@@ -79,12 +79,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         if (userRes.data) {
           const u = userRes.data;
-          setUserName(u.name);
-          localStorage.setItem("userName", u.name);
-          setAccountInfo({
-            agency: u.accountBranch || "---",
-            account: u.accountNumber || "---"
-          });
+          setUserName(u.name || u.nome || "Cliente");
+          localStorage.setItem("userName", u.name || u.nome || "Cliente");
+          
+          // Robust extraction for Optional fields (present/value)
+          const extract = (val: any) => (val && typeof val === 'object' && 'present' in val) 
+            ? (val.present ? val.value : "---") 
+            : (val || "---");
+
+          const agency = extract(u.accountBranch || u.branch || u.agencia);
+          const account = extract(u.accountNumber || u.account || u.conta);
+          
+          setAccountInfo({ agency, account });
         }
 
         if (balanceRes.data) {
@@ -122,13 +128,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <AvatarFallback>{userName[0]}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[10px] text-muted-foreground">Boa tarde,</span>
-              <span className="text-sm font-semibold text-white leading-tight break-words whitespace-normal">
+              <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Boa tarde,</span>
+              <span className="text-sm font-black text-white leading-tight truncate">
                 {userName}
               </span>
               <div className="flex items-center gap-1 mt-1">
-                <span className="text-[10px] font-mono text-primary">{balance}</span>
-                <Eye className="h-3 w-3 text-muted-foreground" />
+                <span className="text-[10px] font-black text-primary font-mono">{balance}</span>
+                <Eye className="h-3 w-3 text-muted-foreground/50" />
               </div>
             </div>
           </div>
@@ -175,36 +181,36 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 flex flex-col relative overflow-hidden">
         {/* Top Header */}
         <header className="h-20 flex items-center justify-between px-8 z-10 shrink-0">
-          <div className="flex items-center max-w-md w-full">
+          <div className="flex items-center max-w-xs xl:max-w-md w-full">
             <div className="relative w-full group">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 placeholder="Procurar transações, serviços..."
-                className="w-full bg-white/5 border-white/5 pl-10 focus:bg-white/10 focus:ring-1 focus:ring-primary/50 rounded-full h-10 transition-all placeholder:text-muted-foreground/50"
+                className="w-full bg-white/5 border-white/10 pl-10 focus:bg-white/10 focus:ring-1 focus:ring-primary/50 rounded-full h-11 transition-all placeholder:text-muted-foreground/50 text-sm"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="hidden lg:flex items-center gap-8 mr-4">
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Conta Corrente</span>
-                <span className="text-xs font-mono font-bold">AG: {accountInfo.agency}  C: {accountInfo.account}</span>
+          <div className="flex items-center gap-4 xl:gap-8">
+            <div className="hidden lg:flex items-center gap-6 xl:gap-10 mr-2">
+              <div className="flex flex-col items-end shrink-0">
+                <span className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] opacity-70">Conta Corrente</span>
+                <span className="text-[11px] font-mono font-black text-white/90 tracking-tighter">AG: {accountInfo.agency}  &bull;  C: {accountInfo.account}</span>
               </div>
-              <div className="flex flex-col items-end">
-                <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Saldo Disponível</span>
+              <div className="flex flex-col items-end shrink-0">
+                <span className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em] opacity-70">Disponível</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-black text-primary font-mono">{balance}</span>
-                  <RotateCw className="h-3 w-3 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
+                  <span className="text-sm font-black text-primary font-mono tracking-tight">{balance}</span>
+                  <RotateCw className="h-3 w-3 text-muted-foreground/30 hover:text-primary cursor-pointer transition-colors" />
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 bg-neutral-900 border border-white/5 p-1 rounded-full pr-4 cursor-pointer hover:bg-neutral-800 transition-colors">
-              <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs font-bold">
+            <div className="flex items-center gap-2 bg-neutral-900 border border-white/10 p-1.5 rounded-full pr-4 cursor-pointer hover:bg-neutral-800 transition-colors shrink-0">
+              <div className="w-7 h-7 rounded-full bg-neutral-800 flex items-center justify-center text-[10px] font-black">
                 PT
               </div>
-              <span className="text-xs font-medium">PT-BR</span>
+              <span className="text-[10px] font-black uppercase tracking-widest">PT-BR</span>
               <ChevronDown className="h-3 w-3 text-muted-foreground" />
             </div>
 
@@ -215,14 +221,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
             <Separator orientation="vertical" className="h-8 bg-white/10" />
 
-            <div className="flex items-center gap-3 cursor-pointer group">
-              <div className="text-right flex flex-col justify-center">
-                <p className="text-xs font-black group-hover:text-primary transition-colors leading-none">{userName}</p>
-                <p className="text-[10px] text-muted-foreground uppercase font-black">Cliente</p>
+            <div className="flex items-center gap-3 cursor-pointer group shrink-0">
+              <div className="text-right flex flex-col justify-center hidden sm:flex">
+                <p className="text-xs font-black group-hover:text-primary transition-colors leading-none whitespace-nowrap">{userName}</p>
+                <p className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Cliente Platinum</p>
               </div>
-              <Avatar className="h-10 w-10 border-2 border-transparent group-hover:border-primary/50 transition-all">
+              <Avatar className="h-10 w-10 border-2 border-white/5 group-hover:border-primary/50 transition-all shadow-lg">
                 <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
-                <AvatarFallback>{userName?.[0]}</AvatarFallback>
+                <AvatarFallback className="bg-primary text-white font-black">{userName?.[0]}</AvatarFallback>
               </Avatar>
             </div>
           </div>
