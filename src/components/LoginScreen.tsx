@@ -4,14 +4,14 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
-import { 
-  User, 
-  Lock, 
-  Smartphone, 
-  ArrowRight, 
-  ShieldCheck, 
-  Eye, 
-  EyeOff, 
+import {
+  User,
+  Lock,
+  Smartphone,
+  ArrowRight,
+  ShieldCheck,
+  Eye,
+  EyeOff,
   HelpCircle,
   ArrowLeft
 } from "lucide-react";
@@ -39,7 +39,7 @@ export default function LoginScreen() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-      
+
       // Clean identifier if it looks like CPF/CNPJ
       const cleanIdentifier = identifier.includes("@") ? identifier : identifier.replace(/\D/g, "");
 
@@ -49,10 +49,10 @@ export default function LoginScreen() {
       });
 
       if (response.status === 200) {
-        const { token, user } = response.data;
-        if (token) localStorage.setItem("token", token);
-        if (user?.name) localStorage.setItem("userName", user.name);
-        
+        const { accessToken, userToken } = response.data;
+        if (accessToken) localStorage.setItem("token", accessToken);
+        if (userToken) localStorage.setItem("userToken", userToken);
+
         toast.success("Dados confirmados! Valide no App.");
         setStep("qrcode");
       }
@@ -60,7 +60,7 @@ export default function LoginScreen() {
       console.error("Login error:", err);
       const message = err.response?.data?.message || "Credenciais inválidas. Verifique seus dados.";
       toast.error(message);
-      
+
       // Optional: Development bypass
       if (process.env.NODE_ENV === "development" && identifier === "999") {
         setStep("qrcode");
@@ -83,18 +83,18 @@ export default function LoginScreen() {
       {/* Background Effects */}
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px]" />
-      
+
       {/* Background Pattern/Image */}
       <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
-        <Image 
-          src="/g8_background.webp" 
-          alt="background" 
-          fill 
+        <Image
+          src="/g8_background.webp"
+          alt="background"
+          fill
           className="object-cover"
         />
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -105,9 +105,9 @@ export default function LoginScreen() {
           <div className="flex items-center gap-3">
             <Image src="/logo_g8.webp" alt="G8Pay Logo" width={120} height={40} className="object-contain" />
           </div>
-          
+
           <div className="space-y-6">
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
@@ -162,9 +162,9 @@ export default function LoginScreen() {
                     <Label htmlFor="identifier" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">CPF, CNPJ OU EMAIL</Label>
                     <div className="relative group">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                      <Input 
-                        id="identifier" 
-                        placeholder="Ex: 000.000.000-00 ou email@exemplo.com" 
+                      <Input
+                        id="identifier"
+                        placeholder="Ex: 000.000.000-00 ou email@exemplo.com"
                         className="pl-10 h-14 bg-background/30 border-border group-focus-within:border-primary transition-all text-foreground font-black text-lg placeholder:text-muted-foreground/20 rounded-2xl"
                         value={identifier}
                         onChange={(e) => setIdentifier(e.target.value)}
@@ -177,16 +177,16 @@ export default function LoginScreen() {
                     <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Sua senha</Label>
                     <div className="relative group">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                      <Input 
-                        id="password" 
-                        type={showPassword ? "text" : "password"} 
-                        placeholder="••••••••" 
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
                         className="pl-10 pr-10 h-14 bg-background/30 border-border group-focus-within:border-primary transition-all text-foreground font-black text-lg placeholder:text-muted-foreground/20 rounded-2xl tracking-widest"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                       />
-                      <button 
+                      <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
@@ -198,13 +198,13 @@ export default function LoginScreen() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="remember" 
-                        checked={rememberMe} 
+                      <Checkbox
+                        id="remember"
+                        checked={rememberMe}
                         onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                       />
-                      <label 
-                        htmlFor="remember" 
+                      <label
+                        htmlFor="remember"
                         className="text-sm font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer uppercase tracking-tight"
                       >
                         Lembrar acesso
@@ -215,9 +215,9 @@ export default function LoginScreen() {
                     </button>
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full h-14 text-lg font-black transition-all hover:scale-[1.01] active:scale-[0.99] rounded-2xl bg-primary shadow-xl shadow-primary/20" 
+                  <Button
+                    type="submit"
+                    className="w-full h-14 text-lg font-black transition-all hover:scale-[1.01] active:scale-[0.99] rounded-2xl bg-primary shadow-xl shadow-primary/20"
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -232,7 +232,7 @@ export default function LoginScreen() {
                 </form>
               </motion.div>
             ) : (
-              <motion.div 
+              <motion.div
                 key="qrcode-step"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -246,10 +246,10 @@ export default function LoginScreen() {
 
                 <div className="relative p-6 bg-white rounded-2xl shadow-xl overflow-hidden group">
                   <div className="absolute inset-0 border-2 border-primary/20 rounded-2xl group-hover:border-primary/50 transition-colors" />
-                  <QRCodeSVG 
-                    value={sessionToken} 
-                    size={200} 
-                    fgColor="#0c0a09" 
+                  <QRCodeSVG
+                    value={sessionToken}
+                    size={200}
+                    fgColor="#0c0a09"
                     level="H"
                     includeMargin={false}
                   />
@@ -273,15 +273,15 @@ export default function LoginScreen() {
                 </div>
 
                 <div className="w-full pt-4 space-y-3">
-                  <Button 
+                  <Button
                     onClick={handleFinalizeLogin}
-                    variant="outline" 
+                    variant="outline"
                     className="w-full border-border hover:bg-white/5"
                     disabled={isLoading}
                   >
                     Já escaneei o código
                   </Button>
-                  <button 
+                  <button
                     onClick={() => setStep("login")}
                     className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-all w-full"
                   >
