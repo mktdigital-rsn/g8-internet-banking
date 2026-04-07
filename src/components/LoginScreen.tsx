@@ -4,14 +4,14 @@ import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
-import { 
-  User, 
-  Lock, 
-  Smartphone, 
-  ArrowRight, 
-  ShieldCheck, 
-  Eye, 
-  EyeOff, 
+import {
+  User,
+  Lock,
+  Smartphone,
+  ArrowRight,
+  ShieldCheck,
+  Eye,
+  EyeOff,
   HelpCircle,
   ArrowLeft
 } from "lucide-react";
@@ -19,15 +19,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import axios from "axios";
+import { toast } from "sonner";
 
 export default function LoginScreen() {
   const [step, setStep] = useState<"login" | "qrcode">("login");
   const [showPassword, setShowPassword] = useState(false);
-  const [cpf, setCpf] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // This would come from the backend in a real scenario
   const [sessionToken, setSessionToken] = useState("g8pay-session-" + Math.random().toString(36).substring(7));
@@ -35,37 +36,35 @@ export default function LoginScreen() {
   const handleInitialLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setError(null);
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-      // The user mentioned it's the same route as the app
-      // Based on AuthController.java, standard login is /api/auth/login
-      const response = await fetch(`${apiUrl}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: cpf.replace(/\D/g, ""), // Using CPF as identifier
-          password: password,
-        }),
+
+      // Clean identifier if it looks like CPF/CNPJ
+      const cleanIdentifier = identifier.includes("@") ? identifier : identifier.replace(/\D/g, "");
+
+      const response = await axios.post(`${apiUrl}/api/auth/login`, {
+        username: cleanIdentifier,
+        password: password,
       });
 
-      if (response.ok) {
-        // In this specific flow requested by the user:
-        // "ao confirmar gerar um qr code pro cara validar pelo celular"
+      if (response.status === 200) {
+        const { accessToken, userToken } = response.data;
+        if (accessToken) localStorage.setItem("token", accessToken);
+        if (userToken) localStorage.setItem("userToken", userToken);
+
+        toast.success("Dados confirmados! Valide no App.");
         setStep("qrcode");
-      } else {
-        const data = await response.json();
-        setError(data.message || "Credenciais inválidas. Verifique seu CPF e senha.");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login error:", err);
-      // For development purposes, if backend is not reachable, we still allow moving to QR step
-      // Remove this in production
-      setStep("qrcode");
-      // setError("Não foi possível conectar ao servidor. Verifique se o backend está rodando na porta 8080.");
+      const message = err.response?.data?.message || "Credenciais inválidas. Verifique seus dados.";
+      toast.error(message);
+
+      // Optional: Development bypass
+      if (process.env.NODE_ENV === "development" && identifier === "999") {
+        setStep("qrcode");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -84,18 +83,18 @@ export default function LoginScreen() {
       {/* Background Effects */}
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px]" />
-      
+
       {/* Background Pattern/Image */}
       <div className="absolute inset-0 z-0 opacity-10 pointer-events-none">
-        <Image 
-          src="/g8_background.webp" 
-          alt="background" 
-          fill 
+        <Image
+          src="/g8_background.webp"
+          alt="background"
+          fill
           className="object-cover"
         />
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -106,9 +105,9 @@ export default function LoginScreen() {
           <div className="flex items-center gap-3">
             <Image src="/logo_g8.webp" alt="G8Pay Logo" width={120} height={40} className="object-contain" />
           </div>
-          
+
           <div className="space-y-6">
-            <motion.h1 
+            <motion.h1
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
@@ -153,53 +152,44 @@ export default function LoginScreen() {
                 className="space-y-6"
               >
                 <div className="space-y-2 mb-8 text-center md:text-left">
-                  <h2 className="text-2xl font-bold">Bem-vindo de volta!</h2>
-                  <p className="text-muted-foreground">Insira seus dados para acessar o Internet Banking.</p>
+                  <h2 className="text-2xl font-black tracking-tight">Bem-vindo de volta!</h2>
+                  <p className="text-muted-foreground font-medium">Insira seus dados para acessar o Internet Banking.</p>
                 </div>
 
                 <form onSubmit={handleInitialLogin} className="space-y-5">
-                  {error && (
-                    <motion.div 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: "auto" }}
-                      className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm"
-                    >
-                      {error}
-                    </motion.div>
-                  )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="cpf">CPF / CNPJ</Label>
+                    <Label htmlFor="identifier" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">CPF, CNPJ OU EMAIL</Label>
                     <div className="relative group">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                      <Input 
-                        id="cpf" 
-                        placeholder="000.000.000-00" 
-                        className="pl-10 h-12 bg-background/50 border-border group-focus-within:border-primary transition-colors text-foreground font-bold text-lg placeholder:text-muted-foreground/30"
-                        value={cpf}
-                        onChange={(e) => setCpf(e.target.value)}
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="identifier"
+                        placeholder="Ex: 000.000.000-00 ou email@exemplo.com"
+                        className="pl-10 h-14 bg-background/30 border-border group-focus-within:border-primary transition-all text-foreground font-black text-lg placeholder:text-muted-foreground/20 rounded-2xl"
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
                         required
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="password">Sua senha</Label>
+                    <Label htmlFor="password" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Sua senha</Label>
                     <div className="relative group">
-                      <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                      <Input 
-                        id="password" 
-                        type={showPassword ? "text" : "password"} 
-                        placeholder="••••••••" 
-                        className="pl-10 pr-10 h-12 bg-background/50 border-border group-focus-within:border-primary transition-colors text-foreground font-bold text-lg placeholder:text-muted-foreground/30"
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input
+                        id="password"
+                        type={showPassword ? "text" : "password"}
+                        placeholder="••••••••"
+                        className="pl-10 pr-10 h-14 bg-background/30 border-border group-focus-within:border-primary transition-all text-foreground font-black text-lg placeholder:text-muted-foreground/20 rounded-2xl tracking-widest"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                       />
-                      <button 
+                      <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       >
                         {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                       </button>
@@ -208,16 +198,16 @@ export default function LoginScreen() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="remember" 
-                        checked={rememberMe} 
+                      <Checkbox
+                        id="remember"
+                        checked={rememberMe}
                         onCheckedChange={(checked) => setRememberMe(checked as boolean)}
                       />
-                      <label 
-                        htmlFor="remember" 
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      <label
+                        htmlFor="remember"
+                        className="text-sm font-bold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer uppercase tracking-tight"
                       >
-                        Lembrar CPF/CNPJ
+                        Lembrar acesso
                       </label>
                     </div>
                     <button type="button" className="text-sm text-primary hover:underline font-medium">
@@ -225,24 +215,24 @@ export default function LoginScreen() {
                     </button>
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    className="w-full h-12 text-base font-semibold transition-all hover:scale-[1.02] active:scale-[0.98]" 
+                  <Button
+                    type="submit"
+                    className="w-full h-14 text-lg font-black transition-all hover:scale-[1.01] active:scale-[0.99] rounded-2xl bg-primary shadow-xl shadow-primary/20"
                     disabled={isLoading}
                   >
                     {isLoading ? (
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
                     ) : (
                       <>
-                        Confirmar dados
-                        <ArrowRight className="ml-2 h-4 w-4" />
+                        CONFIRMAR DADOS
+                        <ArrowRight className="ml-3 h-5 w-5 stroke-[3]" />
                       </>
                     )}
                   </Button>
                 </form>
               </motion.div>
             ) : (
-              <motion.div 
+              <motion.div
                 key="qrcode-step"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -256,10 +246,10 @@ export default function LoginScreen() {
 
                 <div className="relative p-6 bg-white rounded-2xl shadow-xl overflow-hidden group">
                   <div className="absolute inset-0 border-2 border-primary/20 rounded-2xl group-hover:border-primary/50 transition-colors" />
-                  <QRCodeSVG 
-                    value={sessionToken} 
-                    size={200} 
-                    fgColor="#0c0a09" 
+                  <QRCodeSVG
+                    value={sessionToken}
+                    size={200}
+                    fgColor="#0c0a09"
                     level="H"
                     includeMargin={false}
                   />
@@ -283,15 +273,15 @@ export default function LoginScreen() {
                 </div>
 
                 <div className="w-full pt-4 space-y-3">
-                  <Button 
+                  <Button
                     onClick={handleFinalizeLogin}
-                    variant="outline" 
+                    variant="outline"
                     className="w-full border-border hover:bg-white/5"
                     disabled={isLoading}
                   >
                     Já escaneei o código
                   </Button>
-                  <button 
+                  <button
                     onClick={() => setStep("login")}
                     className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-all w-full"
                   >
