@@ -145,11 +145,11 @@ export default function DashboardHome() {
       <div className="p-4 xl:p-8 flex flex-row gap-6 xl:gap-10 h-full overflow-y-auto w-full no-scrollbar">
          {/* Left Column: Main Dashboard */}
          <div className="flex-1 space-y-12 min-w-0 p-6">
-            <div className="flex flex-row gap-12    items-start">
+            <div className="flex flex-row gap-6 items-start">
                {/* Card Summary */}
-               <div className="space-y-6 flex flex-col flex-[1.2] min-w-0">
+               <div className="space-y-6 flex flex-col  min-w-0 ">
                   <div className="flex items-center justify-between">
-                     <h2 className="text-3xl font-black tracking-tighter text-[#f97316]">Meu Resumo</h2>
+                     <h2 className="text-2xl font-black tracking-tighter text-[#f97316]">Meu Resumo</h2>
                      <Link href="/dashboard/conta">
                         <button className="text-primary hover:underline text-[10px] uppercase tracking-widest font-black flex items-center gap-1 group">
                            Ver cartões
@@ -158,8 +158,8 @@ export default function DashboardHome() {
                      </Link>
                   </div>
 
-                  <div className="relative group cursor-pointer w-full max-w-[600px]">
-                     <div className="absolute -inset-1 bg-gradient-to-r from-orange-600 to-orange-400 rounded-[32px] blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
+                  <div className="relative group cursor-pointer w-full max-w-[500px] pr-5">
+                     <div className="absolute -inset-1 rounded-[32px] blur opacity-10 group-hover:opacity-20 transition duration-1000"></div>
                      <div className="relative h-60 xl:h-64 w-full bg-[#0c0a09] text-white p-8 rounded-[32px] shadow-2xl flex flex-col justify-between overflow-hidden border border-white/5">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-white/[0.08] transition-colors" />
                         <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#f97316]/10 rounded-full -ml-24 -mb-24 blur-3xl" />
@@ -180,7 +180,7 @@ export default function DashboardHome() {
                            <div className="flex justify-between items-end gap-2">
                               <div>
                                  <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-1.5">Número do Cartão</p>
-                                 <p className="text-2xl xl:text-3xl font-mono tracking-[0.3em] text-white/90 truncate">{cardNumber}</p>
+                                 <p className="text-lg font-mono tracking-[0.3em] text-white/90 truncate">{cardNumber}</p>
                               </div>
                               <div className="text-right shrink-0">
                                  <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mb-1.5">Bandeira</p>
@@ -193,9 +193,9 @@ export default function DashboardHome() {
                </div>
 
                {/* Maturity Section Carousel - Fixed width for single card */}
-               <div className="space-y-6 flex flex-col w-[300px] shrink-0 min-w-0 -ml-12">
+               <div className="space-y-6 flex flex-col w-[320px] shrink-0 min-w-0">
                   <div className="flex items-center justify-between">
-                     <h2 className="text-2xl xl:text-3xl font-black tracking-tighter text-[#f97316] truncate pr-2">Vencimentos Próx.</h2>
+                     <h2 className="text-xl font-black tracking-tighter text-[#f97316] truncate pr-2">Vencimentos Próximos</h2>
                      <div className="flex gap-2 shrink-0">
                         <button 
                            onClick={prevMaturity}
@@ -214,15 +214,15 @@ export default function DashboardHome() {
                      </div>
                   </div>
 
-                  <div className="relative overflow-hidden flex-1 group/carousel h-[260px] xl:h-[280px]">
+                  <div className="relative overflow-hidden flex-1 group/carousel h-[260px] xl:h-[280px] -mx-2 px-2">
                      <div 
                         className="flex gap-4 transition-transform duration-500 ease-out h-full" 
-                        style={{ transform: `translateX(-${currentIndex * (280 + 16)}px)` }}
+                        style={{ transform: `translateX(-${currentIndex * (240 + 16)}px)` }}
                      >
                         {maturityItems.map((item) => (
                            <div
                               key={item.id}
-                              className="flex-shrink-0 w-[320px] bg-white border border-neutral-100 rounded-[32px] p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group flex flex-col justify-between h-full"
+                              className="flex-shrink-0 w-[240px] bg-white border border-neutral-100 rounded-[32px] p-8 shadow-sm hover:shadow-xl transition-all cursor-pointer group flex flex-col justify-between h-full"
                            >
                               <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm`}>
                                  <item.icon className="h-6 w-6" />
@@ -316,8 +316,8 @@ export default function DashboardHome() {
          </div>
 
          {/* Right Column: Sidebar Charts/Stats */}
-         <div className="w-[380px]  shrink-0 space-y-10 pb-10">
-            <Card className="rounded-[56px] border-0 shadow-2xl shadow-black/5 bg-white p-10 space-y-10">
+         <div className="w-[300px]  shrink-0 space-y-10 pb-10">
+            <Card className="rounded-[26px] border-0 shadow-2xl shadow-black/5 bg-white p-10 space-y-10">
                <div className="space-y-6">
                   <div className="flex items-center justify-between">
                      <div>

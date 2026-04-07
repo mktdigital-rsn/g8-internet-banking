@@ -186,7 +186,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <Input
                 placeholder="Procurar transações, serviços..."
-                className="w-full bg-white/5 border-white/10 pl-10 focus:bg-white/10 focus:ring-1 focus:ring-primary/50 rounded-full h-11 transition-all placeholder:text-muted-foreground/50 text-sm"
+                className="w-[90%] bg-white/5 border-white/10 pl-10 focus:bg-white/10 focus:ring-1 focus:ring-primary/50 rounded-full h-11 transition-all placeholder:text-muted-foreground/50 text-sm"
               />
             </div>
           </div>

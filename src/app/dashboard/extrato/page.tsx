@@ -61,6 +61,115 @@ export default function ExtratoGeralPage() {
         fetchExtrato();
     }, []);
 
+    const getNatureza = (metodo: string) => {
+        switch (metodo) {
+            case "TRANSFERENCIA_PIX":
+            case "TRANSFERENCIA":
+                return "Transferência Bancária";
+            case "TRANSFERENCIA_INTERNA":
+                return "Transferência entre Contas";
+            case "PAGAMENTO_BOLETO":
+                return "Pagamento Fornecedores/Consumo";
+            case "COMPRA_CREDITO":
+                return "Pagamento Fornecedores";
+            case "TARIFA":
+                return "Tarifa Bancária";
+            case "DEVOLUCAO":
+                return "Estorno de Valores";
+            case "MENSALIDADE_CLUBE_BENEFICIOS":
+                return "Mensalidade de Serviços";
+            default:
+                return "Outras Operações";
+        }
+    };
+
+    const handleExport = async (format: 'pdf' | 'xls') => {
+        try {
+            const token = localStorage.getItem("token");
+            const userToken = localStorage.getItem("userToken");
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
+            
+            if (format === 'pdf') {
+                const response = await axios.get(`${apiUrl}/api/banco/extrato/exportar-pdf`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'userToken': userToken || ""
+                    },
+                    responseType: 'blob'
+                });
+
+                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `extrato_${new Date().toISOString().split('T')[0]}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            } else {
+                // Manual XLS (TSV with BOM) - Matching the exact headers and logic from backend PdfService
+                const headers = ["Data/Hora", "Identificação", "Tipo", "Método", "Natureza", "Origem", "Destino", "Valor"];
+                const header = headers.join("\t") + "\n";
+                
+                const rows = filteredItems.map(item => {
+                    const natureza = getNatureza(item.metodo);
+                    const origem = item.pagadorNome || "";
+                    const destino = item.RecebinteNome || "";
+                    
+                    return [
+                        item.dataDaTransacaoFormatada,
+                        item.idDoBancoLiquidante || item.itemId || "",
+                        item.tipoFormatado,
+                        item.metodoFormatado,
+                        natureza,
+                        origem,
+                        destino,
+                        item.valorFormatado.replace("R$", "").trim()
+                    ].join("\t");
+                }).join("\n");
+                
+                const blob = new Blob(["\uFEFF", header, rows], { type: 'application/vnd.ms-excel;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `extrato_${new Date().toISOString().split('T')[0]}.xls`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            }
+        } catch (err) {
+            console.error("Error exporting:", err);
+            alert("Erro ao exportar arquivo.");
+        }
+    };
+
+    const handlePrintReceipt = async (id: string, description: string) => {
+        if (!id) return;
+        try {
+            const token = localStorage.getItem("token");
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
+
+            const response = await axios.get(`${apiUrl}/api/banco/extrato/imprimir-item/${id}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                },
+                responseType: 'blob'
+            });
+
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `comprovante_${description.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error("Error printing receipt:", err);
+            alert("Erro ao gerar comprovante.");
+        }
+    };
+
     const getIconForMetodo = (metodo: string) => {
         switch (metodo) {
             case "TRANSFERENCIA_PIX": return Smartphone;
@@ -123,29 +232,36 @@ export default function ExtratoGeralPage() {
                                         {selectedTransaction.tipo === 'CREDITO' ? '+' : '-'} {selectedTransaction.valorFormatado}
                                     </p>
                                 </div>
-
                                 <div className="space-y-4 bg-neutral-50 rounded-3xl p-6">
-                                    <div>
-                                        <p className="text-[8px] text-neutral-400 font-black uppercase">Pessoa Envolvida</p>
-                                        <p className="text-sm font-black text-[#0c0a09]">
-                                            {selectedTransaction.tipo === 'CREDITO' ? (selectedTransaction.pagadorNome || "N/A") : (selectedTransaction.RecebinteNome || "N/A")}
-                                        </p>
-                                        <p className="text-[10px] text-neutral-400 font-mono font-bold">
-                                            {selectedTransaction.tipo === 'CREDITO' ? (selectedTransaction.pagadorTaxNumber?.present ? selectedTransaction.pagadorTaxNumber.value : selectedTransaction.pagadorTaxNumber) : (selectedTransaction.RecebinteTaxNumber?.present ? selectedTransaction.RecebinteTaxNumber.value : selectedTransaction.RecebinteTaxNumber) || "---"}
-                                        </p>
-                                    </div>
+                                     <div className="flex items-center justify-between mb-2">
+                                         <p className="text-[8px] text-neutral-400 font-black uppercase">Tipo de Operação</p>
+                                         <Badge className={`text-[9px] font-black uppercase tracking-widest border-0 ${selectedTransaction.tipo === 'CREDITO' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+                                             {selectedTransaction.tipoFormatado}
+                                         </Badge>
+                                     </div>
+                                     <div>
+                                         <p className="text-[8px] text-neutral-400 font-black uppercase">Pessoa Envolvida</p>
+                                         <p className="text-sm font-black text-[#0c0a09]">
+                                             {selectedTransaction.tipo === 'CREDITO' ? (selectedTransaction.pagadorNome || "N/A") : (selectedTransaction.RecebinteNome || "N/A")}
+                                         </p>
+                                         <p className="text-[10px] text-neutral-400 font-mono font-bold">
+                                             {selectedTransaction.tipo === 'CREDITO' ? (selectedTransaction.pagadorTaxNumber?.present ? selectedTransaction.pagadorTaxNumber.value : selectedTransaction.pagadorTaxNumber) : (selectedTransaction.RecebinteTaxNumber?.present ? selectedTransaction.RecebinteTaxNumber.value : selectedTransaction.RecebinteTaxNumber) || "---"}
+                                         </p>
+                                     </div>
 
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <p className="text-[8px] text-neutral-400 font-black uppercase">Data e Hora</p>
-                                            <p className="text-xs font-bold text-[#0c0a09]">{selectedTransaction.dataDaTransacaoFormatada}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-[8px] text-neutral-400 font-black uppercase">Método</p>
-                                            <p className="text-xs font-bold text-[#f97316]">{selectedTransaction.metodoFormatado}</p>
-                                        </div>
-                                    </div>
-                                </div>
+                                     <div className="grid grid-cols-2 gap-4">
+                                         <div>
+                                             <p className="text-[8px] text-neutral-400 font-black uppercase">Data e Hora</p>
+                                             <p className="text-xs font-bold text-[#0c0a09]">
+                                                 {selectedTransaction.dataDaTransacaoFormatada.split(" ")[0].split("-").reverse().join("/")} {selectedTransaction.dataDaTransacaoFormatada.split(" ")[1]}
+                                             </p>
+                                         </div>
+                                         <div className="text-right">
+                                             <p className="text-[8px] text-neutral-400 font-black uppercase">Método</p>
+                                             <p className="text-xs font-bold text-[#f97316]">{selectedTransaction.metodoFormatado}</p>
+                                         </div>
+                                     </div>
+                                 </div>
 
                                 <div className="space-y-2 opacity-50 px-2">
                                     <p className="text-[8px] text-neutral-400 font-black uppercase">Chave de Autenticação</p>
@@ -153,14 +269,20 @@ export default function ExtratoGeralPage() {
                                 </div>
                             </div>
 
-                            <div className="flex gap-4 pt-4">
-                                <Button className="flex-1 h-12 bg-[#f97316] text-white rounded-2xl font-bold gap-2">
-                                    <Download className="h-4 w-4" /> Exportar
-                                </Button>
-                                <Button variant="outline" onClick={() => setSelectedTransaction(null)} className="flex-1 h-12 border-neutral-100 rounded-2xl font-bold">
-                                    Fechar
-                                </Button>
-                            </div>
+                             <div className="flex gap-4 pt-4">
+                                 <Button 
+                                    onClick={() => handlePrintReceipt(
+                                        selectedTransaction.idDoBancoLiquidante || selectedTransaction.itemId || selectedTransaction.id,
+                                        selectedTransaction.tipo === "CREDITO" ? (selectedTransaction.pagadorNome || "Transacao") : (selectedTransaction.RecebinteNome || "Transacao")
+                                    )}
+                                    className="flex-1 h-12 bg-[#f97316] text-white rounded-2xl font-bold gap-2"
+                                 >
+                                     <Download className="h-4 w-4" /> Baixar PDF
+                                 </Button>
+                                 <Button variant="outline" onClick={() => setSelectedTransaction(null)} className="flex-1 h-12 border-neutral-100 rounded-2xl font-bold">
+                                     Fechar
+                                 </Button>
+                             </div>
                         </div>
                     </Card>
                 </div>
@@ -170,23 +292,34 @@ export default function ExtratoGeralPage() {
             <div className="flex-1 space-y-8 max-w-5xl">
                 {/* Header */}
                 <div className="flex items-center justify-between">
-                    <div>
-                        <div className="flex items-center gap-2 mb-1">
-                            <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-transparent font-black px-3 py-0.5 rounded-full text-[10px] uppercase tracking-widest">G8Pay &bull; Finanças</Badge>
-                            <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none">Histórico Completo</span>
-                        </div>
-                        <h1 className="text-3xl font-black tracking-tighter text-[#0c0a09] flex items-center gap-3">
-                            Extrato da Conta
-                            <FileText className="h-7 w-7 text-[#f97316] stroke-[2]" />
-                        </h1>
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <Button className="h-12 bg-[#f97316] hover:bg-[#c2410c] text-white rounded-2xl px-6 font-bold flex items-center gap-2 shadow-lg">
-                            <Download className="h-5 w-5" />
-                            Exportar
-                        </Button>
-                    </div>
-                </div>
+                     <div>
+                         <div className="flex items-center gap-2 mb-1">
+                             <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-transparent font-black px-3 py-0.5 rounded-full text-[10px] uppercase tracking-widest">G8Pay &bull; Finanças</Badge>
+                             <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none">Histórico Completo</span>
+                         </div>
+                         <h1 className="text-3xl font-black tracking-tighter text-[#0c0a09] flex items-center gap-3">
+                             Extrato da Conta
+                             <FileText className="h-7 w-7 text-[#f97316] stroke-[2]" />
+                         </h1>
+                     </div>
+                     <div className="flex items-center gap-3">
+                        <Button 
+                            onClick={() => handleExport('pdf')}
+                            variant="outline" 
+                            className="h-12 border-neutral-200 rounded-2xl px-6 font-bold flex items-center gap-2 hover:bg-[#f97316] hover:text-white hover:border-[#f97316] transition-all"
+                        >
+                             <Download className="h-5 w-5" />
+                             PDF
+                         </Button>
+                         <Button 
+                            onClick={() => handleExport('xls')}
+                            className="h-12 bg-[#f97316] hover:bg-[#c2410c] text-white rounded-2xl px-6 font-bold flex items-center gap-2 shadow-lg"
+                        >
+                             <Download className="h-5 w-5" />
+                             EXCEL (XLS)
+                         </Button>
+                     </div>
+                 </div>
 
                 {/* Summary Cards */}
                 <div className="grid grid-cols-2 gap-6">
@@ -233,6 +366,12 @@ export default function ExtratoGeralPage() {
                     </div>
 
                     <div className="space-y-4">
+                        <div className="grid grid-cols-12 px-8 pb-4 text-[10px] font-black text-neutral-300 uppercase tracking-widest gap-4">
+                            <span className="col-span-5">Descrição / Origem</span>
+                            <span className="col-span-3 text-center">Status / Tipo</span>
+                            <span className="col-span-2 text-right">Valor</span>
+                            <span className="col-span-2 text-right">Data / Hora</span>
+                        </div>
                         {isLoading ? (
                             <div className="flex flex-col items-center justify-center py-20 space-y-4">
                                 <div className="w-12 h-12 border-4 border-[#f97316] border-t-transparent rounded-full animate-spin" />
@@ -245,28 +384,44 @@ export default function ExtratoGeralPage() {
                                     const description = t.tipo === "CREDITO" ? t.pagadorNome : t.RecebinteNome;
 
                                     return (
-                                        <div
+                                         <div
                                             key={idx}
                                             onClick={() => setSelectedTransaction(t)}
-                                            className="grid grid-cols-4 items-center px-8 py-6 bg-neutral-50/50 hover:bg-white rounded-[32px] border border-transparent hover:border-neutral-100 hover:shadow-xl transition-all group cursor-pointer"
-                                        >
-                                            <div className="flex items-center gap-4 col-span-2">
-                                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.tipo === 'CREDITO' ? 'text-green-500 bg-green-50' : 'text-red-500 bg-red-50'} group-hover:scale-110 transition-transform`}>
-                                                    <Icon className="h-6 w-6" />
-                                                </div>
-                                                <div>
-                                                    <p className="font-black text-sm text-[#0c0a09] leading-none mb-1 truncate max-w-[250px]">{description || "Transação Diversa"}</p>
-                                                    <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-tight">{t.metodoFormatado} &bull; {t.tipoFormatado}</p>
-                                                </div>
+                                            className="grid grid-cols-12 items-center px-8 py-6 bg-neutral-50/50 hover:bg-white rounded-[32px] border border-transparent hover:border-neutral-100 hover:shadow-xl transition-all group cursor-pointer gap-4"
+                                         >
+                                            <div className="flex items-center gap-4 col-span-5">
+                                               <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center ${t.tipo === 'CREDITO' ? 'text-green-500 bg-green-50' : 'text-red-500 bg-red-50'} group-hover:scale-110 transition-transform shadow-sm`}>
+                                                  <Icon className="h-6 w-6" />
+                                               </div>
+                                               <div className="min-w-0">
+                                                  <p className="font-black text-sm text-[#0c0a09] leading-none mb-1.5 truncate">{description || "Transação Diversa"}</p>
+                                                  <div className="flex items-center gap-2">
+                                                     <p className="text-[9px] text-neutral-400 font-extrabold uppercase tracking-tight bg-neutral-100 px-2 py-0.5 rounded-md">{t.metodoFormatado}</p>
+                                                     <p className="text-[10px] text-neutral-500 font-mono font-medium truncate">
+                                                        {t.tipo === 'CREDITO' ? (t.pagadorTaxNumber?.present ? t.pagadorTaxNumber.value : (t.pagadorTaxNumber || "")) : (t.RecebinteTaxNumber?.present ? t.RecebinteTaxNumber.value : (t.RecebinteTaxNumber || ""))}
+                                                     </p>
+                                                  </div>
+                                               </div>
                                             </div>
-                                            <p className={`text-center font-black text-lg font-mono ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-[#0c0a09]'}`}>
-                                                {t.tipo === 'CREDITO' ? '+' : '-'} {t.valorFormatado}
-                                            </p>
-                                            <div className="flex flex-col items-end justify-center">
-                                                <p className="text-xs font-bold text-[#0c0a09]">{t.dataDaTransacaoFormatada.split(" ")[0]}</p>
-                                                <p className="text-[10px] text-neutral-400 font-medium">{t.dataDaTransacaoFormatada.split(" ")[1]}</p>
+                                            
+                                            <div className="col-span-3 flex flex-col items-center">
+                                                <p className="text-[8px] text-neutral-400 font-black uppercase tracking-[0.1em] mb-1">Status / Tipo</p>
+                                                <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest border-0 ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+                                                    {t.tipoFormatado}
+                                                </Badge>
                                             </div>
-                                        </div>
+
+                                            <div className="col-span-2 text-right">
+                                               <p className={`font-black text-xl font-mono tracking-tighter ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-red-600'}`}>
+                                                  {t.tipo === 'CREDITO' ? '+' : '-'} {t.valorFormatado}
+                                               </p>
+                                            </div>
+
+                                            <div className="col-span-2 flex flex-col items-end justify-center min-w-[80px]">
+                                               <p className="text-xs font-black text-[#0c0a09]">{t.dataDaTransacaoFormatada.split(" ")[0].split("-").reverse().join("/")}</p>
+                                               <p className="text-[10px] text-neutral-400 font-bold">{t.dataDaTransacaoFormatada.split(" ")[1]}</p>
+                                            </div>
+                                         </div>
                                     );
                                 })}
                             </div>
