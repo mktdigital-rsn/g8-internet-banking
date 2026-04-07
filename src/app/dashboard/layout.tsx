@@ -27,8 +27,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
 
 const menuItems = [
   { icon: Home, label: "Resumo", href: "/dashboard" },
@@ -43,6 +44,45 @@ const menuItems = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [userName, setUserName] = React.useState("Carregando...");
+  const [balance, setBalance] = React.useState("R$ 0,00");
+  const [accountInfo, setAccountInfo] = React.useState({ agency: "0001", account: "00000-0" });
+
+  React.useEffect(() => {
+    const savedName = localStorage.getItem("userName");
+    if (savedName) setUserName(savedName);
+
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+        
+        const response = await axios.get(`${apiUrl}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (response.data) {
+          setUserName(response.data.name);
+          setBalance(new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(response.data.balance || 0));
+          setAccountInfo({ 
+             agency: response.data.account?.agency || "382-3", 
+             account: response.data.account?.number || "10254-2" 
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.clear();
+    router.push("/");
+  };
+
   return (
     <div className="flex h-screen bg-[#0c0a09] text-[#f5f5f5] overflow-hidden">
       {/* Sidebar */}
@@ -55,14 +95,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
            {/* User quick info in sidebar (as per image) */}
            <div className="flex items-center gap-3 p-3 mb-6 bg-neutral-900/50 rounded-2xl border border-white/5">
               <Avatar className="h-10 w-10 border border-primary/20">
-                <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guilherme" />
-                <AvatarFallback>GP</AvatarFallback>
+                <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
+                <AvatarFallback>{userName[0]}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
                 <span className="text-[10px] text-muted-foreground">Boa tarde,</span>
-                <span className="text-sm font-semibold truncate">Guilherme P.</span>
+                <span className="text-sm font-semibold truncate">{userName}</span>
                 <div className="flex items-center gap-1 mt-1">
-                   <span className="text-[10px] font-mono text-primary">R$ 5.002,36</span>
+                   <span className="text-[10px] font-mono text-primary">{balance}</span>
                    <Eye className="h-3 w-3 text-muted-foreground" />
                 </div>
               </div>
@@ -97,9 +137,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="mt-auto">
-          <button className="flex items-center gap-3 px-3 py-3 w-full text-muted-foreground hover:text-[#ff4444] transition-colors group">
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-3 py-3 w-full text-muted-foreground hover:text-[#ff4444] transition-colors group"
+          >
             <LogOut className="h-5 w-5 group-hover:scale-110 transition-transform" />
-            <span className="text-sm">Sair</span>
+            <span className="text-sm font-bold uppercase tracking-widest">Sair</span>
           </button>
         </div>
       </aside>
@@ -119,19 +162,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <div className="flex items-center gap-6">
-             <div className="hidden lg:flex items-center gap-8 mr-4">
+              <div className="hidden lg:flex items-center gap-8 mr-4">
                 <div className="flex flex-col items-end">
-                   <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Conta Corrente</span>
-                   <span className="text-xs font-mono font-bold">AG: 2561  C: 2561</span>
+                   <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Conta Corrente</span>
+                   <span className="text-xs font-mono font-bold">AG: {accountInfo.agency}  C: {accountInfo.account}</span>
                 </div>
                 <div className="flex flex-col items-end">
-                   <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Saldo Disponível</span>
+                   <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest">Saldo Disponível</span>
                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold text-primary font-mono">R$ 5.002,36</span>
+                       <span className="text-sm font-black text-primary font-mono">{balance}</span>
                       <RotateCw className="h-3 w-3 text-muted-foreground hover:text-primary cursor-pointer transition-colors" />
                    </div>
                 </div>
-             </div>
+              </div>
 
              <div className="flex items-center gap-2 bg-neutral-900 border border-white/5 p-1 rounded-full pr-4 cursor-pointer hover:bg-neutral-800 transition-colors">
                 <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs font-bold">
@@ -150,12 +193,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
              <div className="flex items-center gap-3 cursor-pointer group">
                 <div className="text-right flex flex-col justify-center">
-                   <p className="text-xs font-bold group-hover:text-primary transition-colors leading-none">Guilherme P.</p>
-                   <p className="text-[10px] text-muted-foreground">Admin</p>
+                   <p className="text-xs font-black group-hover:text-primary transition-colors leading-none">{userName}</p>
+                   <p className="text-[10px] text-muted-foreground uppercase font-black">Cliente</p>
                 </div>
                 <Avatar className="h-10 w-10 border-2 border-transparent group-hover:border-primary/50 transition-all">
-                  <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=Guilherme" />
-                  <AvatarFallback>GP</AvatarFallback>
+                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
+                  <AvatarFallback>{userName?.[0]}</AvatarFallback>
                 </Avatar>
              </div>
           </div>

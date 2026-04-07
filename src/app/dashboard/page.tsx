@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import axios from "axios";
 
 const chartData = [
   { name: "D", value: 120 },
@@ -54,6 +55,32 @@ const transactions = [
 ];
 
 export default function DashboardHome() {
+  const [userName, setUserName] = useState("Cliente");
+  const [balance, setBalance] = useState("R$ 0,00");
+  const [cardNumber, setCardNumber] = useState("**** **** **** 0000");
+
+  React.useEffect(() => {
+    const fetchHomeData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+        
+        const response = await axios.get(`${apiUrl}/api/auth/me`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        if (response.data) {
+          setUserName(response.data.name);
+          setBalance(new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(response.data.balance || 0));
+          if (response.data.cardNumber) setCardNumber(response.data.cardNumber);
+        }
+      } catch (err) {
+        console.error("Error fetching home data:", err);
+      }
+    };
+    fetchHomeData();
+  }, []);
+
   return (
     <div className="p-10 flex gap-10 h-full overflow-y-auto no-scrollbar">
       {/* Left Column: Main Dashboard */}
@@ -88,7 +115,7 @@ export default function DashboardHome() {
                     <div className="flex justify-between items-end">
                        <div>
                           <p className="text-[10px] text-white/50 uppercase font-black tracking-widest mb-1">Número do Cartão</p>
-                          <p className="text-2xl font-mono tracking-[0.2em] whitespace-nowrap">**** **** **** 6239</p>
+                          <p className="text-2xl font-mono tracking-[0.2em] whitespace-nowrap">{cardNumber}</p>
                        </div>
                        <div className="text-right">
                           <p className="text-[10px] text-white/50 uppercase font-black tracking-widest mb-1">Bandeira</p>
@@ -196,7 +223,7 @@ export default function DashboardHome() {
                <div className="flex items-center justify-between">
                   <div>
                      <h3 className="text-neutral-400 text-xs font-black uppercase tracking-[0.2em] mb-2">Saldo Atual</h3>
-                     <p className="text-5xl font-black text-[#0c0a09] font-mono tracking-tighter">R$ 5.002,36</p>
+                     <p className="text-5xl font-black text-[#0c0a09] font-mono tracking-tighter">{balance}</p>
                   </div>
                   <Badge className="bg-[#f97316]/10 text-[#f97316] hover:bg-[#f97316]/20 border-0 px-3 py-1 font-black text-[10px] uppercase">Agos/2026</Badge>
                </div>
