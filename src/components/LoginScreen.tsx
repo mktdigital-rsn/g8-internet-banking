@@ -65,7 +65,7 @@ export default function LoginScreen() {
     setIsLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
 
       // Force lowercase only if it's an email format
       const isEmail = identifier.includes("@");

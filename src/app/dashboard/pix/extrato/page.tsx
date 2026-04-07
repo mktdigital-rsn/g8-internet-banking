@@ -31,7 +31,7 @@ export default function PixExtratoPage() {
          try {
             const token = localStorage.getItem("token");
             const userToken = localStorage.getItem("userToken");
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
 
             const response = await axios.get(`${apiUrl}/api/banco/extrato/buscar`, {
                headers: {
