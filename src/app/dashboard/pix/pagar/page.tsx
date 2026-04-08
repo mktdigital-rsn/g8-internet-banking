@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
+import axios from "axios";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
@@ -24,22 +25,173 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Separator } from "@/components/ui/separator";
+import { Building2, Fingerprint, CheckCircle2, Download, Smartphone as SmartphoneIcon } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 function PixPagarContent() {
   const searchParams = useSearchParams();
   const type = searchParams.get("type") || "key";
+  const urlKey = searchParams.get("key") || "";
+  const urlName = searchParams.get("name") || "";
+  const urlBank = searchParams.get("bank") || "";
 
   const [value, setValue] = useState("");
   const [date, setDate] = useState("");
-  const [pixCode, setPixCode] = useState("");
-  const [identifier, setIdentifier] = useState("");
-  const [step, setStep] = useState<"input" | "confirm">("input");
+  const [pixCode, setPixCode] = useState(urlKey);
+  const [identifier, setIdentifier] = useState(urlKey);
+  const [step, setStep] = useState<"input" | "confirm" | "sms" | "success">("input");
+  const [smsCode, setSmsCode] = useState("");
+  const [isLoadingTransfer, setIsLoadingTransfer] = useState(false);
+  const [transactionId, setTransactionId] = useState("");
+
+  const [recipientName, setRecipientName] = useState(urlName);
+  const [recipientBank, setRecipientBank] = useState(urlBank);
+  const [recipientDocument, setRecipientDocument] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [userPhone, setUserPhone] = useState("");
+  const [pinId, setPinId] = useState("");
+  const [searchResult, setSearchResult] = useState<any>(null);
+  const [uuid, setUuid] = useState("");
+  const [endToEndId, setEndToEndId] = useState("");
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     setDate(today);
+
+    // Fetch User Profile to get the correct phone number
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
+        const res = await axios.get(`${apiUrl}/api/users/data`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.data) {
+          const phone = res.data.phone || res.data.celular || "";
+          setUserPhone(phone);
+        }
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      }
+    };
+    fetchProfile();
   }, []);
+
+  useEffect(() => {
+    // 1. Monitor manual input for keys (from identifier)
+    if (identifier.length >= 8 && !urlKey && (type !== "qrcode" && type !== "copia_cola")) {
+      const delayDebounceFn = setTimeout(() => {
+        performSearch(identifier);
+      }, 1500);
+      return () => clearTimeout(delayDebounceFn);
+    }
+  }, [identifier]);
+
+  useEffect(() => {
+    // 2. Monitor pixCode (Copia e Cola / QR Code)
+    if (pixCode.length > 10 && (type === "qrcode" || type === "copia_cola")) {
+      handleDecodePix(pixCode);
+    }
+  }, [pixCode]);
+
+  const performSearch = async (keyToSearch: string) => {
+    if (!keyToSearch) return;
+    setIsSearching(true);
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
+    const token = localStorage.getItem("token");
+    const userToken = localStorage.getItem("userToken");
+
+    // Formatting logic inside the search to ensure correct format (phone prefixes, etc.)
+    let key = keyToSearch.trim();
+    if (!key.includes("@")) {
+      key = key.replace(/\D/g, "");
+      if ((type === "phone" || type === "celular") && (key.length === 10 || key.length === 11)) {
+        if (!key.startsWith("55")) key = "+55" + key;
+        else key = "+" + key;
+      }
+    }
+
+    try {
+      const response = await axios.get(`${apiUrl}/api/banco/pix/buscar-dados-contato/${encodeURIComponent(key)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'usertoken': userToken || ""
+        }
+      });
+      if (response.data) {
+        updateRecipientData(response.data);
+      }
+    } catch (err) {
+      console.error("Lookup error:", err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleDecodePix = async (emvCode: string) => {
+    const cleanCode = emvCode.trim();
+    if (!cleanCode) return;
+
+    setIsSearching(true);
+    const apiUrl = (type === "qrcode" || type === "copia_cola")
+      ? "http://localhost:8080"
+      : (process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br");
+    const token = localStorage.getItem("token");
+    const userToken = localStorage.getItem("userToken");
+
+    try {
+      console.log("🔍 Decodificando Pix Copia e Cola via /buscar-copicola...");
+      const res = await axios.post(`${apiUrl}/api/banco/pix/buscar-copicola`,
+        { payload: cleanCode },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'usertoken': userToken || "",
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (res.data) {
+        console.log("✅ PIX COPIACOLA SUCCESS:", res.data);
+        const data = res.data.data || res.data;
+        updateRecipientData(data);
+
+        // Extract value from various possible fields
+        const val = data.valor || data.amount || data.value || data.transactionAmount || 0;
+        if (val > 0) {
+          setValue(String(Math.round(val * 100)));
+        }
+      }
+    } catch (err: any) {
+      console.error("❌ PIX COPIACOLA FAILED:", err.response?.data || err.message);
+      toast.error("Erro ao processar código Pix Copia e Cola.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const updateRecipientData = (data: any) => {
+    setSearchResult(data);
+    setRecipientName(data.nome || data.name || "");
+    setRecipientBank(data.instituicao || data.bank || "");
+    setRecipientDocument(data.cpfcnpj || data.documento || data.taxNumber || "");
+    if (data.uuid) setUuid(data.uuid);
+    if (data.endToEndIdInterno) setEndToEndId(data.endToEndIdInterno);
+  };
+
+  useEffect(() => {
+    // Initial search if we came via URL (already has urlKey)
+    if (urlKey && !urlName) {
+      if (type === "qrcode" || type === "copia_cola") {
+        handleDecodePix(urlKey);
+      } else {
+        performSearch(urlKey);
+      }
+    }
+  }, [urlKey]);
 
   const formatCurrency = (val: string) => {
     const cleanValue = val.replace(/\D/g, "");
@@ -59,7 +211,7 @@ function PixPagarContent() {
   const formatIdentifier = (val: string, type: string) => {
     const cleanValue = val.replace(/\D/g, "");
 
-    if (type === "phone") {
+    if (type === "phone" || type === "celular") {
       let v = cleanValue;
       if (v.length > 11) v = v.substring(0, 11);
 
@@ -75,19 +227,17 @@ function PixPagarContent() {
       return v;
     }
 
-    if (type === "cpf_cnpj") {
+    if (type === "cpf_cnpj" || type === "cpf" || type === "cnpj") {
       const v = cleanValue;
       if (v.length <= 11) {
-        // CPF: 000.000.000-00
         if (v.length > 9) return v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, "$1.$2.$3-$4");
         if (v.length > 6) return v.replace(/(\d{3})(\d{3})(\d{1,3})/, "$1.$2.$3");
         if (v.length > 3) return v.replace(/(\d{3})(\d{1,3})/, "$1.$2");
         return v;
       } else {
-        // CNPJ: 00.000.000/0000-00
         const c = v.substring(0, 14);
         if (c.length > 12) return c.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, "$1.$2.$3/$4-$5");
-        if (c.length > 8) return c.replace(/(\d{2})(\d{3})(\d{3})(\d{1,4})/, "$1.$2.$3/$4");
+        if (c.length > 8) return c.replace(/(\d{2})(\d{3})(\d{3})(\d{4})/, "$1.$2.$3/$4");
         if (c.length > 5) return c.replace(/(\d{2})(\d{3})(\d{1,3})/, "$1.$2.$3");
         if (c.length > 2) return c.replace(/(\d{2})(\d{1,3})/, "$1.$2");
         return c;
@@ -97,15 +247,187 @@ function PixPagarContent() {
     return val;
   };
 
+  const handleRequestSms = async () => {
+    setIsLoadingTransfer(true);
+    try {
+      const token = localStorage.getItem("token");
+      const userToken = localStorage.getItem("userToken");
+      const apiUrl = (type === "qrcode" || type === "copia_cola")
+        ? "http://localhost:8080"
+        : (process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br");
+
+      console.log(`📩 [SMS REQUEST] Enviando para ${apiUrl}/api/users/solicitar-pin...`);
+
+      const res = await axios.post(`${apiUrl}/api/users/solicitar-pin`,
+        { amount: String(parseFloat(value.replace(/\D/g, "")) / 100) },
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'usertoken': userToken || "",
+            'Accept': 'application/json, text/plain, */*'
+          }
+        }
+      );
+
+      if (res.data) {
+        console.log("✅ [SMS REQUEST SUCCESS]:", res.data);
+        const data = res.data.data || res.data;
+        setPinId(data.pinId || data.id || "");
+        setStep("sms");
+        toast.success("Código enviado com sucesso!");
+      }
+    } catch (err: any) {
+      console.error("❌ [SMS REQUEST ERROR]:", err.response?.status, err.response?.data || err.message);
+      toast.error("Erro ao solicitar código de segurança.");
+    } finally {
+      setIsLoadingTransfer(false);
+    }
+  };
+
+  const handleFinalizeTransfer = async () => {
+    if (smsCode.length < 5) {
+      toast.error("Digite o código de 5 dígitos recebido.");
+      return;
+    }
+
+    setIsLoadingTransfer(true);
+    try {
+      const token = localStorage.getItem("token");
+      const userToken = localStorage.getItem("userToken");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
+
+      // MATCH MOBILE APP: For Copia e Cola/QR Code, DO NOT call separate validar-pin
+      // The pin is sent directly in the pagar-copicola payload.
+      if (type !== "qrcode" && type !== "copia_cola") {
+        console.log("🛡️ Validando PIN para Pix Chave...");
+        await axios.post(`${apiUrl}/api/users/validar-pin`,
+          { pin: smsCode, pinId: pinId },
+          {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'usertoken': userToken || "",
+              'Accept': 'application/json, text/plain, */*'
+            }
+          }
+        );
+      }
+
+      let endpoint = "/api/banco/pix/transferir";
+      let payload: any = {
+        chave: pixCode || identifier,
+        valor: parseFloat(value.replace(/\D/g, "")) / 100,
+        agendadoPara: null,
+        uuid: uuid || crypto.randomUUID(),
+        endToEndIdInterno: endToEndId || crypto.randomUUID(),
+        chavePixTypeHint: null,
+        pin: smsCode,
+        deviceId: "IB-WEB-PLATFORM"
+      };
+
+      // MATCH MOBILE APP: For Copia e Cola/QR Code, use specific endpoint and payload structure
+      if (type === "qrcode" || type === "copia_cola") {
+        endpoint = "/api/banco/pix/pagar-copicola";
+        const currentId = uuid || searchResult?.uuid || searchResult?.endToEndId || "";
+        const txAmount = parseFloat(value.replace(/\D/g, "")) / 100;
+        const internalId = endToEndId || searchResult?.endToEndIdInterno || currentId; // Use currentId as fallback
+        
+        payload = {
+          endToEndId: currentId,
+          chavePix: "",
+          qrcodeId: currentId,
+          qrCodeType: "",
+          receiverConciliationId: currentId,
+          amount: txAmount,
+          endToEndIdInterno: internalId,
+          deviceId: "2de10864-0672-4f25-a92d-bf802b03a381"
+        };
+      }
+
+      console.log("🔑 [HEADERS]:", { 'Authorization': `Bearer ${token?.substring(0, 10)}...`, 'usertoken': `${userToken?.substring(0, 10)}...` });
+      console.log(`🚀 [PAYLOAD]:`, payload);
+
+      const res = await axios.post(`${apiUrl}${endpoint}`, payload, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'usertoken': userToken || "",
+          'Accept': 'application/json, text/plain, */*',
+          'Content-Type': 'application/json',
+          'User-Agent': 'okhttp/4.12.0' // Matching the app's User-Agent
+        }
+      });
+
+      if (res.data) {
+        console.log("✅ [SUCCESS]:", res.data);
+        const apiData = res.data.data || res.data;
+        const realId = apiData.idLiquidante || apiData.codigoDeIdentificacao || apiData.itemId || apiData.idDoBancoLiquidante || apiData.id;
+
+        setTimeout(() => {
+          setTransactionId(realId || "");
+          setStep("success");
+          toast.success("Transferência realizada com sucesso!");
+        }, 500);
+      }
+    } catch (err: any) {
+      console.error("❌ [API ERROR]:", err.response?.status, err.response?.data || err.message);
+      const msg = err.response?.data?.message || err.response?.data?.mensagem || "Erro ao realizar transferência.";
+      toast.error(`Erro ${err.response?.status || ''}: ${msg}`);
+    } finally {
+      setIsLoadingTransfer(false);
+    }
+  };
+
+  const handlePrintReceipt = async () => {
+    if (!transactionId) {
+      toast.error("ID da transação não localizado.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const userToken = localStorage.getItem("userToken");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
+
+      const response = await axios.get(`${apiUrl}/api/banco/extrato/imprimir-item/${transactionId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'userToken': userToken || ""
+        },
+        responseType: 'blob'
+      });
+
+      // Verification: If it's empty, the backend hasn't generated it yet
+      if (response.data.size === 0) {
+        toast.info("O comprovante está sendo processado. Tente novamente em 5 segundos.");
+        return;
+      }
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `comprovante_pix_${transactionId}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("❌ [RECEIPT ERROR]:", err);
+      toast.error("Erro ao gerar comprovante. Verifique o extrato.");
+    }
+  };
+
   const getPageInfo = () => {
     switch (type) {
       case "qrcode":
         return { title: "Escanear QR Code", icon: QrCode, placeholder: "Aponte a câmera..." };
       case "phone":
+      case "celular":
         return { title: "Pagar via Celular", icon: Smartphone, placeholder: "(00) 00000-0000" };
       case "email":
         return { title: "Pagar via E-mail", icon: Mail, placeholder: "exemplo@email.com" };
       case "cpf_cnpj":
+      case "cpf":
+      case "cnpj":
         return { title: "Pagar via CPF/CNPJ", icon: UserSquare2, placeholder: "000.000.000-00" };
       case "copia_cola":
         return { title: "Pix Copia e Cola", icon: Copy, placeholder: "Cole o código Pix completo aqui" };
@@ -118,78 +440,72 @@ function PixPagarContent() {
 
   return (
     <div className="p-10 flex gap-10 h-full overflow-y-auto w-full no-scrollbar">
-      {/* Main Content */}
       <div className="flex-1 space-y-8 max-w-4xl">
-        {/* Page Title Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Link href={step === "confirm" ? "#" : "/dashboard/pix"} onClick={(e) => {
-              if (step === "confirm") {
+            <Link href={step === "input" ? "/dashboard/pix" : "#"} onClick={(e) => {
+              if (step !== "input" && step !== "success") {
                 e.preventDefault();
-                setStep("input");
+                if (step === "confirm") setStep("input");
+                else if (step === "sms") setStep("confirm");
               }
             }}>
               <Button variant="ghost" size="icon" className="rounded-full hover:bg-neutral-100 h-12 w-12">
-                <ArrowLeft className="h-6 w-6 text-[#f97316]" />
+                <ArrowLeft className="h-6 w-6 text-[#ff7711]" />
               </Button>
             </Link>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-transparent font-black px-3 py-0.5 rounded-full text-[10px] uppercase tracking-widest">G8Pay &bull; Pix</Badge>
-                <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none">{step === "confirm" ? "Confirmação de Pagamento" : "Indicação de Pagamento"}</span>
+                <Badge variant="secondary" className="bg-[#ff7711]/10 text-[#ff7711] border-transparent font-black px-2 py-0.5 rounded-[5px] text-[10px] uppercase tracking-widest leading-none">G8Pay &bull; Pix</Badge>
+                <span className="text-[10px] text-[#0c0a09] font-bold uppercase tracking-widest leading-none opacity-60">
+                  {step === "confirm" ? "Confirmação" : step === "sms" ? "Segurança" : step === "success" ? "Comprovante" : "Indicação de Pagamento"}
+                </span>
               </div>
-              <h1 className="text-3xl font-black tracking-tighter text-[#f97316] flex items-center gap-3">
-                {step === "confirm" ? "Confirme o Pagamento" : info.title}
-                <info.icon className="h-7 w-7 text-[#f97316] stroke-[2]" />
+              <h1 className="text-3xl font-black tracking-tight text-[#0c0a09] flex items-center gap-3 uppercase">
+                {step === "confirm" ? "Confirme os dados" : step === "sms" ? "Validação SMS" : step === "success" ? "Transferência Realizada" : info.title}
+                <info.icon className="h-7 w-7 text-[#ff7711]" />
               </h1>
             </div>
           </div>
         </div>
 
-        {/* PIX Form Section */}
         {step === "input" ? (
-          <div className="space-y-10 max-w-2xl bg-white p-12 rounded-[56px] shadow-sm border border-neutral-50 shadow-black/5">
-            {/* Form Context Info */}
-            <div className="flex items-center gap-4 p-5 bg-neutral-50 rounded-3xl border border-neutral-100">
-              <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-[#f97316] shadow-sm">
-                <info.icon className="h-6 w-6" />
+          <div className="space-y-8 max-w-2xl bg-white p-10 rounded-[5px] shadow-xl shadow-black/5 border border-neutral-100">
+            <div className="flex items-center gap-4 p-5 bg-[#fffbeb] rounded-[5px] border border-neutral-100/50">
+              <div className="w-10 h-10 bg-white rounded-[5px] flex items-center justify-center text-[#ff7711] shadow-sm">
+                <info.icon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-xs text-neutral-400 font-bold uppercase tracking-widest">Você está pagando via</p>
-                <p className="font-black text-[#f97316] uppercase">{info.title.split("via ")[1] || info.title}</p>
+                <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-1 opacity-60">Você está pagando via</p>
+                <p className="font-black text-[#0c0a09] uppercase text-xs tracking-tight">{info.title.split("via ")[1] || info.title}</p>
               </div>
             </div>
 
-            {/* Input field based on type */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-[#f97316]">Dados da Transação</h2>
+                <h2 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Dados da Transação</h2>
               </div>
 
               {type === "qrcode" ? (
                 <div className="space-y-6">
-                  <div className="p-8 border-2 border-dashed border-neutral-200 rounded-[32px] flex flex-col items-center justify-center gap-4 hover:border-[#f97316] transition-colors cursor-pointer group bg-neutral-50/50">
-                    <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center text-neutral-400 group-hover:text-[#f97316] shadow-sm">
-                      <QrCode className="h-8 w-8" />
+                  <div className="p-8 border-2 border-dashed border-neutral-200 rounded-[5px] flex flex-col items-center justify-center gap-4 hover:border-[#ff7711] transition-colors cursor-pointer group bg-neutral-50/50">
+                    <div className="w-14 h-14 bg-white rounded-[5px] flex items-center justify-center text-neutral-400 group-hover:text-[#ff7711] shadow-sm">
+                      <QrCode className="h-6 w-6" />
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-black text-[#f97316]">Anexe o arquivo QRCODE</p>
+                      <p className="text-sm font-black text-[#0c0a09] uppercase">Anexe o arquivo QRCODE</p>
                       <div className="flex items-center justify-center gap-1 mt-1">
-                        <span className="text-sm font-bold text-neutral-400 border-b-2 border-transparent group-hover:border-neutral-300">Clique para Procurar</span>
-                        <ChevronRight className="h-4 w-4 text-neutral-300" />
+                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Clique para Procurar</span>
+                        <ChevronRight className="h-3 w-3 text-neutral-300" />
                       </div>
                     </div>
-                  </div>
-                  <div className="relative py-2 flex items-center">
-                    <div className="flex-1 h-px bg-neutral-100" />
-                    <span className="px-4 text-[10px] font-black text-neutral-300 uppercase tracking-widest">ou cole o código</span>
-                    <div className="flex-1 h-px bg-neutral-100" />
                   </div>
                   <Input
                     value={pixCode}
                     onChange={(e) => setPixCode(e.target.value)}
                     placeholder="Digite ou cole o código"
-                    className="h-16 bg-[#f5f5f5] border-transparent focus:border-[#f97316] focus:ring-0 rounded-2xl px-6 text-[#0c0a09] font-black text-xl placeholder:text-neutral-300"
+                    readOnly={!!urlKey}
+                    className={`h-14 bg-neutral-50/50 border-neutral-100 focus:border-[#ff7711] rounded-[5px] px-6 text-[#ff7711] font-black text-xl placeholder:text-neutral-300 shadow-sm ${urlKey ? 'cursor-not-allowed opacity-80' : ''}`}
                   />
                 </div>
               ) : type === "copia_cola" ? (
@@ -198,55 +514,91 @@ function PixPagarContent() {
                     placeholder={info.placeholder}
                     value={pixCode}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPixCode(e.target.value)}
-                    className="min-h-[160px] font-black text-xl"
+                    readOnly={!!urlKey}
+                    className={`min-h-[120px] font-black text-xl text-[#ff7711] rounded-md border-neutral-100 bg-neutral-50/50 ${urlKey ? 'cursor-not-allowed opacity-80' : ''}`}
                   />
-                  <p className="text-[10px] text-neutral-400 font-bold text-right italic px-2 uppercase tracking-widest">Cole o código Pix completo para processar</p>
+                  <p className="text-[9px] text-neutral-400 font-bold text-right uppercase tracking-widest opacity-60">Cole o código Pix completo para processar</p>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <Input
                     value={type === "email" ? identifier : formatIdentifier(identifier, type)}
                     onChange={(e) => setIdentifier(e.target.value)}
                     placeholder={info.placeholder}
-                    className="h-16 bg-[#f5f5f5] border-transparent focus:border-[#f97316] focus:ring-0 rounded-2xl px-6 text-[#0c0a09] font-black text-xl placeholder:text-neutral-300"
+                    readOnly={!!urlKey}
+                    className={`h-14 bg-neutral-50/50 border-neutral-100 focus:border-[#ff7711] rounded-[5px] px-6 text-[#ff7711] font-black text-xl placeholder:text-neutral-300 shadow-sm ${urlKey ? 'cursor-not-allowed opacity-80' : ''}`}
                   />
-                  {type !== "qrcode" && (
-                    <button className="flex items-center gap-2 group text-[#f97316] hover:text-[#f97316] transition-colors px-2">
-                      <span className="text-sm font-bold border-b-2 border-transparent group-hover:border-[#f97316]">Buscar nos Meus Contatos</span>
-                      <ChevronRight className="h-4 w-4 mt-0.5 group-hover:translate-x-1 transition-transform" />
+                  {!urlKey && (
+                    <button className="flex items-center gap-2 group text-[#ff7711] px-1 translate-y-1">
+                      <span className="text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#ff7711]">Buscar nos Meus Contatos</span>
+                      <ChevronRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                     </button>
                   )}
                 </div>
               )}
+
+              {(isSearching || recipientName) && (
+                <div className="bg-[#fffbeb] p-5 rounded-[5px] border border-orange-100 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-white rounded-[5px] flex items-center justify-center shrink-0 border border-neutral-100 shadow-sm">
+                      <Image
+                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${recipientName || 'G8'}`}
+                        alt="Avatar"
+                        width={40}
+                        height={40}
+                        className="rounded-sm"
+                      />
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <p className="text-[10px] font-black uppercase text-[#ff7711] tracking-widest leading-none">Dados do Recebedor</p>
+                      <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-tighter leading-tight">
+                        {isSearching ? "Buscando informações..." : recipientName}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
+                        <div className="flex items-center gap-1.5 opacity-60">
+                          <Building2 className="h-3 w-3 text-[#ff7711]" />
+                          <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">{isSearching ? "..." : (recipientBank || "Instituição não informada")}</p>
+                        </div>
+                        {recipientDocument && (
+                          <div className="flex items-center gap-1.5 opacity-60">
+                            <UserSquare2 className="h-3 w-3 text-[#ff7711]" />
+                            <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">{recipientDocument}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
-            <div className="h-px bg-neutral-100 w-full" />
+            <Separator className="bg-neutral-100" />
 
-            {/* Qual o Valor? */}
-            <div className="space-y-4">
-              <h2 className="text-xl font-bold text-[#f97316]">Qual o Valor?</h2>
-              <div className="relative">
-                <Input
-                  value={formatCurrency(value)}
-                  onChange={handleValueChange}
-                  placeholder="R$ 0,00"
-                  className="h-20 bg-[#f5f5f5] border-transparent focus:border-[#f97316] focus:ring-0 rounded-3xl px-8 font-black text-4xl text-[#0c0a09] placeholder:text-neutral-200 tracking-tighter"
-                />
-                <div className="absolute right-6 top-1/2 -translate-y-1/2">
-                  <Badge className="bg-[#f97316] text-white hover:bg-[#f97316] rounded-lg px-2 py-1 font-mono text-[10px]">BRL</Badge>
+            {(!(searchResult?.valor > 0 || searchResult?.amount > 0)) && (
+              <div className="space-y-4">
+                <h2 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Qual o Valor?</h2>
+                <div className="relative">
+                  <Input
+                    value={formatCurrency(value)}
+                    onChange={handleValueChange}
+                    placeholder="R$ 0,00"
+                    className="h-16 bg-neutral-50/50 border-neutral-100 focus:border-[#ff7711] rounded-[5px] px-8 font-black text-4xl text-[#ff7711] placeholder:text-neutral-200 tracking-tighter shadow-sm"
+                  />
+                  <div className="absolute right-6 top-1/2 -translate-y-1/2">
+                    <Badge className="bg-[#ff7711] text-white hover:bg-[#ff7711] rounded-[5px] px-2 py-0.5 font-black text-[9px] tracking-widest uppercase">BRL</Badge>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="h-px bg-neutral-100 w-full" />
+            <Separator className="bg-neutral-100" />
 
-            {/* Para Quando? */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-[#f97316]">Para Quando?</h2>
-                <Badge variant="outline" className="rounded-full border-neutral-200 text-neutral-400 font-bold px-3 py-1 flex items-center gap-1.5 bg-neutral-50 shadow-sm">
+                <h2 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Para Quando?</h2>
+                <Badge variant="outline" className="rounded-sm border-neutral-200 text-neutral-400 font-bold px-2 py-1 flex items-center gap-1.5 bg-neutral-50 shadow-sm text-[9px] uppercase tracking-widest">
                   <Clock className="h-3 w-3" />
-                  D+0 (Liquidação Imediata)
+                  Liquidação Imediata
                 </Badge>
               </div>
               <div className="relative group">
@@ -254,73 +606,194 @@ function PixPagarContent() {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="h-14 bg-[#f5f5f5] border-transparent focus:border-[#f97316] focus:ring-0 rounded-2xl px-6 text-[#0c0a09] font-black text-lg appearance-none cursor-pointer group-hover:bg-neutral-100 transition-colors"
+                  className="h-12 bg-neutral-50/50 border-neutral-100 focus:border-[#ff7711] rounded-md px-6 text-[#ff7711] font-black text-base appearance-none cursor-pointer hover:bg-neutral-50 transition-colors shadow-sm"
                 />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-[#f97316]">
-                  <CalendarIcon className="h-6 w-6" />
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-300">
+                  <CalendarIcon className="h-4 w-4" />
                 </div>
               </div>
             </div>
 
-            {/* Warning Message */}
-            <div className="bg-[#fff9e6] border border-[#ffecb3] p-6 rounded-[32px] flex gap-5">
-              <div className="bg-[#ff9800] p-2 h-fit rounded-[14px] mt-0.5 shadow-lg shadow-orange-500/20">
-                <AlertTriangle className="h-5 w-5 text-white" />
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm font-black text-[#855e00] uppercase tracking-tight">Cuidado!</p>
-                <p className="text-sm font-semibold text-[#855e00]/80 leading-relaxed">
-                  Golpes de PIX estão em alta. Verifique a autenticidade das solicitações recebidas e não compartilhe informações pessoais ou financeiras. Proteja-se!
-                </p>
-              </div>
-            </div>
-
-            {/* Submit Button */}
             <Button
-              onClick={() => setStep("confirm")}
-              className="w-full h-16 bg-[#f97316] hover:bg-[#c2410c] text-white rounded-3xl font-black text-xl shadow-2xl shadow-[#f97316]/20 transition-all active:scale-95 group"
+              onClick={async () => {
+                if (!recipientName && !isSearching) {
+                  if (type === "qrcode" || type === "copia_cola") await handleDecodePix(pixCode);
+                  else await performSearch(identifier);
+                  if (!recipientName) {
+                    toast.error("Recebedor não localizado. Verifique a chave ou o código.");
+                    return;
+                  }
+                }
+                if (parseFloat(value.replace(/\D/g, "")) <= 0) {
+                  toast.error("O valor deve ser maior que zero.");
+                  return;
+                }
+                setStep("confirm");
+              }}
+              disabled={isSearching}
+              className="w-full h-14 bg-[#0c0a09] hover:bg-[#ff7711] text-white rounded-[5px] font-black text-sm uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 group"
             >
-              Próximo
-              <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-1 transition-transform" />
+              {isSearching ? "VALIDANDO DADOS..." : "PRÓXIMO PASSO"}
+              <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Button>
           </div>
-        ) : (
-          <div className="space-y-10 max-w-2xl bg-white p-12 rounded-[56px] shadow-sm border border-neutral-50 shadow-black/5">
+        ) : step === "confirm" ? (
+          <div className="space-y-8 max-w-2xl bg-white p-12 rounded-[5px] shadow-xl shadow-black/5 border border-neutral-100">
             <div className="space-y-8">
-              <div className="p-8 bg-neutral-50 rounded-[40px] space-y-6">
-                <div>
-                  <p className="text-xl font-black text-[#f97316]">João Pereira da Silva</p>
-                  <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mt-1">Nome do Beneficiário</p>
+              <div className="p-10 bg-[#fffbeb] rounded-[5px] border border-neutral-100 space-y-8">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-[11px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-3 opacity-60">Recebedor</p>
+                    <p className="text-3xl font-black text-[#0c0a09] uppercase tracking-tighter">
+                      {isSearching ? "Buscando..." : (recipientName || "Não Informado")}
+                    </p>
+                  </div>
+                  <Badge className="bg-[#0c0a09] text-white px-4 py-1.5 font-black text-[11px] uppercase tracking-widest rounded-[5px]">{type?.toUpperCase()}</Badge>
                 </div>
-                <div>
-                  <p className="text-lg font-bold text-[#0c0a09]">123-458-789-10</p>
-                  <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mt-1">CPF/CNPJ</p>
+
+                <Separator className="bg-neutral-200/30" />
+
+                <div className="grid grid-cols-1 gap-8">
+                  <div className="max-w-full overflow-hidden">
+                    <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-2 opacity-60">Chave Pix</p>
+                    <p className="text-[11px] font-medium text-[#0c0a09] font-mono break-all leading-tight tracking-tight bg-white/50 p-3 rounded-md border border-black/5">
+                      {pixCode || identifier}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-8">
+                    {recipientDocument && (
+                      <div>
+                        <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-2 opacity-60">Documento</p>
+                        <p className="text-base font-black text-[#0c0a09] tracking-tighter">{recipientDocument}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-2 opacity-60">Instituição</p>
+                      <p className="text-base font-black text-[#0c0a09] uppercase tracking-tighter">
+                        {isSearching ? "..." : (recipientBank || "Outro Banco")}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-lg font-bold text-[#0c0a09]">Banco Bradesco</p>
-                  <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mt-1">Instituição</p>
-                </div>
-                <div>
-                  <p className="text-2xl font-black text-[#f97316]">{formatCurrency(value) || "R$ 0,00"}</p>
-                  <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mt-1">Valor da Transferência</p>
+
+                <div className="pt-6 border-t border-neutral-200/30">
+                  <p className="text-[11px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-3 opacity-60">Valor Total</p>
+                  <p className="text-6xl font-black text-[#ff7711] tracking-tighter">{formatCurrency(value)}</p>
                 </div>
               </div>
 
-              <div className="bg-[#fff9e6] border border-[#ffecb3] p-6 rounded-[32px] flex gap-5 items-center">
-                <div className="w-8 h-8 rounded-full bg-[#ff9800] flex items-center justify-center text-white shrink-0">
-                  <span className="font-bold text-xl">!</span>
+              <div className="bg-[#fff9e6] border border-[#ffecb3] p-6 rounded-[5px] flex gap-5 items-center">
+                <div className="w-10 h-10 rounded-[5px] bg-[#ff9800] flex items-center justify-center text-white shrink-0 shadow-lg shadow-orange-500/20">
+                  <AlertTriangle className="h-5 w-5" />
                 </div>
-                <p className="text-sm font-semibold text-[#855e00]/90">
-                  Confirme os dados do quem vai receber antes de pagar
+                <p className="text-xs font-black text-[#855e00] uppercase tracking-tight leading-relaxed">
+                  Confirme atentamente os dados do recebedor e o valor antes de confirmar o pagamento via SMS.
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <h3 className="text-xl font-bold text-[#f97316]">Confirmar Pagamento?</h3>
-                <Button className="w-full h-16 bg-[#f97316] hover:bg-[#c2410c] text-white rounded-3xl font-black text-xl shadow-2xl shadow-[#f97316]/20 transition-all active:scale-95">
-                  CONFIRMAR PAGAMENTO
+              <div className="pt-4">
+                <Button
+                  onClick={handleRequestSms}
+                  disabled={isLoadingTransfer}
+                  className="w-full h-20 bg-[#0c0a09] hover:bg-[#ff7711] text-white rounded-[5px] font-black text-xl uppercase tracking-widest shadow-2xl shadow-black/20 transition-all active:scale-95"
+                >
+                  {isLoadingTransfer ? "PROCESSANDO..." : "AUTORIZAR COM SMS"}
                 </Button>
               </div>
+            </div>
+          </div>
+        ) : step === "sms" ? (
+          <div className="space-y-8 max-w-2xl bg-white p-12 rounded-[5px] shadow-xl shadow-black/5 border border-neutral-100 text-center flex flex-col items-center">
+            <div className="w-20 h-20 bg-[#fffbeb] rounded-full flex items-center justify-center text-[#ff7711] mb-4">
+              <Smartphone className="h-10 w-10 animate-bounce" />
+            </div>
+            <div className="space-y-4 mb-10">
+              <h2 className="text-4xl font-black text-[#0c0a09] uppercase tracking-tighter">Validação de Segurança</h2>
+              <p className="text-base font-bold text-neutral-400 uppercase tracking-widest">
+                Enviamos um código para o seu celular final
+                <span className="text-[#ff7711] ml-2">
+                  {userPhone ? `(**) ****-${userPhone.slice(-4)}` : "(**) ****-****"}
+                </span>
+              </p>
+            </div>
+
+            <div className="w-full max-w-xs space-y-6">
+              <Input
+                value={smsCode}
+                onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").substring(0, 6))}
+                placeholder="0 0 0 0 0"
+                className="h-20 text-center font-black text-4xl tracking-[0.5em] border-2 border-neutral-100 rounded-[5px] focus:border-[#ff7711] bg-neutral-50/50"
+              />
+              <div className="flex flex-col gap-4">
+                <Button
+                  disabled={smsCode.length < 5 || isLoadingTransfer}
+                  onClick={handleFinalizeTransfer}
+                  className="w-full h-16 bg-[#0c0a09] hover:bg-[#ff7711] text-white rounded-[5px] font-black text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all disabled:opacity-50"
+                >
+                  {isLoadingTransfer ? "PROCESSANDO..." : "CONFIRMAR TRANSFERÊNCIA"}
+                </Button>
+                <button className="text-[10px] font-black text-[#ff7711] uppercase tracking-widest hover:underline">Reenviar Código em 00:59</button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-10 max-w-2xl bg-white p-12 rounded-[5px] shadow-2xl shadow-black/5 border border-neutral-100 flex flex-col items-center">
+            <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-green-500 mb-2 border-4 border-white shadow-xl">
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+
+            <div className="text-center space-y-2">
+              <h2 className="text-3xl font-black text-[#0c0a09] uppercase tracking-tighter">Pix Enviado com Sucesso!</h2>
+              <p className="text-sm font-bold text-neutral-400 uppercase tracking-widest">A transferência foi processada e já está na conta do recebedor.</p>
+            </div>
+
+            <div className="w-full bg-[#f9f9f9] rounded-[5px] p-8 space-y-8 relative overflow-hidden border border-neutral-100">
+              <div className="absolute top-0 right-0 p-4 opacity-10">
+                <Diamond className="h-24 w-24" />
+              </div>
+
+              <div className="space-y-6 relative z-10">
+                <div className="flex justify-between items-center border-b border-neutral-200 pb-4">
+                  <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Valor da Transferência</span>
+                  <span className="text-4xl font-black text-[#ff7711] tracking-tighter">{formatCurrency(value)}</span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Para quem enviou</p>
+                    <p className="text-base font-black text-[#0c0a09] uppercase leading-none">{recipientName}</p>
+                    <p className="text-[11px] font-bold text-neutral-500 uppercase">{recipientBank}</p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 border-t border-neutral-100 pt-6">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Data e Hora</p>
+                      <p className="text-xs font-black text-[#0c0a09] uppercase">{new Date().toLocaleDateString('pt-BR')} - {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                    </div>
+                    <div className="space-y-1 text-right">
+                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">ID da Transação</p>
+                      <p className="text-xs font-black text-[#0c0a09] font-mono">{transactionId || "G8PAY329KXM0"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full flex flex-row gap-4 items-center">
+              <Button
+                onClick={handlePrintReceipt}
+                className="flex-1 h-20 bg-[#ff7711] hover:bg-orange-600 text-white rounded-md font-black text-lg shadow-lg shadow-[#ff7711]/20 transition-all active:scale-95 flex items-center justify-center gap-4"
+              >
+                <Download className="h-8 w-8" />
+                BAIXAR COMPROVANTE
+              </Button>
+              <Link href="/dashboard/pix" className="flex-1">
+                <Button variant="outline" className="w-full h-20 border-2 border-neutral-100 hover:border-[#ff7711] hover:text-[#ff7711] text-neutral-600 rounded-md font-black text-lg uppercase tracking-tighter">
+                  VOLTAR PARA ÁREA PIX
+                </Button>
+              </Link>
             </div>
           </div>
         )}
@@ -328,44 +801,44 @@ function PixPagarContent() {
 
       {/* Right Column */}
       <div className="w-[380px] shrink-0 space-y-8">
-        <Card className="rounded-[48px] border-0 shadow-2xl shadow-black/5 bg-[#f97316] overflow-hidden relative group cursor-pointer h-[420px]">
+        <Card className="rounded-md border-0 shadow-2xl shadow-black/10 bg-[#ff7711] overflow-hidden relative group cursor-pointer h-[400px]">
           <div className="absolute top-0 right-0 w-48 h-48 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
           <div className="p-10 space-y-4 relative z-10 text-white">
-            <h3 className="text-3xl font-black leading-tight max-w-[220px]">
-              Completa para todos os perfis
+            <h3 className="text-3xl font-black leading-tight max-w-[220px] uppercase">
+              Seu PIX mais rápido
             </h3>
             <p className="text-sm font-medium text-white/80 leading-relaxed max-w-[200px]">
-              Milhares de produtos, descontos de até 50% e cupons exclusivos.
+              Use chaves salvas e favoritos para transferir em segundos.
             </p>
-            <button className="text-xs font-black text-white border-b-2 border-white pb-0.5 mt-8 hover:text-[#f97316] hover:border-[#f97316] transition-colors">
-              VER PRODUTO
+            <button className="text-[10px] font-black text-white border-b-2 border-white pb-0.5 mt-8 hover:text-white/70 transition-colors uppercase tracking-widest">
+              SAIBA MAIS
             </button>
           </div>
           <div className="absolute bottom-0 right-0 w-[240px] h-full flex items-end justify-end translate-y-10 group-hover:translate-y-4 transition-transform duration-700">
             <Image
               src="https://api.dicebear.com/7.x/avataaars/svg?seed=shopping"
               alt="Profile Premium"
-              width={200}
-              height={200}
-              className="object-contain relative z-10 scale-150"
+              width={180}
+              height={180}
+              className="object-contain relative z-10 scale-125"
             />
           </div>
         </Card>
 
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-[#f97316]">Ajuda</h2>
+          <h2 className="text-2xl font-black text-[#0c0a09] uppercase tracking-tight">Ajuda</h2>
           <div className="flex gap-4">
-            <button className="flex-1 flex flex-col items-center justify-center p-8 bg-[#f5f5f5] rounded-[40px] hover:bg-white hover:shadow-2xl transition-all border border-transparent hover:border-neutral-200 group">
-              <div className="w-14 h-14 bg-[#f97316] rounded-2xl flex items-center justify-center mb-4 text-white group-hover:rotate-12 group-hover:scale-110 transition-all">
-                <HelpCircle className="h-7 w-7" />
+            <button className="flex-1 flex flex-col items-center justify-center p-6 bg-white rounded-md hover:shadow-xl transition-all border border-neutral-100 group">
+              <div className="w-10 h-10 bg-[#fffbeb] rounded-md flex items-center justify-center mb-4 text-[#ff7711] group-hover:scale-110 transition-all">
+                <HelpCircle className="h-5 w-5" />
               </div>
-              <span className="font-black text-sm text-[#f97316] uppercase tracking-widest">Suporte</span>
+              <span className="font-black text-[9px] text-[#0c0a09] uppercase tracking-widest">Suporte</span>
             </button>
-            <button className="flex-1 flex flex-col items-center justify-center p-8 bg-[#f5f5f5] rounded-[40px] hover:bg-white hover:shadow-2xl transition-all border border-transparent hover:border-neutral-200 group">
-              <div className="w-14 h-14 bg-[#f97316] rounded-2xl flex items-center justify-center mb-4 text-white group-hover:-rotate-12 group-hover:scale-110 transition-all">
-                <MessageCircle className="h-7 w-7" />
+            <button className="flex-1 flex flex-col items-center justify-center p-6 bg-white rounded-md hover:shadow-xl transition-all border border-neutral-100 group">
+              <div className="w-10 h-10 bg-[#ff7711] rounded-md flex items-center justify-center mb-4 text-white group-hover:scale-110 transition-all">
+                <MessageCircle className="h-5 w-5" />
               </div>
-              <span className="font-black text-sm text-[#f97316] uppercase tracking-widest">Chat 24H</span>
+              <span className="font-black text-[9px] text-[#0c0a09] uppercase tracking-widest">Chat 24H</span>
             </button>
           </div>
         </div>
