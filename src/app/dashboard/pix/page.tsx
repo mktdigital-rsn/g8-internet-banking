@@ -121,7 +121,7 @@ export default function PixPage() {
                           value={pixKey}
                           onChange={(e) => handleKeyChange(e.target.value)}
                           onKeyDown={(e) => { if (e.key === 'Enter') handleContinue(); }}
-                          className="h-14 bg-white border-neutral-100 rounded-2xl pl-6 pr-12 font-bold text-base focus:ring-4 focus:ring-[#ff7711]/10 transition-all shadow-sm text-[#ff7711]"
+                          className="h-14 bg-white border-neutral-100 rounded-[5px] pl-6 pr-12 font-bold text-base focus:ring-4 focus:ring-[#ff7711]/10 transition-all shadow-sm text-[#ff7711]"
                         />
                         {pixKey && (
                           <button 
@@ -135,7 +135,7 @@ export default function PixPage() {
                       <Button 
                         disabled={!keyType}
                         onClick={handleContinue}
-                        className="h-14 px-10 bg-[#0c0a09] hover:bg-[#ff7711] text-white rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl shadow-black/10 transition-all active:scale-95 disabled:opacity-30 disabled:bg-neutral-400"
+                        className="h-14 px-10 bg-[#0c0a09] hover:bg-[#ff7711] text-white rounded-[5px] font-black uppercase tracking-widest text-[10px] shadow-xl shadow-black/10 transition-all active:scale-95 disabled:opacity-30 disabled:bg-neutral-400"
                       >
                         Prosseguir
                       </Button>
