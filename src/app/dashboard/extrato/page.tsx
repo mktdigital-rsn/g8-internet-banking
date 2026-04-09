@@ -285,7 +285,7 @@ export default function ExtratoGeralPage() {
     };
 
     return (
-        <div className="p-6 xl:p-10 flex flex-row gap-8 xl:gap-12 h-full overflow-y-auto w-full no-scrollbar bg-[#f8f9fa] relative">
+        <div className="p-4 md:p-6 flex flex-col gap-8 h-full overflow-y-auto w-full no-scrollbar bg-[#f8f9fa] relative px-4 md:px-8 xl:px-12">
             {/* Receipt Modal Overlay */}
             {selectedTransaction && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-500 overflow-y-auto">
@@ -428,108 +428,156 @@ export default function ExtratoGeralPage() {
             {/* Main Content Area */}
             <div className="flex-1 space-y-12 min-w-0">
                 {/* Header Section */}
-                <div className="flex items-end justify-between px-2">
+                <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 px-2">
                     <div className="space-y-1">
-                        <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.25em] rounded-sm">Fluxo de Caixa</Badge>
-                        <h1 className="text-4xl font-black tracking-tighter text-[#0c0a09] leading-none">Minha Movimentação</h1>
-                        <p className="text-sm text-neutral-400 font-bold">Consulte e exporte seu histórico bancário detalhado.</p>
+                        <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-2 md:px-3 py-0.5 md:py-1 font-black text-[8px] md:text-[10px] uppercase tracking-[0.25em] rounded-sm">Fluxo de Caixa</Badge>
+                        <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-[#0c0a09] leading-none">Minha Movimentação</h1>
+                        <p className="text-xs md:text-sm text-neutral-400 font-bold">Consulte e exporte seu histórico bancário detalhado.</p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto">
                         <Button
                             onClick={() => handleExport('pdf')}
                             variant="outline"
-                            className="h-11 border-neutral-100 bg-white rounded-sm px-5 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all active:scale-95 text-neutral-400 hover:text-black"
+                            className="flex-1 sm:flex-none h-10 md:h-11 border-neutral-100 bg-white rounded-sm px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all active:scale-95 text-neutral-400 hover:text-black"
                         >
                             <Download className="h-4 w-4 text-[#f97316]" />
-                            Exportar PDF
+                            PDF
                         </Button>
                         <Button
                             onClick={() => handleExport('xls')}
-                            className="h-11 bg-[#f97316] hover:bg-[#c2410c] text-white rounded-sm px-5 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all active:scale-95"
+                            className="flex-1 sm:flex-none h-10 md:h-11 bg-[#f97316] hover:bg-[#c2410c] text-white rounded-sm px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all active:scale-95"
                         >
                             <Download className="h-4 w-4" />
-                            Planilha XLS
+                            Planilha
                         </Button>
                     </div>
                 </div>
-
-                {/* Statistics & Chart */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <Card className="bg-[#0c0a09] border-0 rounded-md p-8 flex items-center gap-6 shadow-2xl relative overflow-hidden group cursor-pointer transition-all duration-500">
+                   {/* Stats & Support Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <Card className="bg-[#0c0a09] border-0 rounded-md p-6 md:p-8 flex items-center gap-4 md:gap-6 shadow-2xl relative overflow-hidden group cursor-pointer transition-all duration-500">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[#f97316]/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-                        <div className="w-14 h-14 bg-[#f97316]/10 rounded-md flex items-center justify-center text-[#f97316] border border-white/5 shadow-inner shrink-0 group-hover:rotate-12 transition-transform">
-                            <ArrowDownLeft className="h-7 w-7 stroke-[2.5]" />
+                        <div className="w-12 h-12 md:w-14 md:h-14 bg-[#f97316]/10 rounded-md flex items-center justify-center text-[#f97316] border border-white/5 shadow-inner shrink-0 group-hover:rotate-12 transition-transform">
+                            <ArrowDownLeft className="h-6 w-6 md:h-7 md:w-7 stroke-[2.5]" />
                         </div>
-                        <div className="space-y-1 relative z-10">
-                            <p className="text-[9px] text-white/30 font-black uppercase tracking-[0.3em]">Total Entradas</p>
-                            <p className="text-3xl font-black text-white font-mono tracking-tighter">{formatCurrency(totals.in)}</p>
+                        <div className="space-y-0.5 md:space-y-1 relative z-10">
+                            <p className="text-[8px] md:text-[9px] text-white/30 font-black uppercase tracking-[0.3em]">Total Entradas</p>
+                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter">{formatCurrency(totals.in)}</p>
                         </div>
                     </Card>
-                    <Card className="bg-[#0c0a09] border-0 rounded-md p-8 flex items-center gap-6 shadow-2xl relative overflow-hidden group cursor-pointer transition-all duration-500">
+                    <Card className="bg-[#0c0a09] border-0 rounded-md p-6 md:p-8 flex items-center gap-4 md:gap-6 shadow-2xl relative overflow-hidden group cursor-pointer transition-all duration-500">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-[#f97316]/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-                        <div className="w-14 h-14 bg-[#f97316]/10 rounded-md flex items-center justify-center text-[#f97316] border border-white/5 shadow-inner shrink-0 group-hover:-rotate-12 transition-transform">
-                            <ArrowUpRight className="h-7 w-7 stroke-[2.5]" />
+                        <div className="w-12 h-12 md:w-14 md:h-14 bg-[#f97316]/10 rounded-md flex items-center justify-center text-[#f97316] border border-white/5 shadow-inner shrink-0 group-hover:-rotate-12 transition-transform">
+                            <ArrowUpRight className="h-6 w-6 md:h-7 md:w-7 stroke-[2.5]" />
                         </div>
-                        <div className="space-y-1 relative z-10">
-                            <p className="text-[9px] text-white/30 font-black uppercase tracking-[0.3em]">Total Saídas</p>
-                            <p className="text-3xl font-black text-white font-mono tracking-tighter">{formatCurrency(totals.out)}</p>
+                        <div className="space-y-0.5 md:space-y-1 relative z-10">
+                            <p className="text-[8px] md:text-[9px] text-white/30 font-black uppercase tracking-[0.3em]">Total Saídas</p>
+                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter">{formatCurrency(totals.out)}</p>
                         </div>
                     </Card>
-                    <Card className="col-span-1 lg:col-span-2 rounded-md border-0 shadow-lg bg-white p-8 space-y-4 relative overflow-hidden border border-neutral-100 flex flex-col justify-center">
-                        <div className="flex items-center justify-between">
-                            <h4 className="text-[9px] font-black uppercase tracking-[0.3em] text-neutral-400">Dica de Segurança</h4>
-                            <ShieldAlert className="h-4 w-4 text-[#f97316]" />
+                    <Card className="rounded-md border-0 shadow-2xl bg-[#f97316] p-6 md:p-8 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex items-center gap-6">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-1000" />
+                        <div className="w-12 h-12 md:w-14 md:h-14 bg-white/10 rounded-md flex items-center justify-center text-white border border-white/20 shadow-inner group-hover:scale-110 transition-transform shrink-0">
+                            <AlertCircle className="h-6 w-6 md:h-7 md:w-7" />
                         </div>
-                        <p className="text-sm font-bold text-[#0c0a09] leading-relaxed italic">&ldquo;Nunca compartilhe sua senha ou código de segurança do G8Pay com terceiros, nem por telefone ou chat.&rdquo;</p>
-                        <div className="pt-3 border-t border-neutral-50">
-                            <div className="flex items-center gap-3">
-                                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                                <span className="text-[8px] font-black uppercase tracking-widest text-neutral-300">Conexão criptografada SSL/TLS 1.3</span>
-                            </div>
+                        <div className="min-w-0 flex-1 space-y-2 relative z-10">
+                            <h3 className="text-lg md:text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap">Suporte 24h</h3>
+                            <p className="text-[9px] font-bold text-white/60 leading-none tracking-widest uppercase">Central de Assistência G8</p>
+                            <button className="text-[9px] font-black underline underline-offset-4 uppercase tracking-[0.2em] hover:text-white/70 transition-colors">Contatar Agora</button>
                         </div>
                     </Card>
                 </div>
 
+                {/* Analysis Chart Area */}
+                <Card className="rounded-md border border-neutral-100 bg-white p-6 md:p-10 shadow-sm relative overflow-hidden flex flex-col h-[350px] transition-all hover:shadow-lg">
+                    <div className="flex items-center justify-between mb-8">
+                        <div className="space-y-1">
+                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.4em]">Visão Geral</p>
+                            <h4 className="text-xl font-black text-[#0c0a09] tracking-tighter uppercase">ANÁLISE DE VOLUMES</h4>
+                        </div>
+                        <Tabs value={chartPeriod} onValueChange={(val: any) => setChartPeriod(val)} className="w-fit">
+                            <TabsList className="bg-neutral-50 rounded-sm p-0.5 h-8 gap-0.5 border border-neutral-100">
+                                <TabsTrigger value="day" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316] transition-all font-sans">Dia</TabsTrigger>
+                                <TabsTrigger value="week" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316] transition-all font-sans">Semana</TabsTrigger>
+                                <TabsTrigger value="month" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316] transition-all font-sans">Mês</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
+                    <div className="flex-1 w-full min-h-0">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <defs>
+                                    <linearGradient id="colorEntry" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                    </linearGradient>
+                                    <linearGradient id="colorExit" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis
+                                    dataKey="name"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
+                                    dy={10}
+                                />
+                                <YAxis
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
+                                />
+                                <Tooltip
+                                    contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 'bold', fontSize: '11px' }}
+                                    labelFormatter={(label, payload) => payload[0]?.payload?.full || label}
+                                    formatter={(value: any) => [formatCurrency(value), ""]}
+                                />
+                                <Area type="monotone" dataKey="entries" stroke="#10b981" fillOpacity={1} fill="url(#colorEntry)" strokeWidth={4} activeDot={{ r: 6 }} />
+                                <Area type="monotone" dataKey="exits" stroke="#ef4444" fillOpacity={1} fill="url(#colorExit)" strokeWidth={4} activeDot={{ r: 6 }} />
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                </Card>
+
                 {/* Filter & List Area */}
-                <div className="bg-white/60 backdrop-blur-md rounded-md p-8 border border-white/40 shadow-xl space-y-10">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 px-2">
-                        <div className="flex items-center gap-4 flex-1">
-                            <Tabs defaultValue="all" onValueChange={setFilter} className="w-fit">
-                                <TabsList className="bg-neutral-100/50 rounded-md p-1 h-12 gap-1 border border-neutral-200/20">
-                                    <TabsTrigger value="all" className="rounded-sm h-full px-6 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#f97316] transition-all">Todas</TabsTrigger>
-                                    <TabsTrigger value="in" className="rounded-sm h-full px-6 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-green-600 transition-all">Entrada</TabsTrigger>
-                                    <TabsTrigger value="out" className="rounded-sm h-full px-6 text-[10px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-red-500 transition-all">Saída</TabsTrigger>
+                <div className="bg-white rounded-md p-4 md:p-8 border border-neutral-100 shadow-sm space-y-10">
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 pb-6 border-b border-neutral-100">
+                        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 flex-wrap w-full">
+                            <Tabs value={filter} onValueChange={(val: any) => setFilter(val)} className="w-full sm:w-auto flex justify-center">
+                                <TabsList className="bg-neutral-100/50 rounded-md p-0.5 h-10 gap-0.5 border border-neutral-200/20">
+                                    <TabsTrigger value="all" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#f97316] transition-all font-sans">Todas</TabsTrigger>
+                                    <TabsTrigger value="in" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-green-600 transition-all font-sans">Entrada</TabsTrigger>
+                                    <TabsTrigger value="out" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-red-500 transition-all font-sans">Saída</TabsTrigger>
                                 </TabsList>
                             </Tabs>
 
-                            <div className="flex items-center gap-2 bg-neutral-100/50 rounded-md p-1 border border-neutral-200/20">
-                                <div className="relative group">
-                                    <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
+                            <div className="flex items-center gap-1 md:gap-2 bg-neutral-100/50 rounded-md p-0.5 border border-neutral-200/20 w-fit mx-auto md:mx-0 overflow-x-auto no-scrollbar">
+                                <div className="relative group shrink-0">
+                                    <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400 font-black" />
                                     <Input
                                         type="date"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        className="h-10 w-[140px] bg-transparent border-0 pl-9 text-[10px] font-black uppercase focus-visible:ring-0 cursor-pointer"
+                                        className="h-8 md:h-9 w-[110px] md:w-[130px] bg-transparent border-0 pl-7 md:pl-8 text-[8px] md:text-[9px] font-black uppercase focus-visible:ring-0 cursor-pointer"
                                     />
                                 </div>
-                                <span className="text-neutral-300">/</span>
-                                <div className="relative group">
-                                    <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-400" />
+                                <span className="text-neutral-300 text-[10px]">/</span>
+                                <div className="relative group shrink-0">
+                                    <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400" />
                                     <Input
                                         type="date"
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
-                                        className="h-10 w-[140px] bg-transparent border-0 pl-9 text-[10px] font-black uppercase focus-visible:ring-0 cursor-pointer"
+                                        className="h-8 md:h-9 w-[110px] md:w-[130px] bg-transparent border-0 pl-7 md:pl-8 text-[8px] md:text-[9px] font-black uppercase focus-visible:ring-0 cursor-pointer"
                                     />
                                 </div>
                             </div>
                         </div>
-
-       
                     </div>
 
                     <div className="space-y-4">
-                        <div className="grid grid-cols-12 px-6 pb-2 text-[9px] font-black text-neutral-500 uppercase tracking-[0.3em] gap-4">
+                        <div className="hidden sm:grid grid-cols-12 px-6 pb-2 text-[9px] font-black text-neutral-500 uppercase tracking-[0.3em] gap-4">
                             <span className="col-span-5 flex items-center gap-2"><FileText className="h-3 w-3" /> Identificação</span>
                             <span className="col-span-3 flex items-center justify-center gap-2 text-center"><ArrowUpDown className="h-3 w-3" /> Natureza / Método</span>
                             <span className="col-span-2 flex items-center justify-end gap-2 text-right"><CreditCard className="h-3 w-3" /> Valor Final</span>
@@ -580,36 +628,43 @@ export default function ExtratoGeralPage() {
                                         <div
                                             key={idx}
                                             onClick={() => setSelectedTransaction(t)}
-                                            className="grid grid-cols-12 items-center px-6 py-5 bg-white hover:bg-neutral-50/50 rounded-md border border-neutral-50 hover:border-neutral-200 hover:shadow-xl transition-all duration-300 group cursor-pointer gap-6"
+                                            className="flex flex-col sm:grid sm:grid-cols-12 items-start sm:items-center px-6 py-6 sm:py-5 bg-white hover:bg-neutral-50/50 rounded-md border border-neutral-50 hover:border-neutral-200 hover:shadow-xl transition-all duration-300 group cursor-pointer gap-4 sm:gap-6"
                                         >
-                                            <div className="flex items-center gap-4 col-span-5 min-w-0">
-                                                <div className={`w-12 h-12 shrink-0 rounded-md flex items-center justify-center p-3 transition-all ${t.tipo === 'CREDITO' ? 'text-green-500 bg-green-50' : 'text-red-500 bg-red-50'} group-hover:scale-110`}>
-                                                    <Icon className="h-full w-full stroke-[2.5]" />
+                                            <div className="flex items-center gap-3 md:gap-4 col-span-5 min-w-0 w-full">
+                                                <div className={`w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-[5px] flex items-center justify-center p-2.5 transition-all ${t.tipo === 'CREDITO' ? 'text-green-500 bg-green-50' : 'text-[#f97316] bg-neutral-50' } group-hover:scale-110`}>
+                                                    {t.tipo === 'CREDITO' ? <PlusCircle className="h-full w-full stroke-[2.5]" /> : <MinusCircle className="h-full w-full stroke-[2.5]" />}
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="font-black text-sm text-[#0c0a09] leading-tight mb-1 truncate uppercase font-sans">{description}</p>
-                                                    <p className="text-[9px] font-black text-neutral-400 opacity-60 uppercase tracking-widest"># {t.idDoBancoLiquidante?.substring(0, 12) || "TRANSACTION"}</p>
+                                                    <p className="font-black text-xs md:text-sm text-[#0c0a09] leading-tight mb-1 truncate uppercase">{description}</p>
+                                                    <p className="text-[8px] md:text-[9px] font-black text-neutral-400 opacity-60 uppercase tracking-widest truncate">ID: {t.codigoDeIdentificacao || t.idDoBancoLiquidante}</p>
                                                 </div>
                                             </div>
 
-                                            <div className="col-span-3 flex flex-col items-center">
+                                            <div className="hidden sm:flex col-span-3 flex-col items-center font-sans">
                                                 <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-[0.15em] border-0 px-3 py-1.5 h-7 flex items-center justify-center w-full max-w-[140px] rounded-sm ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50/50' : 'text-neutral-400 bg-neutral-100/50'}`}>
                                                     {t.metodoFormatado}
                                                 </Badge>
                                             </div>
 
-                                            <div className="col-span-2 text-right">
+                                            <div className="hidden sm:block col-span-2 text-right">
                                                 <p className={`font-black text-lg font-mono tracking-tighter ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-red-500'}`}>
                                                     {t.tipo === 'CREDITO' ? '+' : '-'} {t.valorFormatado}
                                                 </p>
                                             </div>
 
-                                            <div className="col-span-2 text-right flex items-center justify-end gap-3 text-neutral-300 group-hover:text-[#f97316] transition-colors">
-                                                <div className="text-right shrink-0">
-                                                    <p className="text-xs font-black text-[#0c0a09] font-mono">{dateParts[0].split("-").reverse().join("/")}</p>
-                                                    <p className="text-[9px] font-bold tracking-widest">{dateParts[1]}</p>
+                                            <div className="flex sm:col-span-2 items-center justify-between sm:justify-end gap-3 w-full sm:w-auto text-neutral-300 group-hover:text-[#f97316] transition-colors border-t sm:border-t-0 border-neutral-50 pt-3 sm:pt-0">
+                                                <div className="sm:hidden">
+                                                    <Badge variant="outline" className={`text-[8px] font-black uppercase tracking-[0.15em] border-0 px-2 py-1 rounded-sm ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50/50' : 'text-neutral-400 bg-neutral-100/50'}`}>
+                                                        {t.metodoFormatado}
+                                                    </Badge>
                                                 </div>
-                                                <ChevronRight className="h-4 w-4" />
+                                                <div className="text-right flex items-center gap-2 md:gap-3">
+                                                    <div className="text-right shrink-0">
+                                                        <p className="text-[9px] md:text-xs font-black text-[#0c0a09] font-mono">{dateParts[0].split("-").reverse().join("/")}</p>
+                                                        <p className="text-[7px] md:text-[9px] font-bold tracking-widest">{dateParts[1]}</p>
+                                                    </div>
+                                                    <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -618,79 +673,6 @@ export default function ExtratoGeralPage() {
                         )}
                     </div>
                 </div>
-            </div>
-
-            {/* Support Info Sidebar */}
-            <div className="w-[320px] shrink-0 space-y-6 pb-10">
-                <Card className="rounded-md border-0 shadow-2xl bg-[#0c0a09] p-8 text-white relative overflow-hidden group cursor-pointer min-h-[280px] border border-white/5">
-                    <div className="absolute top-0 right-0 w-40 h-40 bg-[#f97316]/5 rounded-full -mr-20 -mt-20 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-                    <div className="relative z-10 flex flex-col h-full justify-between space-y-6">
-                        <div className="space-y-4">
-                            <div className="w-14 h-14 bg-white/5 rounded-md flex items-center justify-center text-[#f97316] border border-white/10 shadow-inner group-hover:scale-110 transition-transform">
-                                <AlertCircle className="h-7 w-7" />
-                            </div>
-                            <div className="space-y-2">
-                                <h3 className="text-2xl font-black leading-tight tracking-tighter text-white">Central de Assistência</h3>
-                                <p className="text-xs font-medium text-white/40 leading-relaxed">Precisa de suporte com alguma transação? Acione nosso time de elite agora.</p>
-                            </div>
-                        </div>
-                        <button className="w-full bg-white text-[#0c0a09] hover:bg-[#f97316] hover:text-white transition-all duration-500 rounded-md h-12 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-black/20">
-                            Contatar Agora
-                        </button>
-                    </div>
-                </Card>
-
-                <Card className="rounded-md border border-neutral-100 bg-white p-6 shadow-sm relative overflow-hidden flex flex-col h-[450px] transition-all hover:shadow-lg">
-                    <div className="flex items-center justify-between mb-4">
-                        <div className="space-y-0.5">
-                            <p className="text-[8px] text-neutral-400 font-black uppercase tracking-[0.4em]">Fluxo de Caixa</p>
-                            <h4 className="text-sm font-black text-[#0c0a09] tracking-tighter uppercase">ANÁLISE DE VOLUMES</h4>
-                        </div>
-                        <Tabs value={chartPeriod} onValueChange={(val: any) => setChartPeriod(val)} className="w-fit">
-                            <TabsList className="bg-neutral-50 rounded-sm p-0.5 h-7 gap-0.5 border border-neutral-100">
-                                <TabsTrigger value="day" className="rounded-xs h-full px-2 text-[7px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316] transition-all">Dia</TabsTrigger>
-                                <TabsTrigger value="week" className="rounded-xs h-full px-2 text-[7px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316] transition-all">Sem</TabsTrigger>
-                                <TabsTrigger value="month" className="rounded-xs h-full px-2 text-[7px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316] transition-all">Mês</TabsTrigger>
-                            </TabsList>
-                        </Tabs>
-                    </div>
-                    <div className="flex-1 w-full min-h-0 py-2">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorEntry" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="colorExit" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis
-                                    dataKey="name"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 9, fontWeight: 'bold', fill: '#94a3b8' }}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 9, fontWeight: 'bold', fill: '#94a3b8' }}
-                                />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 'bold', fontSize: '10px' }}
-                                    labelFormatter={(label, payload) => payload[0]?.payload?.full || label}
-                                    formatter={(value: any) => [formatCurrency(value), ""]}
-                                />
-                                <Area type="monotone" dataKey="entries" stroke="#10b981" fillOpacity={1} fill="url(#colorEntry)" strokeWidth={3} activeDot={{ r: 4 }} />
-                                <Area type="monotone" dataKey="exits" stroke="#ef4444" fillOpacity={1} fill="url(#colorExit)" strokeWidth={3} activeDot={{ r: 4 }} />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </Card>
             </div>
         </div>
     );

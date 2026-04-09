@@ -3,25 +3,34 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-interface SliderProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'defaultValue'> {
+interface SliderProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'defaultValue' | 'value'> {
   onValueChange?: (value: number[]) => void;
   defaultValue?: number[];
+  value?: number[];
   max?: number;
   min?: number;
   step?: number;
 }
 
 const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
-  ({ className, onValueChange, defaultValue, max = 100, min = 0, step = 1, ...props }, ref) => {
-    const [value, setValue] = React.useState(defaultValue?.[0] ?? min);
+  ({ className, onValueChange, defaultValue, value: externalValue, max = 100, min = 0, step = 1, ...props }, ref) => {
+    const [internalValue, setInternalValue] = React.useState(externalValue?.[0] ?? defaultValue?.[0] ?? min);
+
+    React.useEffect(() => {
+      if (externalValue !== undefined) {
+        setInternalValue(externalValue[0]);
+      }
+    }, [externalValue]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const newValue = parseInt(e.target.value);
-      setValue(newValue);
+      if (externalValue === undefined) {
+        setInternalValue(newValue);
+      }
       onValueChange?.([newValue]);
     };
 
-    const percentage = ((value - min) / (max - min)) * 100;
+    const percentage = ((internalValue - min) / (max - min)) * 100;
 
     return (
       <div className={cn("relative w-full h-8 flex items-center group", className)}>
@@ -37,7 +46,7 @@ const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
           min={min}
           max={max}
           step={step}
-          value={value}
+          value={internalValue}
           onChange={handleChange}
           className="absolute w-full h-2 appearance-none bg-transparent cursor-pointer z-10 
             [&::-webkit-slider-thumb]:appearance-none 

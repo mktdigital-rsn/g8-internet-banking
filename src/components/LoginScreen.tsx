@@ -141,7 +141,7 @@ export default function LoginScreen() {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="w-full max-w-[1100px] grid md:grid-cols-2 bg-card/40 backdrop-blur-3xl border border-white/5 rounded-[40px] overflow-hidden shadow-2xl relative z-10 min-h-[650px]"
+        className="w-full max-w-[1100px] grid md:grid-cols-2 bg-[#0c0a09] border border-white/5 rounded-[40px] overflow-hidden shadow-2xl relative z-10 min-h-[650px]"
       >
         {/* Left Side: Branding */}
         <div className="hidden md:flex flex-col justify-between p-16 bg-gradient-to-br from-primary/10 to-transparent">
@@ -169,7 +169,7 @@ export default function LoginScreen() {
         </div>
 
         {/* Right Side: Flow */}
-        <div className="p-8 md:p-16 flex flex-col justify-center relative bg-[#0c0a09]/40 backdrop-blur-sm">
+        <div className="p-8 md:p-16 flex flex-col justify-center relative bg-[#0c0a09]">
           <AnimatePresence mode="wait">
             {step === "identifier" && (
               <motion.div
@@ -198,7 +198,7 @@ export default function LoginScreen() {
 
                   <Button
                     type="submit"
-                    className="w-full h-16 text-lg font-black transition-all hover:scale-[1.02] bg-primary text-white"
+                    className="w-full h-16 text-lg font-black transition-all hover:scale-[1.02] bg-[#f97316] hover:bg-[#ea580c] text-white cursor-pointer"
                     disabled={!identifier}
                   >
                     AVANÇAR
@@ -236,7 +236,7 @@ export default function LoginScreen() {
                             key={idx}
                             type="button"
                             onClick={() => addPasswordPair(pair)}
-                            className="h-14 bg-white/[0.03] hover:bg-primary/10 border border-white/5 rounded-2xl text-white font-black text-lg transition-all"
+                            className="h-14 bg-white/[0.08] hover:bg-[#f97316] border border-white/10 rounded-2xl text-white font-black text-lg transition-all"
                           >
                             {pair[0]} ou {pair[1]}
                           </button>
@@ -244,41 +244,19 @@ export default function LoginScreen() {
                         <button
                           type="button"
                           onClick={removeLastPair}
-                          className="h-14 bg-red-500/10 hover:bg-red-500/20 text-red-500 font-black text-[10px] uppercase rounded-2xl"
+                          className="h-14 bg-red-600/20 hover:bg-red-600/40 text-red-500 font-black text-[10px] uppercase rounded-2xl"
                         >
                           APAGAR
                         </button>
                       </div>
-
-                      <button onClick={() => setPasswordMode("input")} className="w-full text-center text-white/20 hover:text-primary text-[10px] font-black uppercase tracking-widest">
-                        Prefiro digitar minha senha
-                      </button>
                     </div>
                   ) : (
-                    <div className="space-y-6">
-                      <div className="relative group">
-                        <Lock className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20 group-focus-within:text-primary transition-colors" />
-                        <Input
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Sua senha eletrônica"
-                          className="pl-14 h-16 bg-white/[0.03] border-white/10 text-white font-black text-xl rounded-2xl"
-                          value={passwordText}
-                          onChange={(e) => setPasswordText(e.target.value)}
-                        />
-                        <button onClick={() => setShowPassword(!showPassword)} className="absolute right-5 top-1/2 -translate-y-1/2 text-white/20">
-                          {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                        </button>
-                      </div>
-
-                      <button onClick={() => setPasswordMode("virtual")} className="w-full text-center text-white/20 hover:text-primary text-[10px] font-black uppercase tracking-widest">
-                        Usar teclado virtual
-                      </button>
-                    </div>
+                    null
                   )}
 
                   <Button
                     onClick={handleLoginSubmit}
-                    className="w-full h-16 text-lg font-black bg-primary text-white rounded-2xl shadow-lg"
+                    className="w-full h-16 text-lg font-black bg-[#f97316] hover:bg-[#ea580c] text-white rounded-2xl shadow-lg cursor-pointer"
                     disabled={isLoading || (passwordMode === 'virtual' ? passwordKeys.length === 0 : !passwordText)}
                   >
                     {isLoading ? "Validando..." : "CONFIRMAR"}

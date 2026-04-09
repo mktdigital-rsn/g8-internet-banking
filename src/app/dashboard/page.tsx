@@ -219,7 +219,7 @@ export default function DashboardHome() {
    };
 
    return (
-      <div className="p-4 md:p-6 flex flex-col xl:flex-row gap-8 xl:gap-12 h-full overflow-y-auto w-full no-scrollbar">
+      <div className="p-3 md:p-4 flex flex-col xl:flex-row gap-8 xl:gap-8 2xl:gap-12 h-full overflow-y-auto w-full no-scrollbar">
          {/* Left Column: Main Dashboard */}
          <div className="flex-1 space-y-12 min-w-0 w-full">
             {/* Upper Section: Welcome & Actions */}
@@ -236,20 +236,15 @@ export default function DashboardHome() {
                </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-start">
+            <div className="flex flex-col lg:flex-row flex-wrap gap-8 items-start">
                {/* Card Summary */}
                <div className="space-y-6 flex flex-col flex-1 min-w-0 w-full">
                   <div className="flex items-center justify-between h-10">
                      <h2 className="text-xl md:text-2xl font-black tracking-tighter text-[#0c0a09]">Meu Resumo</h2>
-                     <Link href="/dashboard/conta">
-                        <button className="text-[#f97316] hover:underline text-[10px] uppercase tracking-widest font-black flex items-center gap-1 group">
-                           Ver cartões
-                           <ChevronRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-                        </button>
-                     </Link>
+            
                   </div>
 
-                  <div className="relative group cursor-pointer w-full max-w-[420px] min-w-[400px]">
+                  <div className="relative group cursor-pointer w-full max-w-[420px] min-w-[380px]">
                      <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-md blur-lg opacity-20 group-hover:opacity-40 transition duration-1000"></div>
                      <div className="relative h-56 xl:h-72 w-full bg-[#0c0a09] text-white p-8 rounded-md shadow-2xl flex flex-col justify-between overflow-hidden border border-white/10 group-hover:scale-[1.01] transition-all duration-500">
                         {/* Design elements */}
@@ -298,7 +293,7 @@ export default function DashboardHome() {
                </div>
 
                {/* Maturity Section Carousel */}
-               <div className="space-y-6 flex flex-col w-full lg:w-[320px] shrink-0 min-w-0">
+               <div className="space-y-6 flex flex-col w-full lg:w-[320px] xl:w-[260px] 2xl:w-[320px] shrink-0 min-w-0">
                   <div className="flex items-center justify-between h-10">
                      <h2 className="text-xl md:text-2xl font-black tracking-tighter text-[#0c0a09] truncate pr-2">Vencimentos</h2>
                      <div className="flex gap-2 shrink-0">
@@ -356,7 +351,7 @@ export default function DashboardHome() {
             <div className="space-y-8 bg-white/30 backdrop-blur-md rounded-md p-8 -mx-4 border border-white/40">
                <div className="flex items-center justify-between px-2">
                   <div className="flex items-center gap-4">
-                     <h2 className="text-3xl font-black tracking-tighter text-[#0c0a09]">Histórico Recente</h2>
+                     <h2 className="text-2xl font-black tracking-tighter text-[#0c0a09]">Histórico Recente</h2>
                      <div className="h-10 w-[1px] bg-neutral-200 hidden sm:block" />
                      <p className="text-xs font-bold text-neutral-400 hidden sm:block uppercase tracking-widest">Últimas 5 operações</p>
                   </div>
@@ -439,7 +434,7 @@ export default function DashboardHome() {
          </div>
 
          {/* Right Column: Sidebar Charts/Stats */}
-         <div className="w-full xl:w-[340px] shrink-0 space-y-10 pb-10 pr-0 xl:pr-2">
+         <div className="w-full xl:w-[30%] xl:min-w-[280px] xl:max-w-[420px] shrink-0 space-y-10 pb-10 pr-0 xl:pr-2">
             <Card className="rounded-md border-0 shadow-2xl shadow-black/10 bg-white p-10 space-y-10 relative overflow-hidden">
                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50" />
                <div className="space-y-8 relative z-10">

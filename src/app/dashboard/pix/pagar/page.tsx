@@ -32,7 +32,8 @@ import { toast } from "sonner";
 
 function PixPagarContent() {
   const searchParams = useSearchParams();
-  const type = searchParams.get("type") || "key";
+  const typeParam = searchParams.get("type") || "key";
+  const type = typeParam.toLowerCase() === "celular" ? "phone" : typeParam.toLowerCase();
   const urlKey = searchParams.get("key") || "";
   const urlName = searchParams.get("name") || "";
   const urlBank = searchParams.get("bank") || "";
@@ -68,6 +69,7 @@ function PixPagarContent() {
         const res = await axios.get(`${apiUrl}/api/users/data`, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        
         if (res.data) {
           const phone = res.data.phone || res.data.celular || "";
           setUserPhone(phone);
@@ -107,9 +109,9 @@ function PixPagarContent() {
     let key = keyToSearch.trim();
     if (!key.includes("@")) {
       key = key.replace(/\D/g, "");
-      if ((type === "phone" || type === "celular") && (key.length === 10 || key.length === 11)) {
-        if (!key.startsWith("55")) key = "+55" + key;
-        else key = "+" + key;
+      // Remover o prefixo 55 se estiver presente (quando for phone)
+      if (type === "phone" && key.startsWith("55") && (key.length === 12 || key.length === 13)) {
+        key = key.substring(2);
       }
     }
 
@@ -211,7 +213,7 @@ function PixPagarContent() {
   const formatIdentifier = (val: string, type: string) => {
     const cleanValue = val.replace(/\D/g, "");
 
-    if (type === "phone" || type === "celular") {
+    if (type === "phone") {
       let v = cleanValue;
       if (v.length > 11) v = v.substring(0, 11);
 
@@ -313,13 +315,22 @@ function PixPagarContent() {
       }
 
       let endpoint = "/api/banco/pix/transferir";
+      let rawChave = pixCode || identifier || "";
+      let finalChave = rawChave;
+      if (!rawChave.includes("@")) {
+        finalChave = rawChave.replace(/\D/g, "");
+        if (type === "phone" && finalChave.startsWith("55") && (finalChave.length === 12 || finalChave.length === 13)) {
+          finalChave = finalChave.substring(2);
+        }
+      }
+
       let payload: any = {
-        chave: pixCode || identifier,
+        chave: finalChave,
         valor: parseFloat(value.replace(/\D/g, "")) / 100,
         agendadoPara: null,
         uuid: uuid || crypto.randomUUID(),
         endToEndIdInterno: endToEndId || crypto.randomUUID(),
-        chavePixTypeHint: null,
+        chavePixTypeHint: type === "phone" ? "phone" : null,
         pin: smsCode,
         deviceId: "IB-WEB-PLATFORM"
       };
@@ -421,7 +432,6 @@ function PixPagarContent() {
       case "qrcode":
         return { title: "Escanear QR Code", icon: QrCode, placeholder: "Aponte a câmera..." };
       case "phone":
-      case "celular":
         return { title: "Pagar via Celular", icon: Smartphone, placeholder: "(00) 00000-0000" };
       case "email":
         return { title: "Pagar via E-mail", icon: Mail, placeholder: "exemplo@email.com" };
@@ -710,10 +720,7 @@ function PixPagarContent() {
             <div className="space-y-4 mb-10">
               <h2 className="text-4xl font-black text-[#0c0a09] uppercase tracking-tighter">Validação de Segurança</h2>
               <p className="text-base font-bold text-neutral-400 uppercase tracking-widest">
-                Enviamos um código para o seu celular final
-                <span className="text-[#ff7711] ml-2">
-                  {userPhone ? `(**) ****-${userPhone.slice(-4)}` : "(**) ****-****"}
-                </span>
+                Enviamos um código para o seu celular.
               </p>
             </div>
 

@@ -33,11 +33,10 @@ import axios from "axios";
 
 const menuItems = [
   { icon: Home, label: "Resumo", href: "/dashboard" },
-  { icon: Wallet, label: "Pagamentos", href: "#", badge: "2" },
+  { icon: Wallet, label: "Pagamentos", href: "/dashboard/pagamentos", badge: "2" },
   { icon: ArrowUpRight, label: "Transferência", href: "/dashboard/transferencia" },
   { icon: Smartphone, label: "PIX", href: "/dashboard/pix" },
   { icon: FileText, label: "Extrato", href: "/dashboard/extrato" },
-  { icon: Users, label: "Referrals", href: "#" },
   { icon: UserCircle, label: "Conta", href: "#" },
   { icon: HelpCircle, label: "Ajuda", href: "#" },
 ];
@@ -115,7 +114,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="flex h-screen bg-[#0c0a09] text-[#f5f5f5] overflow-hidden">
       {/* Sidebar */}
-      <aside className="w-64 flex flex-col p-6 space-y-8 z-20 relative">
+      <aside className="w-60 flex flex-col p-5 space-y-6 z-20 relative">
         {/* Sidebar Background Accents */}
         <div className="absolute top-0 left-0 w-full h-[300px] bg-gradient-to-b from-[#f97316]/5 to-transparent pointer-events-none" />
         
@@ -244,7 +243,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </header>
 
         {/* Content Sheet (The white dashboard background) */}
-        <div className="flex-1 overflow-y-auto px-6 pb-6 lg:px-10 lg:pb-10 bg-[#f8f9fa] border-l border-white/5 relative shadow-inner">
+        <div className="flex-1 overflow-y-auto px-4 pb-4 lg:px-6 lg:pb-6 bg-[#f8f9fa] border-l border-white/5 relative shadow-inner">
           <div className="max-w-[1920px] mx-auto min-h-full">
             {children}
           </div>

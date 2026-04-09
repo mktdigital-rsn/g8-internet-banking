@@ -105,6 +105,9 @@
   html {
     @apply font-sans;
   }
+  button, a, [role="button"], .cursor-pointer, [data-state], select, input[type="submit"] {
+    cursor: pointer !important;
+  }
 }
 
 @layer utilities {
