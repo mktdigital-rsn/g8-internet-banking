@@ -69,7 +69,29 @@ export default function PagamentosPage() {
       });
       
       if (res.data) {
-        setBoletoData(res.data.data || res.data);
+        const rawData = res.data.data || res.data;
+        const details = rawData.data || rawData;
+        
+        // Helper para formatar data YYYY-MM-DD para DD/MM/YYYY
+        const formatDate = (dateStr: string) => {
+          if (!dateStr || typeof dateStr !== 'string' || !dateStr.includes("-")) return dateStr;
+          const parts = dateStr.split("-");
+          if (parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+          return dateStr;
+        };
+
+        const normalized = {
+          ...details,
+          beneficiario: details.beneficiaryLegalName || details.beneficiario || details.nomeBeneficiario || "NÃO IDENTIFICADO",
+          vencimento: formatDate(details.expirationDate || details.vencimento || details.dataVencimento || "---"),
+          valor: details.totalAmount || details.nominalAmount || details.valor || details.valorTotal || 0,
+          linhaDigitavel: details.digitableLine || details.linhaDigitavel || details.barcode || barcode.replace(/\D/g, ""),
+          bancoBeneficiario: details.beneficiaryBankCode || details.bankName || details.bank || "",
+          documentoBeneficiario: details.beneficiaryDocumentNumber || details.documentoBeneficiario || "",
+          pagadorNome: details.payerLegalName || details.nomePagador || ""
+        };
+
+        setBoletoData(normalized);
         setStep("review");
         toast.success("Boleto consultado com sucesso!");
       }
@@ -122,10 +144,33 @@ export default function PagamentosPage() {
       });
 
       if (res.data) {
-        const apiData = res.data.data || res.data;
-        setTransactionId(apiData.idLiquidante || apiData.id || "PAG" + Math.random().toString(36).substring(7).toUpperCase());
         setStep("success");
         toast.success("Pagamento realizado com sucesso!");
+        
+        // Buscar ID da transação no extrato (Sync de ~2s)
+        setTimeout(async () => {
+          try {
+            const extratoRes = await api.get("/api/banco/extrato/buscar");
+            const items = extratoRes.data.transacoes || extratoRes.data.data?.transacoes || [];
+            
+            // Encontrar a transação mais recente de boleto com o mesmo valor
+            const match = items.find((item: any) => 
+               Math.abs(item.valor) === Math.abs(boletoData.valor) && 
+               (item.metodo === "BOLETO" || item.tipoFormatado?.toUpperCase().includes("BOLETO"))
+            );
+
+            if (match && match.idDoBancoLiquidante) {
+              setTransactionId(match.idDoBancoLiquidante);
+              console.log("ID da transação encontrado no extrato:", match.idDoBancoLiquidante);
+            } else {
+              // Fallback se não achar imediatamente
+              setTransactionId("PAG" + Math.random().toString(36).substring(7).toUpperCase());
+            }
+          } catch (e) {
+            console.error("Erro ao buscar ID no extrato:", e);
+            setTransactionId("PAG" + Math.random().toString(36).substring(7).toUpperCase());
+          }
+        }, 2500);
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Erro ao processar pagamento.");
@@ -135,6 +180,13 @@ export default function PagamentosPage() {
   };
 
   const handlePrintReceipt = async () => {
+    if (!transactionId || transactionId.startsWith("PAG")) {
+      toast.error("Processando dados do banco. Tente novamente em 5 segundos.");
+      return;
+    }
+
+    toast.info("Gerando comprovante...");
+    
     try {
       const response = await api.get(`/api/banco/extrato/imprimir-item/${transactionId}`, {
         responseType: 'blob'
@@ -147,6 +199,7 @@ export default function PagamentosPage() {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      toast.success("Comprovante gerado com sucesso!");
     } catch (err) {
       toast.error("Erro ao gerar comprovante.");
     }
@@ -186,7 +239,7 @@ export default function PagamentosPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <div className="lg:col-span-8 space-y-12">
-                <div className="bg-white p-8 md:p-12 rounded-[32px] border border-neutral-100 shadow-2xl shadow-black/[0.03] space-y-8 relative overflow-hidden group">
+                <div className="bg-white p-8 md:p-12 rounded-[12px] border border-neutral-100 shadow-2xl shadow-black/[0.03] space-y-8 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-[#f97316]/5 rounded-full blur-3xl -mr-32 -mt-32" />
                   
                   <div className="space-y-2 relative z-10">
@@ -201,7 +254,7 @@ export default function PagamentosPage() {
                       </div>
                       <Input 
                         placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
-                        className="h-16 pl-16 bg-neutral-50 border-neutral-100 rounded-2xl text-sm font-black tracking-widest focus:ring-2 focus:ring-[#f97316]/20 transition-all placeholder:text-neutral-300"
+                        className="h-16 pl-16 bg-neutral-50 border-neutral-100 rounded-sm text-sm font-black tracking-widest focus:ring-2 focus:ring-[#f97316]/20 transition-all placeholder:text-neutral-300"
                         value={barcode}
                         onChange={(e) => setBarcode(e.target.value)}
                       />
@@ -209,7 +262,7 @@ export default function PagamentosPage() {
                     <Button 
                         onClick={handleConsultBoleto}
                         disabled={isConsulting}
-                        className="h-16 px-10 bg-[#0c0a09] hover:bg-[#1a1715] text-white rounded-2xl font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl shadow-black/10 shrink-0"
+                        className="h-16 px-10 bg-[#0c0a09] hover:bg-[#1a1715] text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl shadow-black/10 shrink-0"
                     >
                       {isConsulting ? "PROCESSANDO..." : "CONFERIR BOLETO"}
                       {!isConsulting && <ArrowRight className="h-5 w-5 ml-2" />}
@@ -217,8 +270,8 @@ export default function PagamentosPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-                      <div className="p-6 bg-[#fffbeb] rounded-2xl border border-neutral-200/20 hover:shadow-xl transition-all group cursor-pointer flex items-center gap-6">
-                          <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center text-[#f97316] group-hover:scale-110 transition-transform shadow-sm">
+                      <div className="p-6 bg-[#fffbeb] rounded-sm border border-neutral-200/20 hover:shadow-xl transition-all group cursor-pointer flex items-center gap-6">
+                          <div className="w-14 h-14 bg-white rounded-sm flex items-center justify-center text-[#f97316] group-hover:scale-110 transition-transform shadow-sm">
                               <QrCode className="h-7 w-7 stroke-[2.5]" />
                           </div>
                           <div className="flex flex-col">
@@ -226,8 +279,8 @@ export default function PagamentosPage() {
                               <span className="text-[10px] font-bold text-neutral-400 mt-1">Use a câmera do seu celular</span>
                           </div>
                       </div>
-                      <div className="p-6 bg-[#fffbeb] rounded-2xl border border-neutral-200/20 hover:shadow-xl transition-all group cursor-pointer flex items-center gap-6">
-                          <div className="w-14 h-14 bg-white rounded-xl flex items-center justify-center text-[#f97316] group-hover:scale-110 transition-transform shadow-sm">
+                      <div className="p-6 bg-[#fffbeb] rounded-sm border border-neutral-200/20 hover:shadow-xl transition-all group cursor-pointer flex items-center gap-6">
+                          <div className="w-14 h-14 bg-white rounded-sm flex items-center justify-center text-[#f97316] group-hover:scale-110 transition-transform shadow-sm">
                               <History className="h-7 w-7 stroke-[2.5]" />
                           </div>
                           <div className="flex flex-col">
@@ -243,7 +296,7 @@ export default function PagamentosPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                     {manageOptions.map((opt, i) => (
                        <div key={i} className="flex flex-col items-center justify-center w-full min-h-[160px] bg-[#fffbeb] rounded-2xl hover:shadow-2xl hover:scale-[1.05] transition-all border border-neutral-200/20 group cursor-pointer p-6">
-                          <div className="w-12 h-12 flex items-center justify-center mb-4 text-[#f97316] bg-white rounded-xl group-hover:scale-110 transition-transform shadow-sm">
+                          <div className="w-12 h-12 flex items-center justify-center mb-4 text-[#f97316] bg-white rounded-sm group-hover:scale-110 transition-transform shadow-sm">
                               <opt.icon className="h-6 w-6 stroke-[2.5]" />
                           </div>
                           <span className="text-[11px] font-black text-[#0c0a09] text-center px-1 uppercase tracking-widest leading-tight opacity-70 group-hover:opacity-100 group-hover:text-[#f97316] transition-colors">{opt.label}</span>
@@ -254,7 +307,7 @@ export default function PagamentosPage() {
               </div>
 
               <div className="lg:col-span-4 space-y-10">
-                <Card className="rounded-3xl border-0 shadow-2xl shadow-black/5 bg-[#0c0a09] p-10 space-y-8 relative overflow-hidden group cursor-pointer border border-white/5 h-[400px]">
+                <Card className="rounded-sm border-0 shadow-2xl shadow-black/5 bg-[#0c0a09] p-10 space-y-8 relative overflow-hidden group cursor-pointer border border-white/5 h-[400px]">
                   <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#f97316]/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
                   <div className="relative z-10 space-y-6">
                     <Badge className="bg-[#f97316] text-white border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest">Segurança G8</Badge>
@@ -283,7 +336,7 @@ export default function PagamentosPage() {
         {step === "review" && boletoData && (
           <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" onClick={() => setStep("landing")} className="rounded-full h-12 w-12 hover:bg-neutral-100">
+              <Button variant="ghost" size="icon" onClick={() => setStep("landing")} className="rounded-sm h-12 w-12 hover:bg-neutral-100">
                 <ArrowLeft className="h-6 w-6 text-[#f97316]" />
               </Button>
               <h2 className="text-3xl font-black text-[#0c0a09] tracking-tighter uppercase">Confirme os dados</h2>
@@ -291,23 +344,42 @@ export default function PagamentosPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
               <div className="md:col-span-8 space-y-8">
-                <div className="bg-white p-10 rounded-[32px] border border-neutral-100 shadow-2xl space-y-8">
+                <div className="bg-white p-10 rounded-sm border border-neutral-100 shadow-2xl space-y-8">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest mb-2 opacity-60">Beneficiário</p>
-                      <h3 className="text-2xl font-black text-[#0c0a09] uppercase">{boletoData.beneficiario || boletoData.nomeBeneficiario || "NÃO IDENTIFICADO"}</h3>
+                      <h3 className="text-2xl font-black text-[#0c0a09] uppercase leading-tight">{boletoData.beneficiario}</h3>
+                      {boletoData.documentoBeneficiario && (
+                        <p className="text-[11px] font-bold text-neutral-500 mt-1">{boletoData.documentoBeneficiario}</p>
+                      )}
+                      {boletoData.bancoBeneficiario && (
+                        <p className="text-[10px] font-black text-[#f97316] uppercase tracking-[0.1em] mt-2 opacity-80 flex items-center gap-1">
+                          <Building2 className="h-3 w-3" />
+                          {boletoData.bancoBeneficiario}
+                        </p>
+                      )}
                     </div>
-                    <div className="w-16 h-16 bg-[#fffbeb] rounded-2xl flex items-center justify-center text-[#f97316]">
+                    <div className="w-16 h-16 bg-[#fffbeb] rounded-sm flex items-center justify-center text-[#f97316] shrink-0">
                       <Building2 className="h-8 w-8" />
                     </div>
                   </div>
 
                   <Separator className="bg-neutral-100" />
 
+                  {boletoData.pagadorNome && (
+                    <>
+                      <div className="space-y-2">
+                        <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest opacity-60">Pagador</p>
+                        <p className="text-sm font-black text-[#0c0a09] uppercase">{boletoData.pagadorNome}</p>
+                      </div>
+                      <Separator className="bg-neutral-100" />
+                    </>
+                  )}
+
                   <div className="grid grid-cols-2 gap-8">
                     <div>
                       <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest mb-2 opacity-60">Vencimento</p>
-                      <p className="text-lg font-black text-[#0c0a09]">{boletoData.dataVencimento || boletoData.vencimento || "---"}</p>
+                      <p className="text-lg font-black text-[#0c0a09]">{boletoData.vencimento}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest mb-2 opacity-60">Data de Pagamento</p>
@@ -315,17 +387,17 @@ export default function PagamentosPage() {
                     </div>
                   </div>
 
-                  <div className="p-8 bg-[#fffbeb] rounded-2xl border border-orange-100">
+                  <div className="p-8 bg-[#fffbeb] rounded-sm border border-orange-100">
                     <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest mb-3 opacity-60">Valor do Pagamento</p>
                     <p className="text-5xl font-black text-[#f97316] font-mono tracking-tighter">
-                      {formatCurrency(boletoData.valorTotal || boletoData.valor)}
+                      {formatCurrency(boletoData.valor)}
                     </p>
                   </div>
 
                   <Button 
                     onClick={handleRequestSms}
                     disabled={isLoading}
-                    className="w-full h-20 bg-[#0c0a09] hover:bg-[#1a1715] text-white rounded-2xl font-black text-lg uppercase tracking-widest shadow-2xl shadow-black/20"
+                    className="w-full h-20 bg-[#0c0a09] hover:bg-[#1a1715] text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-2xl shadow-black/20"
                   >
                     {isLoading ? "PROCESSANDO..." : "AUTORIZAR PAGAMENTO"}
                   </Button>
@@ -333,7 +405,7 @@ export default function PagamentosPage() {
               </div>
 
               <div className="md:col-span-4 space-y-6">
-                <div className="p-6 bg-[#fff9e6] border border-[#ffecb3] rounded-2xl space-y-4">
+                <div className="p-6 bg-[#fff9e6] border border-[#ffecb3] rounded-sm space-y-4">
                   <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg">
                     <AlertTriangle className="h-5 w-5" />
                   </div>
@@ -348,7 +420,7 @@ export default function PagamentosPage() {
 
         {step === "sms" && (
           <div className="max-w-xl mx-auto flex flex-col items-center text-center space-y-10 py-12 animate-in fade-in zoom-in-95 duration-500">
-             <div className="w-24 h-24 bg-[#fffbeb] rounded-3xl flex items-center justify-center text-[#f97316] shadow-xl relative animate-bounce">
+             <div className="w-24 h-24 bg-[#fffbeb] rounded-sm flex items-center justify-center text-[#f97316] shadow-xl relative animate-bounce">
                 <Smartphone className="h-12 w-12" />
                 <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#f97316] rounded-full border-4 border-[#f8f9fa] animate-ping" />
              </div>
@@ -362,13 +434,13 @@ export default function PagamentosPage() {
                 <Input 
                   value={smsCode}
                   onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").substring(0, 5))}
-                  className="h-24 text-center font-black text-5xl tracking-[0.5em] border-2 border-neutral-100 rounded-[32px] focus:border-[#f97316] bg-white shadow-2xl"
+                  className="h-24 text-center font-black text-5xl tracking-[0.5em] border-2 border-neutral-100 rounded-sm focus:border-[#f97316] bg-white shadow-2xl"
                   placeholder="0 0 0 0 0"
                 />
                 <Button 
                   onClick={handleFinalizePayment}
                   disabled={isLoading || smsCode.length < 5}
-                  className="w-full h-20 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-3xl font-black text-xl uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/30"
+                  className="w-full h-20 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-sm font-black text-xl uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/30"
                 >
                   {isLoading ? "PROCESSANDO..." : "CONFIRMAR PAGAMENTO"}
                 </Button>
@@ -388,45 +460,76 @@ export default function PagamentosPage() {
                 <p className="text-base font-bold text-neutral-400 uppercase tracking-widest">Sua conta foi liquidada com sucesso.</p>
              </div>
 
-             <div className="w-full bg-white rounded-[40px] border border-neutral-100 p-10 shadow-2xl space-y-8 relative overflow-hidden">
+             <div className="w-full bg-white rounded-sm border border-neutral-100 p-10 shadow-2xl space-y-8 relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full blur-3xl -mr-16 -mt-16" />
                 
-                <div className="space-y-6 relative z-10">
-                   <div className="flex justify-between items-center border-b border-neutral-50 pb-6">
-                      <span className="text-[11px] font-black text-neutral-400 uppercase tracking-widest">Valor Pago</span>
-                      <span className="text-4xl font-black text-[#f97316] tracking-tighter">{formatCurrency(boletoData?.valorTotal || boletoData?.valor)}</span>
+                <div className="space-y-8 relative z-10">
+                   <div className="flex flex-col items-center border-b border-neutral-50 pb-8 text-center">
+                      <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2 opacity-60">Valor Total Pago</span>
+                      <span className="text-5xl font-black text-[#f97316] tracking-tighter">{formatCurrency(boletoData?.valor)}</span>
                    </div>
                    
-                   <div className="grid grid-cols-1 gap-6">
-                      <div className="space-y-1">
-                        <p className="text-[11px] font-black text-neutral-400 uppercase tracking-widest">Beneficiário</p>
-                        <p className="text-lg font-black text-[#0c0a09] uppercase">{boletoData?.beneficiario || boletoData?.nomeBeneficiario}</p>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+                      <div className="space-y-6">
+                        <div className="space-y-1">
+                          <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Beneficiário</p>
+                          <p className="text-base font-black text-[#0c0a09] uppercase leading-tight">{boletoData?.beneficiario}</p>
+                          {boletoData?.documentoBeneficiario && (
+                            <p className="text-[11px] font-medium text-neutral-500">{boletoData.documentoBeneficiario}</p>
+                          )}
+                          {boletoData?.bancoBeneficiario && (
+                            <p className="text-[11px] font-bold text-[#f97316] uppercase mt-1 flex items-center gap-1">
+                              <Building2 className="h-3 w-3" />
+                              {boletoData.bancoBeneficiario}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="space-y-1 pt-6 border-t border-neutral-50">
+                          <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Pagador</p>
+                          <p className="text-sm font-black text-[#0c0a09] uppercase">{boletoData?.pagadorNome || "NOME NÃO INFORMADO"}</p>
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-8 border-t border-neutral-50 pt-6">
-                        <div className="space-y-1">
-                          <p className="text-[11px] font-black text-neutral-400 uppercase tracking-widest">Data</p>
-                          <p className="text-sm font-black text-[#0c0a09]">{new Date().toLocaleDateString('pt-BR')}</p>
+                      <div className="space-y-6">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Vencimento</p>
+                            <p className="text-sm font-black text-[#0c0a09]">{boletoData?.vencimento}</p>
+                          </div>
+                          <div className="space-y-1 text-right">
+                            <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Data Pagamento</p>
+                            <p className="text-sm font-black text-[#0c0a09]">{new Date().toLocaleDateString('pt-BR')}</p>
+                          </div>
                         </div>
-                        <div className="space-y-1 text-right">
-                          <p className="text-[11px] font-black text-neutral-400 uppercase tracking-widest">Autenticação</p>
-                          <p className="text-[10px] font-black text-[#0c0a09] font-mono opacity-40 truncate">{transactionId}</p>
+
+                        <div className="space-y-1 pt-6 border-t border-neutral-50">
+                          <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Autenticação</p>
+                          <p className="text-[11px] font-black text-neutral-400 font-mono break-all leading-relaxed uppercase">{transactionId}</p>
                         </div>
                       </div>
                    </div>
                 </div>
              </div>
 
-             <div className="w-full flex gap-4">
-                <Button onClick={handlePrintReceipt} className="flex-1 h-20 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-3xl font-black text-lg uppercase tracking-widest shadow-xl flex items-center justify-center gap-3">
-                   <Download className="h-6 w-6" />
+             <div className="w-full flex gap-4 pt-10">
+                <Button onClick={handlePrintReceipt} className="flex-1 h-20 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 group transition-all">
+                   <Download className="h-6 w-6 group-hover:scale-110 transition-transform" />
                    COMPROVANTE
                 </Button>
-                <Link href="/dashboard" className="flex-1">
-                  <Button variant="outline" className="w-full h-20 border-2 border-neutral-100 rounded-3xl font-black text-lg uppercase tracking-widest hover:border-[#f97316] hover:text-[#f97316]">
-                    VOLTAR
-                  </Button>
-                </Link>
+                <Button 
+                  onClick={() => {
+                    setStep("landing");
+                    setBoletoData(null);
+                    setBarcode("");
+                    setSmsCode("");
+                    setTransactionId("");
+                  }}
+                  variant="outline" 
+                  className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-sm font-black text-lg uppercase tracking-widest hover:border-[#f97316] hover:text-[#f97316] hover:bg-orange-50 transition-all"
+                >
+                   NOVO PAGAMENTO
+                </Button>
              </div>
           </div>
         )}
