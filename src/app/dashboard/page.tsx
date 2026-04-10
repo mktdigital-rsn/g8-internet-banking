@@ -36,7 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import axios from "axios";
+import api from "@/lib/api";
 import Link from "next/link";
 
 const chartData = {
@@ -97,26 +97,10 @@ export default function DashboardHome() {
       setMounted(true);
       const fetchData = async () => {
          try {
-            const token = localStorage.getItem("token");
-            const userToken = localStorage.getItem("userToken");
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
-
             const [userRes, balanceRes, extratoRes] = await Promise.all([
-               axios.get(`${apiUrl}/api/users/data`, {
-                  headers: { Authorization: `Bearer ${token}` }
-               }),
-               axios.get(`${apiUrl}/api/banco/saldo/getSaldo`, {
-                  headers: {
-                     Authorization: `Bearer ${token}`,
-                     'userToken': userToken || ""
-                  }
-               }).catch(() => ({ data: { valor: 0 } })),
-               axios.get(`${apiUrl}/api/banco/extrato/buscar`, {
-                  headers: {
-                     Authorization: `Bearer ${token}`,
-                     'userToken': userToken || ""
-                  }
-               }).catch(() => ({ data: { data: [] } }))
+               api.get("/api/users/data"),
+               api.get("/api/banco/saldo/getSaldo").catch(() => ({ data: { valor: 0 } })),
+               api.get("/api/banco/extrato/buscar").catch(() => ({ data: { data: [] } }))
             ]);
 
             if (userRes.data) {
@@ -153,10 +137,7 @@ export default function DashboardHome() {
    const handlePrintReceipt = async (id: string, description: string) => {
       if (!id) return;
       try {
-         const token = localStorage.getItem("token");
-         const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
-         const response = await axios.get(`${apiUrl}/api/banco/extrato/imprimir-item/${id}`, {
-            headers: { Authorization: `Bearer ${token}` },
+         const response = await api.get(`/api/banco/extrato/imprimir-item/${id}`, {
             responseType: 'blob'
          });
          const blob = new Blob([response.data], { type: 'application/pdf' });

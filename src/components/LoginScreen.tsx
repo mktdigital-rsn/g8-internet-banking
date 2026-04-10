@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import axios from "axios";
+import api from "@/lib/api";
 import { toast } from "sonner";
 
 type LoginStep = "identifier" | "password" | "qrcode";
@@ -65,8 +65,6 @@ export default function LoginScreen() {
     setIsLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
-
       // Force lowercase only if it's an email format
       const isEmail = identifier.includes("@");
       const cleanIdentifier = isEmail
@@ -89,7 +87,7 @@ export default function LoginScreen() {
         };
 
         console.log("SENDING TECLADO VIRTUAL LOGIN:", payload.email);
-        response = await axios.post(`${apiUrl}/api/auth/login/teclado-virtual`, payload);
+        response = await api.post("/api/auth/login/teclado-virtual", payload);
       } else {
         if (!passwordText) throw new Error("Digite sua senha");
 
@@ -98,7 +96,7 @@ export default function LoginScreen() {
           password: passwordText
         };
         console.log("SENDING TRADITIONAL LOGIN:", payload.email);
-        response = await axios.post(`${apiUrl}/api/auth/login`, payload);
+        response = await api.post("/api/auth/login", payload);
       }
 
       if (response.status === 200) {

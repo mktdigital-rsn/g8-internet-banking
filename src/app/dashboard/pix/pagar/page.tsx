@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense } from "react";
-import axios from "axios";
+import api from "@/lib/api";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
@@ -64,11 +64,7 @@ function PixPagarContent() {
     // Fetch User Profile to get the correct phone number
     const fetchProfile = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
-        const res = await axios.get(`${apiUrl}/api/users/data`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const res = await api.get("/api/users/data");
         
         if (res.data) {
           const phone = res.data.phone || res.data.celular || "";
@@ -101,10 +97,6 @@ function PixPagarContent() {
   const performSearch = async (keyToSearch: string) => {
     if (!keyToSearch) return;
     setIsSearching(true);
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
-    const token = localStorage.getItem("token");
-    const userToken = localStorage.getItem("userToken");
-
     // Formatting logic inside the search to ensure correct format (phone prefixes, etc.)
     let key = keyToSearch.trim();
     if (!key.includes("@")) {
@@ -116,12 +108,7 @@ function PixPagarContent() {
     }
 
     try {
-      const response = await axios.get(`${apiUrl}/api/banco/pix/buscar-dados-contato/${encodeURIComponent(key)}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'usertoken': userToken || ""
-        }
-      });
+      const response = await api.get(`/api/banco/pix/buscar-dados-contato/${encodeURIComponent(key)}`);
       if (response.data) {
         updateRecipientData(response.data);
       }
@@ -137,24 +124,9 @@ function PixPagarContent() {
     if (!cleanCode) return;
 
     setIsSearching(true);
-    const apiUrl = (type === "qrcode" || type === "copia_cola")
-      ? "http://localhost:8080"
-      : (process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br");
-    const token = localStorage.getItem("token");
-    const userToken = localStorage.getItem("userToken");
-
     try {
       console.log("🔍 Decodificando Pix Copia e Cola via /buscar-copicola...");
-      const res = await axios.post(`${apiUrl}/api/banco/pix/buscar-copicola`,
-        { payload: cleanCode },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'usertoken': userToken || "",
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      const res = await api.post("/api/banco/pix/buscar-copicola", { payload: cleanCode });
 
       if (res.data) {
         console.log("✅ PIX COPIACOLA SUCCESS:", res.data);
@@ -176,11 +148,15 @@ function PixPagarContent() {
   };
 
   const updateRecipientData = (data: any) => {
+    console.log("🔍 [RECIPENT DATA UPDATE]:", data);
     setSearchResult(data);
-    setRecipientName(data.nome || data.name || "");
-    setRecipientBank(data.instituicao || data.bank || "");
+    setRecipientName(data.nome || data.name || data.recebedorNome || data.beneficiario || "");
+    setRecipientBank(data.instituicao || data.bank || data.recebedorInstituicao || data.instituicaoNome || "");
     setRecipientDocument(data.cpfcnpj || data.documento || data.taxNumber || "");
-    if (data.uuid) setUuid(data.uuid);
+    
+    // Aggressive ID capture
+    const foundId = data.qrcodeId || data.id_payment || data.idPayment || data.uuid || data.endToEndId || data.txid || data.id || "";
+    if (foundId) setUuid(foundId);
     if (data.endToEndIdInterno) setEndToEndId(data.endToEndIdInterno);
   };
 
@@ -252,24 +228,11 @@ function PixPagarContent() {
   const handleRequestSms = async () => {
     setIsLoadingTransfer(true);
     try {
-      const token = localStorage.getItem("token");
-      const userToken = localStorage.getItem("userToken");
-      const apiUrl = (type === "qrcode" || type === "copia_cola")
-        ? "http://localhost:8080"
-        : (process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br");
+      console.log(`📩 [SMS REQUEST] Enviando solicitação de PIN...`);
 
-      console.log(`📩 [SMS REQUEST] Enviando para ${apiUrl}/api/users/solicitar-pin...`);
-
-      const res = await axios.post(`${apiUrl}/api/users/solicitar-pin`,
-        { amount: String(parseFloat(value.replace(/\D/g, "")) / 100) },
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'usertoken': userToken || "",
-            'Accept': 'application/json, text/plain, */*'
-          }
-        }
-      );
+      const res = await api.post("/api/users/solicitar-pin", {
+        amount: String(parseFloat(value.replace(/\D/g, "")) / 100)
+      });
 
       if (res.data) {
         console.log("✅ [SMS REQUEST SUCCESS]:", res.data);
@@ -294,24 +257,12 @@ function PixPagarContent() {
 
     setIsLoadingTransfer(true);
     try {
-      const token = localStorage.getItem("token");
-      const userToken = localStorage.getItem("userToken");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
-
-      // MATCH MOBILE APP: For Copia e Cola/QR Code, DO NOT call separate validar-pin
-      // The pin is sent directly in the pagar-copicola payload.
       if (type !== "qrcode" && type !== "copia_cola") {
         console.log("🛡️ Validando PIN para Pix Chave...");
-        await axios.post(`${apiUrl}/api/users/validar-pin`,
-          { pin: smsCode, pinId: pinId },
-          {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'usertoken': userToken || "",
-              'Accept': 'application/json, text/plain, */*'
-            }
-          }
-        );
+        await api.post("/api/users/validar-pin", {
+          pin: smsCode,
+          pinId: pinId
+        });
       }
 
       let endpoint = "/api/banco/pix/transferir";
@@ -335,34 +286,37 @@ function PixPagarContent() {
         deviceId: "IB-WEB-PLATFORM"
       };
 
-      // MATCH MOBILE APP: For Copia e Cola/QR Code, use specific endpoint and payload structure
       if (type === "qrcode" || type === "copia_cola") {
         endpoint = "/api/banco/pix/pagar-copicola";
-        const currentId = uuid || searchResult?.uuid || searchResult?.endToEndId || "";
+        
+        // Exact mobile parity: using qrId for all ID fields and removing extra fields not present in mobile curl
+        const qrId = searchResult?.qrcodeId || 
+                     searchResult?.id_payment || 
+                     searchResult?.idPayment || 
+                     searchResult?.endToEndId || 
+                     searchResult?.uuid || 
+                     searchResult?.id || 
+                     uuid || "";
+                     
         const txAmount = parseFloat(value.replace(/\D/g, "")) / 100;
-        const internalId = endToEndId || searchResult?.endToEndIdInterno || currentId; // Use currentId as fallback
+        const internalId = endToEndId || searchResult?.endToEndIdInterno || crypto.randomUUID();
         
         payload = {
-          endToEndId: currentId,
-          chavePix: "",
-          qrcodeId: currentId,
-          qrCodeType: "",
-          receiverConciliationId: currentId,
+          endToEndId: qrId,
+          chavePix: "", // Mobile uses empty string
+          qrcodeId: qrId,
+          qrCodeType: "", // Mobile uses empty string
+          receiverConciliationId: qrId,
           amount: txAmount,
           endToEndIdInterno: internalId,
           deviceId: "2de10864-0672-4f25-a92d-bf802b03a381"
         };
       }
 
-      console.log("🔑 [HEADERS]:", { 'Authorization': `Bearer ${token?.substring(0, 10)}...`, 'usertoken': `${userToken?.substring(0, 10)}...` });
       console.log(`🚀 [PAYLOAD]:`, payload);
 
-      const res = await axios.post(`${apiUrl}${endpoint}`, payload, {
+      const res = await api.post(`${endpoint}`, payload, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'usertoken': userToken || "",
-          'Accept': 'application/json, text/plain, */*',
-          'Content-Type': 'application/json',
           'User-Agent': 'okhttp/4.12.0' // Matching the app's User-Agent
         }
       });
@@ -394,15 +348,7 @@ function PixPagarContent() {
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const userToken = localStorage.getItem("userToken");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
-
-      const response = await axios.get(`${apiUrl}/api/banco/extrato/imprimir-item/${transactionId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'userToken': userToken || ""
-        },
+      const response = await api.get(`/api/banco/extrato/imprimir-item/${transactionId}`, {
         responseType: 'blob'
       });
 

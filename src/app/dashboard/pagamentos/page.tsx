@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import axios from "axios";
+import api from "@/lib/api";
 import { 
   Barcode, 
   QrCode, 
@@ -63,16 +63,10 @@ export default function PagamentosPage() {
     
     setIsConsulting(true);
     try {
-      const token = localStorage.getItem("token");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
-      
-      const res = await axios.post(`${apiUrl}/api/banco/pagamentos/consultar-boleto`, 
-        { 
-          linhaDigitavel: barcode.replace(/\D/g, ""),
-          deviceId: "IB-WEB-PLATFORM" 
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.post("/api/banco/pagamentos/consultar-boleto", { 
+        linhaDigitavel: barcode.replace(/\D/g, ""),
+        deviceId: "IB-WEB-PLATFORM" 
+      });
       
       if (res.data) {
         setBoletoData(res.data.data || res.data);
@@ -90,13 +84,9 @@ export default function PagamentosPage() {
   const handleRequestSms = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
-      
-      const res = await axios.post(`${apiUrl}/api/users/solicitar-pin`,
-        { amount: String(boletoData?.valorTotal || boletoData?.valor || "0") },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      const res = await api.post("/api/users/solicitar-pin", { 
+        amount: String(boletoData?.valorTotal || boletoData?.valor || "0") 
+      });
 
       if (res.data) {
         setPinId(res.data.pinId || res.data.id || "");
@@ -118,35 +108,18 @@ export default function PagamentosPage() {
 
     setIsLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const userToken = localStorage.getItem("userToken");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
-
       // 1. Validar PIN
-      await axios.post(`${apiUrl}/api/users/validar-pin`,
-        { pin: smsCode, pinId: pinId },
-        { 
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'usertoken': userToken || ""
-          } 
-        }
-      );
+      await api.post("/api/users/validar-pin", { 
+        pin: smsCode, 
+        pinId: pinId 
+      });
 
       // 2. Efetivar Pagamento
-      const res = await axios.post(`${apiUrl}/api/banco/pagamentos/pagar-boleto`,
-        {
-          linhaDigitavel: boletoData?.linhaDigitavel || barcode.replace(/\D/g, ""),
-          deviceId: "IB-WEB-PLATFORM",
-          pin: smsCode
-        },
-        { 
-          headers: { 
-            Authorization: `Bearer ${token}`,
-            'usertoken': userToken || ""
-          } 
-        }
-      );
+      const res = await api.post("/api/banco/pagamentos/pagar-boleto", {
+        linhaDigitavel: boletoData?.linhaDigitavel || barcode.replace(/\D/g, ""),
+        deviceId: "IB-WEB-PLATFORM",
+        pin: smsCode
+      });
 
       if (res.data) {
         const apiData = res.data.data || res.data;
@@ -163,10 +136,7 @@ export default function PagamentosPage() {
 
   const handlePrintReceipt = async () => {
     try {
-      const token = localStorage.getItem("token");
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
-      const response = await axios.get(`${apiUrl}/api/banco/extrato/imprimir-item/${transactionId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const response = await api.get(`/api/banco/extrato/imprimir-item/${transactionId}`, {
         responseType: 'blob'
       });
       const blob = new Blob([response.data], { type: 'application/pdf' });

@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import Link from "next/link";
 import axios from "axios";
+import api from "@/lib/api";
 import { toast } from "sonner";
 
 export default function PixLimitesPage() {
@@ -29,24 +30,17 @@ export default function PixLimitesPage() {
   React.useEffect(() => {
     const fetchLimits = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const userToken = localStorage.getItem("userToken");
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
-        
-        // De acordo com o back-end, o endpoint de limites espera o token longo (userToken)
-        // no header Authorization e o path pode ser /api/v1/pix/limites
-        const res = await axios.get(`${apiUrl}/api/v1/pix/limites`, {
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-            'Content-Type': 'application/json'
-          }
-        });
+        const res = await api.get("/api/limits/buscar");
         
         if (res.data) {
           const data = res.data.data || res.data;
           setLimits(data);
-          if (data.limiteDiario) setDayLimit([data.limiteDiario]);
-          if (data.limiteNoturno) setNightLimit([data.limiteNoturno]);
+          
+          const dailyLimit = data.limiteDiario || data.limiteDiurno;
+          const nightLimitVal = data.limiteNoturno;
+          
+          if (dailyLimit) setDayLimit([dailyLimit]);
+          if (nightLimitVal) setNightLimit([nightLimitVal]);
         }
       } catch (err) {
         console.error("Error fetching limits:", err);
@@ -56,6 +50,25 @@ export default function PixLimitesPage() {
     };
     fetchLimits();
   }, []);
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      const payload = {
+        limiteDiurno: dayLimit[0],
+        limiteNoturno: nightLimit[0],
+        limiteMesmoTitular: limits?.limiteMesmoTitular || 5000 // default or existing
+      };
+      
+      await api.post("/api/limits/atualizar", payload);
+      toast.success("Limites atualizados com sucesso!");
+    } catch (err) {
+      console.error("Error updating limits:", err);
+      toast.error("Erro ao atualizar limites. Tente novamente.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -184,8 +197,12 @@ export default function PixLimitesPage() {
               </div>
            </div>
 
-           <Button className="w-full h-16 md:h-20 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-[24px] md:rounded-[32px] font-black text-base md:text-xl uppercase tracking-widest shadow-2xl shadow-black/10 transition-all active:scale-95 font-sans">
-              Salvar Alterações
+           <Button 
+             onClick={handleSave}
+             disabled={isLoading}
+             className="w-full h-16 md:h-20 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-[24px] md:rounded-[32px] font-black text-base md:text-xl uppercase tracking-widest shadow-2xl shadow-black/10 transition-all active:scale-95 font-sans"
+           >
+              {isLoading ? "Salvando..." : "Salvar Alterações"}
            </Button>
         </div>
       </div>
