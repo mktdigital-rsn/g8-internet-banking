@@ -31,14 +31,21 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 
-const menuItems = [
+interface MenuItem {
+  icon: any;
+  label: string;
+  href: string;
+  badge?: string;
+}
+
+const menuItems: MenuItem[] = [
   { icon: Home, label: "Resumo", href: "/dashboard" },
-  { icon: Wallet, label: "Pagamentos", href: "/dashboard/pagamentos", badge: "2" },
+  { icon: Wallet, label: "Pagamentos", href: "/dashboard/pagamentos" },
   { icon: ArrowUpRight, label: "Transferência", href: "/dashboard/transferencia" },
   { icon: Smartphone, label: "PIX", href: "/dashboard/pix" },
   { icon: FileText, label: "Extrato", href: "/dashboard/extrato" },
-  { icon: UserCircle, label: "Conta", href: "#" },
-  { icon: HelpCircle, label: "Ajuda", href: "#" },
+  { icon: UserCircle, label: "Conta", href: "/dashboard/conta" },
+  { icon: HelpCircle, label: "Ajuda", href: "/dashboard/ajuda" },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

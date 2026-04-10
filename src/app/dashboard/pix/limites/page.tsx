@@ -104,30 +104,30 @@ export default function PixLimitesPage() {
         </div>
 
         {/* Limits Controls Card */}
-        <div className="bg-white rounded-[32px] md:rounded-[56px] p-6 md:p-12 border border-neutral-100 shadow-xl shadow-black/5 space-y-10 md:space-y-12">
+        <div className="bg-white rounded-lg p-6 md:p-8 border border-neutral-100 shadow-xl shadow-black/5 space-y-8">
            {/* Info Box */}
-           <div className="bg-[#fffbeb] border border-orange-100 p-6 md:p-8 rounded-[24px] md:rounded-[32px] flex flex-col sm:flex-row gap-4 md:gap-6 items-start">
-              <div className="bg-[#f97316] p-3 rounded-[14px] md:rounded-[18px] text-white shadow-lg shadow-orange-500/20 shrink-0">
-                 <Info className="h-5 w-5 md:h-6 md:w-6" />
+           <div className="bg-[#fffbeb] border border-orange-100 p-5 md:p-6 rounded-md flex flex-col sm:flex-row gap-4 items-start">
+              <div className="bg-[#f97316] p-2.5 rounded-md text-white shadow-lg shadow-orange-500/20 shrink-0">
+                 <Info className="h-5 w-5" />
               </div>
               <div>
-                 <p className="text-[10px] md:text-sm font-black text-[#0c0a09] uppercase tracking-widest mb-1 md:mb-2 leading-none">Sobre seus limites</p>
-                 <p className="text-xs md:text-sm font-medium text-neutral-500 leading-relaxed font-sans">
+                 <p className="text-[10px] md:text-xs font-black text-[#0c0a09] uppercase tracking-widest mb-1 leading-none">Sobre seus limites</p>
+                 <p className="text-xs font-medium text-neutral-500 leading-relaxed font-sans">
                     Aumentos de limite levam de 24h a 48h para serem aprovados por questões de segurança. Reduções de limite são imediatas.
                  </p>
               </div>
            </div>
 
            {/* Limite Diário */}
-           <div className="space-y-6 md:space-y-10">
+           <div className="space-y-6 md:space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                  <div>
-                    <h3 className="text-xl md:text-2xl font-black text-[#0c0a09] tracking-tight">Limite Diário</h3>
-                    <p className="text-[10px] md:text-sm font-bold text-neutral-400 uppercase tracking-widest mt-1">Período: 06:00 às 20:00</p>
+                    <h3 className="text-lg md:text-xl font-black text-[#0c0a09] tracking-tight">Limite Diário</h3>
+                    <p className="text-[9px] md:text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Período: 06:00 às 20:00</p>
                  </div>
-                 <div className="text-left sm:text-right bg-neutral-50 sm:bg-transparent p-4 sm:p-0 rounded-2xl border border-neutral-100 sm:border-0">
-                    <p className="text-2xl md:text-4xl font-black text-[#f97316] font-mono tracking-tighter leading-none mb-1">{formatCurrency(dayLimit[0])}</p>
-                    <p className="text-[9px] md:text-[10px] text-[#f97316] font-black uppercase tracking-widest opacity-60">
+                 <div className="text-left sm:text-right">
+                    <p className="text-2xl md:text-3xl font-black text-[#f97316] font-mono tracking-tighter leading-none mb-1">{formatCurrency(dayLimit[0])}</p>
+                    <p className="text-[8px] md:text-[9px] text-[#f97316] font-black uppercase tracking-widest opacity-60">
                       Disponível: {formatCurrency(limits?.limiteDiarioUtilizado ? (dayLimit[0] - limits.limiteDiarioUtilizado) : (dayLimit[0] - 1250))}
                     </p>
                  </div>
@@ -138,7 +138,7 @@ export default function PixLimitesPage() {
                    max={20000} 
                    step={100} 
                    onValueChange={setDayLimit}
-                   className="[&_[role=slider]]:bg-[#f97316] [&_[role=slider]]:border-[#f97316] [&_[role=slider]]:h-6 [&_[role=slider]]:w-6 [&_[role=slider]]:shadow-xl [&_.relative]:h-2"
+                   className="[&_[role=slider]]:bg-[#f97316] [&_[role=slider]]:border-[#f97316] [&_[role=slider]]:h-5 [&_[role=slider]]:w-5 [&_[role=slider]]:shadow-xl [&_.relative]:h-1.5"
                  />
               </div>
            </div>
@@ -146,18 +146,18 @@ export default function PixLimitesPage() {
            <div className="h-px bg-neutral-100 w-full" />
 
            {/* Limite Noturno */}
-           <div className="space-y-6 md:space-y-10">
+           <div className="space-y-6 md:space-y-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                  <div>
-                    <div className="flex items-center gap-3">
-                       <h3 className="text-xl md:text-2xl font-black text-[#0c0a09] tracking-tight">Limite Noturno</h3>
-                       <Badge className="bg-[#0c0a09] text-white rounded-full px-2 md:px-3 py-0.5 md:py-1 text-[8px] md:text-[9px] font-black tracking-widest">ATIVO</Badge>
+                    <div className="flex items-center gap-2">
+                       <h3 className="text-lg md:text-xl font-black text-[#0c0a09] tracking-tight">Limite Noturno</h3>
+                       <Badge className="bg-[#0c0a09] text-white rounded-sm px-2 py-0.5 text-[7px] md:text-[8px] font-black tracking-widest">ATIVO</Badge>
                     </div>
-                    <p className="text-[10px] md:text-sm font-bold text-neutral-400 uppercase tracking-widest mt-1">Período: 20:00 às 06:00</p>
+                    <p className="text-[9px] md:text-[11px] font-bold text-neutral-400 uppercase tracking-widest mt-1">Período: 20:00 às 06:00</p>
                  </div>
-                 <div className="text-left sm:text-right bg-black sm:bg-transparent p-4 sm:p-0 rounded-2xl">
-                    <p className="text-2xl md:text-4xl font-black text-[#f97316] font-mono tracking-tighter leading-none mb-1">{formatCurrency(nightLimit[0])}</p>
-                    <p className="text-[9px] md:text-[10px] text-[#f97316] sm:text-[#f97316] font-black uppercase tracking-widest opacity-60">Máximo Sugerido</p>
+                 <div className="text-left sm:text-right">
+                    <p className="text-2xl md:text-3xl font-black text-[#f97316] font-mono tracking-tighter leading-none mb-1">{formatCurrency(nightLimit[0])}</p>
+                    <p className="text-[8px] md:text-[9px] text-[#f97316] font-black uppercase tracking-widest opacity-60">Máximo Sugerido</p>
                  </div>
               </div>
               <div className="px-2">
@@ -166,7 +166,7 @@ export default function PixLimitesPage() {
                    max={5000} 
                    step={50} 
                    onValueChange={setNightLimit}
-                   className="[&_[role=slider]]:bg-[#f97316] [&_[role=slider]]:border-[#f97316] [&_[role=slider]]:h-6 [&_[role=slider]]:w-6 [&_[role=slider]]:shadow-xl [&_.relative]:h-2"
+                   className="[&_[role=slider]]:bg-[#f97316] [&_[role=slider]]:border-[#f97316] [&_[role=slider]]:h-5 [&_[role=slider]]:w-5 [&_[role=slider]]:shadow-xl [&_.relative]:h-1.5"
                  />
               </div>
            </div>
@@ -174,25 +174,25 @@ export default function PixLimitesPage() {
            <div className="h-px bg-neutral-100 w-full" />
 
            {/* Aditional Safety Controls */}
-           <div className="space-y-6 md:space-y-8">
-              <h3 className="text-lg md:text-xl font-black text-[#0c0a09] uppercase tracking-widest">Opções de Segurança</h3>
-              <div className="grid grid-cols-1 gap-4 md:gap-6">
+           <div className="space-y-6">
+              <h3 className="text-base md:text-lg font-black text-[#0c0a09] uppercase tracking-widest">Opções de Segurança</h3>
+              <div className="grid grid-cols-1 gap-3 md:gap-4">
                  {[
                    { icon: ShieldCheck, title: "Lista de Confiança", desc: "Contatos que não precisam de limites rígidos", active: true },
                    { icon: Clock, title: "Horário Noturno", desc: "Defina quando seu limite noturno começa", active: false },
                    { icon: Smartphone, title: "Biometria Ativa", desc: "Pedir biometria para todos os Pix acima de R$ 500", active: true },
                  ].map((item, idx) => (
-                   <div key={idx} className="flex items-center justify-between p-5 md:p-8 bg-neutral-50 rounded-[24px] md:rounded-[32px] border border-neutral-100 hover:bg-white hover:shadow-2xl hover:shadow-orange-500/5 transition-all group cursor-pointer">
-                      <div className="flex items-center gap-4 md:gap-6 min-w-0">
-                         <div className="w-10 h-10 md:w-14 md:h-14 bg-white rounded-xl md:rounded-2xl flex items-center justify-center text-[#f97316] shadow-sm group-hover:scale-110 group-hover:rotate-6 transition-all shrink-0">
-                            <item.icon className="h-5 w-5 md:h-6 md:w-6" />
+                   <div key={idx} className="flex items-center justify-between p-4 md:p-6 bg-neutral-50 rounded-md border border-neutral-100 hover:bg-white hover:shadow-lg transition-all group cursor-pointer">
+                      <div className="flex items-center gap-4 min-w-0">
+                         <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-md flex items-center justify-center text-[#f97316] shadow-sm group-hover:scale-105 transition-all shrink-0">
+                            <item.icon className="h-5 w-5" />
                          </div>
                          <div className="min-w-0">
-                            <p className="font-black text-sm md:text-lg text-[#0c0a09] leading-tight tracking-tight truncate">{item.title}</p>
-                            <p className="text-[8px] md:text-xs text-neutral-400 font-bold uppercase tracking-widest mt-0.5 md:mt-1 truncate">{item.desc}</p>
+                            <p className="font-black text-sm md:text-base text-[#0c0a09] leading-tight tracking-tight truncate">{item.title}</p>
+                            <p className="text-[8px] md:text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-0.5 truncate">{item.desc}</p>
                          </div>
                       </div>
-                      <Switch checked={item.active} className="data-[state=checked]:bg-[#f97316] w-10 md:w-12 h-5 md:h-6 shrink-0" />
+                      <Switch checked={item.active} className="data-[state=checked]:bg-[#f97316] w-9 h-5 shrink-0" />
                    </div>
                  ))}
               </div>
@@ -201,7 +201,7 @@ export default function PixLimitesPage() {
            <Button 
              onClick={handleSave}
              disabled={isLoading}
-             className="w-full h-16 md:h-20 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-[24px] md:rounded-[32px] font-black text-base md:text-xl uppercase tracking-widest shadow-2xl shadow-black/10 transition-all active:scale-95 font-sans"
+             className="w-full h-14 md:h-16 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-md font-black text-sm md:text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 font-sans"
            >
               {isLoading ? "Salvando..." : "Salvar Alterações"}
            </Button>
@@ -209,31 +209,31 @@ export default function PixLimitesPage() {
       </div>
 
       {/* Side Column */}
-      <div className="w-full lg:w-[380px] shrink-0 space-y-6 md:space-y-8 pb-10">
-        <Card className="rounded-[32px] md:rounded-[48px] border-0 shadow-2xl bg-[#f97316] p-8 md:p-10 text-white relative overflow-hidden group min-h-[300px] md:h-[360px] flex flex-col justify-between">
+      <div className="w-full lg:w-[320px] shrink-0 space-y-6 pb-10">
+        <Card className="rounded-md border-0 shadow-2xl bg-[#f97316] p-6 md:p-8 text-white relative overflow-hidden group min-h-[260px] flex flex-col justify-between">
            <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -mr-32 -mt-32 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-           <div className="relative z-10 space-y-4 md:space-y-6">
-              <div className="w-14 h-14 md:w-16 md:h-16 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
-                 <ShieldCheck className="h-7 w-7 md:h-8 md:w-8 text-white" />
+           <div className="relative z-10 space-y-4">
+              <div className="w-12 h-12 bg-white/20 rounded-md flex items-center justify-center backdrop-blur-md">
+                 <ShieldCheck className="h-6 w-6 text-white" />
               </div>
-              <h3 className="text-2xl md:text-3xl font-black leading-tight tracking-tighter uppercase">Seguro Pix Elite</h3>
-              <p className="text-xs md:text-sm font-medium text-white/90 leading-relaxed font-sans">Proteção contra coação e golpes digitais. Mensalidades a partir de R$ 9,90.</p>
+              <h3 className="text-xl md:text-2xl font-black leading-tight tracking-tighter uppercase">Seguro Pix Elite</h3>
+              <p className="text-[11px] md:text-xs font-medium text-white/90 leading-relaxed font-sans">Proteção contra coação e golpes digitais. Mensalidades a partir de R$ 9,90.</p>
            </div>
-           <button className="relative z-10 text-[9px] md:text-[10px] font-black border-b-2 border-white uppercase tracking-[0.2em] self-start pb-1 hover:text-white/70 transition-colors">Saber Mais</button>
+           <button className="relative z-10 text-[9px] font-black border-b-2 border-white uppercase tracking-[0.2em] self-start pb-1 hover:text-white/70 transition-colors">Saber Mais</button>
         </Card>
 
-        <div className="p-8 md:p-10 bg-white rounded-[32px] md:rounded-[40px] border border-neutral-100 shadow-xl shadow-black/5 space-y-6 md:space-y-8">
+        <div className="p-6 md:p-8 bg-white rounded-md border border-neutral-100 shadow-xl shadow-black/5 space-y-6">
            <div className="flex items-center justify-between">
-              <h4 className="font-black text-[#0c0a09] uppercase tracking-widest text-[10px] md:text-xs">Histórico Recente</h4>
-              <button className="text-[8px] md:text-[9px] font-black text-[#f97316] uppercase tracking-widest hover:underline">Ver Todos</button>
+              <h4 className="font-black text-[#0c0a09] uppercase tracking-widest text-[9px] md:text-[10px]">Histórico Recente</h4>
+              <button className="text-[8px] font-black text-[#f97316] uppercase tracking-widest hover:underline">Ver Todos</button>
            </div>
            <div className="space-y-6">
               <div className="flex gap-4">
-                 <div className="w-1 bg-[#f97316] rounded-full shadow-[0_0_10px_rgba(249,115,22,0.4)]" />
+                 <div className="w-1 bg-[#f97316] rounded-full" />
                  <div className="space-y-1">
-                    <p className="text-xs md:text-sm font-black text-[#0c0a09] tracking-tight uppercase">Aumento de Limite</p>
-                    <p className="text-[9px] md:text-[10px] text-neutral-400 font-bold uppercase tracking-widest font-sans">02 Fev, 14:12</p>
-                    <Badge variant="outline" className="mt-2 text-[7px] md:text-[8px] font-black uppercase text-blue-500 border-blue-100 bg-blue-50/50 px-2 rounded-sm">Em Análise</Badge>
+                    <p className="text-xs font-black text-[#0c0a09] tracking-tight uppercase">Aumento de Limite</p>
+                    <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest font-sans">02 Fev, 14:12</p>
+                    <Badge variant="outline" className="mt-2 text-[7px] font-black uppercase text-blue-500 border-blue-100 bg-blue-50/50 px-2 rounded-sm">Em Análise</Badge>
                  </div>
               </div>
            </div>
