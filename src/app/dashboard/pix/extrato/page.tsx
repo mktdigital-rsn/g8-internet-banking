@@ -69,7 +69,7 @@ export default function PixExtratoPage() {
             try {
                 const token = localStorage.getItem("token");
                 const userToken = localStorage.getItem("userToken");
-                const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
+                const apiUrl = "https://g8api.bskpay.com.br";
 
                 const response = await axios.get(`${apiUrl}/api/banco/extrato/buscar`, {
                     headers: {
@@ -109,7 +109,7 @@ export default function PixExtratoPage() {
         try {
             const token = localStorage.getItem("token");
             const userToken = localStorage.getItem("userToken");
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
+            const apiUrl = "https://g8api.bskpay.com.br";
             
             if (format === 'pdf') {
                 const response = await axios.get(`${apiUrl}/api/banco/extrato/exportar-pdf`, {
@@ -167,7 +167,7 @@ export default function PixExtratoPage() {
         if (!id) return;
         try {
             const token = localStorage.getItem("token");
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
+            const apiUrl = "https://g8api.bskpay.com.br";
 
             const response = await axios.get(`${apiUrl}/api/banco/extrato/imprimir-item/${id}`, {
                 headers: {

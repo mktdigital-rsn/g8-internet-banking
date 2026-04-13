@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Get the base URL from environment variables, defaulting to production if not set
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://g8api.bskpay.com.br';
+const BASE_URL = 'https://g8api.bskpay.com.br';
 
 const api = axios.create({
   baseURL: BASE_URL,

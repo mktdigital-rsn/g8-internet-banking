@@ -36,7 +36,7 @@ export default function PixReceberPage() {
       try {
         const token = localStorage.getItem("token");
         const userToken = localStorage.getItem("userToken");
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
+        const apiUrl = "https://g8api.bskpay.com.br";
         
         // 1. Get basic user info
         const userRes = await axios.get(`${apiUrl}/api/users/data`, {
@@ -92,7 +92,7 @@ export default function PixReceberPage() {
     setPixPayload("");
     const token = localStorage.getItem("token");
     const userToken = localStorage.getItem("userToken");
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
+    const apiUrl = "https://g8api.bskpay.com.br";
     
     try {
         // EXACT flow from the mobile app (CronosBankService / gerar-copicola)
