@@ -36,9 +36,12 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useAtomValue } from "jotai";
+import { temporaryDeviceIdAtom } from "@/store/auth";
 
 export default function PagamentosPage() {
   const router = useRouter();
+  const temporaryDeviceId = useAtomValue(temporaryDeviceIdAtom);
   
   // State Machine
   const [step, setStep] = useState<"landing" | "review" | "sms" | "success">("landing");
@@ -60,12 +63,17 @@ export default function PagamentosPage() {
       toast.error("Por favor, insira um código de barras válido.");
       return;
     }
+
+    if (!temporaryDeviceId) {
+      toast.error("Aguarde concluir o login com QR antes de realizar pagamentos.");
+      return;
+    }
     
     setIsConsulting(true);
     try {
       const res = await api.post("/api/banco/pagamentos/consultar-boleto", { 
         linhaDigitavel: barcode.replace(/\D/g, ""),
-        deviceId: "IB-WEB-PLATFORM" 
+        deviceId: temporaryDeviceId
       });
       
       if (res.data) {
@@ -139,7 +147,7 @@ export default function PagamentosPage() {
       // 2. Efetivar Pagamento
       const res = await api.post("/api/banco/pagamentos/pagar-boleto", {
         linhaDigitavel: boletoData?.linhaDigitavel || barcode.replace(/\D/g, ""),
-        deviceId: "IB-WEB-PLATFORM",
+        deviceId: temporaryDeviceId,
         pin: smsCode
       });
 

@@ -29,9 +29,12 @@ import { Separator } from "@/components/ui/separator";
 import { Building2, Fingerprint, CheckCircle2, Download, Smartphone as SmartphoneIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useAtomValue } from "jotai";
+import { temporaryDeviceIdAtom } from "@/store/auth";
 
 function PixPagarContent() {
   const searchParams = useSearchParams();
+  const temporaryDeviceId = useAtomValue(temporaryDeviceIdAtom);
   const typeParam = searchParams.get("type") || "key";
   const type = typeParam.toLowerCase() === "celular" ? "phone" : typeParam.toLowerCase();
   const urlKey = searchParams.get("key") || "";
@@ -255,6 +258,11 @@ function PixPagarContent() {
       return;
     }
 
+    if (!temporaryDeviceId) {
+      toast.error("Aguarde concluir o login com QR antes de realizar pagamentos.");
+      return;
+    }
+
     setIsLoadingTransfer(true);
     try {
       if (type !== "qrcode" && type !== "copia_cola") {
@@ -283,7 +291,7 @@ function PixPagarContent() {
         endToEndIdInterno: endToEndId || crypto.randomUUID(),
         chavePixTypeHint: type === "phone" ? "phone" : null,
         pin: smsCode,
-        deviceId: "IB-WEB-PLATFORM"
+        deviceId: temporaryDeviceId
       };
 
       if (type === "qrcode" || type === "copia_cola") {
@@ -309,7 +317,7 @@ function PixPagarContent() {
           receiverConciliationId: qrId,
           amount: txAmount,
           endToEndIdInterno: internalId,
-          deviceId: "2de10864-0672-4f25-a92d-bf802b03a381"
+          deviceId: temporaryDeviceId
         };
       }
 

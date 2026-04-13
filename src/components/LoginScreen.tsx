@@ -16,6 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
+import { temporaryDeviceIdAtom } from "@/store/auth";
+import { useAtom } from "jotai";
 import { toast } from "sonner";
 
 type LoginStep = "identifier" | "virtual" | "qrcode";
@@ -47,6 +49,7 @@ type LoginResponse = {
 };
 
 export default function LoginScreen() {
+  const [, setTemporaryDeviceId] = useAtom(temporaryDeviceIdAtom);
   const [step, setStep] = useState<LoginStep>("identifier");
   const [identifier, setIdentifier] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -212,6 +215,7 @@ export default function LoginScreen() {
 
       if (response.status === 200) {
         const { token, qrcode, status, expiresAt } = response.data.data;
+        setTemporaryDeviceId(token);
         setChallengeToken(token);
         setChallengeQrCode(qrcode);
         setChallengeStatus(status);
@@ -233,6 +237,7 @@ export default function LoginScreen() {
   const handleRestartFlow = () => {
     setPasswordKeys([]);
     resetChallenge();
+    setTemporaryDeviceId("");
     setStep("identifier");
     setIsLoading(false);
   };
