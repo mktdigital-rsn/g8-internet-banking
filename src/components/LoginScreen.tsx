@@ -9,7 +9,6 @@ import {
   ArrowRight,
   ShieldCheck,
   ChevronLeft,
-  Lock,
   Smartphone,
   RefreshCcw,
   AlertCircle,
@@ -253,6 +252,18 @@ export default function LoginScreen() {
         ? "Desafio expirado"
         : "Aguardando aprovação no app";
 
+  const formattedExpiresAt = useMemo(() => {
+    if (!challengeExpiresAt) return "";
+
+    const parsedDate = new Date(challengeExpiresAt);
+    if (Number.isNaN(parsedDate.getTime())) return challengeExpiresAt;
+
+    return new Intl.DateTimeFormat("pt-BR", {
+      dateStyle: "short",
+      timeStyle: "short",
+    }).format(parsedDate);
+  }, [challengeExpiresAt]);
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-[#0c0a09]">
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
@@ -380,7 +391,7 @@ export default function LoginScreen() {
                     className="w-full h-16 text-lg font-black bg-[#f97316] hover:bg-[#ea580c] text-white rounded-2xl shadow-lg cursor-pointer"
                     disabled={isLoading || passwordKeys.length === 0}
                   >
-                    {isLoading ? "Gerando desafio..." : "CONTINUAR"}
+                    {isLoading ? "Aguarde um instante" : "CONTINUAR"}
                   </Button>
                 </div>
               </motion.div>
@@ -415,12 +426,10 @@ export default function LoginScreen() {
                     <span className="text-sm font-bold">{statusLabel}</span>
                   </div>
                   <div className="flex items-center gap-3 text-white/50">
-                    <Lock className="h-5 w-5" />
-                    <span className="text-xs font-medium break-all">Token temporário: {challengeToken}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-white/50">
                     <AlertCircle className="h-5 w-5" />
-                    <span className="text-xs font-medium">Expira em: {challengeExpiresAt || "aguardando resposta"}</span>
+                    <span className="text-xs font-medium">
+                      Expira em: {formattedExpiresAt || "aguardando resposta"}
+                    </span>
                   </div>
                 </div>
 
