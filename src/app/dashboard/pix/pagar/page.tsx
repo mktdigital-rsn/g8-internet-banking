@@ -47,7 +47,7 @@ function PixPagarContent() {
   const [isLoadingTransfer, setIsLoadingTransfer] = useState(false);
   const [transactionId, setTransactionId] = useState("");
 
-  const [recipientName, setRecipientName] = useState(urlName);
+  const [recipientName, setRecipientName] = useState(urlName.trim());
   const [recipientBank, setRecipientBank] = useState(urlBank);
   const [recipientDocument, setRecipientDocument] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -150,9 +150,9 @@ function PixPagarContent() {
   const updateRecipientData = (data: any) => {
     console.log("🔍 [RECIPENT DATA UPDATE]:", data);
     setSearchResult(data);
-    setRecipientName(data.nome || data.name || data.recebedorNome || data.beneficiario || "");
-    setRecipientBank(data.instituicao || data.bank || data.recebedorInstituicao || data.instituicaoNome || "");
-    setRecipientDocument(data.cpfcnpj || data.documento || data.taxNumber || "");
+    setRecipientName((data.nome || data.name || data.recebedorNome || data.beneficiario || "").trim());
+    setRecipientBank((data.instituicao || data.bank || data.recebedorInstituicao || data.instituicaoNome || "").trim());
+    setRecipientDocument((data.cpfcnpj || data.documento || data.taxNumber || "").trim());
     
     // Aggressive ID capture
     const foundId = data.qrcodeId || data.id_payment || data.idPayment || data.uuid || data.endToEndId || data.txid || data.id || "";
@@ -498,7 +498,7 @@ function PixPagarContent() {
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-white rounded-[5px] flex items-center justify-center shrink-0 border border-neutral-100 shadow-sm">
                       <Image
-                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${recipientName || 'G8'}`}
+                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent((recipientName || 'G8').trim())}`}
                         alt="Avatar"
                         width={40}
                         height={40}
