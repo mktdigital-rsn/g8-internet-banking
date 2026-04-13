@@ -1,38 +1,64 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import {
   User,
-  Lock,
-  Smartphone,
   ArrowRight,
   ShieldCheck,
-  HelpCircle,
-  Delete,
   ChevronLeft,
-  Keyboard,
-  Eye,
-  EyeOff
+  Lock,
+  Smartphone,
+  RefreshCcw,
+  AlertCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/api";
 import { toast } from "sonner";
 
-type LoginStep = "identifier" | "password" | "qrcode";
+type LoginStep = "identifier" | "virtual" | "qrcode";
+type ChallengeStatus = "PENDING" | "APPROVED" | "EXPIRED";
+
+type ChallengeResponse = {
+  success: boolean;
+  data: {
+    token: string;
+    qrcode: string;
+    status: ChallengeStatus;
+    expiresAt: string;
+  };
+  message: string | null;
+};
+
+type ChallengeStatusResponse = {
+  success: boolean;
+  data: {
+    status: ChallengeStatus;
+    expiresAt: string;
+  };
+  message: string | null;
+};
+
+type LoginResponse = {
+  accessToken?: string;
+  userToken?: string;
+};
 
 export default function LoginScreen() {
   const [step, setStep] = useState<LoginStep>("identifier");
   const [identifier, setIdentifier] = useState("");
-  const [passwordMode, setPasswordMode] = useState<"virtual" | "input">("virtual");
-  const [passwordText, setPasswordText] = useState("");
-  const [passwordKeys, setPasswordKeys] = useState<string[][]>([]);
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [sessionToken, setSessionToken] = useState("");
+  const [passwordKeys, setPasswordKeys] = useState<string[][]>([]);
+  const [challengeToken, setChallengeToken] = useState("");
+  const [challengeQrCode, setChallengeQrCode] = useState("");
+  const [challengeStatus, setChallengeStatus] = useState<ChallengeStatus>("PENDING");
+  const [challengeExpiresAt, setChallengeExpiresAt] = useState("");
+  const [isPolling, setIsPolling] = useState(false);
+  const [hasFinalized, setHasFinalized] = useState(false);
+  const pollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const numberPairs = [
     ["0", "1"],
@@ -46,10 +72,26 @@ export default function LoginScreen() {
     return passwordKeys.map(() => "●").join(" ");
   }, [passwordKeys]);
 
-  const handleIdentifierSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!identifier) return;
-    setStep("password");
+  const cleanIdentifier = useMemo(() => {
+    const isEmail = identifier.includes("@");
+    return isEmail ? identifier.trim().toLowerCase() : identifier.replace(/\D/g, "");
+  }, [identifier]);
+
+  const buildPassword = () => {
+    return passwordKeys.map((pair) => pair.join("")).join("");
+  };
+
+  const resetChallenge = () => {
+    if (pollingTimerRef.current) {
+      clearTimeout(pollingTimerRef.current);
+      pollingTimerRef.current = null;
+    }
+    setChallengeToken("");
+    setChallengeQrCode("");
+    setChallengeStatus("PENDING");
+    setChallengeExpiresAt("");
+    setIsPolling(false);
+    setHasFinalized(false);
   };
 
   const addPasswordPair = (pair: string[]) => {
@@ -61,43 +103,24 @@ export default function LoginScreen() {
     setPasswordKeys(passwordKeys.slice(0, -1));
   };
 
-  const handleLoginSubmit = async () => {
-    setIsLoading(true);
+  const handleIdentifierSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!identifier) return;
+    setStep("virtual");
+  };
+
+  const submitFinalLogin = async (token: string) => {
+    if (hasFinalized) return;
+    setHasFinalized(true);
 
     try {
-      // Force lowercase only if it's an email format
-      const isEmail = identifier.includes("@");
-      const cleanIdentifier = isEmail
-        ? identifier.trim().toLowerCase()
-        : identifier.replace(/\D/g, "");
+      const payload = {
+        email: cleanIdentifier,
+        keys: passwordKeys,
+        deviceId: token,
+      };
 
-      let response;
-
-      if (passwordMode === "virtual") {
-        if (passwordKeys.length === 0) throw new Error("Selecione sua senha");
-
-        const deviceNameRaw = typeof window !== 'undefined' ? window.navigator.userAgent : "Web";
-        const deviceNameEncoded = btoa(unescape(encodeURIComponent(deviceNameRaw)));
-
-        const payload = {
-          email: cleanIdentifier,
-          keys: passwordKeys,
-          deviceId: "IB-WEB-PLATFORM",
-          deviceName: deviceNameEncoded, // Send Base64 as app does
-        };
-
-        console.log("SENDING TECLADO VIRTUAL LOGIN:", payload.email);
-        response = await api.post("/api/auth/login/teclado-virtual", payload);
-      } else {
-        if (!passwordText) throw new Error("Digite sua senha");
-
-        const payload = {
-          email: cleanIdentifier,
-          password: passwordText
-        };
-        console.log("SENDING TRADITIONAL LOGIN:", payload.email);
-        response = await api.post("/api/auth/login", payload);
-      }
+      const response = await api.post<LoginResponse>("/api/auth/login/teclado-virtual", payload);
 
       if (response.status === 200) {
         const { accessToken, userToken } = response.data;
@@ -105,33 +128,133 @@ export default function LoginScreen() {
         if (userToken) localStorage.setItem("userToken", userToken);
 
         toast.success("Login realizado!");
-        setSessionToken("session-" + Math.random().toString(36).substring(7));
-        setStep("qrcode");
+        window.location.href = "/dashboard";
       }
     } catch (err: any) {
-      console.error("Login Error details:", err);
-
-      // Check if it's the BadCredentialsException being sent back
-      const message = err.response?.data?.message || err.response?.data?.mensagem || "Senha ou usuário incorretos.";
+      const message =
+        err.response?.data?.message ||
+        err.response?.data?.mensagem ||
+        "Não foi possível concluir o acesso. Tente novamente.";
       toast.error(message);
-
-      setPasswordKeys([]);
-      setPasswordText("");
+      setHasFinalized(false);
+      setIsPolling(false);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleFinalizeLogin = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      window.location.href = "/dashboard";
-    }, 800);
+  const stopPolling = () => {
+    setIsPolling(false);
+    if (pollingTimerRef.current) {
+      clearTimeout(pollingTimerRef.current);
+      pollingTimerRef.current = null;
+    }
   };
+
+  const schedulePoll = (token: string) => {
+    if (pollingTimerRef.current) {
+      clearTimeout(pollingTimerRef.current);
+    }
+
+    pollingTimerRef.current = setTimeout(async () => {
+      const status = await pollChallengeStatus(token);
+      if (status === "PENDING") {
+        schedulePoll(token);
+      }
+    }, 2000);
+  };
+
+  const pollChallengeStatus = async (token: string) => {
+    try {
+      const response = await api.get<ChallengeStatusResponse>(
+        `/api/auth/login/teclado-virtual/challenge/${token}/status`
+      );
+
+      const nextStatus = response.data.data.status;
+      setChallengeStatus(nextStatus);
+      setChallengeExpiresAt(response.data.data.expiresAt);
+
+      if (nextStatus === "APPROVED") {
+        stopPolling();
+        await submitFinalLogin(token);
+        return;
+      }
+
+      if (nextStatus === "EXPIRED") {
+        stopPolling();
+        setIsLoading(false);
+        toast.error("O desafio expirou. Reinicie o acesso.");
+      }
+
+      return nextStatus;
+    } catch (err: any) {
+      const message = err.response?.data?.message || "Não foi possível verificar o desafio.";
+      toast.error(message);
+      stopPolling();
+      setIsLoading(false);
+      return null;
+    }
+  };
+
+  const handleLoginSubmit = async () => {
+    setIsLoading(true);
+    resetChallenge();
+
+    try {
+      if (passwordKeys.length === 0) throw new Error("Selecione sua senha");
+
+      const payload = {
+        email: cleanIdentifier,
+        password: buildPassword(),
+        keys: passwordKeys,
+      };
+
+      const response = await api.post<ChallengeResponse>("/api/auth/login/teclado-virtual/challenge", payload);
+
+      if (response.status === 200) {
+        const { token, qrcode, status, expiresAt } = response.data.data;
+        setChallengeToken(token);
+        setChallengeQrCode(qrcode);
+        setChallengeStatus(status);
+        setChallengeExpiresAt(expiresAt);
+        setStep("qrcode");
+        setIsPolling(true);
+        schedulePoll(token);
+      }
+    } catch (err: any) {
+      const message =
+        err.response?.data?.message ||
+        err.response?.data?.mensagem ||
+        "Não foi possível gerar o desafio QR Code.";
+      toast.error(message);
+      setIsLoading(false);
+    }
+  };
+
+  const handleRestartFlow = () => {
+    setPasswordKeys([]);
+    resetChallenge();
+    setStep("identifier");
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (pollingTimerRef.current) {
+        clearTimeout(pollingTimerRef.current);
+      }
+    };
+  }, []);
+
+  const statusLabel =
+    challengeStatus === "APPROVED"
+      ? "Desafio aprovado"
+      : challengeStatus === "EXPIRED"
+        ? "Desafio expirado"
+        : "Aguardando aprovação no app";
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-[#0c0a09]">
-      {/* Background Effects */}
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px]" />
 
@@ -141,7 +264,6 @@ export default function LoginScreen() {
         transition={{ duration: 0.5 }}
         className="w-full max-w-[1100px] grid md:grid-cols-2 bg-[#0c0a09] border border-white/5 rounded-[40px] overflow-hidden shadow-2xl relative z-10 min-h-[650px]"
       >
-        {/* Left Side: Branding */}
         <div className="hidden md:flex flex-col justify-between p-16 bg-gradient-to-br from-primary/10 to-transparent">
           <div>
             <Image src="/logo_g8.webp" alt="G8Pay Logo" width={140} height={50} className="object-contain" />
@@ -154,8 +276,7 @@ export default function LoginScreen() {
               </div>
               <h1 className="text-5xl font-black tracking-tight text-white leading-[1.1]">
                 Acesso <br />
-                Seguro à <br />
-                <span className="text-primary italic">Plataforma.</span>
+                <span className="text-primary italic">Seguro.</span>
               </h1>
             </div>
           </div>
@@ -166,7 +287,6 @@ export default function LoginScreen() {
           </div>
         </div>
 
-        {/* Right Side: Flow */}
         <div className="p-8 md:p-16 flex flex-col justify-center relative bg-[#0c0a09]">
           <AnimatePresence mode="wait">
             {step === "identifier" && (
@@ -179,7 +299,9 @@ export default function LoginScreen() {
               >
                 <div className="space-y-2">
                   <h2 className="text-3xl font-black text-white tracking-tight">Identificação</h2>
-                  <p className="text-white/40 font-bold uppercase text-[10px] tracking-widest">Use seu CPF ou E-mail</p>
+                  <p className="text-white/40 font-bold uppercase text-[10px] tracking-widest">
+                    Use seu CPF, CNPJ ou E-mail
+                  </p>
                 </div>
 
                 <form onSubmit={handleIdentifierSubmit} className="space-y-6">
@@ -206,58 +328,59 @@ export default function LoginScreen() {
               </motion.div>
             )}
 
-            {step === "password" && (
+            {step === "virtual" && (
               <motion.div
-                key="step-pass"
+                key="step-virtual"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-8"
               >
                 <div className="flex items-center gap-4">
-                  <button onClick={() => setStep("identifier")} className="p-2 hover:bg-white/5 rounded-full transition-colors">
+                  <button
+                    onClick={() => setStep("identifier")}
+                    className="p-2 hover:bg-white/5 rounded-full transition-colors"
+                    type="button"
+                  >
                     <ChevronLeft className="h-6 w-6 text-white/50" />
                   </button>
-                  <h2 className="text-2xl font-black text-white">Senha</h2>
+                  <div>
+                    <h2 className="text-2xl font-black text-white">Teclado Virtual</h2>
+                    <p className="text-white/40 text-sm font-medium">{cleanIdentifier || "Identificação pendente"}</p>
+                  </div>
                 </div>
 
                 <div className="space-y-6">
-                  {passwordMode === "virtual" ? (
-                    <div className="space-y-6">
-                      <div className="h-16 flex items-center justify-center gap-3 bg-white/[0.04] rounded-3xl border border-white/[0.08] font-mono text-2xl text-primary tracking-[0.5em]">
-                        {shownPassword || <span className="text-white/10 text-[10px] uppercase font-black">Teclado Virtual</span>}
-                      </div>
+                  <div className="h-16 flex items-center justify-center gap-3 bg-white/[0.04] rounded-3xl border border-white/[0.08] font-mono text-2xl text-primary tracking-[0.5em]">
+                    {shownPassword || <span className="text-white/10 text-[10px] uppercase font-black">Teclado Virtual</span>}
+                  </div>
 
-                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
-                        {numberPairs.map((pair, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => addPasswordPair(pair)}
-                            className="h-14 bg-white/[0.08] hover:bg-[#f97316] border border-white/10 rounded-2xl text-white font-black text-lg transition-all"
-                          >
-                            {pair[0]} ou {pair[1]}
-                          </button>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={removeLastPair}
-                          className="h-14 bg-red-600/20 hover:bg-red-600/40 text-red-500 font-black text-[10px] uppercase rounded-2xl"
-                        >
-                          APAGAR
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    null
-                  )}
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                    {numberPairs.map((pair, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => addPasswordPair(pair)}
+                        className="h-14 bg-white/[0.08] hover:bg-[#f97316] border border-white/10 rounded-2xl text-white font-black text-lg transition-all"
+                      >
+                        {pair[0]} ou {pair[1]}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={removeLastPair}
+                      className="h-14 bg-red-600/20 hover:bg-red-600/40 text-red-500 font-black text-[10px] uppercase rounded-2xl"
+                    >
+                      APAGAR
+                    </button>
+                  </div>
 
                   <Button
                     onClick={handleLoginSubmit}
                     className="w-full h-16 text-lg font-black bg-[#f97316] hover:bg-[#ea580c] text-white rounded-2xl shadow-lg cursor-pointer"
-                    disabled={isLoading || (passwordMode === 'virtual' ? passwordKeys.length === 0 : !passwordText)}
+                    disabled={isLoading || passwordKeys.length === 0}
                   >
-                    {isLoading ? "Validando..." : "CONFIRMAR"}
+                    {isLoading ? "Gerando desafio..." : "CONTINUAR"}
                   </Button>
                 </div>
               </motion.div>
@@ -272,21 +395,48 @@ export default function LoginScreen() {
                 className="flex flex-col items-center justify-center space-y-8 text-center"
               >
                 <div className="space-y-2">
-                  <h2 className="text-3xl font-black text-white">Segurança Ativa</h2>
-                  <p className="text-white/40 font-medium">Aponte seu App G8Pay para o código abaixo.</p>
+                  <h2 className="text-3xl font-black text-white">Aprovação no App</h2>
+                  <p className="text-white/40 font-medium">
+                    Escaneie o QR Code no aplicativo para concluir o login.
+                  </p>
                 </div>
 
-                <div className="p-8 bg-white rounded-[40px]">
-                  <QRCodeSVG value={sessionToken} size={220} level="H" />
+                <div className="p-6 bg-white rounded-[40px]">
+                  {challengeQrCode ? (
+                    <img src={challengeQrCode} alt="QR Code do desafio" className="h-[220px] w-[220px]" />
+                  ) : (
+                    <QRCodeSVG value={challengeToken} size={220} level="H" />
+                  )}
                 </div>
 
-                <Button
-                  onClick={handleFinalizeLogin}
-                  variant="link"
-                  className="text-primary font-black text-[10px] uppercase tracking-widest"
-                >
-                  CONCLUIR ACESSO
-                </Button>
+                <div className="w-full max-w-md space-y-3 rounded-3xl border border-white/10 bg-white/[0.03] p-5 text-left">
+                  <div className="flex items-center gap-3 text-white">
+                    <Smartphone className="h-5 w-5 text-primary" />
+                    <span className="text-sm font-bold">{statusLabel}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-white/50">
+                    <Lock className="h-5 w-5" />
+                    <span className="text-xs font-medium break-all">Token temporário: {challengeToken}</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-white/50">
+                    <AlertCircle className="h-5 w-5" />
+                    <span className="text-xs font-medium">Expira em: {challengeExpiresAt || "aguardando resposta"}</span>
+                  </div>
+                </div>
+
+                {challengeStatus === "EXPIRED" ? (
+                  <Button
+                    onClick={handleRestartFlow}
+                    className="w-full max-w-md h-14 text-base font-black bg-[#f97316] hover:bg-[#ea580c] text-white rounded-2xl"
+                  >
+                    <RefreshCcw className="h-5 w-5 mr-2" />
+                    REINICIAR ACESSO
+                  </Button>
+                ) : (
+                  <div className="text-[10px] uppercase tracking-[0.4em] font-black text-white/30">
+                    Aguardando aprovação automática
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

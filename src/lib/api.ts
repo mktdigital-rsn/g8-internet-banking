@@ -37,11 +37,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear storage and redirect to login if session expires
+      // Clear storage and redirect back to the actual login entrypoint if session expires
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         localStorage.removeItem('userToken');
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     }
     return Promise.reject(error);
