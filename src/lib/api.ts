@@ -37,12 +37,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear storage and redirect to login if session expires
+      console.error("401 Unauthorized detected. Redirect suppressed for debugging.");
+      /*
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         localStorage.removeItem('userToken');
         window.location.href = '/login';
       }
+      */
     }
     return Promise.reject(error);
   }

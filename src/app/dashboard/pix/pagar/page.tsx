@@ -2,6 +2,25 @@
 
 import React, { useState, useEffect, Suspense } from "react";
 import api from "@/lib/api";
+import axios from "axios";
+
+// Local debug instance for API troubleshooting
+const debugApi = axios.create({
+  baseURL: 'http://localhost:8080',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+debugApi.interceptors.request.use((config) => {
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('token');
+    const userToken = localStorage.getItem('userToken');
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (userToken) config.headers.usertoken = userToken;
+  }
+  return config;
+});
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
@@ -125,8 +144,8 @@ function PixPagarContent() {
 
     setIsSearching(true);
     try {
-      console.log("🔍 Decodificando Pix Copia e Cola via /buscar-copicola...");
-      const res = await api.post("/api/banco/pix/buscar-copicola", { payload: cleanCode });
+      console.log("🔍 Decodificando Pix Copia e Cola via http://localhost:8080/api/banco/pix/buscar-copicola...");
+      const res = await debugApi.post("/api/banco/pix/buscar-copicola", { payload: cleanCode });
 
       if (res.data) {
         console.log("✅ PIX COPIACOLA SUCCESS:", res.data);
@@ -257,12 +276,27 @@ function PixPagarContent() {
 
     setIsLoadingTransfer(true);
     try {
-      if (type !== "qrcode" && type !== "copia_cola") {
-        console.log("🛡️ Validando PIN para Pix Chave...");
-        await api.post("/api/users/validar-pin", {
+      // 1. Transactional Token Confirmation (Mandatory for security)
+      const confirmId = searchResult?.qrcodeId || 
+                        searchResult?.id_payment || 
+                        searchResult?.idPayment || 
+                        searchResult?.endToEndId || 
+                        searchResult?.uuid || 
+                        searchResult?.id || 
+                        uuid || pinId;
+
+      console.log("🛡️ [TOKEN CONFIRM REQUEST]:", { token: smsCode, transactionId: confirmId });
+      
+      try {
+        await debugApi.post("/api/users/validar-pin", {
           pin: smsCode,
-          pinId: pinId
+          pinId: pinId,
+          transactionId: confirmId
         });
+        console.log("✅ [VALIDAR PIN SUCCESS] (Localhost)");
+      } catch (err: any) {
+        console.error("❌ [VALIDAR PIN ERROR] (Localhost):", err.response?.status, err.response?.data);
+        throw err;
       }
 
       let endpoint = "/api/banco/pix/transferir";
@@ -315,11 +349,7 @@ function PixPagarContent() {
 
       console.log(`🚀 [PAYLOAD]:`, payload);
 
-      const res = await api.post(`${endpoint}`, payload, {
-        headers: {
-          'User-Agent': 'okhttp/4.12.0' // Matching the app's User-Agent
-        }
-      });
+      const res = await debugApi.post(`${endpoint}`, payload);
 
       if (res.data) {
         console.log("✅ [SUCCESS]:", res.data);
@@ -612,7 +642,7 @@ function PixPagarContent() {
                 <div className="grid grid-cols-1 gap-8">
                   <div className="max-w-full overflow-hidden">
                     <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-2 opacity-60">Chave Pix</p>
-                    <p className="text-[11px] font-medium text-[#0c0a09] font-mono break-all leading-tight tracking-tight bg-white/50 p-3 rounded-md border border-black/5">
+                    <p className="text-xl font-black text-[#0c0a09] font-mono break-all leading-tight tracking-tight bg-white/50 p-4 rounded-xl border border-black/5">
                       {pixCode || identifier}
                     </p>
                   </div>
@@ -620,12 +650,12 @@ function PixPagarContent() {
                     {recipientDocument && (
                       <div>
                         <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-2 opacity-60">Documento</p>
-                        <p className="text-base font-black text-[#0c0a09] tracking-tighter">{recipientDocument}</p>
+                        <p className="text-xl font-black text-[#0c0a09] tracking-tighter">{recipientDocument}</p>
                       </div>
                     )}
                     <div>
                       <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-2 opacity-60">Instituição</p>
-                      <p className="text-base font-black text-[#0c0a09] uppercase tracking-tighter">
+                      <p className="text-xl font-black text-[#0c0a09] uppercase tracking-tighter">
                         {isSearching ? "..." : (recipientBank || "Outro Banco")}
                       </p>
                     </div>
@@ -722,12 +752,12 @@ function PixPagarContent() {
 
                   <div className="grid grid-cols-2 gap-4 border-t border-neutral-100 pt-6">
                     <div className="space-y-1">
-                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Data e Hora</p>
-                      <p className="text-xs font-black text-[#0c0a09] uppercase">{new Date().toLocaleDateString('pt-BR')} - {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-[10px] font-black text-[#0c0a09] uppercase tracking-widest">Data e Hora</p>
+                      <p className="text-sm font-medium text-neutral-500 uppercase">{new Date().toLocaleDateString('pt-BR')} - {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                     <div className="space-y-1 text-right">
-                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">ID da Transação</p>
-                      <p className="text-xs font-black text-[#0c0a09] font-mono">{transactionId || "G8PAY329KXM0"}</p>
+                      <p className="text-[10px] font-black text-[#0c0a09] uppercase tracking-widest">ID da Transação</p>
+                      <p className="text-sm font-medium text-neutral-500 font-mono break-all">{transactionId || "G8PAY329KXM0"}</p>
                     </div>
                   </div>
                 </div>
