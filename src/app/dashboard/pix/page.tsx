@@ -20,7 +20,8 @@ import {
   MessageCircle,
   Diamond,
   ArrowRight,
-  X
+  X,
+  Fingerprint
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -85,11 +86,6 @@ export default function PixPage() {
     { icon: Copy, label: "Pix Copia e Cola", href: "/dashboard/pix/pagar?type=copia_cola" },
   ];
 
-  const receberActions = [
-    { icon: QrCode, label: "Cobrar", href: "/dashboard/pix/receber" },
-    { icon: ArrowDownToLine, label: "Depositar", href: "/dashboard/pix/receber" },
-  ];
-
   const outrosActions = [
     { icon: Contact2, label: "Contatos", href: "/dashboard/pix/contatos" },
     { icon: Key, label: "Minhas Chaves", href: "/dashboard/pix/chaves" },
@@ -115,11 +111,11 @@ export default function PixPage() {
                 {/* Main Action Grid */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
                     {/* Left Column: Input & Main Options */}
-                    <div className="lg:col-span-8 space-y-10">
+                    <div className="lg:col-span-9 space-y-10">
                         <div className="space-y-6">
                             <h2 className="text-xl font-black text-[#0c0a09] tracking-tight uppercase tracking-[0.1em]">Como você quer transferir?</h2>
                             
-                            <Card className="p-8 rounded-xl border-0 shadow-2xl shadow-black/5 bg-[#fffbeb] relative overflow-hidden group">
+                            <Card className="p-8 rounded-md border-0 shadow-2xl shadow-black/5 bg-[#fffbeb] relative overflow-hidden group">
                                 <div className="absolute top-0 right-0 w-32 h-32 bg-[#f97316]/5 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />
                                 <div className="space-y-8 relative z-10">
                                     <div className="flex items-center gap-4 text-[#f97316]">
@@ -153,7 +149,7 @@ export default function PixPage() {
                                         <Button 
                                             disabled={!keyType}
                                             onClick={handleContinue}
-                                            className="h-14 px-8 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-lg font-black uppercase tracking-widest text-[10px] shadow-xl shadow-black/10 transition-all active:scale-95 disabled:opacity-30 flex items-center gap-3 shrink-0"
+                                            className="h-14 px-8 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-xl shadow-black/10 transition-all active:scale-95 disabled:opacity-30 flex items-center gap-3 shrink-0"
                                         >
                                             Buscar <ArrowRight className="h-4 w-4" />
                                         </Button>
@@ -162,7 +158,7 @@ export default function PixPage() {
                             </Card>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Link href="/dashboard/pix/contatos" className="flex items-center gap-4 p-6 bg-[#fffbeb] rounded-xl border border-neutral-100 hover:shadow-2xl hover:border-[#f97316]/20 transition-all group relative overflow-hidden">
+                                <Link href="/dashboard/pix/contatos" className="flex items-center gap-4 p-6 bg-[#fffbeb] rounded-md border border-neutral-100 hover:shadow-2xl hover:border-[#f97316]/20 transition-all group relative overflow-hidden">
                                    <div className="absolute top-0 right-0 w-24 h-24 bg-[#f97316]/5 rounded-full -mr-12 -mt-12 blur-2xl transition-transform duration-700 group-hover:scale-150" />
                                    <div className="w-12 h-12 bg-[#f97316]/10 rounded-xl flex items-center justify-center text-[#f97316] group-hover:scale-110 transition-transform relative z-10 border border-[#f97316]/5">
                                       <Contact2 className="h-6 w-6" />
@@ -185,26 +181,29 @@ export default function PixPage() {
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                            {/* Pagar Section */}
-                            <div className="space-y-6">
-                                <h2 className="text-xl font-black text-[#0c0a09] tracking-tight uppercase tracking-[0.1em]">Mais opções</h2>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {pagarActions.map((action) => (
-                                        <PixAction key={action.label} icon={action.icon} label={action.label} href={action.href} />
-                                    ))}
-                                </div>
-                            </div>
+                        <div className="space-y-10">
+                             {/* Top Interactive Row: Mais Opções & Suporte */}
+                             <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+                                 {/* Mais Opções Section */}
+                                 <div className="md:col-span-7 space-y-6">
+                                     <h2 className="text-xl font-black text-[#0c0a09] tracking-tight uppercase tracking-[0.1em]">Mais opções</h2>
+                                     <div className="grid grid-cols-3 gap-4">
+                                         {pagarActions.map((action) => (
+                                             <PixAction key={action.label} icon={action.icon} label={action.label} href={action.href} />
+                                         ))}
+                                         <PixAction icon={QrCode} label="Cobrar" href="/dashboard/pix/receber" />
+                                     </div>
+                                 </div>
 
-                            {/* Receber Section */}
-                            <div className="space-y-6">
-                                <h2 className="text-xl font-black text-[#0c0a09] tracking-tight uppercase tracking-[0.1em]">Receber</h2>
-                                <div className="grid grid-cols-2 gap-4">
-                                    {receberActions.map((action) => (
-                                        <PixAction key={action.label} icon={action.icon} label={action.label} href={action.href} />
-                                    ))}
-                                </div>
-                            </div>
+                                 {/* Suporte Section */}
+                                 <div className="md:col-span-5 space-y-6">
+                                     <h2 className="text-xl font-black text-[#0c0a09] tracking-tight uppercase tracking-[0.1em]">Suporte G8</h2>
+                                     <div className="grid grid-cols-2 gap-4">
+                                         <PixAction icon={HelpCircle} label="Suporte" href="https://wa.me/5551996297077" />
+                                         <PixAction icon={MessageCircle} label="Chat 24H" href="https://wa.me/5551996297077" customColor="bg-[#0c0a09]" />
+                                     </div>
+                                 </div>
+                             </div>
                         </div>
 
                         {/* Others Section */}
@@ -218,53 +217,34 @@ export default function PixPage() {
                         </div>
                     </div>
 
-                    {/* Right Sidebar: Promo & Help */}
-                    <div className="lg:col-span-4 space-y-8">
+                    {/* Right Sidebar: Promo */}
+                    <div className="lg:col-span-3 space-y-8">
                         {/* Banner Card Premium */}
-                        <Card className="rounded-3xl border-0 shadow-2xl shadow-black/5 bg-gradient-to-br from-[#f97316] to-[#ea580c] overflow-hidden relative group cursor-pointer h-[450px]">
+                        <Card className="rounded-md border-0 shadow-2xl shadow-black/5 bg-gradient-to-br from-[#f97316] to-[#ea580c] overflow-hidden relative group cursor-pointer h-[380px]">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] group-hover:scale-150 transition-transform duration-1000 -mr-20 -mt-20" />
-                            <div className="p-10 space-y-6 relative z-10 text-white">
-                                <Badge className="bg-white/20 text-white border-0 text-[8px] font-black tracking-[0.3em] backdrop-blur-md mb-2">G8 PREMIUM</Badge>
-                                <h3 className="text-3xl font-black leading-tight max-w-[240px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
+                            <div className="p-8 space-y-4 relative z-10 text-white">
+                                <Badge className="bg-white/20 text-white border-0 text-[8px] font-black tracking-[0.3em] backdrop-blur-md mb-1">G8 PREMIUM</Badge>
+                                <h3 className="text-xl font-black leading-tight max-w-[180px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
                                     Experiência que te move.
                                 </h3>
-                                <p className="text-sm font-bold text-white/80 leading-relaxed max-w-[220px]">
-                                    Benefícios exclusivos para facilitar seu fluxo financeiro diário.
+                                <p className="text-xs font-bold text-white/80 leading-relaxed max-w-[160px]">
+                                    Benefícios exclusivos para o seu dia a dia.
                                 </p>
-                                <Button className="bg-white text-[#f97316] hover:bg-neutral-50 px-8 rounded-full font-black text-[10px] uppercase tracking-widest shadow-xl shadow-black/10 mt-4 active:scale-95 transition-all">
+                                <Button className="bg-white text-[#f97316] hover:bg-neutral-50 px-6 h-9 rounded-full font-black text-[9px] uppercase tracking-widest shadow-xl shadow-black/10 mt-2 active:scale-95 transition-all">
                                     Explorar Agora
                                 </Button>
                             </div>
                             
-                            <div className="absolute bottom-0 right-0 w-full h-[300px] flex items-end justify-end translate-y-12 group-hover:translate-y-4 transition-transform duration-700">
+                            <div className="absolute bottom-0 right-0 w-full h-[220px] flex items-end justify-end translate-y-8 group-hover:translate-y-2 transition-transform duration-700">
                                  <Image 
                                     src="https://api.dicebear.com/7.x/avataaars/svg?seed=shopping&backgroundColor=ff7711&radius=50" 
                                     alt="Benefit" 
-                                    width={280} 
-                                    height={280} 
+                                    width={200} 
+                                    height={200} 
                                     className="object-contain relative z-10 scale-110 drop-shadow-2xl"
                                  />
                             </div>
                         </Card>
-
-                        {/* Help Section */}
-                        <div className="space-y-6">
-                            <h2 className="text-xl font-black text-[#0c0a09] tracking-tight uppercase tracking-[0.1em]">Suporte G8</h2>
-                            <div className="grid grid-cols-2 gap-4">
-                                 <button className="flex flex-col items-center justify-center p-8 bg-[#fffbeb] rounded-2xl hover:shadow-2xl transition-all border border-neutral-100 group">
-                                     <div className="w-12 h-12 flex items-center justify-center mb-4 text-[#f97316] bg-[#f97316]/10 rounded-xl group-hover:scale-110 transition-transform">
-                                        <HelpCircle className="h-6 w-6 stroke-[2.5]" />
-                                     </div>
-                                     <span className="font-black text-[#0c0a09] uppercase text-[10px] tracking-widest">Suporte</span>
-                                 </button>
-                                 <button className="flex flex-col items-center justify-center p-8 bg-[#0c0a09] rounded-2xl hover:shadow-2xl transition-all border border-transparent group">
-                                    <div className="w-12 h-12 bg-[#f97316] rounded-xl flex items-center justify-center mb-4 text-white group-hover:rotate-12 transition-transform shadow-lg shadow-orange-500/20">
-                                       <MessageCircle className="h-6 w-6 stroke-[2.5]" />
-                                    </div>
-                                    <span className="font-black text-white uppercase text-[10px] tracking-widest text-center">Chat 24H</span>
-                                 </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -276,18 +256,20 @@ export default function PixPage() {
 function PixAction({ 
     icon: Icon, 
     label,
-    href
+    href,
+    customColor
 }: { 
     icon: any, 
     label: string,
-    href: string
+    href: string,
+    customColor?: string
 }) {
    const content = (
-    <div className="flex flex-col items-center justify-center w-full min-h-[160px] bg-[#fffbeb] rounded-2xl hover:shadow-2xl hover:scale-[1.05] transition-all border border-neutral-200/20 group cursor-pointer p-6">
-       <div className="w-12 h-12 flex items-center justify-center mb-4 text-[#f97316] bg-[#f97316]/5 rounded-xl group-hover:scale-110 transition-transform">
+    <div className={`flex flex-col items-center justify-center w-full min-h-[160px] ${customColor || 'bg-[#fffbeb]'} rounded-sm hover:shadow-2xl hover:scale-[1.05] transition-all border border-neutral-200/20 group cursor-pointer p-6`}>
+       <div className={`w-12 h-12 flex items-center justify-center mb-4 ${customColor ? 'text-white bg-white/10' : 'text-[#f97316] bg-[#f97316]/5'} rounded-sm group-hover:scale-110 transition-transform`}>
           <Icon className="h-6 w-6 stroke-[2.5]" />
        </div>
-       <span className="text-[11px] font-black text-[#0c0a09] text-center px-1 uppercase tracking-widest leading-tight opacity-70 group-hover:opacity-100 group-hover:text-[#f97316] transition-colors">{label}</span>
+       <span className={`text-[11px] font-black ${customColor ? 'text-white' : 'text-[#0c0a09]'} text-center px-1 uppercase tracking-widest leading-tight opacity-70 group-hover:opacity-100 transition-colors`}>{label}</span>
     </div>
   );
 
@@ -299,4 +281,3 @@ function PixAction({
     </Link>
   );
 }
-

@@ -1,6 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
+import jsQR from "jsqr";
+import { QRCodeSVG } from "qrcode.react";
 import api from "@/lib/api";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -50,7 +52,7 @@ function PixPagarContent() {
   const [isLoadingTransfer, setIsLoadingTransfer] = useState(false);
   const [transactionId, setTransactionId] = useState("");
 
-  const [recipientName, setRecipientName] = useState(urlName);
+  const [recipientName, setRecipientName] = useState(urlName.trim());
   const [recipientBank, setRecipientBank] = useState(urlBank);
   const [recipientDocument, setRecipientDocument] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -59,6 +61,50 @@ function PixPagarContent() {
   const [searchResult, setSearchResult] = useState<any>(null);
   const [uuid, setUuid] = useState("");
   const [endToEndId, setEndToEndId] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsSearching(true);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const imageData = event.target?.result as string;
+      const image = new window.Image();
+      image.src = imageData;
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        if (!context) {
+          setIsSearching(false);
+          return;
+        }
+        canvas.width = image.width;
+        canvas.height = image.height;
+        context.drawImage(image, 0, 0, image.width, image.height);
+        
+        try {
+          const imageDataObj = context.getImageData(0, 0, image.width, image.height);
+          const code = jsQR(imageDataObj.data, imageDataObj.width, imageDataObj.height);
+          
+          if (code) {
+            console.log("✅ [QRCODE DECODER]: Found", code.data);
+            setPixCode(code.data);
+            toast.success("QR Code lido com sucesso!");
+          } else {
+            toast.error("Não foi possível encontrar um QR Code nesta imagem.");
+          }
+        } catch (err) {
+          console.error("❌ [QRCODE DECODER ERROR]:", err);
+          toast.error("Erro ao processar imagem do QR Code.");
+        } finally {
+          setIsSearching(false);
+        }
+      };
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -128,7 +174,7 @@ function PixPagarContent() {
 
     setIsSearching(true);
     try {
-      console.log("🔍 Decodificando Pix Copia e Cola via /buscar-copicola...");
+      console.log("🔍 Decodificando Pix Copia e Cola via API Oficial...");
       const res = await api.post("/api/banco/pix/buscar-copicola", { payload: cleanCode });
 
       if (res.data) {
@@ -153,9 +199,9 @@ function PixPagarContent() {
   const updateRecipientData = (data: any) => {
     console.log("🔍 [RECIPENT DATA UPDATE]:", data);
     setSearchResult(data);
-    setRecipientName(data.nome || data.name || data.recebedorNome || data.beneficiario || "");
-    setRecipientBank(data.instituicao || data.bank || data.recebedorInstituicao || data.instituicaoNome || "");
-    setRecipientDocument(data.cpfcnpj || data.documento || data.taxNumber || "");
+    setRecipientName((data.nome || data.name || data.recebedorNome || data.beneficiario || "").trim());
+    setRecipientBank((data.instituicao || data.bank || data.recebedorInstituicao || data.instituicaoNome || "").trim());
+    setRecipientDocument((data.cpfcnpj || data.documento || data.taxNumber || "").trim());
     
     // Aggressive ID capture
     const foundId = data.qrcodeId || data.id_payment || data.idPayment || data.uuid || data.endToEndId || data.txid || data.id || "";
@@ -265,16 +311,34 @@ function PixPagarContent() {
 
     setIsLoadingTransfer(true);
     try {
-      if (type !== "qrcode" && type !== "copia_cola") {
-        console.log("🛡️ Validando PIN para Pix Chave...");
+      // 1. PIN Validation as per Guide Step 3
+      console.log("🛡️ [VALIDAR PIN REQUEST]:", { pin: smsCode, pinId: pinId });
+      
+      try {
         await api.post("/api/users/validar-pin", {
           pin: smsCode,
           pinId: pinId
         });
+        console.log("✅ [VALIDAR PIN SUCCESS]");
+      } catch (err: any) {
+        console.error("❌ [VALIDAR PIN ERROR]:", err.response?.status, err.response?.data);
+        throw err;
       }
 
+      // Generate or retrieve persistent Device ID for web
+      const getDeviceId = () => {
+        if (typeof window === 'undefined') return 'IB-WEB-PLATFORM';
+        let dId = localStorage.getItem('deviceId');
+        if (!dId) {
+          dId = `IB-WEB-${crypto.randomUUID()}`;
+          localStorage.setItem('deviceId', dId);
+        }
+        return dId;
+      };
+
+      const deviceId = getDeviceId();
       let endpoint = "/api/banco/pix/transferir";
-      let rawChave = pixCode || identifier || "";
+      const rawChave = pixCode || identifier || "";
       let finalChave = rawChave;
       if (!rawChave.includes("@")) {
         finalChave = rawChave.replace(/\D/g, "");
@@ -297,24 +361,17 @@ function PixPagarContent() {
       if (type === "qrcode" || type === "copia_cola") {
         endpoint = "/api/banco/pix/pagar-copicola";
         
-        // Exact mobile parity: using qrId for all ID fields and removing extra fields not present in mobile curl
-        const qrId = searchResult?.qrcodeId || 
-                     searchResult?.id_payment || 
-                     searchResult?.idPayment || 
-                     searchResult?.endToEndId || 
-                     searchResult?.uuid || 
-                     searchResult?.id || 
-                     uuid || "";
-                     
+        // Use data exactly as structured in the decoding step response
+        const qrId = searchResult?.qrcodeId || searchResult?.qrCodeId || searchResult?.id || "";
         const txAmount = parseFloat(value.replace(/\D/g, "")) / 100;
-        const internalId = endToEndId || searchResult?.endToEndIdInterno || crypto.randomUUID();
+        const internalId = endToEndId || crypto.randomUUID();
         
         payload = {
-          endToEndId: qrId,
-          chavePix: "", // Mobile uses empty string
+          endToEndId: searchResult?.endToEndId || qrId, // Use EndToEndId if available
+          chavePix: searchResult?.chavePix || "",
           qrcodeId: qrId,
-          qrCodeType: "", // Mobile uses empty string
-          receiverConciliationId: qrId,
+          qrCodeType: searchResult?.qrCodeType || "STATIC",
+          receiverConciliationId: searchResult?.receiverConciliationId || qrId,
           amount: txAmount,
           endToEndIdInterno: internalId,
           deviceId: temporaryDeviceId
@@ -323,11 +380,7 @@ function PixPagarContent() {
 
       console.log(`🚀 [PAYLOAD]:`, payload);
 
-      const res = await api.post(`${endpoint}`, payload, {
-        headers: {
-          'User-Agent': 'okhttp/4.12.0' // Matching the app's User-Agent
-        }
-      });
+      const res = await api.post(`${endpoint}`, payload);
 
       if (res.data) {
         console.log("✅ [SUCCESS]:", res.data);
@@ -414,7 +467,7 @@ function PixPagarContent() {
                 else if (step === "sms") setStep("confirm");
               }
             }}>
-              <Button variant="ghost" size="icon" className="rounded-full hover:bg-neutral-100 h-12 w-12">
+              <Button variant="ghost" size="icon" className="rounded-sm hover:bg-neutral-100 h-12 w-12">
                 <ArrowLeft className="h-6 w-6 text-[#ff7711]" />
               </Button>
             </Link>
@@ -452,17 +505,41 @@ function PixPagarContent() {
 
               {type === "qrcode" ? (
                 <div className="space-y-6">
-                  <div className="p-8 border-2 border-dashed border-neutral-200 rounded-[5px] flex flex-col items-center justify-center gap-4 hover:border-[#ff7711] transition-colors cursor-pointer group bg-neutral-50/50">
-                    <div className="w-14 h-14 bg-white rounded-[5px] flex items-center justify-center text-neutral-400 group-hover:text-[#ff7711] shadow-sm">
-                      <QrCode className="h-6 w-6" />
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm font-black text-[#0c0a09] uppercase">Anexe o arquivo QRCODE</p>
-                      <div className="flex items-center justify-center gap-1 mt-1">
-                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Clique para Procurar</span>
-                        <ChevronRight className="h-3 w-3 text-neutral-300" />
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-8 border-2 border-dashed border-neutral-200 rounded-[5px] flex flex-col items-center justify-center gap-4 hover:border-[#ff7711] transition-colors cursor-pointer group bg-neutral-50/50"
+                  >
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileSelect}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    {pixCode ? (
+                      <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
+                        <div className="bg-white p-6 rounded-2xl shadow-xl shadow-orange-500/10 border border-orange-100/50 relative group">
+                          <QRCodeSVG value={pixCode} size={140} level="H" includeMargin={false} />
+                          <div className="absolute inset-0 bg-[#ff7711]/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                            <span className="bg-white px-3 py-1.5 rounded-full text-[10px] font-black text-[#ff7711] uppercase tracking-widest shadow-sm">Alterar Arquivo</span>
+                          </div>
+                        </div>
+                        <p className="text-[10px] font-black text-[#ff7711] uppercase tracking-widest bg-[#fffbeb] px-4 py-1.5 rounded-full border border-orange-100">Código Detectado com Sucesso</p>
                       </div>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="w-14 h-14 bg-white rounded-[5px] flex items-center justify-center text-neutral-400 group-hover:text-[#ff7711] shadow-sm">
+                          <QrCode className="h-6 w-6" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-black text-[#0c0a09] uppercase">Anexe o arquivo QRCODE</p>
+                          <div className="flex items-center justify-center gap-1 mt-1">
+                            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Clique para Procurar</span>
+                            <ChevronRight className="h-3 w-3 text-neutral-300" />
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                   <Input
                     value={pixCode}
@@ -506,7 +583,7 @@ function PixPagarContent() {
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-white rounded-[5px] flex items-center justify-center shrink-0 border border-neutral-100 shadow-sm">
                       <Image
-                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${recipientName || 'G8'}`}
+                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent((recipientName || 'G8').trim())}`}
                         alt="Avatar"
                         width={40}
                         height={40}
@@ -538,7 +615,7 @@ function PixPagarContent() {
 
             <Separator className="bg-neutral-100" />
 
-            {(!(searchResult?.valor > 0 || searchResult?.amount > 0)) && (
+            {(!(searchResult?.valor > 0 || searchResult?.amount > 0 || searchResult?.value > 0 || searchResult?.transactionAmount > 0)) && (
               <div className="space-y-4">
                 <h2 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Qual o Valor?</h2>
                 <div className="relative">
@@ -620,7 +697,7 @@ function PixPagarContent() {
                 <div className="grid grid-cols-1 gap-8">
                   <div className="max-w-full overflow-hidden">
                     <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-2 opacity-60">Chave Pix</p>
-                    <p className="text-[11px] font-medium text-[#0c0a09] font-mono break-all leading-tight tracking-tight bg-white/50 p-3 rounded-md border border-black/5">
+                    <p className="text-xl font-black text-[#0c0a09] font-mono break-all leading-tight tracking-tight bg-white/50 p-4 rounded-xl border border-black/5">
                       {pixCode || identifier}
                     </p>
                   </div>
@@ -628,12 +705,12 @@ function PixPagarContent() {
                     {recipientDocument && (
                       <div>
                         <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-2 opacity-60">Documento</p>
-                        <p className="text-base font-black text-[#0c0a09] tracking-tighter">{recipientDocument}</p>
+                        <p className="text-xl font-black text-[#0c0a09] tracking-tighter">{recipientDocument}</p>
                       </div>
                     )}
                     <div>
                       <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-2 opacity-60">Instituição</p>
-                      <p className="text-base font-black text-[#0c0a09] uppercase tracking-tighter">
+                      <p className="text-xl font-black text-[#0c0a09] uppercase tracking-tighter">
                         {isSearching ? "..." : (recipientBank || "Outro Banco")}
                       </p>
                     </div>
@@ -667,8 +744,8 @@ function PixPagarContent() {
             </div>
           </div>
         ) : step === "sms" ? (
-          <div className="space-y-8 max-w-2xl bg-white p-12 rounded-[5px] shadow-xl shadow-black/5 border border-neutral-100 text-center flex flex-col items-center">
-            <div className="w-20 h-20 bg-[#fffbeb] rounded-full flex items-center justify-center text-[#ff7711] mb-4">
+          <div className="space-y-8 max-w-2xl bg-white p-12 rounded-sm shadow-xl shadow-black/5 border border-neutral-100 text-center flex flex-col items-center">
+            <div className="w-20 h-20 bg-[#fffbeb] rounded-sm flex items-center justify-center text-[#ff7711] mb-4">
               <Smartphone className="h-10 w-10 animate-bounce" />
             </div>
             <div className="space-y-4 mb-10">
@@ -698,8 +775,8 @@ function PixPagarContent() {
             </div>
           </div>
         ) : (
-          <div className="space-y-10 max-w-2xl bg-white p-12 rounded-[5px] shadow-2xl shadow-black/5 border border-neutral-100 flex flex-col items-center">
-            <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-green-500 mb-2 border-4 border-white shadow-xl">
+          <div className="space-y-10 max-w-2xl bg-white p-12 rounded-sm shadow-2xl shadow-black/5 border border-neutral-100 flex flex-col items-center">
+            <div className="w-24 h-24 bg-green-50 rounded-sm flex items-center justify-center text-green-500 mb-2 border-4 border-white shadow-xl">
               <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
               </svg>
@@ -730,12 +807,12 @@ function PixPagarContent() {
 
                   <div className="grid grid-cols-2 gap-4 border-t border-neutral-100 pt-6">
                     <div className="space-y-1">
-                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Data e Hora</p>
-                      <p className="text-xs font-black text-[#0c0a09] uppercase">{new Date().toLocaleDateString('pt-BR')} - {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
+                      <p className="text-[10px] font-black text-[#0c0a09] uppercase tracking-widest">Data e Hora</p>
+                      <p className="text-sm font-medium text-neutral-500 uppercase">{new Date().toLocaleDateString('pt-BR')} - {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                     <div className="space-y-1 text-right">
-                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">ID da Transação</p>
-                      <p className="text-xs font-black text-[#0c0a09] font-mono">{transactionId || "G8PAY329KXM0"}</p>
+                      <p className="text-[10px] font-black text-[#0c0a09] uppercase tracking-widest">ID da Transação</p>
+                      <p className="text-sm font-medium text-neutral-500 font-mono break-all">{transactionId || "G8PAY329KXM0"}</p>
                     </div>
                   </div>
                 </div>

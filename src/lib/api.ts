@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Get the base URL from environment variables, defaulting to production if not set
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://g8api.bskpay.com.br';
+const BASE_URL = 'https://g8api.bskpay.com.br';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -22,7 +22,7 @@ api.interceptors.request.use(
       }
       
       if (userToken) {
-        config.headers.usertoken = userToken;
+        config.headers.userToken = userToken;
       }
     }
     return config;
@@ -37,12 +37,14 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear storage and redirect back to the actual login entrypoint if session expires
+      console.error("401 Unauthorized detected. Redirect suppressed for debugging.");
+      /*
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
         localStorage.removeItem('userToken');
         window.location.href = '/';
       }
+      */
     }
     return Promise.reject(error);
   }

@@ -275,31 +275,34 @@ export default function LoginScreen() {
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px]" />
 
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-[1100px] grid md:grid-cols-2 bg-[#0c0a09] border border-white/5 rounded-[40px] overflow-hidden shadow-2xl relative z-10 min-h-[650px]"
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-[500px] lg:max-w-[1000px] 2xl:max-w-[1400px] grid lg:grid-cols-2 bg-[#18181b] border border-white/5 rounded-[2px] overflow-hidden shadow-2xl relative z-10 min-h-[500px] lg:min-h-[600px] 2xl:min-h-[800px]"
       >
         <div className="hidden md:flex flex-col justify-between p-16 bg-gradient-to-br from-primary/10 to-transparent">
           <div>
-            <Image src="/logo_g8.webp" alt="G8Pay Logo" width={140} height={50} className="object-contain" />
+            <Image src="/logo_g8_white.png" alt="G8Pay Logo" width={160} height={60} className="object-contain 2xl:scale-125 origin-left" />
           </div>
 
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <div className="inline-flex items-center rounded-full px-4 py-1 text-[10px] bg-primary/20 text-primary border-0 font-black uppercase tracking-widest w-fit">
+          <div className="space-y-8 2xl:space-y-12">
+            <div className="space-y-5 2xl:space-y-8">
+              <div className="inline-flex items-center rounded-[2px] px-3 py-1 text-[11px] 2xl:text-xs bg-white/5 text-white/70 border border-white/10 font-bold uppercase tracking-widest w-fit">
                 Internet Banking
               </div>
-              <h1 className="text-5xl font-black tracking-tight text-white leading-[1.1]">
+              <h1 className="text-5xl 2xl:text-7xl font-black tracking-tighter text-white leading-[1.05]">
                 Acesso <br />
                 <span className="text-primary italic">Seguro.</span>
               </h1>
+              <p className="text-white/40 text-sm 2xl:text-lg font-medium leading-relaxed max-w-[300px] 2xl:max-w-[450px]">
+                Te ajudamos a gerenciar seu capital de forma inteligente e segura através da nossa tecnologia de ponta.
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-white/40">
-            <ShieldCheck className="text-primary h-6 w-6" />
-            <span className="text-[10px] font-black uppercase tracking-widest">Protocolo SSL Ativo</span>
+          <div className="flex items-center gap-3 text-white/20 2xl:gap-5">
+            <ShieldCheck className="text-[#ea580c] h-5 w-5 2xl:h-7 2xl:w-7" />
+            <span className="text-[10px] 2xl:text-xs font-bold uppercase tracking-[0.2em]">SSL SECURE PROTOCOL</span>
           </div>
         </div>
 
@@ -308,10 +311,10 @@ export default function LoginScreen() {
             {step === "identifier" && (
               <motion.div
                 key="step-id"
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-8"
+                exit={{ opacity: 0, x: -10 }}
+                className="space-y-10 2xl:space-y-16 mt-12 lg:mt-0"
               >
                 <div className="space-y-2">
                   <h2 className="text-3xl font-black text-white tracking-tight">Identificação</h2>
@@ -320,27 +323,35 @@ export default function LoginScreen() {
                   </p>
                 </div>
 
-                <form onSubmit={handleIdentifierSubmit} className="space-y-6">
-                  <div className="relative group">
-                    <User className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-white/20 group-focus-within:text-primary transition-colors" />
-                    <Input
-                      placeholder="000.000.000-00"
-                      className="pl-14 h-16 bg-white/[0.03] border-white/10 group-focus-within:border-primary/50 transition-all text-white font-black text-xl rounded-2xl placeholder:text-white/10"
-                      value={identifier}
-                      onChange={(e) => setIdentifier(e.target.value)}
-                      autoFocus
-                    />
+                <form onSubmit={handleIdentifierSubmit} className="space-y-6 2xl:space-y-10">
+                  <div className="space-y-2 2xl:space-y-4">
+                    <label className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-[#ea580c]/80 ml-1">Acessar com</label>
+                    <div className="relative group">
+                      <User className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 2xl:h-7 2xl:w-7 text-white/20 group-focus-within:text-[#ea580c] transition-colors" />
+                      <Input
+                        placeholder="000.000.000-00"
+                        className="pl-14 2xl:pl-20 h-16 2xl:h-24 bg-white/[0.02] border-white/10 focus:border-[#ea580c]/50 focus:bg-white/[0.04] transition-all text-white font-bold text-xl 2xl:text-3xl rounded-[2px] placeholder:text-white/5 shadow-inner"
+                        value={identifier}
+                        onChange={(e) => setIdentifier(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
                   </div>
 
                   <Button
                     type="submit"
-                    className="w-full h-16 text-lg font-black transition-all hover:scale-[1.02] bg-[#f97316] hover:bg-[#ea580c] text-white cursor-pointer"
+                    className="w-full h-16 2xl:h-24 text-sm 2xl:text-xl font-black transition-all bg-[#ea580c] hover:bg-[#c2410c] text-white cursor-pointer rounded-[2px] tracking-widest shadow-xl shadow-orange-950/20"
                     disabled={!identifier}
                   >
-                    AVANÇAR
-                    <ArrowRight className="h-5 w-5 ml-2" />
+                    AVANÇAR PARA SENHA
+                    <ArrowRight className="h-4 w-4 2xl:h-6 2xl:w-6 ml-3" />
                   </Button>
                 </form>
+
+                <div className="pt-6 2xl:pt-10 border-t border-white/5 flex items-center justify-between">
+                  <button className="text-[10px] 2xl:text-xs font-black text-white/40 uppercase tracking-widest hover:text-white transition-colors">Dificuldade em acessar?</button>
+                  <button className="text-[10px] 2xl:text-xs font-black text-[#ea580c] uppercase tracking-widest hover:underline">Solicitar Acesso</button>
+                </div>
               </motion.div>
             )}
 
@@ -349,8 +360,8 @@ export default function LoginScreen() {
                 key="step-virtual"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-8"
+                exit={{ opacity: 0, x: -10 }}
+                className="space-y-10 2xl:space-y-16 mt-12 lg:mt-0"
               >
                 <div className="flex items-center gap-4">
                   <button
@@ -405,10 +416,10 @@ export default function LoginScreen() {
             {step === "qrcode" && (
               <motion.div
                 key="step-qr"
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center space-y-8 text-center"
+                className="flex flex-col items-center justify-center space-y-10 2xl:space-y-16 text-center mt-12 lg:mt-0"
               >
                 <div className="space-y-2">
                   <h2 className="text-3xl font-black text-white">Aprovação no App</h2>

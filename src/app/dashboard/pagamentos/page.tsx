@@ -51,11 +51,26 @@ export default function PagamentosPage() {
   const [isConsulting, setIsConsulting] = useState(false);
   const [boletoData, setBoletoData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [userBalance, setUserBalance] = useState<number | null>(null);
   
   // Security State
   const [smsCode, setSmsCode] = useState("");
   const [pinId, setPinId] = useState("");
   const [transactionId, setTransactionId] = useState("");
+
+  useEffect(() => {
+    const fetchBalance = async () => {
+      try {
+        const res = await api.get("/api/banco/saldo/getSaldo");
+        if (res.data) {
+          setUserBalance(res.data.valor || 0);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar saldo:", err);
+      }
+    };
+    fetchBalance();
+  }, []);
 
   // Handlers
   const handleConsultBoleto = async () => {
@@ -376,9 +391,9 @@ export default function PagamentosPage() {
 
                   {boletoData.pagadorNome && (
                     <>
-                      <div className="space-y-2">
-                        <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest opacity-60">Pagador</p>
-                        <p className="text-sm font-black text-[#0c0a09] uppercase">{boletoData.pagadorNome}</p>
+                      <div className="space-y-1">
+                        <p className="text-[11px] text-[#0c0a09] font-bold uppercase tracking-widest">Pagador</p>
+                        <p className="text-sm font-medium text-neutral-500 uppercase">{boletoData.pagadorNome}</p>
                       </div>
                       <Separator className="bg-neutral-100" />
                     </>
@@ -386,12 +401,12 @@ export default function PagamentosPage() {
 
                   <div className="grid grid-cols-2 gap-8">
                     <div>
-                      <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest mb-2 opacity-60">Vencimento</p>
-                      <p className="text-lg font-black text-[#0c0a09]">{boletoData.vencimento}</p>
+                      <p className="text-[11px] text-[#0c0a09] font-bold uppercase tracking-widest mb-1">Vencimento</p>
+                      <p className="text-lg font-medium text-neutral-500">{boletoData.vencimento}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest mb-2 opacity-60">Data de Pagamento</p>
-                      <p className="text-lg font-black text-[#f97316]">Hoje</p>
+                      <p className="text-[11px] text-[#0c0a09] font-bold uppercase tracking-widest mb-1">Data de Pagamento</p>
+                      <p className="text-lg font-medium text-[#f97316]">Hoje</p>
                     </div>
                   </div>
 
@@ -402,24 +417,48 @@ export default function PagamentosPage() {
                     </p>
                   </div>
 
+                  {userBalance !== null && boletoData.valor > userBalance && (
+                    <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-100 rounded-sm">
+                      <AlertCircle className="h-4 w-4 text-red-500" />
+                      <p className="text-[10px] font-black text-red-600 uppercase tracking-widest">Atenção: Seu saldo atual ({formatCurrency(userBalance)}) é insuficiente para esta conta.</p>
+                    </div>
+                  )}
+
                   <Button 
                     onClick={handleRequestSms}
-                    disabled={isLoading}
-                    className="w-full h-20 bg-[#0c0a09] hover:bg-[#1a1715] text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-2xl shadow-black/20"
+                    disabled={isLoading || (userBalance !== null && boletoData.valor > userBalance)}
+                    className={`w-full h-20 rounded-sm font-black text-lg uppercase tracking-widest shadow-2xl transition-all ${
+                      userBalance !== null && boletoData.valor > userBalance 
+                      ? "bg-red-500/10 text-red-500 border border-red-200 cursor-not-allowed hover:bg-red-500/10 shadow-none" 
+                      : "bg-[#0c0a09] hover:bg-[#1a1715] text-white shadow-black/20"
+                    }`}
                   >
-                    {isLoading ? "PROCESSANDO..." : "AUTORIZAR PAGAMENTO"}
+                    {isLoading ? "PROCESSANDO..." : (userBalance !== null && boletoData.valor > userBalance ? "Saldo insuficiente" : "AUTORIZAR PAGAMENTO")}
                   </Button>
                 </div>
               </div>
 
               <div className="md:col-span-4 space-y-6">
-                <div className="p-6 bg-[#fff9e6] border border-[#ffecb3] rounded-sm space-y-4">
-                  <div className="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center text-white shadow-lg">
-                    <AlertTriangle className="h-5 w-5" />
+                <div className="p-8 bg-white border border-neutral-100 rounded-sm shadow-xl space-y-6 relative overflow-hidden group">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-[#f97316]" />
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-[#fff9e6] rounded-sm flex items-center justify-center text-[#f97316] shrink-0">
+                      <ShieldCheck className="h-5 w-5" />
+                    </div>
+                    <h4 className="text-xs font-black text-[#0c0a09] uppercase tracking-widest">Aviso Importante</h4>
                   </div>
-                  <p className="text-[11px] font-black text-orange-800 uppercase leading-loose">
-                    Certifique-se de que os dados acima correspondem ao boleto que você deseja pagar. Pagamentos realizados após as 20h serão liquidados no próximo dia útil.
-                  </p>
+                  
+                  <div className="space-y-4">
+                    <p className="text-xs font-bold text-neutral-500 leading-relaxed">
+                      Certifique-se de que os dados acima correspondam ao boleto que você deseja pagar.
+                    </p>
+                    <div className="p-4 bg-neutral-50 rounded-sm border border-neutral-100 flex gap-3">
+                      <Clock className="h-4 w-4 text-[#f97316] shrink-0 mt-0.5" />
+                      <p className="text-[10px] font-bold text-neutral-400 leading-normal uppercase">
+                        Pagamentos após as <span className="text-[#f97316]">20h</span> serão liquidados no próximo dia útil.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -428,31 +467,36 @@ export default function PagamentosPage() {
 
         {step === "sms" && (
           <div className="max-w-xl mx-auto flex flex-col items-center text-center space-y-10 py-12 animate-in fade-in zoom-in-95 duration-500">
-             <div className="w-24 h-24 bg-[#fffbeb] rounded-sm flex items-center justify-center text-[#f97316] shadow-xl relative animate-bounce">
-                <Smartphone className="h-12 w-12" />
-                <div className="absolute -top-2 -right-2 w-6 h-6 bg-[#f97316] rounded-full border-4 border-[#f8f9fa] animate-ping" />
+             <div className="w-20 h-20 bg-[#fffbeb] rounded-[4px] flex items-center justify-center text-[#f97316] shadow-xl relative group">
+                <Smartphone className="h-10 w-10 animate-bounce text-[#f97316]" />
              </div>
+             
              <div className="space-y-4">
-                <h2 className="text-4xl font-black text-[#0c0a09] tracking-tighter uppercase">Validar Segurança</h2>
+                <h2 className="text-4xl font-black text-[#0c0a09] uppercase tracking-tighter">Validação de Segurança</h2>
                 <p className="text-base font-bold text-neutral-400 uppercase tracking-widest leading-relaxed px-10">
-                  Insira o código de 5 dígitos enviado para o seu celular cadastrado.
+                  Enviamos um código para o seu celular cadastrado.
                 </p>
              </div>
-             <div className="w-full space-y-8">
+
+             <div className="w-full max-w-xs space-y-8">
                 <Input 
                   value={smsCode}
-                  onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").substring(0, 5))}
-                  className="h-24 text-center font-black text-5xl tracking-[0.5em] border-2 border-neutral-100 rounded-sm focus:border-[#f97316] bg-white shadow-2xl"
+                  onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").substring(0, 6))}
+                  className="h-20 text-center font-black text-4xl tracking-[0.5em] border-2 border-neutral-100 rounded-sm focus:border-[#f97316] bg-white shadow-2xl"
                   placeholder="0 0 0 0 0"
                 />
-                <Button 
-                  onClick={handleFinalizePayment}
-                  disabled={isLoading || smsCode.length < 5}
-                  className="w-full h-20 bg-[#f97316] hover:bg-[#ea580c] text-white rounded-sm font-black text-xl uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/30"
-                >
-                  {isLoading ? "PROCESSANDO..." : "CONFIRMAR PAGAMENTO"}
-                </Button>
-                <button className="text-[10px] font-black text-neutral-400 hover:text-[#f97316] uppercase tracking-widest transition-colors py-4">Não recebi o código (00:59)</button>
+                <div className="flex flex-col gap-4 w-full">
+                  <Button 
+                    onClick={handleFinalizePayment}
+                    disabled={isLoading || smsCode.length < 5}
+                    className="w-full h-16 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm font-black text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    {isLoading ? "PROCESSANDO..." : "CONFIRMAR PAGAMENTO"}
+                  </Button>
+                  <button className="text-[10px] font-black text-[#f97316] uppercase tracking-widest hover:underline transition-colors py-2">
+                    Reenviar código em 00:59
+                  </button>
+                </div>
              </div>
           </div>
         )}

@@ -146,13 +146,20 @@ export default function AjudaPage() {
                <p className="text-sm text-neutral-500 font-medium">Estamos disponíveis através dos canais abaixo.</p>
             </div>
             <div className="flex flex-wrap items-center gap-4">
-               <Button className="bg-[#0c0a09] text-white rounded-sm font-black uppercase tracking-widest h-14 px-8 flex items-center gap-3">
+               <Button 
+                onClick={() => window.open("https://wa.me/5551996297077", "_blank")}
+                className="bg-[#0c0a09] text-white rounded-sm font-black uppercase tracking-widest h-14 px-8 flex items-center gap-3 active:scale-95 transition-all shadow-xl shadow-black/10"
+               >
                  <MessageCircle className="h-5 w-5 text-primary" />
-                 Chat 24h
+                 Conversar agora
                </Button>
-               <Button variant="outline" className="border-neutral-200 rounded-sm font-black uppercase tracking-widest h-14 px-8 flex items-center gap-3">
+               <Button 
+                variant="outline" 
+                onClick={() => window.open("https://wa.me/5551996297077", "_blank")}
+                className="border-neutral-200 rounded-sm font-black uppercase tracking-widest h-14 px-8 flex items-center gap-3 active:scale-95 transition-all text-neutral-400"
+               >
                  <Phone className="h-5 w-5 text-primary" />
-                 0800 123 4567
+                 +55 51 99629-7077
                </Button>
             </div>
          </div>
