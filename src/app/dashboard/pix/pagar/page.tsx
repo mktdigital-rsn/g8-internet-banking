@@ -1,26 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
+import jsQR from "jsqr";
+import { QRCodeSVG } from "qrcode.react";
 import api from "@/lib/api";
-import axios from "axios";
-
-// Local debug instance for API troubleshooting
-const debugApi = axios.create({
-  baseURL: 'http://localhost:8080',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-debugApi.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('token');
-    const userToken = localStorage.getItem('userToken');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-    if (userToken) config.headers.usertoken = userToken;
-  }
-  return config;
-});
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
@@ -75,6 +58,50 @@ function PixPagarContent() {
   const [searchResult, setSearchResult] = useState<any>(null);
   const [uuid, setUuid] = useState("");
   const [endToEndId, setEndToEndId] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsSearching(true);
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const imageData = event.target?.result as string;
+      const image = new window.Image();
+      image.src = imageData;
+      image.onload = () => {
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        if (!context) {
+          setIsSearching(false);
+          return;
+        }
+        canvas.width = image.width;
+        canvas.height = image.height;
+        context.drawImage(image, 0, 0, image.width, image.height);
+        
+        try {
+          const imageDataObj = context.getImageData(0, 0, image.width, image.height);
+          const code = jsQR(imageDataObj.data, imageDataObj.width, imageDataObj.height);
+          
+          if (code) {
+            console.log("✅ [QRCODE DECODER]: Found", code.data);
+            setPixCode(code.data);
+            toast.success("QR Code lido com sucesso!");
+          } else {
+            toast.error("Não foi possível encontrar um QR Code nesta imagem.");
+          }
+        } catch (err) {
+          console.error("❌ [QRCODE DECODER ERROR]:", err);
+          toast.error("Erro ao processar imagem do QR Code.");
+        } finally {
+          setIsSearching(false);
+        }
+      };
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -144,8 +171,8 @@ function PixPagarContent() {
 
     setIsSearching(true);
     try {
-      console.log("🔍 Decodificando Pix Copia e Cola via http://localhost:8080/api/banco/pix/buscar-copicola...");
-      const res = await debugApi.post("/api/banco/pix/buscar-copicola", { payload: cleanCode });
+      console.log("🔍 Decodificando Pix Copia e Cola via API Oficial...");
+      const res = await api.post("/api/banco/pix/buscar-copicola", { payload: cleanCode });
 
       if (res.data) {
         console.log("✅ PIX COPIACOLA SUCCESS:", res.data);
@@ -276,31 +303,34 @@ function PixPagarContent() {
 
     setIsLoadingTransfer(true);
     try {
-      // 1. Transactional Token Confirmation (Mandatory for security)
-      const confirmId = searchResult?.qrcodeId || 
-                        searchResult?.id_payment || 
-                        searchResult?.idPayment || 
-                        searchResult?.endToEndId || 
-                        searchResult?.uuid || 
-                        searchResult?.id || 
-                        uuid || pinId;
-
-      console.log("🛡️ [TOKEN CONFIRM REQUEST]:", { token: smsCode, transactionId: confirmId });
+      // 1. PIN Validation as per Guide Step 3
+      console.log("🛡️ [VALIDAR PIN REQUEST]:", { pin: smsCode, pinId: pinId });
       
       try {
-        await debugApi.post("/api/users/validar-pin", {
+        await api.post("/api/users/validar-pin", {
           pin: smsCode,
-          pinId: pinId,
-          transactionId: confirmId
+          pinId: pinId
         });
-        console.log("✅ [VALIDAR PIN SUCCESS] (Localhost)");
+        console.log("✅ [VALIDAR PIN SUCCESS]");
       } catch (err: any) {
-        console.error("❌ [VALIDAR PIN ERROR] (Localhost):", err.response?.status, err.response?.data);
+        console.error("❌ [VALIDAR PIN ERROR]:", err.response?.status, err.response?.data);
         throw err;
       }
 
+      // Generate or retrieve persistent Device ID for web
+      const getDeviceId = () => {
+        if (typeof window === 'undefined') return 'IB-WEB-PLATFORM';
+        let dId = localStorage.getItem('deviceId');
+        if (!dId) {
+          dId = `IB-WEB-${crypto.randomUUID()}`;
+          localStorage.setItem('deviceId', dId);
+        }
+        return dId;
+      };
+
+      const deviceId = getDeviceId();
       let endpoint = "/api/banco/pix/transferir";
-      let rawChave = pixCode || identifier || "";
+      const rawChave = pixCode || identifier || "";
       let finalChave = rawChave;
       if (!rawChave.includes("@")) {
         finalChave = rawChave.replace(/\D/g, "");
@@ -317,39 +347,32 @@ function PixPagarContent() {
         endToEndIdInterno: endToEndId || crypto.randomUUID(),
         chavePixTypeHint: type === "phone" ? "phone" : null,
         pin: smsCode,
-        deviceId: "IB-WEB-PLATFORM"
+        deviceId: deviceId
       };
 
       if (type === "qrcode" || type === "copia_cola") {
         endpoint = "/api/banco/pix/pagar-copicola";
         
-        // Exact mobile parity: using qrId for all ID fields and removing extra fields not present in mobile curl
-        const qrId = searchResult?.qrcodeId || 
-                     searchResult?.id_payment || 
-                     searchResult?.idPayment || 
-                     searchResult?.endToEndId || 
-                     searchResult?.uuid || 
-                     searchResult?.id || 
-                     uuid || "";
-                     
+        // Use data exactly as structured in the decoding step response
+        const qrId = searchResult?.qrcodeId || searchResult?.qrCodeId || searchResult?.id || "";
         const txAmount = parseFloat(value.replace(/\D/g, "")) / 100;
-        const internalId = endToEndId || searchResult?.endToEndIdInterno || crypto.randomUUID();
+        const internalId = endToEndId || crypto.randomUUID();
         
         payload = {
-          endToEndId: qrId,
-          chavePix: "", // Mobile uses empty string
+          endToEndId: searchResult?.endToEndId || qrId, // Use EndToEndId if available
+          chavePix: searchResult?.chavePix || "",
           qrcodeId: qrId,
-          qrCodeType: "", // Mobile uses empty string
-          receiverConciliationId: qrId,
+          qrCodeType: searchResult?.qrCodeType || "STATIC",
+          receiverConciliationId: searchResult?.receiverConciliationId || qrId,
           amount: txAmount,
           endToEndIdInterno: internalId,
-          deviceId: "2de10864-0672-4f25-a92d-bf802b03a381"
+          deviceId: deviceId
         };
       }
 
       console.log(`🚀 [PAYLOAD]:`, payload);
 
-      const res = await debugApi.post(`${endpoint}`, payload);
+      const res = await api.post(`${endpoint}`, payload);
 
       if (res.data) {
         console.log("✅ [SUCCESS]:", res.data);
@@ -436,7 +459,7 @@ function PixPagarContent() {
                 else if (step === "sms") setStep("confirm");
               }
             }}>
-              <Button variant="ghost" size="icon" className="rounded-full hover:bg-neutral-100 h-12 w-12">
+              <Button variant="ghost" size="icon" className="rounded-sm hover:bg-neutral-100 h-12 w-12">
                 <ArrowLeft className="h-6 w-6 text-[#ff7711]" />
               </Button>
             </Link>
@@ -474,17 +497,41 @@ function PixPagarContent() {
 
               {type === "qrcode" ? (
                 <div className="space-y-6">
-                  <div className="p-8 border-2 border-dashed border-neutral-200 rounded-[5px] flex flex-col items-center justify-center gap-4 hover:border-[#ff7711] transition-colors cursor-pointer group bg-neutral-50/50">
-                    <div className="w-14 h-14 bg-white rounded-[5px] flex items-center justify-center text-neutral-400 group-hover:text-[#ff7711] shadow-sm">
-                      <QrCode className="h-6 w-6" />
-                    </div>
-                    <div className="text-center">
-                      <p className="text-sm font-black text-[#0c0a09] uppercase">Anexe o arquivo QRCODE</p>
-                      <div className="flex items-center justify-center gap-1 mt-1">
-                        <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Clique para Procurar</span>
-                        <ChevronRight className="h-3 w-3 text-neutral-300" />
+                  <div 
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-8 border-2 border-dashed border-neutral-200 rounded-[5px] flex flex-col items-center justify-center gap-4 hover:border-[#ff7711] transition-colors cursor-pointer group bg-neutral-50/50"
+                  >
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileSelect}
+                      accept="image/*"
+                      className="hidden"
+                    />
+                    {pixCode ? (
+                      <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
+                        <div className="bg-white p-6 rounded-2xl shadow-xl shadow-orange-500/10 border border-orange-100/50 relative group">
+                          <QRCodeSVG value={pixCode} size={140} level="H" includeMargin={false} />
+                          <div className="absolute inset-0 bg-[#ff7711]/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                            <span className="bg-white px-3 py-1.5 rounded-full text-[10px] font-black text-[#ff7711] uppercase tracking-widest shadow-sm">Alterar Arquivo</span>
+                          </div>
+                        </div>
+                        <p className="text-[10px] font-black text-[#ff7711] uppercase tracking-widest bg-[#fffbeb] px-4 py-1.5 rounded-full border border-orange-100">Código Detectado com Sucesso</p>
                       </div>
-                    </div>
+                    ) : (
+                      <>
+                        <div className="w-14 h-14 bg-white rounded-[5px] flex items-center justify-center text-neutral-400 group-hover:text-[#ff7711] shadow-sm">
+                          <QrCode className="h-6 w-6" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-sm font-black text-[#0c0a09] uppercase">Anexe o arquivo QRCODE</p>
+                          <div className="flex items-center justify-center gap-1 mt-1">
+                            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Clique para Procurar</span>
+                            <ChevronRight className="h-3 w-3 text-neutral-300" />
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                   <Input
                     value={pixCode}
@@ -560,7 +607,7 @@ function PixPagarContent() {
 
             <Separator className="bg-neutral-100" />
 
-            {(!(searchResult?.valor > 0 || searchResult?.amount > 0)) && (
+            {(!(searchResult?.valor > 0 || searchResult?.amount > 0 || searchResult?.value > 0 || searchResult?.transactionAmount > 0)) && (
               <div className="space-y-4">
                 <h2 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Qual o Valor?</h2>
                 <div className="relative">
@@ -689,8 +736,8 @@ function PixPagarContent() {
             </div>
           </div>
         ) : step === "sms" ? (
-          <div className="space-y-8 max-w-2xl bg-white p-12 rounded-[5px] shadow-xl shadow-black/5 border border-neutral-100 text-center flex flex-col items-center">
-            <div className="w-20 h-20 bg-[#fffbeb] rounded-full flex items-center justify-center text-[#ff7711] mb-4">
+          <div className="space-y-8 max-w-2xl bg-white p-12 rounded-sm shadow-xl shadow-black/5 border border-neutral-100 text-center flex flex-col items-center">
+            <div className="w-20 h-20 bg-[#fffbeb] rounded-sm flex items-center justify-center text-[#ff7711] mb-4">
               <Smartphone className="h-10 w-10 animate-bounce" />
             </div>
             <div className="space-y-4 mb-10">
@@ -720,8 +767,8 @@ function PixPagarContent() {
             </div>
           </div>
         ) : (
-          <div className="space-y-10 max-w-2xl bg-white p-12 rounded-[5px] shadow-2xl shadow-black/5 border border-neutral-100 flex flex-col items-center">
-            <div className="w-24 h-24 bg-green-50 rounded-full flex items-center justify-center text-green-500 mb-2 border-4 border-white shadow-xl">
+          <div className="space-y-10 max-w-2xl bg-white p-12 rounded-sm shadow-2xl shadow-black/5 border border-neutral-100 flex flex-col items-center">
+            <div className="w-24 h-24 bg-green-50 rounded-sm flex items-center justify-center text-green-500 mb-2 border-4 border-white shadow-xl">
               <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
               </svg>

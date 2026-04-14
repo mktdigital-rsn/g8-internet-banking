@@ -136,6 +136,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   key={item.label}
                   href={item.href}
+                  target={item.href.startsWith("http") ? "_blank" : undefined}
                   className={`flex items-center gap-5 px-6 py-4 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
                     ? "text-white bg-[#ff7711] shadow-lg shadow-orange-600/20"
                     : "text-white hover:bg-white hover:text-[#f97316]"
@@ -204,7 +205,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
 
             {/* Profile Section */}
-            <div className="flex items-center gap-4 cursor-pointer group">
+            <Link href="/dashboard/conta" className="flex items-center gap-4 cursor-pointer group">
               <div className="text-right flex flex-col justify-center hidden sm:flex">
                 <p className="text-base font-black text-white group-hover:text-[#f97316] transition-colors leading-none truncate max-w-[200px] xl:max-w-[300px]">
                   {cleanName(userName)}
@@ -218,7 +219,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <AvatarFallback className="bg-[#f97316] text-white font-black">{cleanName(userName)[0]}</AvatarFallback>
                 </Avatar>
               </div>
-            </div>
+            </Link>
           </div>
         </header>
 

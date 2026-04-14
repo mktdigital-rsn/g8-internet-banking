@@ -48,18 +48,21 @@ import Link from "next/link";
 export default function PixExtratoPage() {
     const [items, setItems] = React.useState<any[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
+    const [exportingType, setExportingType] = React.useState<'pdf' | 'xls' | null>(null);
     const [filter, setFilter] = React.useState("all");
     const [chartPeriod, setChartPeriod] = React.useState<"day" | "week" | "month">("week");
     const [searchTerm, setSearchTerm] = React.useState("");
     const [startDate, setStartDate] = React.useState("");
     const [endDate, setEndDate] = React.useState("");
     const [selectedTransaction, setSelectedTransaction] = React.useState<any>(null);
-    
-    // Default dates: day 1 of month, and today
+
     React.useEffect(() => {
         const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-        const today = now.toISOString().split('T')[0];
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const firstDay = `${year}-${month}-01`;
+        const today = `${year}-${month}-${day}`;
         setStartDate(firstDay);
         setEndDate(today);
     }, []);
@@ -106,13 +109,30 @@ export default function PixExtratoPage() {
     };
 
     const handleExport = async (format: 'pdf' | 'xls') => {
+        setExportingType(format);
         try {
             const token = localStorage.getItem("token");
             const userToken = localStorage.getItem("userToken");
             const apiUrl = "https://g8api.bskpay.com.br";
-            
+
             if (format === 'pdf') {
-                const response = await axios.get(`${apiUrl}/api/banco/extrato/exportar-pdf`, {
+                const params = new URLSearchParams();
+                if (startDate) {
+                    params.append('startDate', startDate);
+                    params.append('dataInicial', startDate);
+                    params.append('data_inicio', startDate);
+                }
+                if (endDate) {
+                    params.append('endDate', endDate);
+                    params.append('dataFinal', endDate);
+                    params.append('data_fim', endDate);
+                }
+                if (filter !== "all") params.append('tipo', filter === "in" ? "CREDITO" : "DEBITO");
+                
+                // Forçar apenas transações PIX no PDF da página de PIX
+                params.append('metodo', 'TRANSFERENCIA_PIX');
+
+                const response = await axios.get(`${apiUrl}/api/banco/extrato/exportar-pdf?${params.toString()}`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                         'userToken': userToken || ""
@@ -120,22 +140,23 @@ export default function PixExtratoPage() {
                     responseType: 'blob'
                 });
 
-                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', `extrato_pix_${new Date().toISOString().split('T')[0]}.pdf`);
+                link.setAttribute('download', `extrato_pix_${startDate || 'inicial'}_a_${endDate || 'hoje'}.pdf`);
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
+                window.URL.revokeObjectURL(url);
             } else {
                 const headers = ["Data/Hora", "ID Transação", "Tipo", "Método", "Natureza", "Origem", "Destino", "Valor"];
-                const header = headers.join("\t") + "\n";
-                
+                const header = "sep=;\n" + headers.join(";") + "\n";
+
                 const rows = filteredItems.map(item => {
                     const natureza = getNatureza(item.metodo);
                     const origem = item.pagadorNome || "";
                     const destino = item.RecebinteNome || "";
-                    
+
                     return [
                         item.dataDaTransacaoFormatada,
                         item.idDoBancoLiquidante || item.itemId || "",
@@ -144,22 +165,25 @@ export default function PixExtratoPage() {
                         natureza,
                         origem,
                         destino,
-                        item.valorFormatado.replace("R$", "").trim()
-                    ].join("\t");
+                        item.valorFormatado.replace("R$", "").trim().replace(".", ",")
+                    ].join(";");
                 }).join("\n");
-                
-                const blob = new Blob(["\uFEFF", header, rows], { type: 'application/vnd.ms-excel;charset=utf-8' });
+
+                const blob = new Blob(["\uFEFF", header, rows], { type: 'text/csv;charset=utf-8' });
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', `extrato_pix_${new Date().toISOString().split('T')[0]}.xls`);
+                link.setAttribute('download', `extrato_pix_${startDate || 'inicial'}_a_${endDate || 'hoje'}.csv`);
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
+                window.URL.revokeObjectURL(url);
             }
         } catch (err) {
             console.error("Error exporting pix:", err);
             alert("Erro ao exportar arquivo.");
+        } finally {
+            setExportingType(null);
         }
     };
 
@@ -206,7 +230,7 @@ export default function PixExtratoPage() {
                 // Detect format: YYYY-MM-DD vs DD-MM-YYYY
                 const parts = item.dataDaTransacaoFormatada.split(" ")[0].replace(/\//g, "-").split("-");
                 const isoDate = parts[0].length === 4 ? parts.join("-") : parts.reverse().join("-");
-                
+
                 if (startDate && isoDate < startDate) matchesDate = false;
                 if (endDate && isoDate > endDate) matchesDate = false;
             }
@@ -216,46 +240,97 @@ export default function PixExtratoPage() {
     }, [items, filter, searchTerm, startDate, endDate]);
 
     const chartData = useMemo(() => {
-        const groups: { [key: string]: { name: string, full: string, entries: number, exits: number } } = {};
+        let referenceDate = new Date();
+        if (endDate) {
+            const parts = endDate.split("-").map(Number);
+            referenceDate = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
+        }
         
-        [...filteredItems].reverse().forEach(item => {
+        const now = new Date();
+        const isToday = referenceDate.toDateString() === now.toDateString();
+        const startOfRef = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
+        
+        const groups: { [key: string]: { name: string, full: string, entries: number, exits: number, timestamp: number } } = {};
+        const daysArr = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+
+        if (chartPeriod === 'day') {
+            const hLimit = isToday ? now.getHours() : 23;
+            for (let h = 0; h <= hLimit; h++) {
+                const key = `H-${h}`;
+                groups[key] = { 
+                    name: `${h}h`, 
+                    full: `${isToday ? 'Hoje' : referenceDate.toLocaleDateString('pt-BR')} às ${String(h).padStart(2, '0')}:00`, 
+                    entries: 0, 
+                    exits: 0,
+                    timestamp: h
+                };
+            }
+        } else if (chartPeriod === 'week') {
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(startOfRef);
+                d.setDate(startOfRef.getDate() - i);
+                const dayLabel = daysArr[d.getDay()];
+                const key = `D-${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+                groups[key] = { 
+                    name: `${dayLabel} ${String(d.getDate()).padStart(2, '0')}`, 
+                    full: d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }), 
+                    entries: 0, 
+                    exits: 0,
+                    timestamp: d.getTime()
+                };
+            }
+        } else if (chartPeriod === 'month') {
+            const firstDay = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+            const diffDays = Math.floor((referenceDate.getTime() - firstDay.getTime()) / (24 * 3600000));
+            // Ensure we don't crash if range is too large
+            const loopLimit = Math.min(diffDays, 31);
+            for (let i = 0; i <= loopLimit; i++) {
+                const d = new Date(firstDay);
+                d.setDate(firstDay.getDate() + i);
+                const key = `D-${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+                groups[key] = { 
+                    name: String(d.getDate()).padStart(2, '0'), 
+                    full: d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }), 
+                    entries: 0, 
+                    exits: 0,
+                    timestamp: d.getTime()
+                };
+            }
+        }
+
+        filteredItems.forEach(item => {
             if (!item.dataDaTransacaoFormatada) return;
-            const parts = item.dataDaTransacaoFormatada.split(" ")[0].replace(/\//g, "-").split("-");
-            const isoDate = parts[0].length === 4 ? parts.join("-") : parts.reverse().join("-");
-            const date = new Date(isoDate);
-            if (isNaN(date.getTime())) return;
+            
+            const [datePart, timePart] = item.dataDaTransacaoFormatada.split(" ");
+            const parts = datePart.replace(/\//g, "-").split("-").map(Number);
+            
+            let day, month, year;
+            if (parts[0] > 1000) { [year, month, day] = parts; } 
+            else { [day, month, year] = parts; }
+            
+            const [hour, min, sec] = (timePart || "00:00:00").split(":").map(Number);
+            const itemDate = new Date(year, month - 1, day, hour, min, sec);
+            if (isNaN(itemDate.getTime())) return;
 
             let key = "";
-            let label = "";
-            let fullLabel = "";
-
             if (chartPeriod === 'day') {
-                const hour = item.dataDaTransacaoFormatada.split(" ")[1].split(":")[0];
-                key = hour + "h";
-                label = key;
-                fullLabel = `Hoje às ${hour}:00`;
-            } else if (chartPeriod === 'week') {
-                const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-                key = days[date.getDay()];
-                label = key;
-                fullLabel = date.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+                if (itemDate.toDateString() === referenceDate.toDateString()) {
+                    key = `H-${itemDate.getHours()}`;
+                }
             } else {
-                const weekNum = Math.ceil(date.getDate() / 7);
-                key = `Sem ${weekNum}`;
-                label = key;
-                fullLabel = `${weekNum}ª Semana de ${date.toLocaleDateString('pt-BR', { month: 'long' })}`;
+                key = `D-${itemDate.getFullYear()}-${itemDate.getMonth()}-${itemDate.getDate()}`;
             }
 
-            if (!groups[key]) {
-                groups[key] = { name: label, full: fullLabel, entries: 0, exits: 0 };
+            if (key && groups[key]) {
+                const val = Math.abs(Number(item.valor || 0));
+                const tipo = String(item.tipo || "").toUpperCase();
+                if (tipo === 'CREDITO') groups[key].entries += val;
+                else groups[key].exits += val;
             }
-            if (item.tipo === 'CREDITO') groups[key].entries += item.valor;
-            else groups[key].exits += item.valor;
         });
 
-        const result = Object.values(groups);
-        return result.length > 0 ? result : [];
-    }, [filteredItems, chartPeriod]);
+        return Object.values(groups).sort((a, b) => a.timestamp - b.timestamp);
+    }, [filteredItems, chartPeriod, endDate]);
 
     const totals = filteredItems.reduce((acc, item) => {
         if (item.tipo === "CREDITO") acc.in += item.valor;
@@ -281,128 +356,128 @@ export default function PixExtratoPage() {
                         </button>
 
                         <div className="relative">
-                           <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-neutral-50 to-white" />
-                           
-                           <div className="p-6 md:p-10 space-y-8 relative z-10">
-                               <div className="text-center space-y-3">
-                                   <div className="relative inline-block">
-                                       <div className="absolute -inset-4 bg-[#f97316]/10 rounded-full blur-xl" />
-                                       <div className="w-16 h-16 bg-[#0c0a09] rounded-[5px] flex items-center justify-center text-[#f97316] mx-auto shadow-2xl relative border border-white/5">
-                                           <Diamond className="h-8 w-8 fill-[#f97316]/20" />
-                                       </div>
-                                   </div>
-                                   <div>
-                                       <h2 className="text-xl font-black text-[#0c0a09] tracking-tighter uppercase leading-none">Comprovante PIX</h2>
-                                       <div className="flex items-center justify-center gap-2 mt-1">
-                                          <CheckCircle2 className="h-3 w-3 text-green-500" />
-                                          <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.2em]">Autenticação Digital G8</p>
-                                       </div>
-                                   </div>
-                               </div>
+                            <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-neutral-50 to-white" />
 
-                               <div className="text-center py-2">
-                                   <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.3em] mb-2">Valor Total</p>
-                                   <p className="text-5xl font-black text-[#f97316] font-mono tracking-tighter">
-                                       {selectedTransaction.tipo === 'CREDITO' ? '+' : '-'} {selectedTransaction.valorFormatado}
-                                   </p>
-                               </div>
+                            <div className="p-6 md:p-10 space-y-8 relative z-10">
+                                <div className="text-center space-y-3">
+                                    <div className="relative inline-block">
+                                        <div className="absolute -inset-4 bg-[#f97316]/10 rounded-full blur-xl" />
+                                        <div className="w-16 h-16 bg-[#0c0a09] rounded-[5px] flex items-center justify-center text-[#f97316] mx-auto shadow-2xl relative border border-white/5">
+                                            <Diamond className="h-8 w-8 fill-[#f97316]/20" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl font-black text-[#0c0a09] tracking-tighter uppercase leading-none">Comprovante PIX</h2>
+                                        <div className="flex items-center justify-center gap-2 mt-1">
+                                            <CheckCircle2 className="h-3 w-3 text-green-500" />
+                                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.2em]">Autenticação Digital G8</p>
+                                        </div>
+                                    </div>
+                                </div>
 
-                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                   <div className="space-y-4 p-5 rounded-md bg-neutral-50/80 border border-neutral-100">
-                                      <div className="flex items-center gap-2 mb-2">
-                                         <Building2 className="h-3.5 w-3.5 text-neutral-400" />
-                                         <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">Origem / Pagador</p>
-                                      </div>
-                                      <div className="space-y-1">
-                                         <p className="font-black text-[#0c0a09] truncate text-sm uppercase">{selectedTransaction.pagadorNome || "CLIENTE G8PAY"}</p>
-                                         <p className="text-[10px] text-neutral-500 font-mono font-bold opacity-70">
-                                            {selectedTransaction.pagadorTaxNumber?.present ? selectedTransaction.pagadorTaxNumber.value : (selectedTransaction.pagadorTaxNumber || "---")}
-                                         </p>
-                                      </div>
-                                      <div className="pt-3 border-t border-neutral-200/50 space-y-2">
-                                         <div className="flex justify-between items-center text-[10px]">
-                                            <span className="text-neutral-400 font-bold">Banco</span>
-                                            <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{selectedTransaction.pagadorInstituicao || "G8 BANK (382)"}</span>
-                                         </div>
-                                         <div className="flex justify-between items-center text-[10px]">
-                                            <span className="text-neutral-400 font-bold">Ag/Conta</span>
-                                            <span className="font-black text-[#0c0a09] font-mono tracking-tighter text-right">
-                                               {selectedTransaction.pagadorAgencia || "0001"} &bull; {selectedTransaction.pagadorConta || "0000000-0"}
-                                            </span>
-                                         </div>
-                                      </div>
-                                   </div>
+                                <div className="text-center py-2">
+                                    <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.3em] mb-2">Valor Total</p>
+                                    <p className="text-5xl font-black text-[#f97316] font-mono tracking-tighter">
+                                        {selectedTransaction.tipo === 'CREDITO' ? '+' : '-'} {selectedTransaction.valorFormatado}
+                                    </p>
+                                </div>
 
-                                   <div className="space-y-4 p-5 rounded-md bg-neutral-50/80 border border-neutral-100">
-                                      <div className="flex items-center gap-2 mb-2">
-                                         <Building2 className="h-3.5 w-3.5 text-neutral-400" />
-                                         <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">Destino / Recebedor</p>
-                                      </div>
-                                      <div className="space-y-1">
-                                         <p className="font-black text-[#0c0a09] truncate text-sm uppercase">{selectedTransaction.RecebinteNome || "PAGAMENTO G8PAY"}</p>
-                                         <p className="text-[10px] text-neutral-500 font-mono font-bold opacity-70">
-                                            {selectedTransaction.RecebinteTaxNumber?.present ? selectedTransaction.RecebinteTaxNumber.value : (selectedTransaction.RecebinteTaxNumber || "---")}
-                                         </p>
-                                      </div>
-                                      <div className="pt-3 border-t border-neutral-200/50 space-y-2">
-                                         <div className="flex justify-between items-center text-[10px]">
-                                            <span className="text-neutral-400 font-bold">Banco</span>
-                                            <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{selectedTransaction.RecebinteInstituicao || "BANCO DESTINO"}</span>
-                                         </div>
-                                         <div className="flex justify-between items-center text-[10px]">
-                                            <span className="text-neutral-400 font-bold">Ag/Conta</span>
-                                            <span className="font-black text-[#0c0a09] font-mono tracking-tighter text-right">
-                                               {selectedTransaction.RecebinteAgencia || "---"} &bull; {selectedTransaction.RecebinteConta || "---"}
-                                            </span>
-                                         </div>
-                                      </div>
-                                   </div>
-                               </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-4 p-5 rounded-md bg-neutral-50/80 border border-neutral-100">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Building2 className="h-3.5 w-3.5 text-neutral-400" />
+                                            <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">Origem / Pagador</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="font-black text-[#0c0a09] truncate text-sm uppercase">{selectedTransaction.pagadorNome || "CLIENTE G8PAY"}</p>
+                                            <p className="text-[10px] text-neutral-500 font-mono font-bold opacity-70">
+                                                {selectedTransaction.pagadorTaxNumber?.present ? selectedTransaction.pagadorTaxNumber.value : (selectedTransaction.pagadorTaxNumber || "---")}
+                                            </p>
+                                        </div>
+                                        <div className="pt-3 border-t border-neutral-200/50 space-y-2">
+                                            <div className="flex justify-between items-center text-[10px]">
+                                                <span className="text-neutral-400 font-bold">Banco</span>
+                                                <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{selectedTransaction.pagadorInstituicao || "G8 BANK (382)"}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-[10px]">
+                                                <span className="text-neutral-400 font-bold">Ag/Conta</span>
+                                                <span className="font-black text-[#0c0a09] font-mono tracking-tighter text-right">
+                                                    {selectedTransaction.pagadorAgencia || "0001"} &bull; {selectedTransaction.pagadorConta || "0000000-0"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                               <div className="space-y-6 pt-4">
-                                  <div className="grid grid-cols-2 gap-12">
-                                      <div>
-                                          <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Metodologia</p>
-                                          <Badge className="bg-[#f97316]/5 text-[#f97316] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-[5px]">
-                                             {selectedTransaction.metodoFormatado}
-                                          </Badge>
-                                      </div>
-                                      <div className="text-right">
-                                          <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Data Efetiva</p>
-                                          <p className="text-xs font-black text-[#0c0a09]">
-                                              {selectedTransaction.dataDaTransacaoFormatada.split(" ")[0].split("-").reverse().join("/")} <span className="ml-1 text-neutral-400">{selectedTransaction.dataDaTransacaoFormatada.split(" ")[1]}</span>
-                                          </p>
-                                      </div>
-                                  </div>
+                                    <div className="space-y-4 p-5 rounded-md bg-neutral-50/80 border border-neutral-100">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <Building2 className="h-3.5 w-3.5 text-neutral-400" />
+                                            <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">Destino / Recebedor</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="font-black text-[#0c0a09] truncate text-sm uppercase">{selectedTransaction.RecebinteNome || "PAGAMENTO G8PAY"}</p>
+                                            <p className="text-[10px] text-neutral-500 font-mono font-bold opacity-70">
+                                                {selectedTransaction.RecebinteTaxNumber?.present ? selectedTransaction.RecebinteTaxNumber.value : (selectedTransaction.RecebinteTaxNumber || "---")}
+                                            </p>
+                                        </div>
+                                        <div className="pt-3 border-t border-neutral-200/50 space-y-2">
+                                            <div className="flex justify-between items-center text-[10px]">
+                                                <span className="text-neutral-400 font-bold">Banco</span>
+                                                <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{selectedTransaction.RecebinteInstituicao || "BANCO DESTINO"}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-[10px]">
+                                                <span className="text-neutral-400 font-bold">Ag/Conta</span>
+                                                <span className="font-black text-[#0c0a09] font-mono tracking-tighter text-right">
+                                                    {selectedTransaction.RecebinteAgencia || "---"} &bull; {selectedTransaction.RecebinteConta || "---"}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
-                                  <div className="p-4 rounded-[5px] bg-[#0c0a09] text-white/50 space-y-2 border border-white/5 shadow-2xl">
-                                     <div className="flex items-center gap-2 mb-1">
-                                        <Fingerprint className="h-3 w-3 text-[#f97316]" />
-                                        <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[#f97316]">Identificador End-to-End</p>
-                                     </div>
-                                     <p className="text-[9px] font-mono font-bold break-all leading-relaxed whitespace-pre-wrap">{selectedTransaction.codigoDeIdentificacao}</p>
-                                  </div>
-                               </div>
+                                <div className="space-y-6 pt-4">
+                                    <div className="grid grid-cols-2 gap-12">
+                                        <div>
+                                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Metodologia</p>
+                                            <Badge className="bg-[#f97316]/5 text-[#f97316] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-[5px]">
+                                                {selectedTransaction.metodoFormatado}
+                                            </Badge>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Data Efetiva</p>
+                                            <p className="text-xs font-black text-[#0c0a09]">
+                                                {selectedTransaction.dataDaTransacaoFormatada.split(" ")[0].split("-").reverse().join("/")} <span className="ml-1 text-neutral-400">{selectedTransaction.dataDaTransacaoFormatada.split(" ")[1]}</span>
+                                            </p>
+                                        </div>
+                                    </div>
 
-                               <div className="flex gap-4 pt-4">
-                                   <Button 
-                                      onClick={() => handlePrintReceipt(
-                                          selectedTransaction.idDoBancoLiquidante || selectedTransaction.itemId || selectedTransaction.id,
-                                          selectedTransaction.tipo === "CREDITO" ? (selectedTransaction.pagadorNome || "Transacao") : (selectedTransaction.RecebinteNome || "Transacao")
-                                      )}
-                                      className="flex-1 h-14 bg-[#0c0a09] text-white hover:bg-[#f97316] rounded-[5px] font-black uppercase tracking-widest text-[11px] transition-all shadow-xl shadow-black/10 group active:scale-95"
-                                   >
-                                       <Download className="h-4 w-4 mr-2 group-hover:-translate-y-1 transition-transform" /> Baixar Comprovante
-                                   </Button>
-                                   <Button 
-                                      variant="outline" 
-                                      onClick={() => setSelectedTransaction(null)} 
-                                      className="h-14 border-neutral-100 rounded-[5px] font-black uppercase tracking-widest text-[11px] px-8 active:scale-95 text-neutral-400 hover:text-black"
-                                   >
-                                       Fechar
-                                   </Button>
-                               </div>
-                           </div>
+                                    <div className="p-4 rounded-[5px] bg-[#0c0a09] text-white/50 space-y-2 border border-white/5 shadow-2xl">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Fingerprint className="h-3 w-3 text-[#f97316]" />
+                                            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[#f97316]">Identificador End-to-End</p>
+                                        </div>
+                                        <p className="text-[9px] font-mono font-bold break-all leading-relaxed whitespace-pre-wrap">{selectedTransaction.codigoDeIdentificacao}</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 pt-4">
+                                    <Button
+                                        onClick={() => handlePrintReceipt(
+                                            selectedTransaction.idDoBancoLiquidante || selectedTransaction.itemId || selectedTransaction.id,
+                                            selectedTransaction.tipo === "CREDITO" ? (selectedTransaction.pagadorNome || "Transacao") : (selectedTransaction.RecebinteNome || "Transacao")
+                                        )}
+                                        className="flex-1 h-14 bg-[#0c0a09] text-white hover:bg-[#f97316] rounded-[5px] font-black uppercase tracking-widest text-[11px] transition-all shadow-xl shadow-black/10 group active:scale-95"
+                                    >
+                                        <Download className="h-4 w-4 mr-2 group-hover:-translate-y-1 transition-transform" /> Baixar Comprovante
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setSelectedTransaction(null)}
+                                        className="h-14 border-neutral-100 rounded-[5px] font-black uppercase tracking-widest text-[11px] px-8 active:scale-95 text-neutral-400 hover:text-black"
+                                    >
+                                        Fechar
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
                     </Card>
                 </div>
@@ -425,44 +500,55 @@ export default function PixExtratoPage() {
                         </div>
                     </div>
                     <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto">
-                        <Button 
+                        <Button
                             onClick={() => handleExport('pdf')}
-                            variant="outline" 
+                            disabled={!!exportingType}
+                            variant="outline"
                             className="flex-1 sm:flex-none h-10 md:h-11 border-neutral-100 bg-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all text-neutral-400 hover:text-black"
                         >
-                            <Download className="h-4 w-4 text-[#f97316]" /> PDF
+                            {exportingType === 'pdf' ? <div className="h-4 w-4 border-2 border-[#f97316] border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-[#f97316]" />} 
+                            PDF
                         </Button>
-                        <Button 
+                        <Button
                             onClick={() => handleExport('xls')}
+                            disabled={!!exportingType}
                             className="flex-1 sm:flex-none h-10 md:h-11 bg-[#f97316] hover:bg-[#c2410c] text-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all font-sans"
                         >
-                            <Download className="h-4 w-4" /> Planilha
+                            {exportingType === 'xls' ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4" />} 
+                            Planilha
                         </Button>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Card className="bg-[#0c0a09] border-0 rounded-md p-6 md:p-8 flex items-center gap-4 md:gap-6 shadow-2xl relative overflow-hidden group cursor-pointer transition-all duration-500">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#f97316]/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-[#f97316]/10 rounded-md flex items-center justify-center text-[#f97316] border border-white/5 shadow-inner shrink-0 group-hover:rotate-12 transition-transform">
+                    <Card className="bg-emerald-600 border-0 rounded-md p-6 md:p-8 flex items-center gap-4 md:gap-6 shadow-2xl shadow-emerald-900/20 relative overflow-hidden group cursor-pointer transition-all duration-500">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+                        <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 rounded-md flex items-center justify-center text-white border border-white/10 shadow-inner shrink-0 group-hover:rotate-12 transition-transform">
                             <ArrowDownLeft className="h-6 w-6 md:h-7 md:w-7 stroke-[2.5]" />
                         </div>
                         <div className="space-y-0.5 md:space-y-1 relative z-10">
-                            <p className="text-[8px] md:text-[9px] text-white/30 font-black uppercase tracking-[0.3em]">Total Entradas</p>
-                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter">{formatCurrency(totals.in)}</p>
+                            <p className="text-[8px] md:text-[9px] text-white/60 font-black uppercase tracking-[0.3em]">Total Entradas</p>
+                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter">
+                                {isLoading ? <span className="opacity-20 animate-pulse">R$ 0,00</span> : formatCurrency(totals.in)}
+                            </p>
                         </div>
                     </Card>
-                    <Card className="bg-[#0c0a09] border-0 rounded-md p-6 md:p-8 flex items-center gap-4 md:gap-6 shadow-2xl relative overflow-hidden group cursor-pointer transition-all duration-500">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#f97316]/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-[#f97316]/10 rounded-md flex items-center justify-center text-[#f97316] border border-white/5 shadow-inner shrink-0 group-hover:-rotate-12 transition-transform">
+                    <Card className="bg-rose-500 border-0 rounded-md p-6 md:p-8 flex items-center gap-4 md:gap-6 shadow-2xl shadow-rose-900/20 relative overflow-hidden group cursor-pointer transition-all duration-500">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+                        <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 rounded-md flex items-center justify-center text-white border border-white/10 shadow-inner shrink-0 group-hover:-rotate-12 transition-transform">
                             <ArrowUpRight className="h-6 w-6 md:h-7 md:w-7 stroke-[2.5]" />
                         </div>
                         <div className="space-y-0.5 md:space-y-1 relative z-10">
-                            <p className="text-[8px] md:text-[9px] text-white/30 font-black uppercase tracking-[0.3em]">Total Saídas</p>
-                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter">{formatCurrency(totals.out)}</p>
+                            <p className="text-[8px] md:text-[9px] text-white/60 font-black uppercase tracking-[0.3em]">Total Saídas</p>
+                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter">
+                                {isLoading ? <span className="opacity-20 animate-pulse">R$ 0,00</span> : formatCurrency(totals.out)}
+                            </p>
                         </div>
                     </Card>
-                    <Card className="rounded-md border-0 shadow-2xl bg-[#f97316] p-6 md:p-8 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex items-center gap-6">
+                    <Card 
+                        onClick={() => window.open("https://wa.me/5551996297077", "_blank")}
+                        className="rounded-md border-0 shadow-2xl bg-[#f97316] p-6 md:p-8 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex items-center gap-6 active:scale-95 transition-all"
+                    >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-1000" />
                         <div className="w-12 h-12 md:w-14 md:h-14 bg-white/10 rounded-md flex items-center justify-center text-white border border-white/20 shadow-inner group-hover:scale-110 transition-transform shrink-0">
                             <AlertCircle className="h-6 w-6 md:h-7 md:w-7" />
@@ -490,7 +576,12 @@ export default function PixExtratoPage() {
                             </TabsList>
                         </Tabs>
                     </div>
-                    <div className="flex-1 w-full min-h-0">
+                    <div className="flex-1 w-full min-h-0 relative">
+                        {isLoading && (
+                            <div className="absolute inset-0 bg-white/50 z-20 flex items-center justify-center">
+                                <div className="h-4 w-4 bg-[#f97316] rounded-full animate-ping" />
+                            </div>
+                        )}
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
@@ -542,7 +633,7 @@ export default function PixExtratoPage() {
                             <div className="flex items-center gap-1 md:gap-2 bg-neutral-100/50 rounded-[5px] p-0.5 border border-neutral-200/20 w-fit mx-auto md:mx-0 overflow-x-auto no-scrollbar">
                                 <div className="relative group shrink-0">
                                     <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400 group-hover:text-[#f97316] transition-colors" />
-                                    <Input 
+                                    <Input
                                         type="date"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
@@ -552,7 +643,7 @@ export default function PixExtratoPage() {
                                 <span className="text-neutral-300 font-bold opacity-30 text-[10px]">/</span>
                                 <div className="relative group shrink-0">
                                     <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400 group-hover:text-[#f97316] transition-colors" />
-                                    <Input 
+                                    <Input
                                         type="date"
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
@@ -566,11 +657,11 @@ export default function PixExtratoPage() {
                     <div className="space-y-4 pt-6">
                         <div className="hidden sm:grid grid-cols-12 px-6 pb-2 text-[9px] font-black text-neutral-500 uppercase tracking-[0.3em] gap-4">
                             <span className="col-span-5 flex items-center gap-2"><Smartphone className="h-3 w-3" /> Beneficiário / Pagador</span>
-                            <span className="col-span-3 flex items-center justify-center gap-2 text-center"><Diamond className="h-3 w-3" /> Natureza PIX</span>
+                            <span className="col-span-3 flex items-center justify-center gap-2 text-center"><Diamond className="h-3 w-3" /> Tipo de Operação</span>
                             <span className="col-span-2 flex items-center justify-end gap-2 text-right"><CreditCard className="h-3 w-3" /> Valor Total</span>
                             <span className="col-span-2 flex items-center justify-end gap-2 text-right"><Calendar className="h-3 w-3" /> Horário</span>
                         </div>
-                        
+
                         {isLoading ? (
                             <div className="space-y-4">
                                 {[1, 2, 3, 4, 5].map(i => (
@@ -580,15 +671,15 @@ export default function PixExtratoPage() {
                                 ))}
                             </div>
                         ) : filteredItems.length === 0 ? (
-                           <div className="py-24 text-center bg-white/50 rounded-[5px] border border-dashed border-neutral-200 flex flex-col items-center space-y-4">
-                               <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center text-neutral-200">
-                                  <Smartphone className="h-8 w-8" />
-                               </div>
-                               <div className="space-y-1">
-                                  <p className="text-neutral-400 font-black uppercase text-[10px] tracking-widest">Nenhuma transação PIX localizada</p>
-                                  <p className="text-neutral-300 text-[9px] font-medium italic">Seu fluxo está vazio para os filtros selecionados.</p>
-                               </div>
-                           </div>
+                            <div className="py-24 text-center bg-white/50 rounded-[5px] border border-dashed border-neutral-200 flex flex-col items-center space-y-4">
+                                <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center text-neutral-200">
+                                    <Smartphone className="h-8 w-8" />
+                                </div>
+                                <div className="space-y-1">
+                                    <p className="text-neutral-400 font-black uppercase text-[10px] tracking-widest">Nenhuma transação PIX localizada</p>
+                                    <p className="text-neutral-300 text-[9px] font-medium italic">Seu fluxo está vazio para os filtros selecionados.</p>
+                                </div>
+                            </div>
                         ) : (
                             <div className="space-y-2">
                                 {filteredItems.map((t, idx) => {
@@ -596,53 +687,53 @@ export default function PixExtratoPage() {
                                     const dateParts = t.dataDaTransacaoFormatada.split(" ");
 
                                     return (
-                                         <div
+                                        <div
                                             key={idx}
                                             onClick={() => setSelectedTransaction(t)}
                                             className="flex flex-col sm:grid sm:grid-cols-12 items-start sm:items-center px-6 py-6 sm:py-5 bg-white hover:bg-neutral-50/50 rounded-[5px] border border-neutral-50 hover:border-neutral-200 transition-all duration-300 group cursor-pointer gap-4 sm:gap-6"
-                                         >
+                                        >
                                             <div className="flex items-center gap-3 md:gap-4 col-span-5 min-w-0 w-full">
-                                               <div className={`w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-[5px] flex items-center justify-center p-2.5 transition-all ${t.tipo === 'CREDITO' ? 'text-green-500 bg-green-50' : 'text-[#f97316] bg-neutral-50' } group-hover:scale-110`}>
-                                                  {t.tipo === 'CREDITO' ? <PlusCircle className="h-full w-full stroke-[2.5]" /> : <MinusCircle className="h-full w-full stroke-[2.5]" />}
-                                               </div>
-                                               <div className="min-w-0 flex-1">
-                                                  <p className="font-black text-xs md:text-sm text-[#0c0a09] leading-tight mb-1 truncate uppercase">{description}</p>
-                                                  <p className="text-[8px] md:text-[9px] font-black text-neutral-400 opacity-60 uppercase tracking-widest truncate">ID: {t.codigoDeIdentificacao || t.idDoBancoLiquidante}</p>
-                                               </div>
-                                               <div className="sm:hidden text-right shrink-0">
-                                                   <p className={`font-black text-lg font-mono tracking-tighter ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-red-500'}`}>
-                                                      {t.tipo === 'CREDITO' ? '+' : '-'}{t.valorFormatado.replace('R$', '').trim()}
-                                                   </p>
-                                               </div>
+                                                <div className={`w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-[5px] flex items-center justify-center p-2.5 transition-all ${t.tipo === 'CREDITO' ? 'text-green-500 bg-green-50' : 'text-[#f97316] bg-neutral-50'} group-hover:scale-110`}>
+                                                    {t.tipo === 'CREDITO' ? <PlusCircle className="h-full w-full stroke-[2.5]" /> : <MinusCircle className="h-full w-full stroke-[2.5]" />}
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-black text-xs md:text-sm text-[#0c0a09] leading-tight mb-1 truncate uppercase">{description}</p>
+                                                    <p className="text-[8px] md:text-[9px] font-black text-neutral-400 opacity-60 uppercase tracking-widest truncate">ID: {t.codigoDeIdentificacao || t.idDoBancoLiquidante}</p>
+                                                </div>
+                                                <div className="sm:hidden text-right shrink-0">
+                                                    <p className={`font-black text-lg font-mono tracking-tighter ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-red-500'}`}>
+                                                        {t.tipo === 'CREDITO' ? '+' : '-'}{t.valorFormatado.replace('R$', '').trim()}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            
+
                                             <div className="hidden sm:flex col-span-3 flex-col items-center">
                                                 <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest border-0 px-3 py-1.5 h-7 flex items-center justify-center w-full max-w-[140px] rounded-[5px] ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50/50' : 'text-neutral-400 bg-neutral-50'}`}>
                                                     {t.metodoFormatado}
                                                 </Badge>
                                             </div>
-    
+
                                             <div className="hidden sm:block col-span-2 text-right">
-                                               <p className={`font-black text-lg font-mono tracking-tighter ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-red-500'}`}>
-                                                  {t.tipo === 'CREDITO' ? '+' : '-'} {t.valorFormatado}
-                                               </p>
+                                                <p className={`font-black text-lg font-mono tracking-tighter ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-red-500'}`}>
+                                                    {t.tipo === 'CREDITO' ? '+' : '-'} {t.valorFormatado}
+                                                </p>
                                             </div>
-    
+
                                             <div className="flex sm:col-span-2 items-center justify-between sm:justify-end gap-3 w-full sm:w-auto text-neutral-300 group-hover:text-[#f97316] transition-colors border-t sm:border-t-0 border-neutral-50 pt-3 sm:pt-0">
-                                               <div className="sm:hidden">
-                                                   <Badge variant="outline" className={`text-[8px] font-black uppercase tracking-widest border-0 px-2 py-1 rounded-[5px] ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50/50' : 'text-neutral-400 bg-neutral-50'}`}>
-                                                       {t.metodoFormatado}
-                                                   </Badge>
-                                               </div>
-                                               <div className="text-right flex items-center gap-2 md:gap-3">
-                                                   <div className="text-right shrink-0">
-                                                      <p className="text-[9px] md:text-xs font-black text-[#0c0a09] font-mono">{dateParts[0].split("-").reverse().join("/")}</p>
-                                                      <p className="text-[7px] md:text-[9px] font-bold tracking-widest">{dateParts[1]}</p>
-                                                   </div>
-                                                   <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
-                                               </div>
+                                                <div className="sm:hidden">
+                                                    <Badge variant="outline" className={`text-[8px] font-black uppercase tracking-widest border-0 px-2 py-1 rounded-[5px] ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50/50' : 'text-neutral-400 bg-neutral-50'}`}>
+                                                        {t.metodoFormatado}
+                                                    </Badge>
+                                                </div>
+                                                <div className="text-right flex items-center gap-2 md:gap-3">
+                                                    <div className="text-right shrink-0">
+                                                        <p className="text-[9px] md:text-xs font-black text-[#0c0a09] font-mono">{dateParts[0].split("-").reverse().join("/")}</p>
+                                                        <p className="text-[7px] md:text-[9px] font-bold tracking-widest">{dateParts[1]}</p>
+                                                    </div>
+                                                    <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
+                                                </div>
                                             </div>
-                                         </div>
+                                        </div>
                                     );
                                 })}
                             </div>

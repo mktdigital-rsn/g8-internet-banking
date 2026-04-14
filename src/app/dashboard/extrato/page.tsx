@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
-import axios from "axios";
+import React, { useMemo, useState, useEffect } from "react";
+import api from "@/lib/api";
 import {
     ArrowUpRight,
     ArrowDownLeft,
@@ -45,8 +45,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
 
 export default function ExtratoGeralPage() {
-    const [items, setItems] = React.useState<any[]>([]);
-    const [isLoading, setIsLoading] = React.useState(true);
+    const [items, setItems] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [exportingType, setExportingType] = useState<'pdf' | 'xls' | null>(null);
     const [filter, setFilter] = React.useState("all");
     const [chartPeriod, setChartPeriod] = React.useState<"day" | "week" | "month">("week");
     const [searchTerm, setSearchTerm] = React.useState("");
@@ -54,28 +55,21 @@ export default function ExtratoGeralPage() {
     const [endDate, setEndDate] = React.useState("");
     const [selectedTransaction, setSelectedTransaction] = React.useState<any>(null);
 
-    // Default dates: day 1 of month, and today
     React.useEffect(() => {
         const now = new Date();
-        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-        const today = now.toISOString().split('T')[0];
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const firstDay = `${year}-${month}-01`;
+        const today = `${year}-${month}-${day}`;
         setStartDate(firstDay);
         setEndDate(today);
     }, []);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const fetchExtrato = async () => {
             try {
-                const token = localStorage.getItem("token");
-                const userToken = localStorage.getItem("userToken");
-                const apiUrl = "https://g8api.bskpay.com.br";
-
-                const response = await axios.get(`${apiUrl}/api/banco/extrato/buscar`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'userToken': userToken || ""
-                    }
-                });
+                const response = await api.get("/api/banco/extrato/buscar");
 
                 if (response.data && Array.isArray(response.data.data)) {
                     setItems(response.data.data);
@@ -113,30 +107,37 @@ export default function ExtratoGeralPage() {
     };
 
     const handleExport = async (format: 'pdf' | 'xls') => {
+        setExportingType(format);
         try {
-            const token = localStorage.getItem("token");
-            const userToken = localStorage.getItem("userToken");
-            const apiUrl = "https://g8api.bskpay.com.br";
-
             if (format === 'pdf') {
-                const response = await axios.get(`${apiUrl}/api/banco/extrato/exportar-pdf`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'userToken': userToken || ""
-                    },
+                const params = new URLSearchParams();
+                if (startDate) {
+                    params.append('startDate', startDate);
+                    params.append('dataInicial', startDate);
+                    params.append('data_inicio', startDate);
+                }
+                if (endDate) {
+                    params.append('endDate', endDate);
+                    params.append('dataFinal', endDate);
+                    params.append('data_fim', endDate);
+                }
+                if (filter !== "all") params.append('tipo', filter === "in" ? "CREDITO" : "DEBITO");
+
+                const response = await api.get(`/api/banco/extrato/exportar-pdf?${params.toString()}`, {
                     responseType: 'blob'
                 });
 
-                const url = window.URL.createObjectURL(new Blob([response.data]));
+                const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', `extrato_${new Date().toISOString().split('T')[0]}.pdf`);
+                link.setAttribute('download', `extrato_${startDate || 'inicial'}_a_${endDate || 'final'}.pdf`);
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
+                window.URL.revokeObjectURL(url);
             } else {
                 const headers = ["Data/Hora", "Identificação", "Tipo", "Método", "Natureza", "Origem", "Destino", "Valor"];
-                const header = headers.join("\t") + "\n";
+                const header = "sep=;\n" + headers.join(";") + "\n";
 
                 const rows = filteredItems.map(item => {
                     const natureza = getNatureza(item.metodo);
@@ -151,35 +152,32 @@ export default function ExtratoGeralPage() {
                         natureza,
                         origem,
                         destino,
-                        item.valorFormatado.replace("R$", "").trim()
-                    ].join("\t");
+                        item.valorFormatado.replace("R$", "").trim().replace(".", ",")
+                    ].join(";");
                 }).join("\n");
 
-                const blob = new Blob(["\uFEFF", header, rows], { type: 'application/vnd.ms-excel;charset=utf-8' });
+                const blob = new Blob(["\uFEFF", header, rows], { type: 'text/csv;charset=utf-8' });
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', `extrato_${new Date().toISOString().split('T')[0]}.xls`);
+                link.setAttribute('download', `extrato_${startDate || 'inicial'}_a_${endDate || 'final'}.csv`);
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
+                window.URL.revokeObjectURL(url);
             }
         } catch (err) {
             console.error("Error exporting:", err);
             alert("Erro ao exportar arquivo.");
+        } finally {
+            setExportingType(null);
         }
     };
 
     const handlePrintReceipt = async (id: string, description: string) => {
         if (!id) return;
         try {
-            const token = localStorage.getItem("token");
-            const apiUrl = "https://g8api.bskpay.com.br";
-
-            const response = await axios.get(`${apiUrl}/api/banco/extrato/imprimir-item/${id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                },
+            const response = await api.get(`/api/banco/extrato/imprimir-item/${id}`, {
                 responseType: 'blob'
             });
 
@@ -233,46 +231,97 @@ export default function ExtratoGeralPage() {
     }, [items, filter, searchTerm, startDate, endDate]);
 
     const chartData = useMemo(() => {
-        const groups: { [key: string]: { name: string, full: string, entries: number, exits: number } } = {};
+        let referenceDate = new Date();
+        if (endDate) {
+            const parts = endDate.split("-").map(Number);
+            referenceDate = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
+        }
+        
+        const now = new Date();
+        const isToday = referenceDate.toDateString() === now.toDateString();
+        const startOfRef = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
+        
+        const groups: { [key: string]: { name: string, full: string, entries: number, exits: number, timestamp: number } } = {};
+        const daysArr = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-        [...filteredItems].reverse().forEach(item => {
+        if (chartPeriod === 'day') {
+            const hLimit = isToday ? now.getHours() : 23;
+            for (let h = 0; h <= hLimit; h++) {
+                const key = `H-${h}`;
+                groups[key] = { 
+                    name: `${h}h`, 
+                    full: `${isToday ? 'Hoje' : referenceDate.toLocaleDateString('pt-BR')} às ${String(h).padStart(2, '0')}:00`, 
+                    entries: 0, 
+                    exits: 0,
+                    timestamp: h
+                };
+            }
+        } else if (chartPeriod === 'week') {
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(startOfRef);
+                d.setDate(startOfRef.getDate() - i);
+                const dayLabel = daysArr[d.getDay()];
+                const key = `D-${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+                groups[key] = { 
+                    name: `${dayLabel} ${String(d.getDate()).padStart(2, '0')}`, 
+                    full: d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }), 
+                    entries: 0, 
+                    exits: 0,
+                    timestamp: d.getTime()
+                };
+            }
+        } else if (chartPeriod === 'month') {
+            const firstDay = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+            const diffDays = Math.floor((referenceDate.getTime() - firstDay.getTime()) / (24 * 3600000));
+            // Ensure we don't crash if range is too large
+            const loopLimit = Math.min(diffDays, 31);
+            for (let i = 0; i <= loopLimit; i++) {
+                const d = new Date(firstDay);
+                d.setDate(firstDay.getDate() + i);
+                const key = `D-${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+                groups[key] = { 
+                    name: String(d.getDate()).padStart(2, '0'), 
+                    full: d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }), 
+                    entries: 0, 
+                    exits: 0,
+                    timestamp: d.getTime()
+                };
+            }
+        }
+
+        filteredItems.forEach(item => {
             if (!item.dataDaTransacaoFormatada) return;
-            const parts = item.dataDaTransacaoFormatada.split(" ")[0].replace(/\//g, "-").split("-");
-            const isoDate = parts[0].length === 4 ? parts.join("-") : parts.reverse().join("-");
-            const date = new Date(isoDate);
-            if (isNaN(date.getTime())) return;
+            
+            const [datePart, timePart] = item.dataDaTransacaoFormatada.split(" ");
+            const parts = datePart.replace(/\//g, "-").split("-").map(Number);
+            
+            let day, month, year;
+            if (parts[0] > 1000) { [year, month, day] = parts; } 
+            else { [day, month, year] = parts; }
+            
+            const [hour, min, sec] = (timePart || "00:00:00").split(":").map(Number);
+            const itemDate = new Date(year, month - 1, day, hour, min, sec);
+            if (isNaN(itemDate.getTime())) return;
 
             let key = "";
-            let label = "";
-            let fullLabel = "";
-
             if (chartPeriod === 'day') {
-                const hour = item.dataDaTransacaoFormatada.split(" ")[1].split(":")[0];
-                key = hour + "h";
-                label = key;
-                fullLabel = `Hoje às ${hour}:00`;
-            } else if (chartPeriod === 'week') {
-                const days = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-                key = days[date.getDay()];
-                label = key;
-                fullLabel = date.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+                if (itemDate.toDateString() === referenceDate.toDateString()) {
+                    key = `H-${itemDate.getHours()}`;
+                }
             } else {
-                const weekNum = Math.ceil(date.getDate() / 7);
-                key = `Sem ${weekNum}`;
-                label = key;
-                fullLabel = `${weekNum}ª Semana de ${date.toLocaleDateString('pt-BR', { month: 'long' })}`;
+                key = `D-${itemDate.getFullYear()}-${itemDate.getMonth()}-${itemDate.getDate()}`;
             }
 
-            if (!groups[key]) {
-                groups[key] = { name: label, full: fullLabel, entries: 0, exits: 0 };
+            if (key && groups[key]) {
+                const val = Math.abs(Number(item.valor || 0));
+                const tipo = String(item.tipo || "").toUpperCase();
+                if (tipo === 'CREDITO') groups[key].entries += val;
+                else groups[key].exits += val;
             }
-            if (item.tipo === 'CREDITO') groups[key].entries += item.valor;
-            else groups[key].exits += item.valor;
         });
 
-        const result = Object.values(groups);
-        return result.length > 0 ? result : [];
-    }, [filteredItems, chartPeriod]);
+        return Object.values(groups).sort((a, b) => a.timestamp - b.timestamp);
+    }, [filteredItems, chartPeriod, endDate]);
 
     const totals = filteredItems.reduce((acc, item) => {
         if (item.tipo === "CREDITO") acc.in += item.valor;
@@ -292,7 +341,7 @@ export default function ExtratoGeralPage() {
                     <Card className="w-full max-w-lg bg-white rounded-md overflow-hidden shadow-2xl relative border-white/20 animate-in zoom-in-95 duration-300 my-auto">
                         <button
                             onClick={() => setSelectedTransaction(null)}
-                            className="absolute top-6 right-6 p-2 rounded-full bg-neutral-50 hover:bg-neutral-100 transition-all z-20 hover:rotate-90"
+                            className="absolute top-6 right-6 p-2 rounded-sm bg-neutral-50 hover:bg-neutral-100 transition-all z-20 hover:rotate-90"
                         >
                             <ArrowLeft className="h-5 w-5 rotate-180 text-neutral-400" />
                         </button>
@@ -437,44 +486,53 @@ export default function ExtratoGeralPage() {
                     <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto">
                         <Button
                             onClick={() => handleExport('pdf')}
+                            disabled={!!exportingType}
                             variant="outline"
                             className="flex-1 sm:flex-none h-10 md:h-11 border-neutral-100 bg-white rounded-sm px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all active:scale-95 text-neutral-400 hover:text-black"
                         >
-                            <Download className="h-4 w-4 text-[#f97316]" />
+                            {exportingType === 'pdf' ? <div className="h-4 w-4 border-2 border-[#f97316] border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-[#f97316]" />}
                             PDF
                         </Button>
                         <Button
                             onClick={() => handleExport('xls')}
+                            disabled={!!exportingType}
                             className="flex-1 sm:flex-none h-10 md:h-11 bg-[#f97316] hover:bg-[#c2410c] text-white rounded-sm px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all active:scale-95"
                         >
-                            <Download className="h-4 w-4" />
+                            {exportingType === 'xls' ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4" />}
                             Planilha
                         </Button>
                     </div>
                 </div>
                    {/* Stats & Support Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Card className="bg-[#0c0a09] border-0 rounded-md p-6 md:p-8 flex items-center gap-4 md:gap-6 shadow-2xl relative overflow-hidden group cursor-pointer transition-all duration-500">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#f97316]/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-[#f97316]/10 rounded-md flex items-center justify-center text-[#f97316] border border-white/5 shadow-inner shrink-0 group-hover:rotate-12 transition-transform">
+                    <Card className="bg-emerald-600 border-0 rounded-md p-6 md:p-8 flex items-center gap-4 md:gap-6 shadow-2xl shadow-emerald-900/20 relative overflow-hidden group cursor-pointer transition-all duration-500">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+                        <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 rounded-md flex items-center justify-center text-white border border-white/10 shadow-inner shrink-0 group-hover:rotate-12 transition-transform">
                             <ArrowDownLeft className="h-6 w-6 md:h-7 md:w-7 stroke-[2.5]" />
                         </div>
                         <div className="space-y-0.5 md:space-y-1 relative z-10">
-                            <p className="text-[8px] md:text-[9px] text-white/30 font-black uppercase tracking-[0.3em]">Total Entradas</p>
-                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter">{formatCurrency(totals.in)}</p>
+                            <p className="text-[8px] md:text-[9px] text-white/60 font-black uppercase tracking-[0.3em]">Total Entradas</p>
+                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter">
+                                {isLoading ? <span className="opacity-20 animate-pulse">R$ 0,00</span> : formatCurrency(totals.in)}
+                            </p>
                         </div>
                     </Card>
-                    <Card className="bg-[#0c0a09] border-0 rounded-md p-6 md:p-8 flex items-center gap-4 md:gap-6 shadow-2xl relative overflow-hidden group cursor-pointer transition-all duration-500">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-[#f97316]/5 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-[#f97316]/10 rounded-md flex items-center justify-center text-[#f97316] border border-white/5 shadow-inner shrink-0 group-hover:-rotate-12 transition-transform">
+                    <Card className="bg-rose-500 border-0 rounded-md p-6 md:p-8 flex items-center gap-4 md:gap-6 shadow-2xl shadow-rose-900/20 relative overflow-hidden group cursor-pointer transition-all duration-500">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+                        <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 rounded-md flex items-center justify-center text-white border border-white/10 shadow-inner shrink-0 group-hover:-rotate-12 transition-transform">
                             <ArrowUpRight className="h-6 w-6 md:h-7 md:w-7 stroke-[2.5]" />
                         </div>
                         <div className="space-y-0.5 md:space-y-1 relative z-10">
-                            <p className="text-[8px] md:text-[9px] text-white/30 font-black uppercase tracking-[0.3em]">Total Saídas</p>
-                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter">{formatCurrency(totals.out)}</p>
+                            <p className="text-[8px] md:text-[9px] text-white/60 font-black uppercase tracking-[0.3em]">Total Saídas</p>
+                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter">
+                                {isLoading ? <span className="opacity-20 animate-pulse">R$ 0,00</span> : formatCurrency(totals.out)}
+                            </p>
                         </div>
                     </Card>
-                    <Card className="rounded-md border-0 shadow-2xl bg-[#f97316] p-6 md:p-8 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex items-center gap-6">
+                    <Card 
+                        onClick={() => window.open("https://wa.me/5551996297077", "_blank")}
+                        className="rounded-md border-0 shadow-2xl bg-[#f97316] p-6 md:p-8 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex items-center gap-6 active:scale-95 transition-all"
+                    >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-1000" />
                         <div className="w-12 h-12 md:w-14 md:h-14 bg-white/10 rounded-md flex items-center justify-center text-white border border-white/20 shadow-inner group-hover:scale-110 transition-transform shrink-0">
                             <AlertCircle className="h-6 w-6 md:h-7 md:w-7" />
@@ -502,7 +560,12 @@ export default function ExtratoGeralPage() {
                             </TabsList>
                         </Tabs>
                     </div>
-                    <div className="flex-1 w-full min-h-0">
+                    <div className="flex-1 w-full min-h-0 relative">
+                        {isLoading && (
+                            <div className="absolute inset-0 bg-white/50 z-20 flex items-center justify-center">
+                                <div className="h-4 w-4 bg-[#f97316] rounded-full animate-ping" />
+                            </div>
+                        )}
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
@@ -608,8 +671,8 @@ export default function ExtratoGeralPage() {
                                 ))}
                             </div>
                         ) : filteredItems.length === 0 ? (
-                            <div className="py-24 text-center bg-white/50 rounded-md border border-dashed border-neutral-200 flex flex-col items-center space-y-4">
-                                <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center text-neutral-200">
+                            <div className="py-24 text-center bg-white/50 rounded-sm border border-dashed border-neutral-200 flex flex-col items-center space-y-4">
+                                <div className="w-16 h-16 bg-neutral-50 rounded-sm flex items-center justify-center text-neutral-200">
                                     <Search className="h-8 w-8" />
                                 </div>
                                 <div className="space-y-1">
