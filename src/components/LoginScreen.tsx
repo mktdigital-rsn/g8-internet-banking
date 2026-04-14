@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import api from "@/lib/api";
+import api, { getDeviceId } from "@/lib/api";
 import { toast } from "sonner";
 
 type LoginStep = "identifier" | "password" | "qrcode";
@@ -82,7 +82,7 @@ export default function LoginScreen() {
         const payload = {
           email: cleanIdentifier,
           keys: passwordKeys,
-          deviceId: "IB-WEB-PLATFORM",
+          deviceId: getDeviceId(),
           deviceName: deviceNameEncoded, // Send Base64 as app does
         };
 
@@ -141,7 +141,7 @@ export default function LoginScreen() {
         className="w-full max-w-[500px] lg:max-w-[1000px] 2xl:max-w-[1400px] grid lg:grid-cols-2 bg-[#18181b] border border-white/5 rounded-[2px] overflow-hidden shadow-2xl relative z-10 min-h-[500px] lg:min-h-[600px] 2xl:min-h-[800px]"
       >
         {/* Left Side: Branding (Hidden on Tablet/Mobile) */}
-        <div className="hidden lg:flex flex-col justify-between p-16 2xl:p-24 bg-[#1f1f23] border-r border-white/5">
+        <div className="hidden lg:flex flex-col justify-between p-16 2xl:p-24 bg-[#252529] border-r border-white/5">
           <div>
             <Image src="/logo_g8_white.png" alt="G8Pay Logo" width={160} height={60} className="object-contain 2xl:scale-125 origin-left" />
           </div>
@@ -156,14 +156,14 @@ export default function LoginScreen() {
                 Seguro à <br />
                 <span className="text-[#ea580c]">Plataforma.</span>
               </h1>
-              <p className="text-white/40 text-sm 2xl:text-lg font-medium leading-relaxed max-w-[300px] 2xl:max-w-[450px]">
+              <p className="text-neutral-300 text-sm 2xl:text-lg font-medium leading-relaxed max-w-[300px] 2xl:max-w-[450px]">
                 Te ajudamos a gerenciar seu capital de forma inteligente e segura através da nossa tecnologia de ponta.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-white/20 2xl:gap-5">
-            <ShieldCheck className="text-[#ea580c] h-5 w-5 2xl:h-7 2xl:w-7" />
+          <div className="flex items-center gap-3 text-neutral-400 2xl:gap-5">
+            <ShieldCheck className="text-green-500 h-5 w-5 2xl:h-7 2xl:w-7" />
             <span className="text-[10px] 2xl:text-xs font-bold uppercase tracking-[0.2em]">SSL SECURE PROTOCOL</span>
           </div>
         </div>
@@ -186,12 +186,12 @@ export default function LoginScreen() {
               >
                 <div className="space-y-3 2xl:space-y-5">
                   <h2 className="text-4xl 2xl:text-6xl font-black text-white tracking-tighter">Identificação</h2>
-                  <p className="text-white/30 font-bold uppercase text-[11px] 2xl:text-sm tracking-[0.2em]">Digite seu CPF ou E-mail da conta</p>
+                  <p className="text-neutral-300 font-bold uppercase text-[11px] 2xl:text-sm tracking-[0.2em]">Digite seu CPF ou E-mail da conta</p>
                 </div>
 
                 <form onSubmit={handleIdentifierSubmit} className="space-y-6 2xl:space-y-10">
                   <div className="space-y-2 2xl:space-y-4">
-                    <label className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-[#ea580c]/80 ml-1">Acessar com</label>
+                    <label className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-[#f97316] ml-1">Acessar com</label>
                     <div className="relative group">
                       <User className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 2xl:h-7 2xl:w-7 text-white/20 group-focus-within:text-[#ea580c] transition-colors" />
                       <Input
@@ -215,8 +215,8 @@ export default function LoginScreen() {
                 </form>
 
                 <div className="pt-6 2xl:pt-10 border-t border-white/5 flex items-center justify-between">
-                  <button className="text-[10px] 2xl:text-xs font-black text-white/40 uppercase tracking-widest hover:text-white transition-colors">Dificuldade em acessar?</button>
-                  <button className="text-[10px] 2xl:text-xs font-black text-[#ea580c] uppercase tracking-widest hover:underline">Solicitar Acesso</button>
+                  <button className="text-[10px] 2xl:text-xs font-black text-neutral-400 uppercase tracking-widest hover:text-white transition-colors">Dificuldade em acessar?</button>
+                  <button className="text-[10px] 2xl:text-xs font-black text-[#f97316] uppercase tracking-widest hover:underline">Solicitar Acesso</button>
                 </div>
               </motion.div>
             )}
@@ -235,7 +235,7 @@ export default function LoginScreen() {
                   </button>
                   <div className="space-y-1">
                     <h2 className="text-3xl 2xl:text-5xl font-black text-white tracking-tighter">Senha</h2>
-                    <p className="text-white/30 font-bold uppercase text-[10px] 2xl:text-sm tracking-widest">Usuário: {identifier}</p>
+                    <p className="text-neutral-300 font-bold uppercase text-[10px] 2xl:text-sm tracking-widest">Usuário: {identifier}</p>
                   </div>
                 </div>
 
@@ -243,7 +243,7 @@ export default function LoginScreen() {
                   {passwordMode === "virtual" ? (
                     <div className="space-y-6 2xl:space-y-10">
                       <div className="h-16 2xl:h-24 flex items-center justify-center gap-3 2xl:gap-6 bg-black/20 rounded-[2px] border border-white/10 font-mono text-xl 2xl:text-4xl text-[#ea580c] tracking-[0.5em] shadow-inner">
-                        {shownPassword || <span className="text-white/10 text-[10px] 2xl:text-sm uppercase font-black tracking-[0.3em]">Senha Eletrônica</span>}
+                        {shownPassword || <span className="text-neutral-400 text-[10px] 2xl:text-sm uppercase font-black tracking-[0.3em]">Senha Eletrônica</span>}
                       </div>
 
                       <div className="grid grid-cols-2 gap-3 2xl:gap-5">

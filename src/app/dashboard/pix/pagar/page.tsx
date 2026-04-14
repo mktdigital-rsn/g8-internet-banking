@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import jsQR from "jsqr";
 import { QRCodeSVG } from "qrcode.react";
-import api from "@/lib/api";
+import api, { getDeviceId } from "@/lib/api";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
@@ -271,13 +271,19 @@ function PixPagarContent() {
     return val;
   };
 
+
+
   const handleRequestSms = async () => {
     setIsLoadingTransfer(true);
     try {
       console.log(`📩 [SMS REQUEST] Enviando solicitação de PIN...`);
 
+      const amountNum = parseFloat(value.replace(/\D/g, "")) / 100;
+      const amountStr = amountNum.toFixed(2);
+
       const res = await api.post("/api/users/solicitar-pin", {
-        amount: String(parseFloat(value.replace(/\D/g, "")) / 100)
+        amount: amountStr,
+        deviceId: getDeviceId()
       });
 
       if (res.data) {
@@ -309,24 +315,14 @@ function PixPagarContent() {
       try {
         await api.post("/api/users/validar-pin", {
           pin: smsCode,
-          pinId: pinId
+          pinId: pinId,
+          deviceId: getDeviceId()
         });
         console.log("✅ [VALIDAR PIN SUCCESS]");
       } catch (err: any) {
         console.error("❌ [VALIDAR PIN ERROR]:", err.response?.status, err.response?.data);
         throw err;
       }
-
-      // Generate or retrieve persistent Device ID for web
-      const getDeviceId = () => {
-        if (typeof window === 'undefined') return 'IB-WEB-PLATFORM';
-        let dId = localStorage.getItem('deviceId');
-        if (!dId) {
-          dId = `IB-WEB-${crypto.randomUUID()}`;
-          localStorage.setItem('deviceId', dId);
-        }
-        return dId;
-      };
 
       const deviceId = getDeviceId();
       let endpoint = "/api/banco/pix/transferir";
@@ -339,9 +335,11 @@ function PixPagarContent() {
         }
       }
 
+      const txAmount = parseFloat(value.replace(/\D/g, "")) / 100;
+      
       let payload: any = {
         chave: finalChave,
-        valor: parseFloat(value.replace(/\D/g, "")) / 100,
+        valor: txAmount,
         agendadoPara: null,
         uuid: uuid || crypto.randomUUID(),
         endToEndIdInterno: endToEndId || crypto.randomUUID(),
@@ -366,6 +364,7 @@ function PixPagarContent() {
           receiverConciliationId: searchResult?.receiverConciliationId || qrId,
           amount: txAmount,
           endToEndIdInterno: internalId,
+          pin: smsCode,
           deviceId: deviceId
         };
       }
