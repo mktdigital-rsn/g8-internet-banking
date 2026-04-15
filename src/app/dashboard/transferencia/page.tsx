@@ -30,9 +30,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import api, { getDeviceId } from "@/lib/api";
+import api from "@/lib/api";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAtomValue } from "jotai";
+import { temporaryDeviceIdAtom } from "@/store/auth";
 
 type Step = 'menu' | 'select_target' | 'form' | 'pin' | 'confirming' | 'success' | 'error';
 type SearchMode = 'cpf' | 'account';
@@ -47,6 +49,7 @@ interface ReceiverInfo {
 }
 
 export default function TransferenciaPage() {
+    const temporaryDeviceId = useAtomValue(temporaryDeviceIdAtom);
     const [step, setStep] = useState<Step>('menu');
     const [searchMode, setSearchMode] = useState<SearchMode>('cpf');
     const [isLoading, setIsLoading] = useState(false);
@@ -149,6 +152,11 @@ export default function TransferenciaPage() {
     };
 
     const handleRequestPin = async () => {
+        if (!temporaryDeviceId) {
+            setErrorMessage("Aguarde concluir o login com QR antes de realizar pagamentos.");
+            return;
+        }
+
         setIsLoading(true);
         try {
             const amountNum = parseInt(amount) / 100;
@@ -156,7 +164,7 @@ export default function TransferenciaPage() {
 
             const res = await api.post('/api/users/solicitar-pin', { 
                 amount: amountStr,
-                deviceId: getDeviceId()
+                deviceId: temporaryDeviceId
             });
             if (res.data) {
                 const data = res.data.data || res.data;
@@ -178,10 +186,8 @@ export default function TransferenciaPage() {
             await api.post("/api/users/validar-pin", {
                 pin: pin,
                 pinId: pinId,
-                deviceId: getDeviceId()
+                deviceId: temporaryDeviceId
             });
-            
-            const deviceId = getDeviceId();
             
             const payload = {
                 taxNumber: receiver?.taxNumber,
@@ -189,7 +195,7 @@ export default function TransferenciaPage() {
                 recebedorConta: receiver?.conta + (receiver?.digito ? receiver.digito : ""),
                 valor: parseInt(amount) / 100,
                 pin: pin,
-                deviceId: deviceId
+                deviceId: temporaryDeviceId
             };
 
             console.log("🚀 [TRANSFERÊNCIA INTERNA PAYLOAD]:", payload);

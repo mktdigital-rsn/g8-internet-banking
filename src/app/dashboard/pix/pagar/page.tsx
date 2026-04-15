@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import jsQR from "jsqr";
 import { QRCodeSVG } from "qrcode.react";
-import api, { getDeviceId } from "@/lib/api";
+import api from "@/lib/api";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
@@ -31,9 +31,12 @@ import { Separator } from "@/components/ui/separator";
 import { Building2, Fingerprint, CheckCircle2, Download, Smartphone as SmartphoneIcon } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useAtomValue } from "jotai";
+import { temporaryDeviceIdAtom } from "@/store/auth";
 
 function PixPagarContent() {
   const searchParams = useSearchParams();
+  const temporaryDeviceId = useAtomValue(temporaryDeviceIdAtom);
   const typeParam = searchParams.get("type") || "key";
   const type = typeParam.toLowerCase() === "celular" ? "phone" : typeParam.toLowerCase();
   const urlKey = searchParams.get("key") || "";
@@ -80,11 +83,11 @@ function PixPagarContent() {
         canvas.width = image.width;
         canvas.height = image.height;
         context.drawImage(image, 0, 0, image.width, image.height);
-        
+
         try {
           const imageDataObj = context.getImageData(0, 0, image.width, image.height);
           const code = jsQR(imageDataObj.data, imageDataObj.width, imageDataObj.height);
-          
+
           if (code) {
             console.log("✅ [QRCODE DECODER]: Found", code.data);
             setPixCode(code.data);
@@ -111,7 +114,7 @@ function PixPagarContent() {
     const fetchProfile = async () => {
       try {
         const res = await api.get("/api/users/data");
-        
+
         if (res.data) {
           const phone = res.data.phone || res.data.celular || "";
           setUserPhone(phone);
@@ -199,7 +202,7 @@ function PixPagarContent() {
     setRecipientName((data.nome || data.name || data.recebedorNome || data.beneficiario || "").trim());
     setRecipientBank((data.instituicao || data.bank || data.recebedorInstituicao || data.instituicaoNome || "").trim());
     setRecipientDocument((data.cpfcnpj || data.documento || data.taxNumber || "").trim());
-    
+
     // Aggressive ID capture
     const foundId = data.qrcodeId || data.id_payment || data.idPayment || data.uuid || data.endToEndId || data.txid || data.id || "";
     if (foundId) setUuid(foundId);
@@ -274,6 +277,11 @@ function PixPagarContent() {
 
 
   const handleRequestSms = async () => {
+    if (!temporaryDeviceId) {
+      toast.error("Aguarde concluir o login com QR antes de realizar pagamentos.");
+      return;
+    }
+
     setIsLoadingTransfer(true);
     try {
       console.log(`📩 [SMS REQUEST] Enviando solicitação de PIN...`);
@@ -283,7 +291,7 @@ function PixPagarContent() {
 
       const res = await api.post("/api/users/solicitar-pin", {
         amount: amountStr,
-        deviceId: getDeviceId()
+        deviceId: temporaryDeviceId
       });
 
       if (res.data) {
@@ -307,24 +315,27 @@ function PixPagarContent() {
       return;
     }
 
+    if (!temporaryDeviceId) {
+      toast.error("Aguarde concluir o login com QR antes de realizar pagamentos.");
+      return;
+    }
+
     setIsLoadingTransfer(true);
     try {
       // 1. PIN Validation as per Guide Step 3
       console.log("🛡️ [VALIDAR PIN REQUEST]:", { pin: smsCode, pinId: pinId });
-      
+
       try {
         await api.post("/api/users/validar-pin", {
           pin: smsCode,
           pinId: pinId,
-          deviceId: getDeviceId()
+          deviceId: temporaryDeviceId
         });
         console.log("✅ [VALIDAR PIN SUCCESS]");
       } catch (err: any) {
         console.error("❌ [VALIDAR PIN ERROR]:", err.response?.status, err.response?.data);
         throw err;
       }
-
-      const deviceId = getDeviceId();
       let endpoint = "/api/banco/pix/transferir";
       const rawChave = pixCode || identifier || "";
       let finalChave = rawChave;
@@ -336,7 +347,7 @@ function PixPagarContent() {
       }
 
       const txAmount = parseFloat(value.replace(/\D/g, "")) / 100;
-      
+
       let payload: any = {
         chave: finalChave,
         valor: txAmount,
@@ -345,17 +356,17 @@ function PixPagarContent() {
         endToEndIdInterno: endToEndId || crypto.randomUUID(),
         chavePixTypeHint: type === "phone" ? "phone" : null,
         pin: smsCode,
-        deviceId: deviceId
+        deviceId: temporaryDeviceId
       };
 
       if (type === "qrcode" || type === "copia_cola") {
         endpoint = "/api/banco/pix/pagar-copicola";
-        
+
         // Use data exactly as structured in the decoding step response
         const qrId = searchResult?.qrcodeId || searchResult?.qrCodeId || searchResult?.id || "";
         const txAmount = parseFloat(value.replace(/\D/g, "")) / 100;
         const internalId = endToEndId || crypto.randomUUID();
-        
+
         payload = {
           endToEndId: searchResult?.endToEndId || qrId, // Use EndToEndId if available
           chavePix: searchResult?.chavePix || "",
@@ -364,8 +375,8 @@ function PixPagarContent() {
           receiverConciliationId: searchResult?.receiverConciliationId || qrId,
           amount: txAmount,
           endToEndIdInterno: internalId,
+          deviceId: temporaryDeviceId,
           pin: smsCode,
-          deviceId: deviceId
         };
       }
 
@@ -496,7 +507,7 @@ function PixPagarContent() {
 
               {type === "qrcode" ? (
                 <div className="space-y-6">
-                  <div 
+                  <div
                     onClick={() => fileInputRef.current?.click()}
                     className="p-8 border-2 border-dashed border-neutral-200 rounded-[5px] flex flex-col items-center justify-center gap-4 hover:border-[#ff7711] transition-colors cursor-pointer group bg-neutral-50/50"
                   >
