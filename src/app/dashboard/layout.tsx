@@ -12,7 +12,8 @@ import {
   HelpCircle,
   Search,
   LogOut,
-  RotateCw
+  RotateCw,
+  CreditCard
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -36,6 +37,7 @@ const menuItems: MenuItem[] = [
   { icon: ArrowUpRight, label: "Transferência", href: "/dashboard/transferencia" },
   { icon: Smartphone, label: "PIX", href: "/dashboard/pix" },
   { icon: FileText, label: "Extrato", href: "/dashboard/extrato" },
+  { icon: CreditCard, label: "Maquininhas", href: "/dashboard/maquininhas" },
   { icon: UserCircle, label: "Conta", href: "/dashboard/conta" },
   { icon: HelpCircle, label: "Ajuda", href: "/dashboard/ajuda" },
 ];
@@ -121,7 +123,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Image src="/logo_g8_official.png" alt="G8Pay" width={180} height={60} className="object-contain 2xl:scale-110" />
         </div>
 
-        <div className="flex flex-col space-y-6 relative z-10 flex-1 min-h-0 overflow-y-auto no-scrollbar">
+        <div className="flex flex-col space-y-5 relative z-10 flex-1 min-h-0 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#ffffff20 transparent' }}>
           <div className="flex items-center gap-4 p-5 bg-white/[0.04] rounded-md border border-white/5 shadow-2xl">
             <Avatar className="h-14 w-14 border-2 border-[#ff7711]/40 rounded-md">
               <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
@@ -133,7 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
 
-          <nav className="space-y-2 font-bold">
+          <nav className="space-y-1 font-bold">
             {menuItems.map((item) => {
               const isActive = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
               return (
@@ -141,7 +143,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   key={item.label}
                   href={item.href}
                   target={item.href.startsWith("http") ? "_blank" : undefined}
-                  className={`flex items-center gap-5 px-6 py-4 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
+                  className={`flex items-center gap-5 px-6 py-3 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
                     ? "text-white bg-[#ff7711] shadow-lg shadow-orange-600/20"
                     : "text-white hover:bg-white hover:text-[#f97316]"
                     }`}

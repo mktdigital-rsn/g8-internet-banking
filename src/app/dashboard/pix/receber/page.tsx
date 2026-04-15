@@ -294,7 +294,7 @@ export default function PixReceberPage() {
                 />
              </div>
 
-             <div className="p-6 bg-[#fffbeb] rounded-[24px] border border-yellow-100/50 flex items-center justify-between relative z-10">
+             <div className="p-6 bg-[#f97316]/10 rounded-[24px] border border-yellow-100/50 flex items-center justify-between relative z-10">
                 <div>
                    <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest leading-none mb-2">Chave Pix Selecionada</p>
                    <p className="font-black text-[#0c0a09] text-base">{userKey} ({keyType})</p>

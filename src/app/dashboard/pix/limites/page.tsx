@@ -106,7 +106,7 @@ export default function PixLimitesPage() {
         {/* Limits Controls Card */}
         <div className="bg-white rounded-lg p-6 md:p-8 border border-neutral-100 shadow-xl shadow-black/5 space-y-8">
            {/* Info Box */}
-           <div className="bg-[#fffbeb] border border-orange-100 p-5 md:p-6 rounded-md flex flex-col sm:flex-row gap-4 items-start">
+           <div className="bg-[#f97316]/10 border border-orange-100 p-5 md:p-6 rounded-md flex flex-col sm:flex-row gap-4 items-start">
               <div className="bg-[#f97316] p-2.5 rounded-md text-white shadow-lg shadow-orange-500/20 shrink-0">
                  <Info className="h-5 w-5" />
               </div>
@@ -201,7 +201,7 @@ export default function PixLimitesPage() {
            <Button 
              onClick={handleSave}
              disabled={isLoading}
-             className="w-full h-14 md:h-16 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-md font-black text-sm md:text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 font-sans"
+             className="w-full h-14 md:h-16 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-md font-black text-sm md:text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 font-sans"
            >
               {isLoading ? "Salvando..." : "Salvar Alterações"}
            </Button>

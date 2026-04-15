@@ -61,6 +61,7 @@ function PixPagarContent() {
   const [searchResult, setSearchResult] = useState<any>(null);
   const [uuid, setUuid] = useState("");
   const [endToEndId, setEndToEndId] = useState("");
+  const [balanceValue, setBalanceValue] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,6 +125,19 @@ function PixPagarContent() {
       }
     };
     fetchProfile();
+
+    // Fetch balance
+    const fetchBalance = async () => {
+      try {
+        const res = await api.get("/api/banco/saldo/getSaldo");
+        if (res.data && typeof res.data.valor !== 'undefined') {
+          setBalanceValue(res.data.valor);
+        }
+      } catch (err) {
+        console.error("Error fetching balance:", err);
+      }
+    };
+    fetchBalance();
   }, []);
 
   useEffect(() => {
@@ -234,6 +248,11 @@ function PixPagarContent() {
     const rawValue = e.target.value.replace(/\D/g, "");
     setValue(rawValue);
   };
+
+  const currentAmount = value ? parseInt(value.replace(/\D/g, "")) / 100 : 0;
+  const hasInsufficientBalance = balanceValue <= 0;
+  const amountExceedsBalance = currentAmount > 0 && currentAmount > balanceValue;
+  const balanceFormatted = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(balanceValue);
 
   const formatIdentifier = (val: string, type: string) => {
     const cleanValue = val.replace(/\D/g, "");
@@ -490,7 +509,18 @@ function PixPagarContent() {
 
         {step === "input" ? (
           <div className="space-y-8 max-w-2xl bg-white p-10 rounded-[5px] shadow-xl shadow-black/5 border border-neutral-100">
-            <div className="flex items-center gap-4 p-5 bg-[#fffbeb] rounded-[5px] border border-neutral-100/50">
+            {hasInsufficientBalance && (
+              <div className="flex items-center gap-4 p-5 bg-rose-500/10 rounded-sm border-2 border-rose-200 animate-in fade-in slide-in-from-top-2">
+                <div className="w-12 h-12 bg-rose-500 rounded-sm flex items-center justify-center shrink-0">
+                  <AlertTriangle className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-rose-600 uppercase tracking-tight">Saldo insuficiente</p>
+                  <p className="text-xs font-bold text-rose-500/70">Seu saldo atual é <span className="font-black text-rose-600">{balanceFormatted}</span>. Deposite fundos antes de realizar um Pix.</p>
+                </div>
+              </div>
+            )}
+            <div className="flex items-center gap-4 p-5 bg-[#f97316]/10 rounded-[5px] border border-neutral-100/50">
               <div className="w-10 h-10 bg-white rounded-[5px] flex items-center justify-center text-[#ff7711] shadow-sm">
                 <info.icon className="h-5 w-5" />
               </div>
@@ -526,7 +556,7 @@ function PixPagarContent() {
                             <span className="bg-white px-3 py-1.5 rounded-full text-[10px] font-black text-[#ff7711] uppercase tracking-widest shadow-sm">Alterar Arquivo</span>
                           </div>
                         </div>
-                        <p className="text-[10px] font-black text-[#ff7711] uppercase tracking-widest bg-[#fffbeb] px-4 py-1.5 rounded-full border border-orange-100">Código Detectado com Sucesso</p>
+                        <p className="text-[10px] font-black text-[#ff7711] uppercase tracking-widest bg-[#f97316]/10 px-4 py-1.5 rounded-full border border-orange-100">Código Detectado com Sucesso</p>
                       </div>
                     ) : (
                       <>
@@ -581,7 +611,7 @@ function PixPagarContent() {
               )}
 
               {(isSearching || recipientName) && (
-                <div className="bg-[#fffbeb] p-5 rounded-[5px] border border-orange-100 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="bg-[#f97316]/10 p-5 rounded-[5px] border border-orange-100 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-white rounded-[5px] flex items-center justify-center shrink-0 border border-neutral-100 shadow-sm">
                       <Image
@@ -619,18 +649,27 @@ function PixPagarContent() {
 
             {(!(searchResult?.valor > 0 || searchResult?.amount > 0 || searchResult?.value > 0 || searchResult?.transactionAmount > 0)) && (
               <div className="space-y-4">
-                <h2 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Qual o Valor?</h2>
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Qual o Valor?</h2>
+                  <span className="text-[10px] font-black text-[#0c0a09]/40 uppercase tracking-widest">Saldo: <span className={balanceValue <= 0 ? 'text-rose-500' : 'text-green-600'}>{balanceFormatted}</span></span>
+                </div>
                 <div className="relative">
                   <Input
                     value={formatCurrency(value)}
                     onChange={handleValueChange}
                     placeholder="R$ 0,00"
-                    className="h-16 bg-neutral-50/50 border-neutral-100 focus:border-[#ff7711] rounded-[5px] px-8 font-black text-4xl text-[#ff7711] placeholder:text-neutral-200 tracking-tighter shadow-sm"
+                    className={`h-16 bg-neutral-50/50 border-2 ${amountExceedsBalance ? 'border-rose-300 focus:border-rose-500' : 'border-neutral-100 focus:border-[#ff7711]'} rounded-[5px] px-8 font-black text-4xl text-[#ff7711] placeholder:text-neutral-200 tracking-tighter shadow-sm transition-colors`}
                   />
                   <div className="absolute right-6 top-1/2 -translate-y-1/2">
                     <Badge className="bg-[#ff7711] text-white hover:bg-[#ff7711] rounded-[5px] px-2 py-0.5 font-black text-[9px] tracking-widest uppercase">BRL</Badge>
                   </div>
                 </div>
+                {amountExceedsBalance && (
+                  <div className="flex items-center gap-2 text-rose-500 animate-in fade-in slide-in-from-top-1 duration-200">
+                    <AlertTriangle className="h-4 w-4 shrink-0" />
+                    <p className="text-xs font-black uppercase tracking-tight">O valor informado excede seu saldo disponível de {balanceFormatted}</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -671,19 +710,27 @@ function PixPagarContent() {
                   toast.error("O valor deve ser maior que zero.");
                   return;
                 }
+                if (amountExceedsBalance) {
+                  toast.error("Saldo insuficiente para esta transferência.");
+                  return;
+                }
                 setStep("confirm");
               }}
-              disabled={isSearching}
-              className="w-full h-14 bg-[#0c0a09] hover:bg-[#ff7711] text-white rounded-[5px] font-black text-sm uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 group"
+              disabled={isSearching || hasInsufficientBalance || amountExceedsBalance}
+              className={`w-full h-14 text-white rounded-[5px] font-black text-sm uppercase tracking-widest shadow-xl transition-all active:scale-95 group ${
+                hasInsufficientBalance || amountExceedsBalance
+                  ? 'bg-neutral-300 cursor-not-allowed shadow-none'
+                  : 'bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] shadow-orange-200/30'
+              }`}
             >
-              {isSearching ? "VALIDANDO DADOS..." : "PRÓXIMO PASSO"}
-              <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              {isSearching ? "VALIDANDO DADOS..." : hasInsufficientBalance ? "SALDO INSUFICIENTE" : amountExceedsBalance ? "VALOR EXCEDE O SALDO" : "PRÓXIMO PASSO"}
+              {!hasInsufficientBalance && !amountExceedsBalance && <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-1 transition-transform" />}
             </Button>
           </div>
         ) : step === "confirm" ? (
           <div className="space-y-8 max-w-2xl bg-white p-12 rounded-[5px] shadow-xl shadow-black/5 border border-neutral-100">
             <div className="space-y-8">
-              <div className="p-10 bg-[#fffbeb] rounded-[5px] border border-neutral-100 space-y-8">
+              <div className="p-10 bg-[#f97316]/10 rounded-[5px] border border-neutral-100 space-y-8">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-[11px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-3 opacity-60">Recebedor</p>
@@ -747,7 +794,7 @@ function PixPagarContent() {
           </div>
         ) : step === "sms" ? (
           <div className="space-y-8 max-w-2xl bg-white p-12 rounded-sm shadow-xl shadow-black/5 border border-neutral-100 text-center flex flex-col items-center">
-            <div className="w-20 h-20 bg-[#fffbeb] rounded-sm flex items-center justify-center text-[#ff7711] mb-4">
+            <div className="w-20 h-20 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#ff7711] mb-4">
               <Smartphone className="h-10 w-10 animate-bounce" />
             </div>
             <div className="space-y-4 mb-10">
@@ -869,7 +916,7 @@ function PixPagarContent() {
           <h2 className="text-2xl font-black text-[#0c0a09] uppercase tracking-tight">Ajuda</h2>
           <div className="flex gap-4">
             <button className="flex-1 flex flex-col items-center justify-center p-6 bg-white rounded-md hover:shadow-xl transition-all border border-neutral-100 group">
-              <div className="w-10 h-10 bg-[#fffbeb] rounded-md flex items-center justify-center mb-4 text-[#ff7711] group-hover:scale-110 transition-all">
+              <div className="w-10 h-10 bg-[#f97316]/10 rounded-md flex items-center justify-center mb-4 text-[#ff7711] group-hover:scale-110 transition-all">
                 <HelpCircle className="h-5 w-5" />
               </div>
               <span className="font-black text-[9px] text-[#0c0a09] uppercase tracking-widest">Suporte</span>

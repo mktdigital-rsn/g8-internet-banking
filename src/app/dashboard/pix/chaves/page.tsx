@@ -296,7 +296,7 @@ export default function MyPixKeysPage() {
                   </div>
                ) : keys.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-20 space-y-6 bg-white rounded-md border border-neutral-200 text-center w-full">
-                     <div className="w-20 h-20 bg-[#fffbeb] rounded-md flex items-center justify-center text-[#f97316] shadow-sm">
+                     <div className="w-20 h-20 bg-[#f97316]/10 rounded-md flex items-center justify-center text-[#f97316] shadow-sm">
                         <Key className="h-10 w-10 stroke-[1.5]" />
                      </div>
                      <div className="space-y-2">
@@ -320,7 +320,7 @@ export default function MyPixKeysPage() {
                         <Card key={index} className="bg-white border border-neutral-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:shadow-orange-500/5 transition-all group flex flex-col md:flex-row items-start md:items-center justify-between relative overflow-hidden gap-6 w-full">
                            <div className="absolute top-0 left-0 w-1 h-full bg-[#f97316] opacity-0 group-hover:opacity-100 transition-opacity" />
                            <div className="flex items-center gap-6 z-10 w-full md:flex-1 min-w-0">
-                              <div className="w-16 h-16 bg-[#f8f9fa] rounded-md flex items-center justify-center text-[#0c0a09] group-hover:bg-[#fffbeb] group-hover:text-[#f97316] transition-colors border border-neutral-100/50 shrink-0">
+                              <div className="w-16 h-16 bg-[#f8f9fa] rounded-md flex items-center justify-center text-[#0c0a09] group-hover:bg-[#f97316]/10 group-hover:text-[#f97316] transition-colors border border-neutral-100/50 shrink-0">
                                  <Icon className="h-7 w-7 stroke-[2]" />
                               </div>
                               <div className="flex-1 min-w-0">
@@ -384,7 +384,7 @@ export default function MyPixKeysPage() {
                </div>
             </Card>
 
-            <div className="bg-[#fffbeb] rounded-md p-8 border border-orange-100/50 space-y-8 shadow-sm">
+            <div className="bg-[#f97316]/10 rounded-md p-8 border border-orange-100/50 space-y-8 shadow-sm">
                <div className="flex items-center justify-between">
                   <h4 className="font-black text-[#0c0a09] uppercase tracking-[0.2em] text-[10px] leading-none">Portabilidade</h4>
                   <AlertCircle className="h-4 w-4 text-[#f97316]" />

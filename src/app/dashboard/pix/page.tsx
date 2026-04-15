@@ -115,16 +115,16 @@ export default function PixPage() {
                         <div className="space-y-6">
                             <h2 className="text-xl font-black text-[#0c0a09] tracking-tight uppercase tracking-[0.1em]">Como você quer transferir?</h2>
                             
-                            <Card className="p-8 rounded-md border-0 shadow-2xl shadow-black/5 bg-[#fffbeb] relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#f97316]/5 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />
+                            <Card className="p-8 rounded-sm border-0 shadow-2xl shadow-orange-200/30 bg-gradient-to-br from-[#f97316] to-[#ea580c] relative overflow-hidden group">
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent)]" />
                                 <div className="space-y-8 relative z-10">
-                                    <div className="flex items-center gap-4 text-[#f97316]">
-                                        <div className="w-10 h-10 bg-[#f97316]/10 rounded-lg flex items-center justify-center border border-[#f97316]/10">
+                                    <div className="flex items-center gap-4 text-white">
+                                        <div className="w-10 h-10 bg-white/20 rounded-sm flex items-center justify-center">
                                             <Key className="h-5 w-5" />
                                         </div>
                                         <div className="flex flex-col">
                                             <span className="font-black uppercase tracking-widest text-[10px]">Chave Imediata</span>
-                                            <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Pague Agora via PIX</span>
+                                            <span className="text-[9px] font-bold text-white/60 uppercase tracking-widest">Pague Agora via PIX</span>
                                         </div>
                                     </div>
 
@@ -135,12 +135,12 @@ export default function PixPage() {
                                                 value={pixKey}
                                                 onChange={(e) => handleKeyChange(e.target.value)}
                                                 onKeyDown={(e) => { if (e.key === 'Enter') handleContinue(); }}
-                                                className="h-14 bg-white border-neutral-100 rounded-lg pl-6 pr-12 font-bold text-sm focus:ring-4 focus:ring-[#f97316]/10 transition-all shadow-[inner_0_2px_4px_rgba(0,0,0,0.05)] text-[#f97316]"
+                                                className="h-14 bg-white border-0 rounded-sm pl-6 pr-12 font-black text-sm focus:ring-4 focus:ring-white/30 transition-all text-[#0c0a09] placeholder:text-neutral-400 shadow-lg"
                                             />
                                             {pixKey && (
                                                 <button 
                                                     onClick={() => { setPixKey(""); }}
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#f97316] transition-colors"
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-300 hover:text-[#f97316] transition-colors"
                                                 >
                                                     <X size={20} />
                                                 </button>
@@ -149,7 +149,7 @@ export default function PixPage() {
                                         <Button 
                                             disabled={!keyType}
                                             onClick={handleContinue}
-                                            className="h-14 px-8 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-xl shadow-black/10 transition-all active:scale-95 disabled:opacity-30 flex items-center gap-3 shrink-0"
+                                            className="h-14 px-8 bg-[#0c0a09] hover:bg-[#1a1715] text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-xl shadow-black/20 transition-all active:scale-95 disabled:opacity-30 flex items-center gap-3 shrink-0"
                                         >
                                             Buscar <ArrowRight className="h-4 w-4" />
                                         </Button>
@@ -158,14 +158,14 @@ export default function PixPage() {
                             </Card>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Link href="/dashboard/pix/contatos" className="flex items-center gap-4 p-6 bg-[#fffbeb] rounded-md border border-neutral-100 hover:shadow-2xl hover:border-[#f97316]/20 transition-all group relative overflow-hidden">
-                                   <div className="absolute top-0 right-0 w-24 h-24 bg-[#f97316]/5 rounded-full -mr-12 -mt-12 blur-2xl transition-transform duration-700 group-hover:scale-150" />
-                                   <div className="w-12 h-12 bg-[#f97316]/10 rounded-xl flex items-center justify-center text-[#f97316] group-hover:scale-110 transition-transform relative z-10 border border-[#f97316]/5">
+                                <Link href="/dashboard/pix/contatos" className="flex items-center gap-4 p-6 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-sm hover:shadow-2xl hover:shadow-orange-200/50 transition-all group relative overflow-hidden">
+                                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent)]" />
+                                   <div className="w-12 h-12 bg-white/20 rounded-sm flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-white/30 transition-all relative z-10">
                                       <Contact2 className="h-6 w-6" />
                                    </div>
                                    <div className="text-left relative z-10">
-                                      <span className="block font-black text-[#0c0a09] text-sm uppercase tracking-tight leading-none mb-1">Escolher contato</span>
-                                      <span className="text-[9px] text-neutral-400 font-black uppercase tracking-widest opacity-60">Seus favoritos</span>
+                                      <span className="block font-black text-white text-sm uppercase tracking-tight leading-none mb-1">Escolher contato</span>
+                                      <span className="text-[9px] text-white/60 font-black uppercase tracking-widest">Seus favoritos</span>
                                    </div>
                                 </Link>
                                 <button disabled className="flex items-center gap-4 p-6 bg-neutral-50 rounded-xl border border-neutral-100 transition-all opacity-40 cursor-not-allowed group relative grayscale">
@@ -265,11 +265,12 @@ function PixAction({
     customColor?: string
 }) {
    const content = (
-    <div className={`flex flex-col items-center justify-center w-full min-h-[160px] ${customColor || 'bg-[#fffbeb]'} rounded-sm hover:shadow-2xl hover:scale-[1.05] transition-all border border-neutral-200/20 group cursor-pointer p-6`}>
-       <div className={`w-12 h-12 flex items-center justify-center mb-4 ${customColor ? 'text-white bg-white/10' : 'text-[#f97316] bg-[#f97316]/5'} rounded-sm group-hover:scale-110 transition-transform`}>
+    <div className={`flex flex-col items-center justify-center w-full min-h-[160px] ${customColor || 'bg-gradient-to-br from-[#f97316] to-[#ea580c]'} rounded-sm hover:shadow-2xl hover:shadow-orange-200/50 hover:scale-[1.03] transition-all group cursor-pointer p-6 relative overflow-hidden`}>
+       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent)]" />
+       <div className="w-12 h-12 flex items-center justify-center mb-4 text-white bg-white/20 rounded-sm group-hover:scale-110 group-hover:bg-white/30 transition-all relative z-10">
           <Icon className="h-6 w-6 stroke-[2.5]" />
        </div>
-       <span className={`text-[11px] font-black ${customColor ? 'text-white' : 'text-[#0c0a09]'} text-center px-1 uppercase tracking-widest leading-tight opacity-70 group-hover:opacity-100 transition-colors`}>{label}</span>
+       <span className="text-[11px] font-black text-white text-center px-1 uppercase tracking-widest leading-tight relative z-10">{label}</span>
     </div>
   );
 

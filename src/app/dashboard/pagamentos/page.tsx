@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import api from "@/lib/api";
 import { 
@@ -27,7 +26,12 @@ import {
   AlertTriangle,
   Clock,
   X,
-  ChevronRight
+  ChevronRight,
+  ReceiptText,
+  CalendarClock,
+  ListChecks,
+  Eye,
+  Ban,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,12 +43,36 @@ import { useRouter } from "next/navigation";
 import { useAtomValue } from "jotai";
 import { temporaryDeviceIdAtom } from "@/store/auth";
 
+/* ──── Mock data for sections ──── */
+const mockAgendamentos = [
+  { id: 1, beneficiario: "CDHU SP", valor: "R$ 485,00", data: "20/04/2026", status: "Agendado", barcode: "0001.0001 00001.000001..." },
+  { id: 2, beneficiario: "ENEL DISTRIBUIÇÃO", valor: "R$ 312,45", data: "25/04/2026", status: "Agendado", barcode: "8366.0000 00312.450001..." },
+  { id: 3, beneficiario: "SABESP", valor: "R$ 89,70", data: "28/04/2026", status: "Agendado", barcode: "8269.0000 00089.700001..." },
+];
+
+const mockHistorico = [
+  { id: 1, beneficiario: "VIVO TELECOMUNICAÇÕES", valor: "R$ 149,90", data: "10/04/2026", status: "Pago" },
+  { id: 2, beneficiario: "PREFEITURA DE SÃO PAULO - IPTU", valor: "R$ 1.250,00", data: "08/04/2026", status: "Pago" },
+  { id: 3, beneficiario: "CLARO S.A.", valor: "R$ 99,90", data: "05/04/2026", status: "Pago" },
+  { id: 4, beneficiario: "TIM CELULAR S.A.", valor: "R$ 65,00", data: "01/04/2026", status: "Pago" },
+  { id: 5, beneficiario: "ELETROPAULO - ENEL", valor: "R$ 278,33", data: "28/03/2026", status: "Pago" },
+];
+
+const mockComprovantes = [
+  { id: "REC-2026041501", beneficiario: "VIVO TELECOMUNICAÇÕES", valor: "R$ 149,90", data: "10/04/2026" },
+  { id: "REC-2026040801", beneficiario: "PREFEITURA DE SÃO PAULO", valor: "R$ 1.250,00", data: "08/04/2026" },
+  { id: "REC-2026040502", beneficiario: "CLARO S.A.", valor: "R$ 99,90", data: "05/04/2026" },
+];
+
 export default function PagamentosPage() {
   const router = useRouter();
   const temporaryDeviceId = useAtomValue(temporaryDeviceIdAtom);
   
   // State Machine
   const [step, setStep] = useState<"landing" | "review" | "sms" | "success">("landing");
+  
+  // Section modals
+  const [activeSection, setActiveSection] = useState<string | null>(null);
   
   // Data State
   const [barcode, setBarcode] = useState("");
@@ -57,6 +85,11 @@ export default function PagamentosPage() {
   const [smsCode, setSmsCode] = useState("");
   const [pinId, setPinId] = useState("");
   const [transactionId, setTransactionId] = useState("");
+  
+  // Scheduling State
+  const [paymentMode, setPaymentMode] = useState<"now" | "schedule">("now");
+  const [scheduleDate, setScheduleDate] = useState("");
+  const [agendamentos, setAgendamentos] = useState(mockAgendamentos);
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -228,13 +261,6 @@ export default function PagamentosPage() {
     }
   };
 
-  const manageOptions = [
-    { icon: Calendar, label: "Agendamentos", href: "#" },
-    { icon: History, label: "Histórico", href: "#" },
-    { icon: ShieldCheck, label: "DDA", href: "#" },
-    { icon: FileText, label: "Comprovantes", href: "#" },
-  ];
-
   const formatCurrency = (val: any) => {
     return new Intl.NumberFormat("pt-BR", {
       style: "currency",
@@ -262,7 +288,8 @@ export default function PagamentosPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <div className="lg:col-span-8 space-y-12">
-                <div className="bg-white p-8 md:p-12 rounded-[12px] border border-neutral-100 shadow-2xl shadow-black/[0.03] space-y-8 relative overflow-hidden group">
+                {/* Boleto input card */}
+                <div className="bg-white p-8 md:p-12 rounded-sm border border-neutral-100 shadow-2xl shadow-black/[0.03] space-y-8 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-[#f97316]/5 rounded-full blur-3xl -mr-32 -mt-32" />
                   
                   <div className="space-y-2 relative z-10">
@@ -276,8 +303,9 @@ export default function PagamentosPage() {
                         <Barcode className="h-6 w-6" />
                       </div>
                       <Input 
+                        id="barcode-input"
                         placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
-                        className="h-16 pl-16 bg-neutral-50 border-neutral-100 rounded-sm text-sm font-black tracking-widest focus:ring-2 focus:ring-[#f97316]/20 transition-all placeholder:text-neutral-300"
+                        className="h-16 pl-16 bg-neutral-50 border-neutral-200 rounded-sm text-sm font-black tracking-widest focus:ring-2 focus:ring-[#f97316]/20 focus:border-[#f97316]/30 transition-all placeholder:text-neutral-300 text-[#0c0a09]"
                         value={barcode}
                         onChange={(e) => setBarcode(e.target.value)}
                       />
@@ -285,52 +313,75 @@ export default function PagamentosPage() {
                     <Button 
                         onClick={handleConsultBoleto}
                         disabled={isConsulting}
-                        className="h-16 px-10 bg-[#0c0a09] hover:bg-[#1a1715] text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl shadow-black/10 shrink-0"
+                        className="h-16 px-10 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl shadow-black/10 shrink-0"
                     >
                       {isConsulting ? "PROCESSANDO..." : "CONFERIR BOLETO"}
                       {!isConsulting && <ArrowRight className="h-5 w-5 ml-2" />}
                     </Button>
                   </div>
 
+                  {/* Quick actions */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-                      <div className="p-6 bg-[#fffbeb] rounded-sm border border-neutral-200/20 hover:shadow-xl transition-all group cursor-pointer flex items-center gap-6">
-                          <div className="w-14 h-14 bg-white rounded-sm flex items-center justify-center text-[#f97316] group-hover:scale-110 transition-transform shadow-sm">
-                              <QrCode className="h-7 w-7 stroke-[2.5]" />
-                          </div>
-                          <div className="flex flex-col">
-                              <span className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Ler QR Code</span>
-                              <span className="text-[10px] font-bold text-neutral-400 mt-1">Use a câmera do seu celular</span>
-                          </div>
+                    <div className="p-6 bg-[#0c0a09] rounded-sm hover:shadow-xl transition-all group/qr cursor-pointer flex items-center gap-6 border border-white/5">
+                      <div className="w-14 h-14 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316] group-hover/qr:scale-110 transition-transform">
+                        <QrCode className="h-7 w-7 stroke-[2.5]" />
                       </div>
-                      <div className="p-6 bg-[#fffbeb] rounded-sm border border-neutral-200/20 hover:shadow-xl transition-all group cursor-pointer flex items-center gap-6">
-                          <div className="w-14 h-14 bg-white rounded-sm flex items-center justify-center text-[#f97316] group-hover:scale-110 transition-transform shadow-sm">
-                              <History className="h-7 w-7 stroke-[2.5]" />
-                          </div>
-                          <div className="flex flex-col">
-                              <span className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Recentes</span>
-                              <span className="text-[10px] font-bold text-neutral-400 mt-1">Re-pague uma conta</span>
-                          </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black text-white uppercase tracking-widest">Ler QR Code</span>
+                        <span className="text-[10px] font-bold text-white/40 mt-1">Use a câmera do seu celular</span>
                       </div>
+                      <ChevronRight className="h-5 w-5 text-white/20 ml-auto group-hover/qr:text-[#f97316] transition-colors" />
+                    </div>
+                    <div 
+                      onClick={() => setActiveSection("historico")}
+                      className="p-6 bg-[#0c0a09] rounded-sm hover:shadow-xl transition-all group/rec cursor-pointer flex items-center gap-6 border border-white/5"
+                    >
+                      <div className="w-14 h-14 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316] group-hover/rec:scale-110 transition-transform">
+                        <History className="h-7 w-7 stroke-[2.5]" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-black text-white uppercase tracking-widest">Recentes</span>
+                        <span className="text-[10px] font-bold text-white/40 mt-1">Re-pague uma conta</span>
+                      </div>
+                      <ChevronRight className="h-5 w-5 text-white/20 ml-auto group-hover/rec:text-[#f97316] transition-colors" />
+                    </div>
                   </div>
                 </div>
 
+                {/* Gestão de Contas */}
                 <div className="space-y-6 text-center md:text-left">
                   <h2 className="text-xl font-black text-[#0c0a09] tracking-tight uppercase tracking-[0.1em]">Gestão de Contas</h2>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                    {manageOptions.map((opt, i) => (
-                       <div key={i} className="flex flex-col items-center justify-center w-full min-h-[160px] bg-[#fffbeb] rounded-2xl hover:shadow-2xl hover:scale-[1.05] transition-all border border-neutral-200/20 group cursor-pointer p-6">
-                          <div className="w-12 h-12 flex items-center justify-center mb-4 text-[#f97316] bg-white rounded-sm group-hover:scale-110 transition-transform shadow-sm">
+                    {[
+                      { icon: CalendarClock, label: "Agendamentos", key: "agendamentos", count: agendamentos.length },
+                      { icon: ListChecks, label: "Histórico", key: "historico", count: mockHistorico.length },
+                      { icon: ShieldCheck, label: "DDA", key: "dda", count: 0 },
+                      { icon: ReceiptText, label: "Comprovantes", key: "comprovantes", count: mockComprovantes.length },
+                    ].map((opt, i) => (
+                       <div 
+                         key={i} 
+                         onClick={() => setActiveSection(opt.key)}
+                         className="flex flex-col items-center justify-center w-full min-h-[160px] bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-sm hover:shadow-2xl hover:shadow-orange-200/50 hover:scale-[1.03] transition-all group cursor-pointer p-6 relative overflow-hidden"
+                       >
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent)]" />
+                          {opt.count > 0 && (
+                            <div className="absolute top-3 right-3 w-6 h-6 bg-white rounded-sm flex items-center justify-center shadow-md">
+                              <span className="text-[9px] font-black text-[#f97316]">{opt.count}</span>
+                            </div>
+                          )}
+                          <div className="w-12 h-12 flex items-center justify-center mb-4 text-white bg-white/20 rounded-sm group-hover:scale-110 group-hover:bg-white/30 transition-all relative z-10">
                               <opt.icon className="h-6 w-6 stroke-[2.5]" />
                           </div>
-                          <span className="text-[11px] font-black text-[#0c0a09] text-center px-1 uppercase tracking-widest leading-tight opacity-70 group-hover:opacity-100 group-hover:text-[#f97316] transition-colors">{opt.label}</span>
+                          <span className="text-[11px] font-black text-white text-center px-1 uppercase tracking-widest leading-tight relative z-10">{opt.label}</span>
                        </div>
                     ))}
                   </div>
                 </div>
               </div>
 
+              {/* Sidebar / DDA Card */}
               <div className="lg:col-span-4 space-y-10">
-                <Card className="rounded-sm border-0 shadow-2xl shadow-black/5 bg-[#0c0a09] p-10 space-y-8 relative overflow-hidden group cursor-pointer border border-white/5 h-[400px]">
+                <Card className="rounded-sm border-0 shadow-2xl shadow-black/5 bg-[#0c0a09] p-10 space-y-8 relative overflow-hidden group cursor-pointer border border-white/5">
                   <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#f97316]/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
                   <div className="relative z-10 space-y-6">
                     <Badge className="bg-[#f97316] text-white border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest">Segurança G8</Badge>
@@ -341,18 +392,264 @@ export default function PagamentosPage() {
                     <p className="text-sm text-white/50 leading-relaxed font-medium">
                       Ative o Débito Direto Autorizado e visualize todos os boletos emitidos no seu CPF automaticamente.
                     </p>
+                    <Button 
+                      onClick={() => setActiveSection("dda")}
+                      className="w-full h-14 bg-white/10 hover:bg-[#f97316] text-white rounded-sm font-black text-[10px] uppercase tracking-widest transition-all border border-white/10 hover:border-[#f97316]"
+                    >
+                      Ativar DDA <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
                   </div>
-                  <div className="absolute bottom-0 right-0 w-[220px] h-[220px] z-0 opacity-40 group-hover:opacity-80 transition-opacity translate-y-8 group-hover:translate-y-0 transition-transform duration-700">
-                    <Image 
-                      src="https://api.dicebear.com/7.x/avataaars/svg?seed=security&backgroundColor=0c0a09" 
-                      alt="Security" 
-                      fill
-                      className="object-contain"
-                    />
+
+                  <div className="pt-6 border-t border-white/5 space-y-4 relative z-10">
+                    {[
+                      { icon: ShieldCheck, text: "Proteção contra boletos falsos" },
+                      { icon: Eye, text: "Visualize antes de pagar" },
+                      { icon: Ban, text: "Bloqueie cobranças indevidas" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <item.icon className="h-4 w-4 text-[#f97316] shrink-0" />
+                        <span className="text-xs font-bold text-white/40">{item.text}</span>
+                      </div>
+                    ))}
                   </div>
                 </Card>
+
+                {/* Horário info */}
+                <div className="p-6 bg-white border border-neutral-100 rounded-sm shadow-sm space-y-4 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-[#f97316]" />
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-5 w-5 text-[#f97316]" />
+                    <span className="text-xs font-black text-[#0c0a09] uppercase tracking-widest">Horários de pagamento</span>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-neutral-400">Boletos</span>
+                      <span className="text-xs font-black text-[#0c0a09]">Até 22h</span>
+                    </div>
+                    <Separator className="bg-neutral-50" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-neutral-400">Tributos</span>
+                      <span className="text-xs font-black text-[#0c0a09]">Até 20h</span>
+                    </div>
+                    <Separator className="bg-neutral-50" />
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-neutral-400">Convênios</span>
+                      <span className="text-xs font-black text-[#0c0a09]">Até 21h</span>
+                    </div>
+                  </div>
+                  <p className="text-[10px] font-bold text-neutral-300 leading-normal">
+                    Pagamentos fora do horário serão processados no próximo dia útil.
+                  </p>
+                </div>
               </div>
             </div>
+
+            {/* ──── Section Overlay: Agendamentos ──── */}
+            {activeSection === "agendamentos" && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="w-full max-w-3xl bg-white rounded-sm shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden max-h-[85vh] flex flex-col">
+                  <div className="flex items-center justify-between p-8 border-b border-neutral-100 shrink-0">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316]">
+                        <CalendarClock className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">Agendamentos</h2>
+                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{agendamentos.length} pagamentos agendados</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        onClick={() => { setActiveSection(null); }}
+                        variant="outline"
+                        className="h-10 px-5 rounded-sm border-neutral-200 font-black text-[9px] uppercase tracking-widest text-neutral-400 hover:text-[#0c0a09] hover:border-neutral-300"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-8 space-y-4">
+                    <Button
+                      onClick={() => { 
+                        setActiveSection(null); 
+                        setPaymentMode("schedule");
+                        toast.info("Digite o código de barras do boleto que deseja agendar.");
+                        setTimeout(() => {
+                          document.getElementById("barcode-input")?.focus();
+                          document.getElementById("barcode-input")?.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }, 400);
+                      }}
+                      className="w-full h-14 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-xs uppercase tracking-widest shadow-lg shadow-orange-200/30 transition-all active:scale-[0.98] mb-2"
+                    >
+                      <CalendarClock className="h-4 w-4 mr-2" />
+                      Novo Agendamento
+                    </Button>
+                    {agendamentos.map((ag) => (
+                      <div key={ag.id} className="p-6 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between group hover:shadow-lg hover:border-[#f97316]/20 transition-all">
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <p className="text-sm font-black text-[#0c0a09] uppercase tracking-tight truncate">{ag.beneficiario}</p>
+                          <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Vencimento: {ag.data}</p>
+                          <p className="text-[9px] font-mono text-neutral-300 truncate">{ag.barcode}</p>
+                        </div>
+                        <div className="text-right shrink-0 ml-4">
+                          <p className="text-lg font-black text-[#f97316] font-mono tracking-tight">{ag.valor}</p>
+                          <Badge className="bg-amber-50 text-amber-600 border-0 text-[8px] font-black uppercase tracking-widest">{ag.status}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                    {agendamentos.length === 0 && (
+                      <div className="p-16 text-center space-y-4">
+                        <CalendarClock className="h-12 w-12 text-neutral-200 mx-auto" />
+                        <p className="text-sm font-black text-neutral-400 uppercase tracking-widest">Nenhum agendamento</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ──── Section Overlay: Histórico ──── */}
+            {activeSection === "historico" && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="w-full max-w-3xl bg-white rounded-sm shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden max-h-[85vh] flex flex-col">
+                  <div className="flex items-center justify-between p-8 border-b border-neutral-100 shrink-0">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316]">
+                        <ListChecks className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">Histórico de Pagamentos</h2>
+                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{mockHistorico.length} pagamentos encontrados</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setActiveSection(null)} className="p-2 rounded-sm hover:bg-neutral-50 transition-colors">
+                      <X className="h-5 w-5 text-neutral-400" />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-8 space-y-3">
+                    {mockHistorico.map((item) => (
+                      <div key={item.id} className="p-5 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between group hover:shadow-lg hover:border-[#f97316]/20 transition-all cursor-pointer">
+                        <div className="flex items-center gap-4 min-w-0 flex-1">
+                          <div className="w-10 h-10 bg-green-50 rounded-sm flex items-center justify-center text-green-500 shrink-0">
+                            <CheckCircle2 className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-black text-[#0c0a09] uppercase tracking-tight truncate">{item.beneficiario}</p>
+                            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{item.data}</p>
+                          </div>
+                        </div>
+                        <div className="text-right shrink-0 ml-4 flex items-center gap-4">
+                          <p className="text-base font-black text-[#0c0a09] font-mono tracking-tight">{item.valor}</p>
+                          <ChevronRight className="h-4 w-4 text-neutral-200 group-hover:text-[#f97316] transition-colors" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ──── Section Overlay: DDA ──── */}
+            {activeSection === "dda" && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="w-full max-w-xl bg-white rounded-sm shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden">
+                  <div className="flex items-center justify-between p-8 border-b border-neutral-100">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-green-50 rounded-sm flex items-center justify-center text-green-500">
+                        <ShieldCheck className="h-5 w-5" />
+                      </div>
+                      <h2 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">Débito Direto Autorizado</h2>
+                    </div>
+                    <button onClick={() => setActiveSection(null)} className="p-2 rounded-sm hover:bg-neutral-50 transition-colors">
+                      <X className="h-5 w-5 text-neutral-400" />
+                    </button>
+                  </div>
+                  <div className="p-8 space-y-8">
+                    <div className="p-6 bg-[#f97316]/10 rounded-sm border border-orange-100 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <AlertCircle className="h-5 w-5 text-[#f97316]" />
+                        <span className="text-xs font-black text-[#0c0a09] uppercase tracking-widest">O que é DDA?</span>
+                      </div>
+                      <p className="text-sm text-neutral-600 font-medium leading-relaxed">
+                        O DDA permite que você visualize todos os boletos emitidos no seu CPF/CNPJ diretamente no internet banking, antes mesmo de recebê-los fisicamente. Isso evita fraudes e pagamentos duplicados.
+                      </p>
+                    </div>
+
+                    <div className="space-y-4">
+                      {[
+                        { icon: ShieldCheck, title: "Segurança total", desc: "Todos os boletos são verificados pelo sistema bancário nacional." },
+                        { icon: Eye, title: "Visualização completa", desc: "Veja valor, beneficiário e data de vencimento antes de pagar." },
+                        { icon: Ban, title: "Bloqueio de fraudes", desc: "Identifique e bloqueie cobranças indevidas automaticamente." },
+                      ].map((feat, i) => (
+                        <div key={i} className="flex items-start gap-4 p-4 bg-neutral-50 rounded-sm border border-neutral-100">
+                          <div className="w-8 h-8 bg-green-50 rounded-sm flex items-center justify-center text-green-500 shrink-0 mt-0.5">
+                            <feat.icon className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-[#0c0a09] uppercase tracking-tight">{feat.title}</p>
+                            <p className="text-xs font-medium text-neutral-400 leading-relaxed mt-1">{feat.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <Button
+                      onClick={() => { setActiveSection(null); toast.info("Ativação do DDA será disponibilizada em breve."); }}
+                      className="w-full h-14 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-xs uppercase tracking-widest shadow-xl shadow-black/10 transition-all"
+                    >
+                      Ativar DDA na minha conta <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ──── Section Overlay: Comprovantes ──── */}
+            {activeSection === "comprovantes" && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-300">
+                <div className="w-full max-w-3xl bg-white rounded-sm shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden max-h-[85vh] flex flex-col">
+                  <div className="flex items-center justify-between p-8 border-b border-neutral-100 shrink-0">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316]">
+                        <ReceiptText className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">Comprovantes</h2>
+                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{mockComprovantes.length} disponíveis para download</p>
+                      </div>
+                    </div>
+                    <button onClick={() => setActiveSection(null)} className="p-2 rounded-sm hover:bg-neutral-50 transition-colors">
+                      <X className="h-5 w-5 text-neutral-400" />
+                    </button>
+                  </div>
+                  <div className="flex-1 overflow-y-auto p-8 space-y-3">
+                    {mockComprovantes.map((comp) => (
+                      <div key={comp.id} className="p-5 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between group hover:shadow-lg hover:border-[#f97316]/20 transition-all">
+                        <div className="flex items-center gap-4 min-w-0 flex-1">
+                          <div className="w-10 h-10 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316] shrink-0">
+                            <FileText className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-sm font-black text-[#0c0a09] uppercase tracking-tight truncate">{comp.beneficiario}</p>
+                            <div className="flex items-center gap-3">
+                              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{comp.data}</p>
+                              <span className="text-neutral-200">&bull;</span>
+                              <p className="text-[10px] font-mono font-bold text-neutral-300">{comp.id}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4 shrink-0 ml-4">
+                          <p className="text-base font-black text-[#0c0a09] font-mono tracking-tight">{comp.valor}</p>
+                          <button className="w-10 h-10 bg-white rounded-sm border border-neutral-100 flex items-center justify-center text-neutral-300 hover:text-[#f97316] hover:border-[#f97316]/20 transition-all group-hover:shadow-sm">
+                            <Download className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -382,7 +679,7 @@ export default function PagamentosPage() {
                         </p>
                       )}
                     </div>
-                    <div className="w-16 h-16 bg-[#fffbeb] rounded-sm flex items-center justify-center text-[#f97316] shrink-0">
+                    <div className="w-16 h-16 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316] shrink-0">
                       <Building2 className="h-8 w-8" />
                     </div>
                   </div>
@@ -399,18 +696,74 @@ export default function PagamentosPage() {
                     </>
                   )}
 
-                  <div className="grid grid-cols-2 gap-8">
-                    <div>
-                      <p className="text-[11px] text-[#0c0a09] font-bold uppercase tracking-widest mb-1">Vencimento</p>
-                      <p className="text-lg font-medium text-neutral-500">{boletoData.vencimento}</p>
+                  {/* Payment Date Section */}
+                  <div className="p-6 bg-neutral-50 rounded-sm border border-neutral-100 space-y-5">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-black text-[#0c0a09] uppercase tracking-widest">Quando pagar?</p>
+                      <div className="flex items-center bg-white rounded-sm border border-neutral-200 p-1 gap-1">
+                        <button
+                          onClick={() => { setPaymentMode("now"); setScheduleDate(""); }}
+                          className={`flex items-center gap-2 px-5 py-2.5 rounded-sm font-black text-[9px] uppercase tracking-widest transition-all ${
+                            paymentMode === "now"
+                              ? "bg-[#0c0a09] text-white shadow-md"
+                              : "text-neutral-400 hover:text-[#0c0a09]"
+                          }`}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Agora
+                        </button>
+                        <button
+                          onClick={() => setPaymentMode("schedule")}
+                          className={`flex items-center gap-2 px-5 py-2.5 rounded-sm font-black text-[9px] uppercase tracking-widest transition-all ${
+                            paymentMode === "schedule"
+                              ? "bg-[#0c0a09] text-white shadow-md"
+                              : "text-neutral-400 hover:text-[#0c0a09]"
+                          }`}
+                        >
+                          <CalendarClock className="h-3.5 w-3.5" />
+                          Agendar
+                        </button>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-[11px] text-[#0c0a09] font-bold uppercase tracking-widest mb-1">Data de Pagamento</p>
-                      <p className="text-lg font-medium text-[#f97316]">Hoje</p>
+
+                    <div className="grid grid-cols-2 gap-6">
+                      <div className="p-4 bg-white rounded-sm border border-neutral-100">
+                        <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-2">Vencimento</p>
+                        <p className="text-lg font-black text-[#0c0a09] tracking-tight">{boletoData.vencimento}</p>
+                      </div>
+                      <div className={`p-4 rounded-sm border-2 transition-colors ${
+                        paymentMode === "schedule" && !scheduleDate 
+                          ? "bg-[#f97316]/5 border-[#f97316]/30" 
+                          : "bg-white border-neutral-100"
+                      }`}>
+                        <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-2">Data de Pagamento</p>
+                        <p className={`text-lg font-black tracking-tight ${
+                          paymentMode === "now" ? "text-[#0c0a09]" : scheduleDate ? "text-[#f97316]" : "text-[#f97316]/40"
+                        }`}>
+                          {paymentMode === "now" ? "Hoje" : scheduleDate ? new Date(scheduleDate + "T12:00:00").toLocaleDateString("pt-BR") : "Selecione →"}
+                        </p>
+                      </div>
                     </div>
+
+                    {paymentMode === "schedule" && (
+                      <div className="animate-in fade-in slide-in-from-top-2 duration-300 pt-2">
+                        <div className="flex items-center gap-4 p-4 bg-white rounded-sm border-2 border-[#0c0a09] relative">
+                          <div className="w-10 h-10 bg-[#0c0a09] rounded-sm flex items-center justify-center shrink-0">
+                            <Calendar className="h-5 w-5 text-white" />
+                          </div>
+                          <Input
+                            type="date"
+                            value={scheduleDate}
+                            onChange={(e) => setScheduleDate(e.target.value)}
+                            min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+                            className="h-12 bg-transparent border-0 px-0 text-[#0c0a09] font-black text-lg focus:ring-0 focus-visible:ring-0 cursor-pointer"
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="p-8 bg-[#fffbeb] rounded-sm border border-orange-100">
+                  <div className="p-8 bg-[#f97316]/10 rounded-sm border border-orange-100">
                     <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest mb-3 opacity-60">Valor do Pagamento</p>
                     <p className="text-5xl font-black text-[#f97316] font-mono tracking-tighter">
                       {formatCurrency(boletoData.valor)}
@@ -425,15 +778,48 @@ export default function PagamentosPage() {
                   )}
 
                   <Button 
-                    onClick={handleRequestSms}
-                    disabled={isLoading || (userBalance !== null && boletoData.valor > userBalance)}
+                    onClick={() => {
+                      if (paymentMode === "schedule") {
+                        if (!scheduleDate) {
+                          toast.error("Selecione uma data para o agendamento.");
+                          return;
+                        }
+                        // Add to scheduled payments
+                        const newAgendamento = {
+                          id: agendamentos.length + 1,
+                          beneficiario: boletoData.beneficiario,
+                          valor: formatCurrency(boletoData.valor),
+                          data: new Date(scheduleDate + "T12:00:00").toLocaleDateString("pt-BR"),
+                          status: "Agendado",
+                          barcode: boletoData.linhaDigitavel?.substring(0, 30) + "..."
+                        };
+                        setAgendamentos(prev => [...prev, newAgendamento]);
+                        toast.success(`Pagamento agendado para ${newAgendamento.data}!`);
+                        setStep("landing");
+                        setBarcode("");
+                        setBoletoData(null);
+                        setPaymentMode("now");
+                        setScheduleDate("");
+                        return;
+                      }
+                      handleRequestSms();
+                    }}
+                    disabled={isLoading || (userBalance !== null && boletoData.valor > userBalance) || (paymentMode === "schedule" && !scheduleDate)}
                     className={`w-full h-20 rounded-sm font-black text-lg uppercase tracking-widest shadow-2xl transition-all ${
                       userBalance !== null && boletoData.valor > userBalance 
                       ? "bg-red-500/10 text-red-500 border border-red-200 cursor-not-allowed hover:bg-red-500/10 shadow-none" 
-                      : "bg-[#0c0a09] hover:bg-[#1a1715] text-white shadow-black/20"
+                      : paymentMode === "schedule"
+                        ? "bg-[#0c0a09] hover:bg-[#f97316] text-white shadow-black/10"
+                        : "bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white shadow-black/20"
                     }`}
                   >
-                    {isLoading ? "PROCESSANDO..." : (userBalance !== null && boletoData.valor > userBalance ? "Saldo insuficiente" : "AUTORIZAR PAGAMENTO")}
+                    {isLoading ? "PROCESSANDO..." : (
+                      userBalance !== null && boletoData.valor > userBalance 
+                        ? "Saldo insuficiente" 
+                        : paymentMode === "schedule" 
+                          ? <><CalendarClock className="h-5 w-5 mr-3" /> AGENDAR PAGAMENTO</>
+                          : "AUTORIZAR PAGAMENTO"
+                    )}
                   </Button>
                 </div>
               </div>
@@ -467,7 +853,7 @@ export default function PagamentosPage() {
 
         {step === "sms" && (
           <div className="max-w-xl mx-auto flex flex-col items-center text-center space-y-10 py-12 animate-in fade-in zoom-in-95 duration-500">
-             <div className="w-20 h-20 bg-[#fffbeb] rounded-[4px] flex items-center justify-center text-[#f97316] shadow-xl relative group">
+             <div className="w-20 h-20 bg-[#f97316]/10 rounded-[4px] flex items-center justify-center text-[#f97316] shadow-xl relative group">
                 <Smartphone className="h-10 w-10 animate-bounce text-[#f97316]" />
              </div>
              
@@ -489,7 +875,7 @@ export default function PagamentosPage() {
                   <Button 
                     onClick={handleFinalizePayment}
                     disabled={isLoading || smsCode.length < 5}
-                    className="w-full h-16 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm font-black text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 disabled:opacity-50"
+                    className="w-full h-16 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 disabled:opacity-50"
                   >
                     {isLoading ? "PROCESSANDO..." : "CONFIRMAR PAGAMENTO"}
                   </Button>
@@ -565,7 +951,7 @@ export default function PagamentosPage() {
              </div>
 
              <div className="w-full flex gap-4 pt-10">
-                <Button onClick={handlePrintReceipt} className="flex-1 h-20 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 group transition-all">
+                <Button onClick={handlePrintReceipt} className="flex-1 h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 group transition-all">
                    <Download className="h-6 w-6 group-hover:scale-110 transition-transform" />
                    COMPROVANTE
                 </Button>
