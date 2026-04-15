@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import jsQR from "jsqr";
 import { QRCodeSVG } from "qrcode.react";
-import api from "@/lib/api";
+import api, { getDeviceId } from "@/lib/api";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
@@ -83,11 +83,11 @@ function PixPagarContent() {
         canvas.width = image.width;
         canvas.height = image.height;
         context.drawImage(image, 0, 0, image.width, image.height);
-        
+
         try {
           const imageDataObj = context.getImageData(0, 0, image.width, image.height);
           const code = jsQR(imageDataObj.data, imageDataObj.width, imageDataObj.height);
-          
+
           if (code) {
             console.log("✅ [QRCODE DECODER]: Found", code.data);
             setPixCode(code.data);
@@ -114,7 +114,7 @@ function PixPagarContent() {
     const fetchProfile = async () => {
       try {
         const res = await api.get("/api/users/data");
-        
+
         if (res.data) {
           const phone = res.data.phone || res.data.celular || "";
           setUserPhone(phone);
@@ -202,7 +202,7 @@ function PixPagarContent() {
     setRecipientName((data.nome || data.name || data.recebedorNome || data.beneficiario || "").trim());
     setRecipientBank((data.instituicao || data.bank || data.recebedorInstituicao || data.instituicaoNome || "").trim());
     setRecipientDocument((data.cpfcnpj || data.documento || data.taxNumber || "").trim());
-    
+
     // Aggressive ID capture
     const foundId = data.qrcodeId || data.id_payment || data.idPayment || data.uuid || data.endToEndId || data.txid || data.id || "";
     if (foundId) setUuid(foundId);
@@ -274,13 +274,19 @@ function PixPagarContent() {
     return val;
   };
 
+
+
   const handleRequestSms = async () => {
     setIsLoadingTransfer(true);
     try {
       console.log(`📩 [SMS REQUEST] Enviando solicitação de PIN...`);
 
+      const amountNum = parseFloat(value.replace(/\D/g, "")) / 100;
+      const amountStr = amountNum.toFixed(2);
+
       const res = await api.post("/api/users/solicitar-pin", {
-        amount: String(parseFloat(value.replace(/\D/g, "")) / 100)
+        amount: amountStr,
+        deviceId: getDeviceId()
       });
 
       if (res.data) {
@@ -313,28 +319,18 @@ function PixPagarContent() {
     try {
       // 1. PIN Validation as per Guide Step 3
       console.log("🛡️ [VALIDAR PIN REQUEST]:", { pin: smsCode, pinId: pinId });
-      
+
       try {
         await api.post("/api/users/validar-pin", {
           pin: smsCode,
-          pinId: pinId
+          pinId: pinId,
+          deviceId: getDeviceId()
         });
         console.log("✅ [VALIDAR PIN SUCCESS]");
       } catch (err: any) {
         console.error("❌ [VALIDAR PIN ERROR]:", err.response?.status, err.response?.data);
         throw err;
       }
-
-      // Generate or retrieve persistent Device ID for web
-      const getDeviceId = () => {
-        if (typeof window === 'undefined') return 'IB-WEB-PLATFORM';
-        let dId = localStorage.getItem('deviceId');
-        if (!dId) {
-          dId = `IB-WEB-${crypto.randomUUID()}`;
-          localStorage.setItem('deviceId', dId);
-        }
-        return dId;
-      };
 
       const deviceId = getDeviceId();
       let endpoint = "/api/banco/pix/transferir";
@@ -347,9 +343,11 @@ function PixPagarContent() {
         }
       }
 
+      const txAmount = parseFloat(value.replace(/\D/g, "")) / 100;
+
       let payload: any = {
         chave: finalChave,
-        valor: parseFloat(value.replace(/\D/g, "")) / 100,
+        valor: txAmount,
         agendadoPara: null,
         uuid: uuid || crypto.randomUUID(),
         endToEndIdInterno: endToEndId || crypto.randomUUID(),
@@ -360,12 +358,12 @@ function PixPagarContent() {
 
       if (type === "qrcode" || type === "copia_cola") {
         endpoint = "/api/banco/pix/pagar-copicola";
-        
+
         // Use data exactly as structured in the decoding step response
         const qrId = searchResult?.qrcodeId || searchResult?.qrCodeId || searchResult?.id || "";
         const txAmount = parseFloat(value.replace(/\D/g, "")) / 100;
         const internalId = endToEndId || crypto.randomUUID();
-        
+
         payload = {
           endToEndId: searchResult?.endToEndId || qrId, // Use EndToEndId if available
           chavePix: searchResult?.chavePix || "",
@@ -374,7 +372,8 @@ function PixPagarContent() {
           receiverConciliationId: searchResult?.receiverConciliationId || qrId,
           amount: txAmount,
           endToEndIdInterno: internalId,
-          deviceId: temporaryDeviceId
+          deviceId: temporaryDeviceId,
+          pin: smsCode,
         };
       }
 
@@ -505,7 +504,7 @@ function PixPagarContent() {
 
               {type === "qrcode" ? (
                 <div className="space-y-6">
-                  <div 
+                  <div
                     onClick={() => fileInputRef.current?.click()}
                     className="p-8 border-2 border-dashed border-neutral-200 rounded-[5px] flex flex-col items-center justify-center gap-4 hover:border-[#ff7711] transition-colors cursor-pointer group bg-neutral-50/50"
                   >

@@ -30,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import api from "@/lib/api";
+import api, { getDeviceId } from "@/lib/api";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -59,6 +59,7 @@ export default function TransferenciaPage() {
     const [targetDigito, setTargetDigito] = useState("");
     const [amount, setAmount] = useState("");
     const [pin, setPin] = useState("");
+    const [pinId, setPinId] = useState("");
     
     // Result States
     const [receiver, setReceiver] = useState<ReceiverInfo | null>(null);
@@ -96,6 +97,8 @@ export default function TransferenciaPage() {
         const rawValue = e.target.value.replace(/\D/g, "");
         setAmount(rawValue);
     };
+
+
 
     const handleLookup = async () => {
         setIsLoading(true);
@@ -148,10 +151,18 @@ export default function TransferenciaPage() {
     const handleRequestPin = async () => {
         setIsLoading(true);
         try {
-            await api.post('/api/users/solicitar-pin', { 
-                amount: String(parseInt(amount) / 100) 
+            const amountNum = parseInt(amount) / 100;
+            const amountStr = amountNum.toFixed(2);
+
+            const res = await api.post('/api/users/solicitar-pin', { 
+                amount: amountStr,
+                deviceId: getDeviceId()
             });
-            setStep('pin');
+            if (res.data) {
+                const data = res.data.data || res.data;
+                setPinId(data.pinId || data.id || "");
+                setStep('pin');
+            }
         } catch (err: any) {
             setErrorMessage(err.response?.data?.message || "Erro ao solicitar PIN.");
         } finally {
@@ -163,16 +174,13 @@ export default function TransferenciaPage() {
         setIsLoading(true);
         setStep('confirming');
         try {
-            const getDeviceId = () => {
-                if (typeof window === 'undefined') return 'IB-WEB-PLATFORM';
-                let dId = localStorage.getItem('deviceId');
-                if (!dId) {
-                    dId = `IB-WEB-${crypto.randomUUID()}`;
-                    localStorage.setItem('deviceId', dId);
-                }
-                return dId;
-            };
-
+            // 1. Explicitly validate PIN before transfer
+            await api.post("/api/users/validar-pin", {
+                pin: pin,
+                pinId: pinId,
+                deviceId: getDeviceId()
+            });
+            
             const deviceId = getDeviceId();
             
             const payload = {

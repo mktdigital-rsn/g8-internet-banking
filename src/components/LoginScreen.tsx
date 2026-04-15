@@ -15,9 +15,9 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import api from "@/lib/api";
 import { temporaryDeviceIdAtom } from "@/store/auth";
 import { useAtom } from "jotai";
+import api, { getDeviceId } from "@/lib/api";
 import { toast } from "sonner";
 
 type LoginStep = "identifier" | "virtual" | "qrcode";
@@ -294,14 +294,14 @@ export default function LoginScreen() {
                 Acesso <br />
                 <span className="text-primary italic">Seguro.</span>
               </h1>
-              <p className="text-white/40 text-sm 2xl:text-lg font-medium leading-relaxed max-w-[300px] 2xl:max-w-[450px]">
+              <p className="text-neutral-300 text-sm 2xl:text-lg font-medium leading-relaxed max-w-[300px] 2xl:max-w-[450px]">
                 Te ajudamos a gerenciar seu capital de forma inteligente e segura através da nossa tecnologia de ponta.
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-white/20 2xl:gap-5">
-            <ShieldCheck className="text-[#ea580c] h-5 w-5 2xl:h-7 2xl:w-7" />
+          <div className="flex items-center gap-3 text-neutral-400 2xl:gap-5">
+            <ShieldCheck className="text-green-500 h-5 w-5 2xl:h-7 2xl:w-7" />
             <span className="text-[10px] 2xl:text-xs font-bold uppercase tracking-[0.2em]">SSL SECURE PROTOCOL</span>
           </div>
         </div>
@@ -325,7 +325,7 @@ export default function LoginScreen() {
 
                 <form onSubmit={handleIdentifierSubmit} className="space-y-6 2xl:space-y-10">
                   <div className="space-y-2 2xl:space-y-4">
-                    <label className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-[#ea580c]/80 ml-1">Acessar com</label>
+                    <label className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-[#f97316] ml-1">Acessar com</label>
                     <div className="relative group">
                       <User className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 2xl:h-7 2xl:w-7 text-white/20 group-focus-within:text-[#ea580c] transition-colors" />
                       <Input
@@ -349,8 +349,8 @@ export default function LoginScreen() {
                 </form>
 
                 <div className="pt-6 2xl:pt-10 border-t border-white/5 flex items-center justify-between">
-                  <button className="text-[10px] 2xl:text-xs font-black text-white/40 uppercase tracking-widest hover:text-white transition-colors">Dificuldade em acessar?</button>
-                  <button className="text-[10px] 2xl:text-xs font-black text-[#ea580c] uppercase tracking-widest hover:underline">Solicitar Acesso</button>
+                  <button className="text-[10px] 2xl:text-xs font-black text-neutral-400 uppercase tracking-widest hover:text-white transition-colors">Dificuldade em acessar?</button>
+                  <button className="text-[10px] 2xl:text-xs font-black text-[#f97316] uppercase tracking-widest hover:underline">Solicitar Acesso</button>
                 </div>
               </motion.div>
             )}

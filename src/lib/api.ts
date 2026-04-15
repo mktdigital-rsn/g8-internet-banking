@@ -1,7 +1,16 @@
 import axios from 'axios';
-
-// Get the base URL from environment variables, defaulting to production if not set
 const BASE_URL = 'https://g8api.bskpay.com.br';
+
+export const getDeviceId = () => {
+  if (typeof window === 'undefined') return 'IB-WEB-PLATFORM';
+  let dId = localStorage.getItem('deviceId');
+  if (!dId) {
+    // Generate a consistent ID for the browser if not present
+    dId = `IB-WEB-${crypto.randomUUID()}`;
+    localStorage.setItem('deviceId', dId);
+  }
+  return dId;
+};
 
 const api = axios.create({
   baseURL: BASE_URL,
