@@ -1,3 +1,10 @@
-import { atom } from "jotai";
+import { atomWithStorage, createJSONStorage } from "jotai/utils";
 
-export const temporaryDeviceIdAtom = atom("");
+const temporaryDeviceIdStorage = createJSONStorage<string>(() => localStorage);
+
+export const temporaryDeviceIdAtom = atomWithStorage(
+  "temporaryDeviceId",
+  "",
+  temporaryDeviceIdStorage,
+  { getOnInit: true }
+);

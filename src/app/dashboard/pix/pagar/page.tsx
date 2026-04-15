@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense, useRef } from "react";
 import jsQR from "jsqr";
 import { QRCodeSVG } from "qrcode.react";
-import api, { getDeviceId } from "@/lib/api";
+import api from "@/lib/api";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import {
@@ -277,6 +277,11 @@ function PixPagarContent() {
 
 
   const handleRequestSms = async () => {
+    if (!temporaryDeviceId) {
+      toast.error("Aguarde concluir o login com QR antes de realizar pagamentos.");
+      return;
+    }
+
     setIsLoadingTransfer(true);
     try {
       console.log(`📩 [SMS REQUEST] Enviando solicitação de PIN...`);
@@ -286,7 +291,7 @@ function PixPagarContent() {
 
       const res = await api.post("/api/users/solicitar-pin", {
         amount: amountStr,
-        deviceId: getDeviceId()
+        deviceId: temporaryDeviceId
       });
 
       if (res.data) {
@@ -324,15 +329,13 @@ function PixPagarContent() {
         await api.post("/api/users/validar-pin", {
           pin: smsCode,
           pinId: pinId,
-          deviceId: getDeviceId()
+          deviceId: temporaryDeviceId
         });
         console.log("✅ [VALIDAR PIN SUCCESS]");
       } catch (err: any) {
         console.error("❌ [VALIDAR PIN ERROR]:", err.response?.status, err.response?.data);
         throw err;
       }
-
-      const deviceId = getDeviceId();
       let endpoint = "/api/banco/pix/transferir";
       const rawChave = pixCode || identifier || "";
       let finalChave = rawChave;

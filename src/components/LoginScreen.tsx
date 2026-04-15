@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { temporaryDeviceIdAtom } from "@/store/auth";
 import { useAtom } from "jotai";
-import api, { getDeviceId } from "@/lib/api";
+import api from "@/lib/api";
 import { toast } from "sonner";
 
 type LoginStep = "identifier" | "virtual" | "qrcode";

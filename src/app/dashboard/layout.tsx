@@ -21,6 +21,8 @@ import { Separator } from "@/components/ui/separator";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import { useSetAtom } from "jotai";
+import { temporaryDeviceIdAtom } from "@/store/auth";
 
 interface MenuItem {
   icon: any;
@@ -41,6 +43,7 @@ const menuItems: MenuItem[] = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
    const pathname = usePathname();
    const router = useRouter();
+   const setTemporaryDeviceId = useSetAtom(temporaryDeviceIdAtom);
    const [userName, setUserName] = React.useState("");
    const [balance, setBalance] = React.useState("");
    const [accountInfo, setAccountInfo] = React.useState({ agency: "", account: "" });
@@ -99,6 +102,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [pathname]);
 
   const handleLogout = () => {
+    setTemporaryDeviceId("");
     localStorage.clear();
     router.push("/");
   };
