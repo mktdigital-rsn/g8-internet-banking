@@ -12,6 +12,8 @@ import {
   Smartphone,
   RefreshCcw,
   AlertCircle,
+  CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -129,7 +131,9 @@ export default function LoginScreen() {
         if (accessToken) localStorage.setItem("token", accessToken);
         if (userToken) localStorage.setItem("userToken", userToken);
 
-        toast.success("Login realizado!");
+        toast.success("Autenticação confirmada! Redirecionando...");
+        // Delay redirect to let user see success animation
+        await new Promise((resolve) => setTimeout(resolve, 2500));
         window.location.href = "/dashboard";
       }
     } catch (err: any) {
@@ -378,8 +382,8 @@ export default function LoginScreen() {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="h-16 flex items-center justify-center gap-3 bg-white/[0.04] rounded-3xl border border-white/[0.08] font-mono text-2xl text-primary tracking-[0.5em]">
-                    {shownPassword || <span className="text-white/10 text-[10px] uppercase font-black">Teclado Virtual</span>}
+                  <div className="h-16 flex items-center justify-center gap-3 bg-white/[0.07] rounded-[2px] border border-white/[0.12] font-mono text-2xl text-primary tracking-[0.5em]">
+                    {shownPassword || <span className="text-white/20 text-[10px] uppercase font-black tracking-[0.3em]">Teclado Virtual</span>}
                   </div>
 
                   <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
@@ -388,7 +392,7 @@ export default function LoginScreen() {
                         key={idx}
                         type="button"
                         onClick={() => addPasswordPair(pair)}
-                        className="h-14 bg-white/[0.08] hover:bg-[#f97316] border border-white/10 rounded-2xl text-white font-black text-lg transition-all"
+                        className="h-14 bg-white/[0.10] hover:bg-[#f97316] border border-white/[0.14] rounded-[2px] text-white font-black text-lg transition-all"
                       >
                         {pair[0]} ou {pair[1]}
                       </button>
@@ -396,7 +400,7 @@ export default function LoginScreen() {
                     <button
                       type="button"
                       onClick={removeLastPair}
-                      className="h-14 bg-red-600/20 hover:bg-red-600/40 text-red-500 font-black text-[10px] uppercase rounded-2xl"
+                      className="h-14 bg-red-600/20 hover:bg-red-600/40 text-red-500 font-black text-[10px] uppercase rounded-[2px] border border-red-500/20"
                     >
                       APAGAR
                     </button>
@@ -404,7 +408,7 @@ export default function LoginScreen() {
 
                   <Button
                     onClick={handleLoginSubmit}
-                    className="w-full h-16 text-lg font-black bg-[#f97316] hover:bg-[#ea580c] text-white rounded-2xl shadow-lg cursor-pointer"
+                    className="w-full h-16 text-lg font-black bg-[#f97316] hover:bg-[#ea580c] text-white rounded-[2px] shadow-lg cursor-pointer"
                     disabled={isLoading || passwordKeys.length === 0}
                   >
                     {isLoading ? "Aguarde um instante" : "CONTINUAR"}
@@ -421,47 +425,124 @@ export default function LoginScreen() {
                 exit={{ opacity: 0 }}
                 className="flex flex-col items-center justify-center space-y-10 2xl:space-y-16 text-center mt-12 lg:mt-0"
               >
-                <div className="space-y-2">
-                  <h2 className="text-3xl font-black text-white">Aprovação no App</h2>
-                  <p className="text-white/40 font-medium">
-                    Escaneie o QR Code no aplicativo para concluir o login.
-                  </p>
-                </div>
+                <AnimatePresence mode="wait">
+                  {challengeStatus === "APPROVED" ? (
+                    <motion.div
+                      key="approved-state"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.5, ease: "easeOut" }}
+                      className="flex flex-col items-center space-y-8"
+                    >
+                      {/* Success pulse ring */}
+                      <div className="relative">
+                        <motion.div
+                          initial={{ scale: 0.5, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ duration: 0.6, ease: "easeOut" }}
+                          className="w-28 h-28 rounded-full bg-green-500/10 border-2 border-green-500/30 flex items-center justify-center"
+                        >
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.3, duration: 0.4, type: "spring", stiffness: 200 }}
+                          >
+                            <CheckCircle2 className="h-14 w-14 text-green-500" />
+                          </motion.div>
+                        </motion.div>
+                        <motion.div
+                          initial={{ scale: 0.8, opacity: 0.6 }}
+                          animate={{ scale: 1.6, opacity: 0 }}
+                          transition={{ duration: 1.2, repeat: Infinity, ease: "easeOut" }}
+                          className="absolute inset-0 w-28 h-28 rounded-full border-2 border-green-500/40"
+                        />
+                      </div>
 
-                <div className="p-6 bg-white rounded-[40px]">
-                  {challengeQrCode ? (
-                    <img src={challengeQrCode} alt="QR Code do desafio" className="h-[220px] w-[220px]" />
+                      <div className="space-y-2">
+                        <motion.h2
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.4 }}
+                          className="text-2xl font-black text-white"
+                        >
+                          Autenticado com sucesso!
+                        </motion.h2>
+                        <motion.p
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: 0.6 }}
+                          className="text-white/50 font-medium text-sm"
+                        >
+                          QR Code confirmado no aplicativo.
+                        </motion.p>
+                      </div>
+
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.8 }}
+                        className="flex items-center gap-3 text-white/40"
+                      >
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="text-xs font-bold uppercase tracking-widest">Redirecionando para o painel...</span>
+                      </motion.div>
+                    </motion.div>
                   ) : (
-                    <QRCodeSVG value={challengeToken} size={220} level="H" />
+                    <motion.div
+                      key="pending-state"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex flex-col items-center space-y-10 2xl:space-y-16 w-full"
+                    >
+                      <div className="space-y-2">
+                        <h2 className="text-3xl font-black text-white">Aprovação no App</h2>
+                        <p className="text-white/40 font-medium">
+                          Escaneie o QR Code no aplicativo para concluir o login.
+                        </p>
+                      </div>
+
+                      <div className="p-6 bg-white rounded-[6px]">
+                        {challengeQrCode ? (
+                          <img src={challengeQrCode} alt="QR Code do desafio" className="h-[220px] w-[220px]" />
+                        ) : (
+                          <QRCodeSVG value={challengeToken} size={220} level="H" />
+                        )}
+                      </div>
+
+                      <div className="w-full max-w-md space-y-3 rounded-[2px] border border-white/10 bg-white/[0.05] p-5 text-left">
+                        <div className="flex items-center gap-3 text-white">
+                          <Smartphone className="h-5 w-5 text-primary" />
+                          <span className="text-sm font-bold">{statusLabel}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-white/50">
+                          <AlertCircle className="h-5 w-5" />
+                          <span className="text-xs font-medium">
+                            Expira em: {formattedExpiresAt || "aguardando resposta"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {challengeStatus === "EXPIRED" ? (
+                        <Button
+                          onClick={handleRestartFlow}
+                          className="w-full max-w-md h-14 text-base font-black bg-[#f97316] hover:bg-[#ea580c] text-white rounded-[2px]"
+                        >
+                          <RefreshCcw className="h-5 w-5 mr-2" />
+                          REINICIAR ACESSO
+                        </Button>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <Loader2 className="h-4 w-4 animate-spin text-white/20" />
+                          <span className="text-[10px] uppercase tracking-[0.4em] font-black text-white/30">
+                            Aguardando aprovação automática
+                          </span>
+                        </div>
+                      )}
+                    </motion.div>
                   )}
-                </div>
-
-                <div className="w-full max-w-md space-y-3 rounded-3xl border border-white/10 bg-white/[0.03] p-5 text-left">
-                  <div className="flex items-center gap-3 text-white">
-                    <Smartphone className="h-5 w-5 text-primary" />
-                    <span className="text-sm font-bold">{statusLabel}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-white/50">
-                    <AlertCircle className="h-5 w-5" />
-                    <span className="text-xs font-medium">
-                      Expira em: {formattedExpiresAt || "aguardando resposta"}
-                    </span>
-                  </div>
-                </div>
-
-                {challengeStatus === "EXPIRED" ? (
-                  <Button
-                    onClick={handleRestartFlow}
-                    className="w-full max-w-md h-14 text-base font-black bg-[#f97316] hover:bg-[#ea580c] text-white rounded-2xl"
-                  >
-                    <RefreshCcw className="h-5 w-5 mr-2" />
-                    REINICIAR ACESSO
-                  </Button>
-                ) : (
-                  <div className="text-[10px] uppercase tracking-[0.4em] font-black text-white/30">
-                    Aguardando aprovação automática
-                  </div>
-                )}
+                </AnimatePresence>
               </motion.div>
             )}
           </AnimatePresence>
