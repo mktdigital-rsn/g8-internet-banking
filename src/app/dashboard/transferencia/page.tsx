@@ -196,7 +196,6 @@ export default function TransferenciaPage() {
                 recebedorConta: receiver?.conta,
                 recebedorDigito: receiver?.digito,
                 valor: parseInt(amount) / 100,
-                pin: pin,
                 deviceId: temporaryDeviceId
             };
 

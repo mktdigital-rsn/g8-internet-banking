@@ -25,6 +25,12 @@ api.interceptors.request.use(
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       const userToken = localStorage.getItem('userToken');
+      
+      // Critical: Ensure the same deviceId from login is used everywhere
+      const rawTempId = localStorage.getItem('temporaryDeviceId');
+      const tempId = rawTempId ? rawTempId.replace(/"/g, '') : null;
+      const defaultId = localStorage.getItem('deviceId');
+      const finalDeviceId = tempId || defaultId;
 
       if (token) {
         config.headers.Authorization = `Bearer ${token}`;
@@ -33,6 +39,11 @@ api.interceptors.request.use(
       if (userToken) {
         config.headers.userToken = userToken;
         config.headers.usertoken = userToken;
+      }
+
+      if (finalDeviceId) {
+        config.headers['deviceId'] = finalDeviceId;
+        config.headers['device-id'] = finalDeviceId;
       }
     }
     return config;

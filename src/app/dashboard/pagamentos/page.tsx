@@ -199,8 +199,7 @@ export default function PagamentosPage() {
       // 2. Efetivar Pagamento
       const res = await api.post("/api/banco/pagamentos/pagar-boleto", {
         linhaDigitavel: boletoData?.linhaDigitavel || barcode.replace(/\D/g, ""),
-        deviceId: temporaryDeviceId,
-        pin: smsCode
+        deviceId: temporaryDeviceId
       });
 
       if (res.data) {
