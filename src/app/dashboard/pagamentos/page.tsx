@@ -204,28 +204,33 @@ export default function PagamentosPage() {
       if (res.data) {
         setStep("success");
         toast.success("Pagamento realizado com sucesso!");
+
+        // 1. Tentar pegar ID direto da resposta do pagamento (mais rápido)
+        const directId = res.data.transactionId || res.data.id || res.data.data?.id || res.data.data?.transactionId;
+        if (directId) {
+          setTransactionId(directId);
+          console.log("✅ ID da transação capturado diretamente:", directId);
+        }
         
-        // Buscar ID da transação no extrato (Sync de ~2s)
+        // 2. Fallback: Buscar no extrato (Sync de segurança)
         setTimeout(async () => {
+          if (directId) return; // Se já temos, não precisa buscar
+
           try {
             const extratoRes = await api.get("/api/banco/extrato/buscar");
             const items = extratoRes.data.transacoes || extratoRes.data.data?.transacoes || [];
             
-            // Encontrar a transação mais recente de boleto com o mesmo valor
             const match = items.find((item: any) => 
                Math.abs(item.valor) === Math.abs(boletoData.valor) && 
                (item.metodo === "BOLETO" || item.tipoFormatado?.toUpperCase().includes("BOLETO"))
             );
 
-            if (match && match.idDoBancoLiquidante) {
-              setTransactionId(match.idDoBancoLiquidante);
-              console.log("ID da transação encontrado no extrato:", match.idDoBancoLiquidante);
+            if (match && (match.idDoBancoLiquidante || match.id)) {
+              setTransactionId(match.idDoBancoLiquidante || match.id);
             } else {
-              // Fallback se não achar imediatamente
               setTransactionId("PAG" + Math.random().toString(36).substring(7).toUpperCase());
             }
           } catch (e) {
-            console.error("Erro ao buscar ID no extrato:", e);
             setTransactionId("PAG" + Math.random().toString(36).substring(7).toUpperCase());
           }
         }, 2500);
