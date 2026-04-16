@@ -10,7 +10,10 @@ import {
   Gauge,
   Info,
   ChevronRight,
-  Download
+  Download,
+  UploadCloud,
+  FileText,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -27,24 +30,43 @@ export default function PixLimitesPage() {
   const [nightLimit, setNightLimit] = useState([1000]);
   const [limits, setLimits] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [attachedFiles, setAttachedFiles] = useState<any[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     const fetchLimits = async () => {
+      console.log("🔍 [LIMITS] Tentando buscar em /api/limits/buscar...");
       try {
         const res = await api.get("/api/limits/buscar");
+        console.log("📦 [LIMITS] Conteúdo bruto da resposta:", res.data);
         
-        if (res.data) {
-          const data = res.data.data || res.data;
-          setLimits(data);
+        // Estratégia de busca profunda no objeto (suporta flat, .data, ou .data.limites)
+        const root = res.data;
+        const nestedData = root?.data || root;
+        const finalData = nestedData?.limites || nestedData;
+        
+        console.log("🎯 [LIMITS] Dados extraídos para mapeamento:", finalData);
+        
+        if (finalData) {
+          setLimits(finalData);
           
-          const dailyLimit = data.limiteDiario || data.limiteDiurno;
-          const nightLimitVal = data.limiteNoturno;
+          const dLimit = finalData.limiteDiurno ?? finalData.limite_diurno ?? finalData.limiteDiario;
+          const nLimit = finalData.limiteNoturno ?? finalData.limite_noturno ?? finalData.nightLimit;
           
-          if (dailyLimit) setDayLimit([dailyLimit]);
-          if (nightLimitVal) setNightLimit([nightLimitVal]);
+          if (dLimit !== undefined && dLimit !== null) {
+            const val = Number(dLimit);
+            console.log(`💰 [LIMITS] Aplicando Diurno: ${val}`);
+            setDayLimit([val]);
+          }
+          
+          if (nLimit !== undefined && nLimit !== null) {
+            const val = Number(nLimit);
+            console.log(`🌙 [LIMITS] Aplicando Noturno: ${val}`);
+            setNightLimit([val]);
+          }
         }
       } catch (err) {
-        console.error("Error fetching limits:", err);
+        console.error("❌ [LIMITS] Falha total na requisição:", err);
       } finally {
         setIsLoading(false);
       }
@@ -54,17 +76,19 @@ export default function PixLimitesPage() {
 
   const handleSave = async () => {
     setIsLoading(true);
+    const payload = {
+      limiteDiurno: Number(dayLimit[0]),
+      limiteNoturno: Number(nightLimit[0]),
+      limiteMesmoTitular: Number(limits?.limiteMesmoTitular || 5000)
+    };
+
+    console.log("📤 [LIMITS] Enviando atualização:", payload);
     try {
-      const payload = {
-        limiteDiurno: dayLimit[0],
-        limiteNoturno: nightLimit[0],
-        limiteMesmoTitular: limits?.limiteMesmoTitular || 5000 // default or existing
-      };
-      
       await api.post("/api/limits/atualizar", payload);
+      console.log("✨ [LIMITS] Limites atualizados com sucesso!");
       toast.success("Limites atualizados com sucesso!");
     } catch (err) {
-      console.error("Error updating limits:", err);
+      console.error("❌ [LIMITS] Erro na atualização:", err);
       toast.error("Erro ao atualizar limites. Tente novamente.");
     } finally {
       setIsLoading(false);
@@ -77,6 +101,15 @@ export default function PixLimitesPage() {
       currency: "BRL",
     }).format(val);
   };
+
+  if (isLoading && !limits) {
+    return (
+      <div className="h-full w-full flex flex-col items-center justify-center p-20 space-y-4">
+        <div className="w-12 h-12 border-4 border-[#f97316]/20 border-t-[#f97316] rounded-full animate-spin" />
+        <p className="text-xs font-black text-neutral-400 uppercase tracking-[0.3em] animate-pulse">Sincronizando limites...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 xl:p-10 flex flex-col lg:flex-row gap-8 md:gap-10 h-full overflow-y-auto w-full no-scrollbar bg-[#f8f9fa] relative">
@@ -127,8 +160,8 @@ export default function PixLimitesPage() {
                  </div>
                  <div className="text-left sm:text-right">
                     <p className="text-2xl md:text-3xl font-black text-[#f97316] font-mono tracking-tighter leading-none mb-1">{formatCurrency(dayLimit[0])}</p>
-                    <p className="text-[8px] md:text-[9px] text-[#f97316] font-black uppercase tracking-widest opacity-60">
-                      Disponível: {formatCurrency(limits?.limiteDiarioUtilizado ? (dayLimit[0] - limits.limiteDiarioUtilizado) : (dayLimit[0] - 1250))}
+                    <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-tight">
+                      Disponível: {formatCurrency(dayLimit[0] - (limits?.limiteDiarioUtilizado || limits?.limite_diario_utilizado || 0))}
                     </p>
                  </div>
               </div>
@@ -198,13 +231,82 @@ export default function PixLimitesPage() {
               </div>
            </div>
 
-           <Button 
-             onClick={handleSave}
-             disabled={isLoading}
-             className="w-full h-14 md:h-16 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-md font-black text-sm md:text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 font-sans"
-           >
-              {isLoading ? "Salvando..." : "Salvar Alterações"}
-           </Button>
+            <div className="h-px bg-neutral-100 w-full" />
+
+            {/* Document Upload Section */}
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base md:text-lg font-black text-[#0c0a09] uppercase tracking-widest">Aumento de Limite Especial</h3>
+                  <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-0.5">Comprovação de Renda para Upgrades acima de R$ 20.000</p>
+                </div>
+                <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 text-[8px] font-black uppercase tracking-widest px-3 py-1">Recomendado</Badge>
+              </div>
+
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className="group relative border-2 border-dashed border-neutral-200 rounded-lg p-10 flex flex-col items-center justify-center gap-4 hover:border-[#f97316] hover:bg-orange-50/50 transition-all cursor-pointer overflow-hidden text-center"
+              >
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-neutral-50/50 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="w-16 h-16 bg-white rounded-md shadow-xl flex items-center justify-center text-neutral-300 group-hover:text-[#f97316] group-hover:scale-110 transition-all relative z-10">
+                  <UploadCloud className="h-8 w-8" />
+                </div>
+                <div className="relative z-10 space-y-2">
+                  <p className="font-black text-sm text-[#0c0a09] uppercase tracking-tight">Arraste ou clique para anexar</p>
+                  <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">PDF, JPG ou PNG (Máx. 10MB)</p>
+                </div>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || []);
+                    const newFiles = files.map(f => ({ name: f.name, size: (f.size / 1024 / 1024).toFixed(2), type: f.type }));
+                    setAttachedFiles([...attachedFiles, ...newFiles]);
+                    toast.success(`${files.length} documento(s) anexado(s) com sucesso!`);
+                  }}
+                />
+              </div>
+
+              {attachedFiles.length > 0 && (
+                <div className="space-y-3 animate-in fade-in slide-in-from-top-4">
+                  <p className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] mb-4">Documentos Selecionados ({attachedFiles.length})</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {attachedFiles.map((file, idx) => (
+                      <div key={idx} className="flex items-center justify-between p-4 bg-white rounded-md border border-neutral-100 shadow-sm group">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-orange-50 rounded-sm flex items-center justify-center text-[#f97316]">
+                            <FileText className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-black text-[#0c0a09] truncate max-w-[120px] uppercase tracking-tight">{file.name}</p>
+                            <p className="text-[9px] font-bold text-neutral-400 uppercase">{file.size} MB</p>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAttachedFiles(attachedFiles.filter((_, i) => i !== idx));
+                          }}
+                          className="p-2 text-neutral-300 hover:text-rose-500 transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <Button 
+              onClick={handleSave}
+              disabled={isLoading}
+              className="w-full h-14 md:h-16 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-md font-black text-sm md:text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 font-sans"
+            >
+               {isLoading ? "Salvando..." : (attachedFiles.length > 0 ? "Enviar Solicitação com Anexos" : "Salvar Alterações")}
+            </Button>
         </div>
       </div>
 

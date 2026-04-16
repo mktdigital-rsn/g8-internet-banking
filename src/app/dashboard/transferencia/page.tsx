@@ -36,6 +36,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAtomValue } from "jotai";
 import { temporaryDeviceIdAtom } from "@/store/auth";
+import { useRouter } from "next/navigation";
 
 type Step = 'menu' | 'select_target' | 'form' | 'pin' | 'confirming' | 'success' | 'error';
 type SearchMode = 'cpf' | 'account';
@@ -50,6 +51,7 @@ interface ReceiverInfo {
 }
 
 export default function TransferenciaPage() {
+    const router = useRouter();
     const temporaryDeviceId = useAtomValue(temporaryDeviceIdAtom);
     const [step, setStep] = useState<Step>('menu');
     const [searchMode, setSearchMode] = useState<SearchMode>('cpf');
@@ -356,7 +358,7 @@ export default function TransferenciaPage() {
                                     <div className="md:col-span-2">
                                         <h2 className="text-[12px] font-black text-[#0c0a09] uppercase tracking-[0.2em] mb-6">Serviços Adicionais</h2>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
-                                            <SimpleAction icon={History} label="Extrato" />
+                                            <SimpleAction icon={History} label="Extrato" onClick={() => router.push('/dashboard/extrato')} />
                                             <SimpleAction icon={Star} label="Favoritos" />
                                             <SimpleAction icon={Globe} label="Exterior" />
                                             <SimpleAction icon={Search} label="Comprovantes" />
@@ -710,9 +712,12 @@ function TransferOption({
     );
 }
 
-function SimpleAction({ icon: Icon, label }: { icon: any, label: string }) {
+function SimpleAction({ icon: Icon, label, onClick }: { icon: any, label: string, onClick?: () => void }) {
     return (
-        <button className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-sm hover:shadow-2xl hover:shadow-orange-200/50 hover:scale-[1.03] transition-all active:scale-[0.98] group relative overflow-hidden">
+        <button 
+            onClick={onClick}
+            className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-sm hover:shadow-2xl hover:shadow-orange-200/50 hover:scale-[1.03] transition-all active:scale-[0.98] group relative overflow-hidden"
+        >
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent)]" />
             <div className="w-10 h-10 bg-white/20 rounded-sm flex items-center justify-center text-white mb-3 group-hover:scale-110 group-hover:bg-white/30 transition-all relative z-10">
                 <Icon size={18} />

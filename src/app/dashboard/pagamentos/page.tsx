@@ -88,6 +88,10 @@ export default function PagamentosPage() {
   const [pinId, setPinId] = useState("");
   const [transactionId, setTransactionId] = useState("");
   
+  // Real History State
+  const [pagamentosHistory, setPagamentosHistory] = useState<any[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  
   const [paymentMode, setPaymentMode] = useState<"now" | "schedule">("now");
   const [scheduleDate, setScheduleDate] = useState("");
   const [agendamentos, setAgendamentos] = useState(mockAgendamentos);
@@ -105,7 +109,31 @@ export default function PagamentosPage() {
       }
     };
     fetchBalance();
+    fetchHistory(); // Busca o histórico em background logo na entrada
   }, []);
+
+  const fetchHistory = async () => {
+    setIsLoadingHistory(true);
+    try {
+      const res = await api.get("/api/banco/extrato/buscar");
+      const items = res.data.transacoes || res.data.data?.transacoes || res.data.data || [];
+      
+      // Filtro inteligente para Boletos/Pagamentos
+      const filtered = (Array.isArray(items) ? items : []).filter((item: any) => 
+        item.metodo === "PAGAMENTO_BOLETO" || 
+        item.metodo === "PAGAMENTO" || 
+        String(item.metodoFormatado || "").toUpperCase().includes("BOLETO") ||
+        String(item.metodoFormatado || "").toUpperCase().includes("PAGAMENTO")
+      );
+      
+      setPagamentosHistory(filtered);
+    } catch (err) {
+      console.error("Erro ao buscar histórico:", err);
+      // Silencioso se der erro na carga inicial
+    } finally {
+      setIsLoadingHistory(false);
+    }
+  };
 
   // Handlers
   const handleConsultBoleto = async () => {
@@ -395,9 +423,9 @@ export default function PagamentosPage() {
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                     {[
                       { icon: CalendarClock, label: "Agendamentos", key: "agendamentos", count: agendamentos.length },
-                      { icon: ListChecks, label: "Histórico", key: "historico", count: mockHistorico.length },
+                      { icon: ListChecks, label: "Histórico", key: "historico", count: pagamentosHistory.length },
                       { icon: ShieldCheck, label: "DDA", key: "dda", count: 0 },
-                      { icon: ReceiptText, label: "Comprovantes", key: "comprovantes", count: mockComprovantes.length },
+                  
                     ].map((opt, i) => (
                        <div 
                          key={i} 
@@ -679,31 +707,87 @@ export default function PagamentosPage() {
                       </div>
                       <div>
                         <h2 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">Histórico de Pagamentos</h2>
-                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{mockHistorico.length} pagamentos encontrados</p>
+                        <p className="text-[10px] font-bold text-[#f97316] uppercase tracking-[0.2em] animate-pulse">
+                          {isLoadingHistory ? "Sincronizando com o banco..." : `${pagamentosHistory.length} pagamentos encontrados`}
+                        </p>
                       </div>
                     </div>
                     <button onClick={() => setActiveSection(null)} className="p-2 rounded-sm hover:bg-neutral-50 transition-colors">
                       <X className="h-5 w-5 text-neutral-400" />
                     </button>
                   </div>
-                  <div className="flex-1 overflow-y-auto p-8 space-y-3">
-                    {mockHistorico.map((item) => (
-                      <div key={item.id} className="p-5 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between group hover:shadow-lg hover:border-[#f97316]/20 transition-all cursor-pointer">
-                        <div className="flex items-center gap-4 min-w-0 flex-1">
-                          <div className="w-10 h-10 bg-green-50 rounded-sm flex items-center justify-center text-green-500 shrink-0">
-                            <CheckCircle2 className="h-5 w-5" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-black text-[#0c0a09] uppercase tracking-tight truncate">{item.beneficiario}</p>
-                            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{item.data}</p>
-                          </div>
+                  <div className="flex-1 overflow-y-auto p-8 space-y-3 no-scrollbar">
+                    {isLoadingHistory ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-3 p-4 bg-orange-50/50 rounded-sm border border-orange-100/50 animate-pulse">
+                          <div className="w-2 h-2 bg-[#f97316] rounded-full animate-bounce" />
+                          <p className="text-[10px] font-black text-[#f97316] uppercase tracking-widest">Aguarde um instante, estamos processando...</p>
                         </div>
-                        <div className="text-right shrink-0 ml-4 flex items-center gap-4">
-                          <p className="text-base font-black text-[#0c0a09] font-mono tracking-tight">{item.valor}</p>
-                          <ChevronRight className="h-4 w-4 text-neutral-200 group-hover:text-[#f97316] transition-colors" />
-                        </div>
+                        {Array(5).fill(0).map((_, i) => (
+                          <div key={i} className="p-5 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between opacity-60">
+                            <div className="flex items-center gap-4 flex-1">
+                              <div className="w-10 h-10 bg-neutral-200 rounded-sm animate-pulse" />
+                              <div className="space-y-2 flex-1">
+                                <div className="h-4 bg-neutral-200 rounded-sm w-3/4 animate-pulse" />
+                                <div className="h-3 bg-neutral-200 rounded-sm w-1/4 animate-pulse" />
+                              </div>
+                            </div>
+                            <div className="w-20 h-6 bg-neutral-200 rounded-sm animate-pulse" />
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    ) : pagamentosHistory.length === 0 ? (
+                      <div className="py-20 text-center space-y-4">
+                        <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center mx-auto text-neutral-200">
+                          <History className="h-8 w-8" />
+                        </div>
+                        <p className="text-xs font-black text-neutral-400 uppercase tracking-widest">Nenhum pagamento localizado</p>
+                      </div>
+                    ) : (
+                      pagamentosHistory.map((item, idx) => (
+                        <div 
+                          key={idx} 
+                          onClick={() => {
+                            const id = item.idDoBancoLiquidante || item.id_transaction || item.id || item.nsu;
+                            if (id) {
+                              // Mapeia os dados do histórico para o formato que a tela de sucesso espera
+                              setBoletoData({
+                                beneficiario: item.beneficiario || item.RecebinteNome || "PAGAMENTO BOLETO",
+                                valor: Math.abs(item.valor),
+                                vencimento: item.dataDaTransacaoFormatada || item.data,
+                                dataPagamento: item.dataDaTransacaoFormatada || item.data,
+                                bancoBeneficiario: item.metodoFormatado,
+                                pagadorNome: "---"
+                              });
+                              setTransactionId(id);
+                              setStep("success");
+                              setActiveSection(null); // Fecha o modal de histórico
+                            }
+                          }}
+                          className="p-5 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between group hover:shadow-lg hover:border-[#f97316]/20 transition-all cursor-pointer"
+                        >
+                          <div className="flex items-center gap-4 min-w-0 flex-1">
+                            <div className="w-10 h-10 bg-green-50 rounded-sm flex items-center justify-center text-green-500 shrink-0">
+                              <CheckCircle2 className="h-5 w-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-black text-[#0c0a09] uppercase tracking-tight truncate">
+                                {item.beneficiario || item.RecebinteNome || "PAGAMENTO BOLETO"}
+                              </p>
+                              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                                {item.dataDaTransacaoFormatada || item.data}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-right shrink-0 ml-4 flex items-center gap-4">
+                            <p className="text-base font-black text-[#0c0a09] font-mono tracking-tight">
+                              {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Math.abs(item.valor))}
+                            </p>
+                            <ChevronRight className="h-4 w-4 text-neutral-200 group-hover:text-[#f97316] transition-colors" />
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               </div>
@@ -764,52 +848,7 @@ export default function PagamentosPage() {
               </div>
             )}
 
-            {/* ──── Section Overlay: Comprovantes ──── */}
-            {activeSection === "comprovantes" && (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-300">
-                <div className="w-full max-w-3xl bg-white rounded-sm shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden max-h-[85vh] flex flex-col">
-                  <div className="flex items-center justify-between p-8 border-b border-neutral-100 shrink-0">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316]">
-                        <ReceiptText className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h2 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">Comprovantes</h2>
-                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{mockComprovantes.length} disponíveis para download</p>
-                      </div>
-                    </div>
-                    <button onClick={() => setActiveSection(null)} className="p-2 rounded-sm hover:bg-neutral-50 transition-colors">
-                      <X className="h-5 w-5 text-neutral-400" />
-                    </button>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-8 space-y-3">
-                    {mockComprovantes.map((comp) => (
-                      <div key={comp.id} className="p-5 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between group hover:shadow-lg hover:border-[#f97316]/20 transition-all">
-                        <div className="flex items-center gap-4 min-w-0 flex-1">
-                          <div className="w-10 h-10 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316] shrink-0">
-                            <FileText className="h-5 w-5" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-sm font-black text-[#0c0a09] uppercase tracking-tight truncate">{comp.beneficiario}</p>
-                            <div className="flex items-center gap-3">
-                              <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{comp.data}</p>
-                              <span className="text-neutral-200">&bull;</span>
-                              <p className="text-[10px] font-mono font-bold text-neutral-300">{comp.id}</p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4 shrink-0 ml-4">
-                          <p className="text-base font-black text-[#0c0a09] font-mono tracking-tight">{comp.valor}</p>
-                          <button className="w-10 h-10 bg-white rounded-sm border border-neutral-100 flex items-center justify-center text-neutral-300 hover:text-[#f97316] hover:border-[#f97316]/20 transition-all group-hover:shadow-sm">
-                            <Download className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+      
           </>
         )}
 
@@ -1097,7 +1136,7 @@ export default function PagamentosPage() {
                           </div>
                           <div className="space-y-1 text-right">
                             <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Data Pagamento</p>
-                            <p className="text-sm font-black text-[#0c0a09]">{new Date().toLocaleDateString('pt-BR')}</p>
+                            <p className="text-sm font-black text-[#0c0a09]">{boletoData?.dataPagamento || new Date().toLocaleDateString('pt-BR')}</p>
                           </div>
                         </div>
 

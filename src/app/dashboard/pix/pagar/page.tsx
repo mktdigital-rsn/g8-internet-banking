@@ -330,6 +330,40 @@ function PixPagarContent() {
     }
 
     setIsLoadingTransfer(true);
+
+    // Função para buscar o ID real no extrato (Sync de Comprovante)
+    const searchWithRetry = async (targetValue: number, attempts = 0) => {
+      const maxAttempts = 5;
+      try {
+        console.log(`🔍 [SYNC COMPROVANTE] Tentativa ${attempts + 1}/${maxAttempts} para valor R$ ${targetValue}...`);
+        const extratoRes = await api.get("/api/banco/extrato/buscar");
+        const items = extratoRes.data.transacoes || extratoRes.data.data?.transacoes || [];
+        
+        // Procura um item que bata com o valor (margem de erro de 1 centavo)
+        const match = items.find((item: any) => {
+          const itemVal = Math.abs(parseFloat(String(item.valor).replace(/[R$\s]/g, "").replace(",", ".")));
+          return Math.abs(itemVal - targetValue) < 0.01;
+        });
+
+        if (match && (match.idDoBancoLiquidante || match.id || match.id_transaction)) {
+          const finalId = match.idDoBancoLiquidante || match.id || match.id_transaction;
+          console.log("✅ [SYNC COMPROVANTE] ID REAL LOCALIZADO:", finalId);
+          setTransactionId(finalId);
+          return true;
+        } else if (attempts < maxAttempts) {
+          await new Promise(r => setTimeout(r, 3000));
+          return searchWithRetry(targetValue, attempts + 1);
+        }
+      } catch (e) {
+        console.error("❌ [SYNC COMPROVANTE ERROR]:", e);
+        if (attempts < maxAttempts) {
+          await new Promise(r => setTimeout(r, 3000));
+          return searchWithRetry(targetValue, attempts + 1);
+        }
+      }
+      return false;
+    };
+
     try {
       // 1. PIN Validation as per Guide Step 3
       console.log("🛡️ [VALIDAR PIN REQUEST]:", { pin: smsCode, pinId: pinId });
@@ -398,11 +432,12 @@ function PixPagarContent() {
         const apiData = res.data.data || res.data;
         const realId = apiData.idLiquidante || apiData.codigoDeIdentificacao || apiData.itemId || apiData.idDoBancoLiquidante || apiData.id;
 
-        setTimeout(() => {
-          setTransactionId(realId || "");
-          setStep("success");
-          toast.success("Transferência realizada com sucesso!");
-        }, 500);
+        setTransactionId(realId || "");
+        setStep("success");
+        toast.success("Transferência realizada com sucesso!");
+        
+        // Inicia a busca pelo ID real no extrato em background
+        searchWithRetry(txAmount);
       }
     } catch (err: any) {
       console.error("❌ [API ERROR]:", err.response?.status, err.response?.data || err.message);
@@ -413,20 +448,28 @@ function PixPagarContent() {
     }
   };
 
-  const handlePrintReceipt = async () => {
+  const [isDownloadingReceipt, setIsDownloadingReceipt] = useState(false);
+  const handlePrintReceipt = async (attempts = 0) => {
     if (!transactionId) {
       toast.error("ID da transação não localizado.");
       return;
     }
 
+    setIsDownloadingReceipt(true);
     try {
+      console.log(`📄 [RECEIPT] Tentativa ${attempts + 1} de gerar comprovante para ${transactionId}...`);
       const response = await api.get(`/api/banco/extrato/imprimir-item/${transactionId}`, {
         responseType: 'blob'
       });
 
-      // Verification: If it's empty, the backend hasn't generated it yet
       if (response.data.size === 0) {
-        toast.info("O comprovante está sendo processado. Tente novamente em 5 segundos.");
+        if (attempts < 3) {
+          toast.info("O comprovante está sendo gerado pelo banco. Aguarde alguns instantes...");
+          setTimeout(() => handlePrintReceipt(attempts + 1), 3000);
+          return;
+        }
+        toast.info("O comprovante ainda está sendo processado. Tente novamente em alguns segundos no extrato.");
+        setIsDownloadingReceipt(false);
         return;
       }
 
@@ -439,9 +482,12 @@ function PixPagarContent() {
       link.click();
       link.remove();
       window.URL.revokeObjectURL(url);
+      setIsDownloadingReceipt(false);
+      toast.success("Comprovante baixado com sucesso!");
     } catch (err) {
       console.error("❌ [RECEIPT ERROR]:", err);
       toast.error("Erro ao gerar comprovante. Verifique o extrato.");
+      setIsDownloadingReceipt(false);
     }
   };
 
@@ -863,11 +909,12 @@ function PixPagarContent() {
 
             <div className="w-full flex flex-row gap-4 items-center">
               <Button
-                onClick={handlePrintReceipt}
+                onClick={() => handlePrintReceipt()}
+                disabled={isDownloadingReceipt}
                 className="flex-1 h-20 bg-[#ff7711] hover:bg-orange-600 text-white rounded-md font-black text-lg shadow-lg shadow-[#ff7711]/20 transition-all active:scale-95 flex items-center justify-center gap-4"
               >
-                <Download className="h-8 w-8" />
-                BAIXAR COMPROVANTE
+                <Download className={`h-8 w-8 ${isDownloadingReceipt ? 'animate-bounce' : ''}`} />
+                {isDownloadingReceipt ? "BAIXANDO..." : "BAIXAR COMPROVANTE"}
               </Button>
               <Link href="/dashboard/pix" className="flex-1">
                 <Button variant="outline" className="w-full h-20 border-2 border-neutral-100 hover:border-[#ff7711] hover:text-[#ff7711] text-neutral-600 rounded-md font-black text-lg uppercase tracking-tighter">
