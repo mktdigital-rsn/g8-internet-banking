@@ -62,6 +62,7 @@ function PixPagarContent() {
   const [uuid, setUuid] = useState("");
   const [endToEndId, setEndToEndId] = useState("");
   const [balanceValue, setBalanceValue] = useState<number>(0);
+  const [isBalanceLoading, setIsBalanceLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,6 +129,7 @@ function PixPagarContent() {
 
     // Fetch balance
     const fetchBalance = async () => {
+      setIsBalanceLoading(true);
       try {
         const res = await api.get("/api/banco/saldo/getSaldo");
         if (res.data && typeof res.data.valor !== 'undefined') {
@@ -135,6 +137,8 @@ function PixPagarContent() {
         }
       } catch (err) {
         console.error("Error fetching balance:", err);
+      } finally {
+        setIsBalanceLoading(false);
       }
     };
     fetchBalance();
@@ -509,14 +513,14 @@ function PixPagarContent() {
 
         {step === "input" ? (
           <div className="space-y-8 max-w-2xl bg-white p-10 rounded-[5px] shadow-xl shadow-black/5 border border-neutral-100">
-            {hasInsufficientBalance && (
-              <div className="flex items-center gap-4 p-5 bg-rose-500/10 rounded-sm border-2 border-rose-200 animate-in fade-in slide-in-from-top-2">
-                <div className="w-12 h-12 bg-rose-500 rounded-sm flex items-center justify-center shrink-0">
+            {!isBalanceLoading && hasInsufficientBalance && (
+              <div className="flex items-center gap-4 p-6 bg-rose-500/5 rounded-[5px] border border-rose-100 animate-in fade-in slide-in-from-top-2">
+                <div className="w-12 h-12 bg-rose-500 rounded-sm flex items-center justify-center shrink-0 shadow-lg shadow-rose-500/20">
                   <AlertTriangle className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-rose-600 uppercase tracking-tight">Saldo insuficiente</p>
-                  <p className="text-xs font-bold text-rose-500/70">Seu saldo atual é <span className="font-black text-rose-600">{balanceFormatted}</span>. Deposite fundos antes de realizar um Pix.</p>
+                  <p className="text-xs font-black text-rose-600 uppercase tracking-widest mb-1">Atenção: Sem Saldo</p>
+                  <p className="text-[11px] font-bold text-rose-500/80 leading-tight">Você não possui saldo disponível para realizar transações hoje. <br/>Saldo atual: <span className="font-black text-rose-600">{balanceFormatted}</span></p>
                 </div>
               </div>
             )}
@@ -651,7 +655,10 @@ function PixPagarContent() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Qual o Valor?</h2>
-                  <span className="text-[10px] font-black text-[#0c0a09]/40 uppercase tracking-widest">Saldo: <span className={balanceValue <= 0 ? 'text-rose-500' : 'text-green-600'}>{balanceFormatted}</span></span>
+                  <div className="flex flex-col items-end">
+                    <span className="text-[9px] font-black text-neutral-400 uppercase tracking-[0.2em] leading-none mb-1">Saldo Disponível</span>
+                    <span className={`text-base font-black tracking-tight leading-none ${balanceValue <= 0 ? 'text-rose-500' : 'text-emerald-600'}`}>{balanceFormatted}</span>
+                  </div>
                 </div>
                 <div className="relative">
                   <Input
@@ -723,7 +730,7 @@ function PixPagarContent() {
                   : 'bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] shadow-orange-200/30'
               }`}
             >
-              {isSearching ? "VALIDANDO DADOS..." : hasInsufficientBalance ? "SALDO INSUFICIENTE" : amountExceedsBalance ? "VALOR EXCEDE O SALDO" : "PRÓXIMO PASSO"}
+              {isSearching ? "VALIDANDO DADOS..." : hasInsufficientBalance && !isBalanceLoading ? "SEM SALDO EM CONTA" : amountExceedsBalance ? "VALOR ACIMA DO SALDO" : "PRÓXIMO PASSO"}
               {!hasInsufficientBalance && !amountExceedsBalance && <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-1 transition-transform" />}
             </Button>
           </div>

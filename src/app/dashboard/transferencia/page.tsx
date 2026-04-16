@@ -192,7 +192,8 @@ export default function TransferenciaPage() {
             const payload = {
                 taxNumber: receiver?.taxNumber,
                 recebedorAgencia: receiver?.agencia,
-                recebedorConta: receiver?.conta + (receiver?.digito ? receiver.digito : ""),
+                recebedorConta: receiver?.conta,
+                recebedorDigito: receiver?.digito,
                 valor: parseInt(amount) / 100,
                 pin: pin,
                 deviceId: temporaryDeviceId
@@ -226,11 +227,11 @@ export default function TransferenciaPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#f8f9fa] text-[#0c0a09] p-4 md:p-8 xl:p-12 overflow-y-auto no-scrollbar relative">
+        <div className="min-h-screen bg-[#f8f9fa] text-[#0c0a09] p-4 md:p-8 xl:p-12 overflow-y-auto relative">
             {/* Background Decor */}
             <div className="absolute top-1/4 right-0 w-[800px] h-[800px] bg-[#f97316]/5 rounded-full blur-[150px] pointer-events-none" />
             
-            <div className="max-w-[1440px] mx-auto space-y-12 relative z-10 px-4 md:px-0">
+            <div className="max-w-[1440px] mx-auto space-y-12 relative z-10 px-4 md:px-0 pb-32">
                 {/* Header */}
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
                     <div className="space-y-1">
@@ -405,11 +406,11 @@ export default function TransferenciaPage() {
 
                             {step === 'pin' && (
                                 <motion.div 
-                                    initial={{ opacity: 0, scale: 1.1 }}
+                                    initial={{ opacity: 0, scale: 1.05 }}
                                     animate={{ opacity: 1, scale: 1 }}
-                                    className="max-w-xl mx-auto"
+                                    className="max-w-xl mx-auto w-full"
                                 >
-                                    <Card className="bg-white border-0 p-16 rounded-[5px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] text-center flex flex-col items-center">
+                                    <Card className="bg-white border-0 p-10 md:p-16 rounded-[5px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] text-center flex flex-col items-center">
                                         <div className="w-24 h-24 bg-[#f97316]/10 rounded-[5px] flex items-center justify-center text-[#f97316] mb-8 shadow-sm">
                                             <Smartphone className="h-12 w-12 animate-pulse" />
                                         </div>

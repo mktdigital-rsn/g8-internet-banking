@@ -444,7 +444,7 @@ export default function PixExtratoPage() {
                                         </div>
                                         <div className="text-right">
                                             <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Data Efetiva</p>
-                                            <p className="text-xs font-black text-[#0c0a09]">
+                                            <p className="text-sm font-black text-[#0c0a09]">
                                                 {selectedTransaction.dataDaTransacaoFormatada.split(" ")[0].split("-").reverse().join("/")} <span className="ml-1 text-neutral-400">{selectedTransaction.dataDaTransacaoFormatada.split(" ")[1]}</span>
                                             </p>
                                         </div>
@@ -521,42 +521,41 @@ export default function PixExtratoPage() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Card className="bg-emerald-600 border-0 rounded-md p-6 md:p-8 flex items-center gap-4 md:gap-6 shadow-2xl shadow-emerald-900/20 relative overflow-hidden group cursor-pointer transition-all duration-500">
+                    <Card className="bg-emerald-600 border-0 rounded-[2px] p-6 flex flex-row items-center gap-5 shadow-xl shadow-emerald-900/10 relative overflow-hidden group cursor-pointer transition-all duration-500 min-h-[110px]">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 rounded-md flex items-center justify-center text-white border border-white/10 shadow-inner shrink-0 group-hover:rotate-12 transition-transform">
-                            <ArrowDownLeft className="h-6 w-6 md:h-7 md:w-7 stroke-[2.5]" />
+                        <div className="w-12 h-12 bg-white/20 rounded-[2px] flex items-center justify-center text-white border border-white/10 shadow-inner shrink-0 group-hover:rotate-12 transition-transform relative z-10">
+                            <ArrowDownLeft className="h-6 w-6 stroke-[2.5]" />
                         </div>
-                        <div className="space-y-0.5 md:space-y-1 relative z-10">
-                            <p className="text-[8px] md:text-[9px] text-white/60 font-black uppercase tracking-[0.3em]">Total Entradas</p>
-                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter">
+                        <div className="flex flex-col justify-center relative z-10 min-w-0">
+                            <p className="text-[10px] text-white/70 font-black uppercase tracking-[0.2em] mb-1">Total Entradas</p>
+                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter truncate leading-none">
                                 {isLoading ? <span className="opacity-20 animate-pulse">R$ 0,00</span> : formatCurrency(totals.in)}
                             </p>
                         </div>
                     </Card>
-                    <Card className="bg-rose-500 border-0 rounded-md p-6 md:p-8 flex items-center gap-4 md:gap-6 shadow-2xl shadow-rose-900/20 relative overflow-hidden group cursor-pointer transition-all duration-500">
+                    <Card className="bg-rose-500 border-0 rounded-[2px] p-6 flex flex-row items-center gap-5 shadow-xl shadow-rose-900/10 relative overflow-hidden group cursor-pointer transition-all duration-500 min-h-[110px]">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-white/20 rounded-md flex items-center justify-center text-white border border-white/10 shadow-inner shrink-0 group-hover:-rotate-12 transition-transform">
-                            <ArrowUpRight className="h-6 w-6 md:h-7 md:w-7 stroke-[2.5]" />
+                        <div className="w-12 h-12 bg-white/20 rounded-[2px] flex items-center justify-center text-white border border-white/10 shadow-inner shrink-0 group-hover:-rotate-12 transition-transform relative z-10">
+                            <ArrowUpRight className="h-6 w-6 stroke-[2.5]" />
                         </div>
-                        <div className="space-y-0.5 md:space-y-1 relative z-10">
-                            <p className="text-[8px] md:text-[9px] text-white/60 font-black uppercase tracking-[0.3em]">Total Saídas</p>
-                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter">
+                        <div className="flex flex-col justify-center relative z-10 min-w-0">
+                            <p className="text-[10px] text-white/70 font-black uppercase tracking-[0.2em] mb-1">Total Saídas</p>
+                            <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter truncate leading-none">
                                 {isLoading ? <span className="opacity-20 animate-pulse">R$ 0,00</span> : formatCurrency(totals.out)}
                             </p>
                         </div>
                     </Card>
                     <Card 
                         onClick={() => window.open("https://wa.me/5551996297077", "_blank")}
-                        className="rounded-md border-0 shadow-2xl bg-[#f97316] p-6 md:p-8 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex items-center gap-6 active:scale-95 transition-all"
+                        className="rounded-[2px] border-0 shadow-xl bg-[#f97316] p-6 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex flex-row items-center gap-5 active:scale-95 transition-all min-h-[110px]"
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-1000" />
-                        <div className="w-12 h-12 md:w-14 md:h-14 bg-white/10 rounded-md flex items-center justify-center text-white border border-white/20 shadow-inner group-hover:scale-110 transition-transform shrink-0">
-                            <AlertCircle className="h-6 w-6 md:h-7 md:w-7" />
+                        <div className="w-12 h-12 bg-white/10 rounded-[2px] flex items-center justify-center text-white border border-white/20 shadow-inner group-hover:scale-110 transition-transform shrink-0 relative z-10">
+                            <AlertCircle className="h-6 w-6" />
                         </div>
-                        <div className="min-w-0 flex-1 space-y-2 relative z-10">
-                            <h3 className="text-lg md:text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap">Suporte 24h</h3>
-                            <p className="text-[9px] font-bold text-white/60 leading-none tracking-widest uppercase">Central de Assistência G8</p>
-                            <button className="text-[9px] font-black underline underline-offset-4 uppercase tracking-[0.2em] hover:text-white/70 transition-colors">Contatar Agora</button>
+                        <div className="flex flex-col justify-center relative z-10 min-w-0">
+                            <h3 className="text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 24h</h3>
+                            <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central de Assistência G8</p>
                         </div>
                     </Card>
                 </div>
@@ -727,8 +726,8 @@ export default function PixExtratoPage() {
                                                 </div>
                                                 <div className="text-right flex items-center gap-2 md:gap-3">
                                                     <div className="text-right shrink-0">
-                                                        <p className="text-[9px] md:text-xs font-black text-[#0c0a09] font-mono">{dateParts[0].split("-").reverse().join("/")}</p>
-                                                        <p className="text-[7px] md:text-[9px] font-bold tracking-widest">{dateParts[1]}</p>
+                                                        <p className="text-[11px] md:text-sm font-black text-[#0c0a09] font-mono">{dateParts[0].split("-").reverse().join("/")}</p>
+                                                        <p className="text-[9px] md:text-[11px] font-bold tracking-widest">{dateParts[1]}</p>
                                                     </div>
                                                     <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
                                                 </div>

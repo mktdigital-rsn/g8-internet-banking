@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import api from "@/lib/api";
 import {
   CreditCard,
   Store,
@@ -19,6 +20,8 @@ import {
   Star,
   TrendingUp,
   Loader2,
+  FileText,
+  FileUp,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -36,18 +39,20 @@ type MaquininhaModel = {
   icon: React.ElementType;
   popular?: boolean;
   color: string;
+  revenueLabel: string;
 };
 
 const modelos: MaquininhaModel[] = [
   {
     id: "g8-smart",
     name: "G8 Smart",
-    description: "Compacta e inteligente. Ideal para quem está começando.",
+    description: "Compacta e inteligente. Ideal para o dia a dia.",
     features: ["Wi-Fi + Chip 4G", "NFC Contactless", "Bateria 12h", "Impressão rápida"],
     price: "R$ 0,00",
     taxRate: "1,99%",
     icon: Smartphone,
     color: "from-orange-500 to-amber-500",
+    revenueLabel: "Até R$ 20 mil / mês",
   },
   {
     id: "g8-pro",
@@ -59,6 +64,7 @@ const modelos: MaquininhaModel[] = [
     icon: CreditCard,
     popular: true,
     color: "from-[#f97316] to-[#ea580c]",
+    revenueLabel: "Até R$ 500 mil / mês",
   },
   {
     id: "g8-ultra",
@@ -69,37 +75,177 @@ const modelos: MaquininhaModel[] = [
     taxRate: "0,99%",
     icon: Store,
     color: "from-zinc-800 to-zinc-900",
+    revenueLabel: "Acima de R$ 500 mil / mês",
   },
 ];
 
-type FormStep = "select" | "form" | "confirm" | "success";
+type FormStep = "select" | "form" | "documents" | "confirm" | "success";
 
 export default function MaquininhasPage() {
   const [step, setStep] = useState<FormStep>("select");
   const [selectedModel, setSelectedModel] = useState<MaquininhaModel | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Document State
+  const [attachedDocs, setAttachedDocs] = useState<string[]>([]);
+  const [isSearchingCep, setIsSearchingCep] = useState(false);
+
   // Form fields
   const [formData, setFormData] = useState({
-    nomeEmpresa: "",
-    cnpj: "",
-    nomeResponsavel: "",
-    cpfResponsavel: "",
-    telefone: "",
-    email: "",
+    // Informações Básicas
+    tipoEstabelecimento: "",
+    cnpjCpf: "",
+    razaoSocial: "",
+    tipoEmpresa: "",
+    nomeFantasia: "",
+    contatoPrincipal: "",
+    dataFundacao: "",
+    horarioFuncionamento: "",
+    site: "",
+    shopping: "Não",
+    descricaoShopping: "",
+    mcc: "",
+    cnae: "",
+
+    // Informações Financeiras
+    faturamentoMensal: "",
+    ticketMedio: "",
+    antecipacaoRecebeiveis: "",
+
+    // Endereço
+    tipoEndereco: "",
     cep: "",
-    endereco: "",
+    rua: "",
     numero: "",
     complemento: "",
     bairro: "",
     cidade: "",
     estado: "",
-    faturamentoMensal: "",
+    pais: "Brasil",
+
+    // Quantidade
     quantidade: "1",
+
+    // Dynamic Lists
+    contatos: [{ nome: "", cpf: "", email: "", tipoResponsavel: "", dataNascimento: "", nacionalidade: "Brasileira", funcao: "", telefone: "" }],
+    contasBancarias: [{ tipoConta: "Conta Corrente", banco: "", agencia: "", conta: "", digito: "" }]
   });
+
+  const maskCpfCnpj = (val: string) => {
+    const v = val.replace(/\D/g, "");
+    if (v.length <= 11) {
+      return v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, "$1.$2.$3-$4").substring(0, 14);
+    }
+    return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, "$1.$2.$3/$4-$5").substring(0, 18);
+  };
+
+  const maskCep = (val: string) => {
+    return val.replace(/\D/g, "").replace(/(\d{5})(\d{3})/, "$1-$2").substring(0, 9);
+  };
+
+  const maskPhone = (val: string) => {
+    const v = val.replace(/\D/g, "");
+    if (v.length > 10) {
+      return v.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3").substring(0, 15);
+    }
+    return v.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3").substring(0, 14);
+  };
+
+  const maskCurrency = (val: string) => {
+    const v = val.replace(/\D/g, "");
+    if (!v) return "";
+    const value = parseInt(v) / 100;
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  };
+
+  const handleCepChange = async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, "");
+    updateField("cep", maskCep(cep));
+
+    if (cleanCep.length === 8) {
+      setIsSearchingCep(true);
+      try {
+        // Try internal bankwhitelabel API first
+        const res = await api.get(`/api/banco/util/buscar-cep/${cleanCep}`).catch(() => null);
+        
+        let data = res?.data?.data || res?.data;
+        
+        // Fallback to ViaCEP if internal fails or returns no data
+        if (!data || !data.logradouro) {
+          const viaRes = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+          data = await viaRes.json();
+        }
+
+        if (data && !data.erro) {
+          setFormData(prev => ({
+            ...prev,
+            rua: data.logradouro || data.rua || prev.rua,
+            bairro: data.bairro || prev.bairro,
+            cidade: data.localidade || data.cidade || prev.cidade,
+            estado: data.uf || data.estado || prev.estado
+          }));
+          toast.success("Endereço preenchido automaticamente!");
+        }
+      } catch (err) {
+        console.error("Erro ao buscar CEP:", err);
+      } finally {
+        setIsSearchingCep(false);
+      }
+    }
+  };
 
   const updateField = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const updateAttachedDoc = (docTitle: string) => {
+    if (!attachedDocs.includes(docTitle)) {
+      setAttachedDocs(prev => [...prev, docTitle]);
+      toast.success(`${docTitle} anexado com sucesso!`);
+    }
+  };
+
+  const addContato = () => {
+    setFormData(prev => ({
+      ...prev,
+      contatos: [...prev.contatos, { nome: "", cpf: "", email: "", tipoResponsavel: "", dataNascimento: "", nacionalidade: "Brasileira", funcao: "", telefone: "" }]
+    }));
+  };
+
+  const removeContato = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      contatos: prev.contatos.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateContato = (index: number, field: string, value: string) => {
+    const newContatos = [...formData.contatos];
+    newContatos[index] = { ...newContatos[index], [field]: value };
+    setFormData(prev => ({ ...prev, contatos: newContatos }));
+  };
+
+  const addConta = () => {
+    setFormData(prev => ({
+      ...prev,
+      contasBancarias: [...prev.contasBancarias, { tipoConta: "Conta Corrente", banco: "", agencia: "", conta: "", digito: "" }]
+    }));
+  };
+
+  const removeConta = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      contasBancarias: prev.contasBancarias.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateConta = (index: number, field: string, value: string) => {
+    const newContas = [...formData.contasBancarias];
+    newContas[index] = { ...newContas[index], [field]: value };
+    setFormData(prev => ({ ...prev, contasBancarias: newContas }));
   };
 
   const handleSelectModel = (model: MaquininhaModel) => {
@@ -108,21 +254,44 @@ export default function MaquininhasPage() {
   };
 
   const handleSubmitForm = () => {
-    // Validate required fields
-    const required = ["nomeEmpresa", "cnpj", "nomeResponsavel", "telefone", "email", "cep", "endereco", "numero", "bairro", "cidade", "estado"];
+    // Validate required fields (Strict)
+    const required = [
+      "tipoEstabelecimento", "cnpjCpf", "tipoEmpresa", "nomeFantasia", 
+      "contatoPrincipal", "mcc", "cnae", "cep", "rua", "numero", 
+      "bairro", "cidade", "estado"
+    ];
+    
     const missing = required.filter((f) => !formData[f as keyof typeof formData]);
 
     if (missing.length > 0) {
-      toast.error("Preencha todos os campos obrigatórios.");
+      toast.error(`Campos obrigatórios pendentes: ${missing.length}. Por favor, preencha todos os campos marcados com *.`, {
+        description: "Verifique os dados básicos e de endereço."
+      });
+      return;
+    }
+
+    // Validate dynamic lists
+    const contactMissing = formData.contatos.some(c => !c.nome || !c.cpf || !c.telefone);
+    if (contactMissing) {
+      toast.error("Preencha os dados obrigatórios de todos os contatos.");
+      return;
+    }
+
+    const bankMissing = formData.contasBancarias.some(b => !b.banco || !b.agencia || !b.conta);
+    if (bankMissing) {
+      toast.error("Preencha os dados bancários completos.");
       return;
     }
 
     setStep("confirm");
   };
 
+  const handleSubmitDocuments = () => {
+    setStep("confirm");
+  };
+
   const handleConfirm = async () => {
     setIsSubmitting(true);
-    // Simula envio
     await new Promise((resolve) => setTimeout(resolve, 2500));
     setIsSubmitting(false);
     setStep("success");
@@ -133,21 +302,34 @@ export default function MaquininhasPage() {
     setStep("select");
     setSelectedModel(null);
     setFormData({
-      nomeEmpresa: "",
-      cnpj: "",
-      nomeResponsavel: "",
-      cpfResponsavel: "",
-      telefone: "",
-      email: "",
+      tipoEstabelecimento: "",
+      cnpjCpf: "",
+      razaoSocial: "",
+      tipoEmpresa: "",
+      nomeFantasia: "",
+      contatoPrincipal: "",
+      dataFundacao: "",
+      horarioFuncionamento: "",
+      site: "",
+      shopping: "Não",
+      descricaoShopping: "",
+      mcc: "",
+      cnae: "",
+      faturamentoMensal: "",
+      ticketMedio: "",
+      antecipacaoRecebeiveis: "",
+      tipoEndereco: "",
       cep: "",
-      endereco: "",
+      rua: "",
       numero: "",
       complemento: "",
       bairro: "",
       cidade: "",
       estado: "",
-      faturamentoMensal: "",
+      pais: "Brasil",
       quantidade: "1",
+      contatos: [{ nome: "", cpf: "", email: "", tipoResponsavel: "", dataNascimento: "", nacionalidade: "Brasileira", funcao: "", telefone: "" }],
+      contasBancarias: [{ tipoConta: "Conta Corrente", banco: "", agencia: "", conta: "", digito: "" }]
     });
   };
 
@@ -220,9 +402,15 @@ export default function MaquininhasPage() {
                         )}
                       </div>
                       <div className="p-8 space-y-6">
-                        <div>
+                        <div className="space-y-1">
                           <h3 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">{model.name}</h3>
-                          <p className="text-xs font-bold text-neutral-400 mt-1 leading-relaxed">{model.description}</p>
+                          <div className="inline-flex items-center px-2 py-0.5 bg-[#f97316]/10 rounded-sm border border-[#f97316]/20">
+                            <TrendingUp className="h-3 w-3 text-[#f97316] mr-1.5" />
+                            <span className="text-[13px] font-black text-[#f97316] uppercase tracking-wider">
+                              {model.revenueLabel}
+                            </span>
+                          </div>
+                          <p className="text-[12px] font-bold text-neutral-600 mt-2 leading-tight">{model.description}</p>
                         </div>
                         <div className="space-y-2">
                           {model.features.map((feat, i) => (
@@ -279,7 +467,7 @@ export default function MaquininhasPage() {
 
         {/* Step: Form */}
         {step === "form" && selectedModel && (
-          <div className="max-w-5xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="max-w-7xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
             {/* Selected model summary */}
             <div className="flex items-center gap-6 p-6 bg-white border-2 border-[#f97316]/20 rounded-sm shadow-md">
               <div className={`w-14 h-14 bg-gradient-to-br ${selectedModel.color} rounded-sm flex items-center justify-center shrink-0`}>
@@ -287,199 +475,491 @@ export default function MaquininhasPage() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[9px] font-black text-[#f97316] uppercase tracking-widest">Modelo selecionado</p>
-                <p className="text-lg font-black text-[#0c0a09] uppercase tracking-tight">{selectedModel.name}</p>
+                <div className="flex items-center gap-3">
+                  <p className="text-lg font-black text-[#0c0a09] uppercase tracking-tight">{selectedModel.name}</p>
+                  <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 text-[10px] font-black uppercase tracking-widest">{selectedModel.revenueLabel}</Badge>
+                </div>
               </div>
               <button
                 onClick={() => setStep("select")}
                 className="text-[10px] font-black text-[#f97316] uppercase tracking-widest shrink-0 px-4 py-2 border-2 border-[#f97316]/30 rounded-sm hover:bg-[#f97316]/10 transition-all"
               >
-                Alterar
+                Alterar modelo
               </button>
             </div>
 
-            {/* Form sections */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-              <div className="lg:col-span-8 space-y-10">
-                {/* Business info */}
-                <div className="bg-white p-8 rounded-sm border border-neutral-200 shadow-md space-y-6 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[#f97316]" />
-                  <div className="flex items-center gap-4 pb-5 border-b border-neutral-100">
-                    <div className="w-10 h-10 bg-[#f97316] rounded-sm flex items-center justify-center">
-                      <Store className="h-5 w-5 text-white" />
-                    </div>
-                    <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Dados do Estabelecimento</h3>
+            {/* Form Sections */}
+            <div className="space-y-12">
+              {/* Informações Básicas */}
+              <Card className="p-8 border-l-[6px] border-l-[#f97316] shadow-xl space-y-8">
+                <div className="flex items-center gap-3 border-b border-neutral-100 pb-5">
+                  <div className="w-10 h-10 bg-[#f97316] rounded-sm flex items-center justify-center">
+                    <AlertCircle className="h-5 w-5 text-white" />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField label="Razão Social / Nome Fantasia" required value={formData.nomeEmpresa} onChange={(v) => updateField("nomeEmpresa", v)} placeholder="Ex: Lanchonete do João" />
-                    <FormField label="CNPJ / CPF" required value={formData.cnpj} onChange={(v) => updateField("cnpj", v)} placeholder="00.000.000/0000-00" />
-                    <FormField label="Faturamento Mensal Estimado" value={formData.faturamentoMensal} onChange={(v) => updateField("faturamentoMensal", v)} placeholder="R$ 0,00" />
-                    <FormField label="Quantidade de Maquininhas" value={formData.quantidade} onChange={(v) => updateField("quantidade", v)} placeholder="1" />
+                  <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Informações Básicas</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <FormSelect 
+                    label="Tipo de Estabelecimento" 
+                    required 
+                    value={formData.tipoEstabelecimento} 
+                    onChange={(v) => updateField("tipoEstabelecimento", v)}
+                    options={["Pessoa Física", "Pessoa Jurídica"]}
+                  />
+                  <FormField label="CPF/CNPJ" required value={formData.cnpjCpf} onChange={(v) => updateField("cnpjCpf", maskCpfCnpj(v))} placeholder="XXX.XXX.XXX-XX" />
+                  <FormField label="Razão Social" value={formData.razaoSocial} onChange={(v) => updateField("razaoSocial", v)} placeholder="Razão Social da Empresa" />
+                  
+                  <FormSelect 
+                    label="Tipo de Empresa" 
+                    required 
+                    value={formData.tipoEmpresa} 
+                    onChange={(v) => updateField("tipoEmpresa", v)}
+                    options={["MEI", "ME", "EPP", "LTDA", "S.A."]}
+                  />
+                  <FormField label="Nome Fantasia" required value={formData.nomeFantasia} onChange={(v) => updateField("nomeFantasia", v)} placeholder="Nome Fantasia" />
+                  <FormField label="Contato Principal" required value={formData.contatoPrincipal} onChange={(v) => updateField("contatoPrincipal", maskPhone(v))} placeholder="(XX) X XXXX-XXXX" />
+                  
+                  <FormField label="Data de Fundação" type="date" required value={formData.dataFundacao} onChange={(v) => updateField("dataFundacao", v)} />
+                  <FormSelect 
+                    label="Horário de Funcionamento" 
+                    required 
+                    value={formData.horarioFuncionamento} 
+                    onChange={(v) => updateField("horarioFuncionamento", v)}
+                    options={["08h às 18h", "09h às 19h", "24 horas", "Comercial"]}
+                  />
+                  <FormField label="Site" value={formData.site} onChange={(v) => updateField("site", v)} placeholder="https://www.xxxxx.com.br" />
+                  
+                  <FormSelect 
+                    label="Shopping" 
+                    value={formData.shopping} 
+                    onChange={(v) => updateField("shopping", v)}
+                    options={["Não", "Sim"]}
+                  />
+                  <FormField label="Descrição do Shopping" value={formData.descricaoShopping} onChange={(v) => updateField("descricaoShopping", v)} placeholder="Nome do Shopping ou Edifício" />
+                  <div className="space-y-2">
+                    <FormField label="MCC" required value={formData.mcc} onChange={(v) => updateField("mcc", v)} placeholder="XXXX" />
+                    <p className="text-[9px] text-neutral-400 font-bold uppercase italic tracking-widest leading-none">Código MCC será preenchido automaticamente</p>
+                  </div>
+                  <div className="space-y-2">
+                    <FormField label="CNAE" required value={formData.cnae} onChange={(v) => updateField("cnae", v)} placeholder="XXXX-X/XX" />
+                    <p className="text-[9px] text-neutral-400 font-bold uppercase italic tracking-widest leading-none">CNAE será preenchido automaticamente</p>
                   </div>
                 </div>
+              </Card>
 
-                {/* Contact info */}
-                <div className="bg-white p-8 rounded-sm border border-neutral-200 shadow-md space-y-6 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[#f97316]" />
-                  <div className="flex items-center gap-4 pb-5 border-b border-neutral-100">
-                    <div className="w-10 h-10 bg-[#f97316] rounded-sm flex items-center justify-center">
+              {/* Informações Financeiras */}
+            {/* Informações Financeiras */}
+              <Card className="p-8 border-l-[6px] border-l-blue-500 shadow-xl space-y-8">
+                <div className="flex items-center gap-3 border-b border-neutral-100 pb-5">
+                  <div className="w-10 h-10 bg-blue-500 rounded-sm flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Informações Financeiras</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <FormField label="Faturamento Mensal" required value={formData.faturamentoMensal} onChange={(v) => updateField("faturamentoMensal", maskCurrency(v))} placeholder="R$ 0,00" />
+                  <FormField label="Ticket Médio" required value={formData.ticketMedio} onChange={(v) => updateField("ticketMedio", maskCurrency(v))} placeholder="R$ 0,00" />
+                  <FormSelect 
+                    label="Antecipação de Recebíveis" 
+                    required 
+                    value={formData.antecipacaoRecebeiveis} 
+                    onChange={(v) => updateField("antecipacaoRecebeiveis", v)}
+                    options={["Sim", "Não"]}
+                  />
+                </div>
+              </Card>
+
+              {/* Contatos */}
+              <Card className="p-8 border-l-[6px] border-l-green-500 shadow-xl space-y-8">
+                <div className="flex items-center justify-between border-b border-neutral-100 pb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-500 rounded-sm flex items-center justify-center">
                       <Smartphone className="h-5 w-5 text-white" />
                     </div>
-                    <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Dados de Contato</h3>
+                    <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Contatos</h3>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField label="Nome do Responsável" required value={formData.nomeResponsavel} onChange={(v) => updateField("nomeResponsavel", v)} placeholder="Nome completo" />
-                    <FormField label="CPF do Responsável" value={formData.cpfResponsavel} onChange={(v) => updateField("cpfResponsavel", v)} placeholder="000.000.000-00" />
-                    <FormField label="Telefone / WhatsApp" required value={formData.telefone} onChange={(v) => updateField("telefone", v)} placeholder="(00) 00000-0000" />
-                    <FormField label="E-mail" required value={formData.email} onChange={(v) => updateField("email", v)} placeholder="email@empresa.com" />
+                  <Button onClick={addContato} className="bg-green-600 hover:bg-green-700 text-white font-black text-[10px] uppercase tracking-[0.2em] px-6 rounded-[4px]">
+                    + Adicionar Contato
+                  </Button>
+                </div>
+                
+                <div className="space-y-8">
+                  {formData.contatos.map((contato, idx) => (
+                    <div key={idx} className="p-8 bg-neutral-50/50 rounded-[2px] border-2 border-dashed border-neutral-200 relative group animate-in fade-in duration-300">
+                      <div className="absolute top-4 right-4 flex items-center gap-4">
+                        <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest bg-white px-3 py-1 rounded-full border border-neutral-100 shadow-sm">Contato {idx + 1}</span>
+                        {formData.contatos.length > 1 && (
+                          <Button variant="destructive" size="sm" onClick={() => removeContato(idx)} className="h-8 text-[9px] font-black uppercase tracking-widest px-4 rounded-[2px]">Remover</Button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
+                        <FormField label="Nome" required value={contato.nome} onChange={(v) => updateContato(idx, "nome", v)} placeholder="Nome completo" />
+                        <FormField label="CPF" required value={contato.cpf} onChange={(v) => updateContato(idx, "cpf", maskCpfCnpj(v))} placeholder="XXX.XXX.XXX-XX" />
+                        <FormField label="Email" required value={contato.email} onChange={(v) => updateContato(idx, "email", v)} placeholder="nome@email.com" />
+                        
+                        <FormSelect 
+                          label="Tipo de Responsável" 
+                          required 
+                          value={contato.tipoResponsavel} 
+                          onChange={(v) => updateContato(idx, "tipoResponsavel", v)}
+                          options={["Sócio", "Diretor", "Procurador", "Outros"]}
+                        />
+                        <FormField label="Data de Nascimento" type="date" required value={contato.dataNascimento} onChange={(v) => updateContato(idx, "dataNascimento", v)} />
+                        <FormField label="Nacionalidade" required value={contato.nacionalidade} onChange={(v) => updateContato(idx, "nacionalidade", v)} placeholder="Brasileira" />
+                        
+                        <FormField label="Função" required value={contato.funcao} onChange={(v) => updateContato(idx, "funcao", v)} placeholder="Ex: Administrador" />
+                        <FormField label="Telefone" required value={contato.telefone} onChange={(v) => updateContato(idx, "telefone", maskPhone(v))} placeholder="(XX) X XXXX-XXXX" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* Contas Bancárias */}
+              <Card className="p-8 border-l-[6px] border-l-indigo-600 shadow-xl space-y-8">
+                <div className="flex items-center justify-between border-b border-neutral-100 pb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-indigo-600 rounded-[2px] flex items-center justify-center">
+                      <Shield className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Contas Bancárias</h3>
+                  </div>
+                  <Button onClick={addConta} className="bg-green-600 hover:bg-green-700 text-white font-black text-[10px] uppercase tracking-[0.2em] px-6 rounded-[2px]">
+                    + Adicionar Conta
+                  </Button>
+                </div>
+                
+                <div className="space-y-8">
+                  {formData.contasBancarias.map((conta, idx) => (
+                    <div key={idx} className="p-8 bg-neutral-50/50 rounded-[2px] border-2 border-dashed border-neutral-200 relative group animate-in fade-in duration-300">
+                       <div className="absolute top-4 right-4 flex items-center gap-4">
+                        <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest bg-white px-3 py-1 rounded-[2px] border border-neutral-100 shadow-sm">Conta {idx + 1}</span>
+                        {formData.contasBancarias.length > 1 && (
+                          <Button variant="destructive" size="sm" onClick={() => removeConta(idx)} className="h-8 text-[9px] font-black uppercase tracking-widest px-4 rounded-[2px]">Remover</Button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
+                        <FormSelect 
+                          label="Tipo de Conta" 
+                          value={conta.tipoConta} 
+                          onChange={(v) => updateConta(idx, "tipoConta", v)}
+                          options={["Conta Corrente", "Conta Poupança", "Conta Pagamento"]}
+                        />
+                        <FormField label="Código do Banco" value={conta.banco} onChange={(v) => updateConta(idx, "banco", v)} placeholder="Pesquisar banco..." />
+                        <FormField label="Agência" value={conta.agencia} onChange={(v) => updateConta(idx, "agencia", v)} placeholder="0000" />
+                        
+                        <div className="flex gap-4">
+                          <div className="flex-1">
+                            <FormField label="Conta" value={conta.conta} onChange={(v) => updateConta(idx, "conta", v)} placeholder="000000" />
+                          </div>
+                          <div className="w-24">
+                            <FormField label="Dígito" value={conta.digito} onChange={(v) => updateConta(idx, "digito", v)} placeholder="X" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+
+              {/* Endereço */}
+              <Card className="p-8 border-l-[6px] border-l-amber-600 shadow-xl space-y-8">
+                <div className="flex items-center gap-3 border-b border-neutral-100 pb-5">
+                  <div className="w-10 h-10 bg-amber-600 rounded-[2px] flex items-center justify-center">
+                    <MapPin className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Endereço</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  <FormSelect 
+                    label="Tipo de Endereço" 
+                    required 
+                    value={formData.tipoEndereco} 
+                    onChange={(v) => updateField("tipoEndereco", v)}
+                    options={["Comercial", "Residencial", "Cobranca"]}
+                  />
+                  <div className="space-y-2">
+                    <FormField label="CEP" required value={formData.cep} onChange={(v) => handleCepChange(v)} placeholder="XXXXX-XXX" />
+                    <p className="text-[9px] text-neutral-400 font-bold uppercase italic tracking-widest leading-none">
+                      {isSearchingCep ? "Buscando dados..." : "Digite o CEP para buscar automaticamente"}
+                    </p>
+                  </div>
+                  <FormField label="Rua" required value={formData.rua} onChange={(v) => updateField("rua", v)} placeholder="Nome da Rua / Av" />
+                  
+                  <FormField label="Número" required value={formData.numero} onChange={(v) => updateField("numero", v)} placeholder="000" />
+                  <FormField label="Complemento" value={formData.complemento} onChange={(v) => updateField("complemento", v)} placeholder="Sala, Loja, etc" />
+                  <FormField label="Bairro" required value={formData.bairro} onChange={(v) => updateField("bairro", v)} placeholder="Bairro" />
+                  
+                  <FormField label="Cidade" required value={formData.cidade} onChange={(v) => updateField("cidade", v)} placeholder="Cidade" />
+                  <FormSelect 
+                    label="Estado" 
+                    required 
+                    value={formData.estado} 
+                    onChange={(v) => updateField("estado", v)}
+                    options={["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"]}
+                  />
+                  <div className="space-y-2">
+                    <FormField label="País" required value={formData.pais} onChange={(v) => updateField("pais", v)} />
+                    <p className="text-[9px] text-neutral-400 font-bold uppercase italic tracking-widest leading-none">Nome do País</p>
                   </div>
                 </div>
+              </Card>
 
-                {/* Address */}
-                <div className="bg-white p-8 rounded-sm border border-neutral-200 shadow-md space-y-6 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[#f97316]" />
-                  <div className="flex items-center gap-4 pb-5 border-b border-neutral-100">
-                    <div className="w-10 h-10 bg-[#f97316] rounded-sm flex items-center justify-center">
-                      <MapPin className="h-5 w-5 text-white" />
-                    </div>
-                    <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Endereço de Entrega</h3>
+              {/* Quantidade */}
+              <Card className="p-8 border-l-[6px] border-l-black shadow-xl bg-neutral-900/5 space-y-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-black rounded-[2px] flex items-center justify-center">
+                    <Store className="h-5 w-5 text-white" />
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <FormField label="CEP" required value={formData.cep} onChange={(v) => updateField("cep", v)} placeholder="00000-000" />
-                    <div className="md:col-span-2">
-                      <FormField label="Endereço" required value={formData.endereco} onChange={(v) => updateField("endereco", v)} placeholder="Rua, Avenida..." />
-                    </div>
-                    <FormField label="Número" required value={formData.numero} onChange={(v) => updateField("numero", v)} placeholder="000" />
-                    <FormField label="Complemento" value={formData.complemento} onChange={(v) => updateField("complemento", v)} placeholder="Sala, loja..." />
-                    <FormField label="Bairro" required value={formData.bairro} onChange={(v) => updateField("bairro", v)} placeholder="Bairro" />
-                    <FormField label="Cidade" required value={formData.cidade} onChange={(v) => updateField("cidade", v)} placeholder="Cidade" />
-                    <FormField label="Estado" required value={formData.estado} onChange={(v) => updateField("estado", v)} placeholder="UF" />
-                  </div>
+                  <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Quantidade de Máquinas Solicitadas</h3>
                 </div>
+                <div className="max-w-xs space-y-4">
+                  <FormField label="Quantidade de Máquinas" value={formData.quantidade} onChange={(v) => updateField("quantidade", v)} placeholder="01" />
+                  <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-tight leading-relaxed">Informe a quantidade de máquinas que o estabelecimento está solicitando</p>
+                </div>
+              </Card>
 
+              {/* Seção de Documentos - Botão Solicitado */}
+              <Card className="p-8 border-l-[6px] border-l-[#f97316] shadow-xl bg-orange-50/30 space-y-6 rounded-[2px]">
+                <div className="flex items-center justify-between flex-wrap gap-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-[#f97316] rounded-[2px] flex items-center justify-center shadow-lg shadow-orange-500/20">
+                      <FileUp className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Deseja anexar documentos agora?</h3>
+                      {attachedDocs.length > 0 ? (
+                        <div className="space-y-1">
+                           <p className="text-[9px] font-black text-green-600 uppercase tracking-widest flex items-center gap-1">
+                             <CheckCircle2 className="h-3 w-3" /> {attachedDocs.length} documentos anexados:
+                           </p>
+                           <p className="text-[8px] font-bold text-neutral-500 uppercase">{attachedDocs.join(", ")}</p>
+                        </div>
+                      ) : (
+                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-tight">Anexe o contrato, CNPJ e fotos para agilizar seu credenciamento</p>
+                      )}
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => setStep("documents")}
+                    className="bg-white border-2 border-[#f97316] text-[#f97316] hover:bg-[#f97316] hover:text-white transition-all font-black text-[11px] uppercase tracking-[0.2em] px-8 h-14 rounded-[2px]"
+                  >
+                    {attachedDocs.length > 0 ? "Gerenciar Documentos" : "+ Anexar Documentos"}
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Action Buttons */}
+              <div className="pt-10 flex flex-col items-center gap-6">
                 <Button
                   onClick={handleSubmitForm}
-                  className="w-full h-16 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-sm uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-[0.98]"
+                  className="w-full max-w-2xl h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-[2px] font-black text-lg uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 transition-all active:scale-[0.98]"
                 >
-                  Revisar Solicitação <ArrowRight className="h-5 w-5 ml-2" />
+                  Revisar Solicitação e Continuar <ArrowRight className="h-6 w-6 ml-4" />
                 </Button>
-              </div>
-
-              {/* Sidebar info */}
-              <div className="lg:col-span-4 space-y-6">
-                <div className="bg-white rounded-sm border-2 border-neutral-200 shadow-md p-8 space-y-6 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1.5 h-full bg-[#f97316]" />
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#f97316] rounded-sm flex items-center justify-center shrink-0">
-                      <Package className="h-5 w-5 text-white" />
-                    </div>
-                    <h4 className="text-xs font-black text-[#0c0a09] uppercase tracking-widest">Entrega</h4>
-                  </div>
-                  <div className="space-y-4">
-                    <p className="text-sm font-bold text-[#0c0a09]/70 leading-relaxed">Prazo de entrega de <span className="text-[#0c0a09] font-black">5 a 10 dias úteis</span> após aprovação do cadastro.</p>
-                    <div className="p-4 bg-[#f97316]/5 rounded-sm border border-[#f97316]/20 flex gap-3">
-                      <Truck className="h-4 w-4 text-[#f97316] shrink-0 mt-0.5" />
-                      <p className="text-[11px] font-bold text-[#0c0a09] leading-normal uppercase">
-                        Frete <span className="text-[#f97316] font-black">grátis</span> para todo o Brasil.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-sm border-2 border-neutral-200 shadow-md p-8 space-y-6 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1.5 h-full bg-green-500" />
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-500 rounded-sm flex items-center justify-center text-white shrink-0">
-                      <Shield className="h-5 w-5" />
-                    </div>
-                    <h4 className="text-xs font-black text-[#0c0a09] uppercase tracking-widest">Suporte 24h</h4>
-                  </div>
-                  <p className="text-sm font-bold text-[#0c0a09]/70 leading-relaxed">
-                    Suporte dedicado <span className="text-green-600 font-black">24h por dia</span>, 7 dias por semana. Assistência técnica remota incluída.
-                  </p>
-                </div>
-
-                <div className="bg-[#f97316]/10 rounded-sm border-2 border-[#f97316]/20 p-6 flex items-start gap-3">
-                  <AlertCircle className="h-5 w-5 text-[#f97316] shrink-0 mt-0.5" />
-                  <p className="text-[11px] font-black text-[#0c0a09] leading-normal">
-                    Campos marcados com <span className="text-[#f97316] font-black text-sm">*</span> são obrigatórios. Seu cadastro será analisado em até <span className="text-[#f97316]">48h</span>.
-                  </p>
+                <div className="flex items-center gap-2 text-[10px] font-black text-neutral-400 uppercase tracking-[0.15em]">
+                  <Shield className="h-4 w-4 text-green-500" />
+                  Solicitação segura e criptografada
                 </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Step: Confirm */}
-        {step === "confirm" && selectedModel && (
-          <div className="max-w-3xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="text-center space-y-2">
-              <h2 className="text-3xl font-black text-[#0c0a09] tracking-tighter uppercase">Confirme sua solicitação</h2>
-              <p className="text-sm text-neutral-400 font-bold uppercase tracking-widest">Revise os dados antes de enviar</p>
+        {/* Step: Documents (NEW) */}
+        {step === "documents" && selectedModel && (
+          <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+            <div className="text-center space-y-3">
+              <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 px-4 py-1 text-[10px] font-black uppercase tracking-widest">Documentação</Badge>
+              <h2 className="text-4xl font-black text-[#0c0a09] tracking-tighter uppercase leading-none">Envio de Documentos</h2>
+              <p className="text-xs text-neutral-400 font-bold uppercase tracking-[0.2em]">Gerencie os documentos obrigatórios da sua empresa</p>
             </div>
 
-            <div className="bg-white rounded-sm border border-neutral-100 shadow-2xl overflow-hidden">
-              {/* Model header */}
-              <div className={`p-8 bg-gradient-to-br ${selectedModel.color} flex items-center gap-6 relative overflow-hidden`}>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.15),transparent)]" />
-                <div className="w-16 h-16 bg-white/20 rounded-sm flex items-center justify-center relative z-10">
-                  <selectedModel.icon className="h-8 w-8 text-white" />
-                </div>
-                <div className="relative z-10">
-                  <p className="text-xs font-black text-white/60 uppercase tracking-widest">Modelo</p>
-                  <p className="text-2xl font-black text-white uppercase tracking-tight">{selectedModel.name}</p>
-                </div>
-                <div className="ml-auto text-right relative z-10">
-                  <p className="text-xs font-black text-white/60 uppercase tracking-widest">Qtd</p>
-                  <p className="text-2xl font-black text-white">{formData.quantidade}x</p>
-                </div>
+            <div className="bg-orange-50 border border-orange-200 p-6 rounded-[2px] flex items-center gap-4">
+              <div className="w-10 h-10 bg-[#f97316]/20 rounded-[2px] flex items-center justify-center text-[#f97316] shrink-0">
+                <AlertCircle className="h-6 w-6" />
               </div>
-
-              {/* Data summary */}
-              <div className="p-8 space-y-8">
-                <ConfirmSection title="Estabelecimento">
-                  <ConfirmRow label="Razão Social" value={formData.nomeEmpresa} />
-                  <ConfirmRow label="CNPJ / CPF" value={formData.cnpj} />
-                  {formData.faturamentoMensal && <ConfirmRow label="Faturamento" value={formData.faturamentoMensal} />}
-                </ConfirmSection>
-
-                <ConfirmSection title="Responsável">
-                  <ConfirmRow label="Nome" value={formData.nomeResponsavel} />
-                  <ConfirmRow label="Telefone" value={formData.telefone} />
-                  <ConfirmRow label="E-mail" value={formData.email} />
-                </ConfirmSection>
-
-                <ConfirmSection title="Endereço de Entrega">
-                  <ConfirmRow label="Endereço" value={`${formData.endereco}, ${formData.numero}${formData.complemento ? ` - ${formData.complemento}` : ""}`} />
-                  <ConfirmRow label="Bairro" value={formData.bairro} />
-                  <ConfirmRow label="Cidade / UF" value={`${formData.cidade} - ${formData.estado}`} />
-                  <ConfirmRow label="CEP" value={formData.cep} />
-                </ConfirmSection>
+              <div className="space-y-0.5">
+                <p className="text-[11px] font-black text-[#f97316] uppercase tracking-widest">Atenção</p>
+                <p className="text-sm font-bold text-neutral-700">Os documentos são opcionais para o envio inicial, mas recomendados para facilitar o processo de credenciamento.</p>
               </div>
             </div>
 
-            <div className="flex gap-4">
+            <div className="grid grid-cols-1 gap-6">
+              <DocumentUploadCard 
+                title="Contrato Assinado" 
+                desc="Documento que formaliza a parceria com a G8 Pay"
+                attached={attachedDocs.includes("Contrato Assinado")}
+                onUpload={() => updateAttachedDoc("Contrato Assinado")}
+              />
+              <DocumentUploadCard 
+                title="Contrato / Estatuto Social" 
+                desc="Cópia do instrumento de constituição ou Ficha Cadastral Jacesp"
+                attached={attachedDocs.includes("Contrato / Estatuto Social")}
+                onUpload={() => updateAttachedDoc("Contrato / Estatuto Social")}
+              />
+              <DocumentUploadCard 
+                title="Cartão CNPJ (RCFB)" 
+                desc="Comprovante de inscrição e de situação cadastral atualizado"
+                attached={attachedDocs.includes("Cartão CNPJ (RCFB)")}
+                onUpload={() => updateAttachedDoc("Cartão CNPJ (RCFB)")}
+              />
+              <DocumentUploadCard 
+                title="RG/CNH do representante legal" 
+                desc="Documento de identificação com foto do sócio administrador"
+                attached={attachedDocs.includes("RG/CNH do representante legal")}
+                onUpload={() => updateAttachedDoc("RG/CNH do representante legal")}
+              />
+              <DocumentUploadCard 
+                title="Comprovante de endereço da empresa" 
+                desc="Contas de consumo (luz, água, telefone) dos últimos 90 dias"
+                attached={attachedDocs.includes("Comprovante de endereço da empresa")}
+                onUpload={() => updateAttachedDoc("Comprovante de endereço da empresa")}
+              />
+              <DocumentUploadCard 
+                title="Foto da Fachada" 
+                desc="Registro visual da frente do estabelecimento comercial"
+                attached={attachedDocs.includes("Foto da Fachada")}
+                onUpload={() => updateAttachedDoc("Foto da Fachada")}
+              />
+            </div>
+
+            <div className="flex gap-6">
               <Button
                 onClick={() => setStep("form")}
                 variant="outline"
-                className="flex-1 h-16 border-2 border-neutral-200 text-neutral-400 rounded-sm font-black text-sm uppercase tracking-widest hover:border-[#f97316] hover:text-[#f97316] hover:bg-orange-50 transition-all"
+                className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-[2px] font-black text-sm uppercase tracking-[0.2em] hover:border-[#f97316] hover:text-[#f97316] hover:bg-orange-50 transition-all"
               >
-                Voltar e Editar
+                Voltar ao Formulário
               </Button>
               <Button
-                onClick={handleConfirm}
-                disabled={isSubmitting}
-                className="flex-1 h-16 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-sm uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-[0.98] disabled:opacity-50"
+                onClick={() => setStep("confirm")}
+                className="flex-3 h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-[2px] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 transition-all active:scale-[0.98]"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" /> Enviando...
-                  </>
-                ) : (
-                  <>
-                    Confirmar Solicitação <ArrowRight className="h-5 w-5 ml-2" />
-                  </>
-                )}
+                Próximo Passo <ArrowRight className="h-6 w-6 ml-3" />
               </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step: Confirm */}
+        {step === "confirm" && selectedModel && (
+          <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
+            <div className="text-center space-y-3">
+              <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 px-4 py-1 text-[10px] font-black uppercase tracking-widest">Revisão Final</Badge>
+              <h2 className="text-4xl font-black text-[#0c0a09] tracking-tighter uppercase leading-none">Confirme sua solicitação</h2>
+              <p className="text-xs text-neutral-400 font-bold uppercase tracking-[0.2em]">Verifique se todos os dados estão corretos</p>
+            </div>
+
+            <div className="bg-white rounded-[2px] border border-neutral-100 shadow-2xl overflow-hidden">
+              {/* Model Header */}
+              <div className={`p-10 bg-gradient-to-br ${selectedModel.color} flex items-center justify-between relative overflow-hidden`}>
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.2),transparent)]" />
+                <div className="flex items-center gap-6 relative z-10">
+                  <div className="w-20 h-20 bg-white/20 rounded-[2px] flex items-center justify-center shadow-2xl backdrop-blur-sm border border-white/30">
+                    <selectedModel.icon className="h-10 w-10 text-white" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">Modelo Selecionado</p>
+                    <h2 className="text-3xl font-black text-white uppercase tracking-tight">{selectedModel.name}</h2>
+                  </div>
+                </div>
+                <div className="text-right relative z-10">
+                  <p className="text-[10px] font-black text-white/60 uppercase tracking-[0.2em]">Faturamento Alvo</p>
+                  <p className="text-xl font-black text-white uppercase">{selectedModel.revenueLabel}</p>
+                </div>
+              </div>
+
+              <div className="p-10 space-y-12">
+                <ConfirmSection title="Dados da Empresa">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <ConfirmRow label="CNPJ/CPF" value={formData.cnpjCpf} />
+                    <ConfirmRow label="Razão Social" value={formData.razaoSocial || "---"} />
+                    <ConfirmRow label="Nome Fantasia" value={formData.nomeFantasia} />
+                    <ConfirmRow label="MCC / CNAE" value={`${formData.mcc} / ${formData.cnae}`} />
+                    <ConfirmRow label="Faturamento Mensal" value={formData.faturamentoMensal} />
+                    <ConfirmRow label="Ticket Médio" value={formData.ticketMedio} />
+                  </div>
+                </ConfirmSection>
+
+                <ConfirmSection title="Contatos Associados">
+                  <div className="space-y-4">
+                    {formData.contatos.map((c, i) => (
+                      <div key={i} className="p-4 bg-neutral-50 rounded-[2px] border border-neutral-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <ConfirmRow label="Nome" value={c.nome} />
+                        <ConfirmRow label="CPF" value={c.cpf} />
+                        <ConfirmRow label="Telefone" value={c.telefone} />
+                      </div>
+                    ))}
+                  </div>
+                </ConfirmSection>
+
+                <ConfirmSection title="Dados Bancários para Recebimento">
+                  <div className="space-y-4">
+                    {formData.contasBancarias.map((b, i) => (
+                      <div key={i} className="p-4 bg-neutral-50 rounded-[2px] border border-neutral-100 grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <ConfirmRow label="Banco" value={b.banco} />
+                        <ConfirmRow label="Agência/Conta" value={`${b.agencia} / ${b.conta}-${b.digito}`} />
+                        <ConfirmRow label="Tipo" value={b.tipoConta} />
+                      </div>
+                    ))}
+                  </div>
+                </ConfirmSection>
+
+                <ConfirmSection title="Endereço de Instalação">
+                  <div className="p-6 border-2 border-dashed border-neutral-100 rounded-[2px] space-y-4">
+                    <ConfirmRow label="Logradouro" value={`${formData.rua}, ${formData.numero}${formData.complemento ? ` - ${formData.complemento}` : ""}`} />
+                    <div className="grid grid-cols-3 gap-6">
+                      <ConfirmRow label="CEP" value={formData.cep} />
+                      <ConfirmRow label="Bairro" value={formData.bairro} />
+                      <ConfirmRow label="Cidade/UF" value={`${formData.cidade} - ${formData.estado}`} />
+                    </div>
+                  </div>
+                </ConfirmSection>
+
+                <ConfirmSection title="Documentação Anexada">
+                  {attachedDocs.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                       {attachedDocs.map(doc => (
+                         <Badge key={doc} className="bg-green-100 text-green-700 border-green-200 px-3 py-1 font-black text-[9px] uppercase tracking-widest rounded-[2px]">
+                           <CheckCircle2 className="h-3 w-3 mr-1" /> {doc}
+                         </Badge>
+                       ))}
+                    </div>
+                  ) : (
+                    <p className="text-[10px] font-bold text-neutral-400 uppercase italic">Nenhum documento anexado (serão solicitados posteriormente)</p>
+                  )}
+                </ConfirmSection>
+              </div>
+
+              <div className="p-10 bg-neutral-50 border-t border-neutral-100 flex gap-6">
+                <Button
+                  onClick={() => setStep("form")}
+                  variant="outline"
+                  className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-[2px] font-black text-sm uppercase tracking-[0.2em] hover:border-[#f97316] hover:text-[#f97316] hover:bg-orange-50 transition-all"
+                >
+                  Voltar e Corrigir
+                </Button>
+                <Button
+                  onClick={handleConfirm}
+                  disabled={isSubmitting}
+                  className="flex-[2] h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-[2px] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-3 h-5 w-5 animate-spin" />
+                      PROCESSANDO...
+                    </>
+                  ) : (
+                    <>
+                      Encerrar e Enviar para Análise <ArrowRight className="h-6 w-6 ml-3" />
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         )}
@@ -487,7 +967,7 @@ export default function MaquininhasPage() {
         {/* Step: Success */}
         {step === "success" && (
           <div className="max-w-xl mx-auto flex flex-col items-center text-center space-y-10 py-12 animate-in fade-in zoom-in-95 duration-500">
-            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-600 shadow-2xl relative border-4 border-white">
+            <div className="w-24 h-24 bg-green-100 rounded-[2px] flex items-center justify-center text-green-600 shadow-2xl relative border-4 border-white">
               <CheckCircle2 className="h-12 w-12" />
             </div>
 
@@ -498,7 +978,7 @@ export default function MaquininhasPage() {
               </p>
             </div>
 
-            <div className="w-full bg-white rounded-sm border border-neutral-100 shadow-2xl p-8 space-y-5 text-left">
+            <div className="w-full bg-white rounded-[2px] border border-neutral-100 shadow-2xl p-8 space-y-5 text-left">
               <div className="flex items-center gap-3 pb-4 border-b border-neutral-50">
                 <CheckCircle2 className="h-5 w-5 text-green-500" />
                 <span className="text-sm font-black text-[#0c0a09] uppercase tracking-widest">Próximos passos</span>
@@ -539,12 +1019,14 @@ function FormField({
   onChange,
   placeholder,
   required,
+  type = "text",
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   required?: boolean;
+  type?: string;
 }) {
   return (
     <div className="space-y-2.5">
@@ -553,6 +1035,7 @@ function FormField({
         {required && <span className="text-[#f97316] text-sm leading-none">*</span>}
       </label>
       <Input
+        type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -564,18 +1047,94 @@ function FormField({
 
 function ConfirmSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-4">
-      <p className="text-[10px] font-black text-[#f97316] uppercase tracking-widest">{title}</p>
-      <div className="space-y-3">{children}</div>
+    <div className="space-y-6">
+      <h3 className="text-xs font-black text-[#f97316] uppercase tracking-[0.2em] border-b border-orange-100 pb-2">
+        {title}
+      </h3>
+      {children}
     </div>
   );
 }
 
 function ConfirmRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-neutral-50">
-      <span className="text-xs font-bold text-neutral-400 uppercase tracking-widest">{label}</span>
-      <span className="text-sm font-black text-[#0c0a09] text-right max-w-[60%] truncate">{value}</span>
+    <div className="space-y-1.5">
+      <p className="text-[11px] font-black text-neutral-900 uppercase tracking-widest leading-none">
+        {label}
+      </p>
+      <p className="text-sm font-medium text-neutral-600 uppercase tracking-tight break-words">
+        {value || "---"}
+      </p>
     </div>
+  );
+}
+
+function FormSelect({
+  label,
+  value,
+  onChange,
+  options,
+  required,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: string[];
+  required?: boolean;
+}) {
+  return (
+    <div className="space-y-2.5">
+      <label className="text-[11px] font-black text-[#0c0a09] uppercase tracking-widest block flex items-center gap-1">
+        {label}
+        {required && <span className="text-[#f97316] text-sm leading-none">*</span>}
+      </label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-14 w-full bg-white border-2 border-neutral-200 rounded-[2px] px-4 text-sm font-black focus:ring-2 focus:ring-[#f97316]/30 focus:border-[#f97316] transition-all outline-none text-[#0c0a09] shadow-sm appearance-none cursor-pointer"
+        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f97316' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2rem' }}
+      >
+        <option value="" disabled>Selecione...</option>
+        {options.map((opt) => (
+          <option key={opt} value={opt}>{opt}</option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function DocumentUploadCard({ title, desc, attached, onUpload }: { title: string; desc: string; attached?: boolean; onUpload: (file: File) => void }) {
+  return (
+    <Card className={`p-8 group hover:border-[#f97316]/50 transition-all duration-300 rounded-[2px] ${attached ? 'bg-green-50/30 border-green-200' : ''}`}>
+      <div className="flex flex-col md:flex-row items-center gap-8">
+        <div className="flex-1 space-y-2 text-center md:text-left">
+          <div className="flex items-center gap-3 justify-center md:justify-start">
+            <div className={`w-10 h-10 rounded-[2px] flex items-center justify-center shrink-0 ${attached ? 'bg-green-500 text-white' : 'bg-blue-50 text-blue-500'}`}>
+               <Package className="h-5 w-5" />
+            </div>
+            <h4 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">{title}</h4>
+            {attached && <Badge className="bg-green-500 text-white border-0 text-[8px] font-black uppercase">Anexado</Badge>}
+          </div>
+          <p className="text-xs font-bold text-neutral-400 leading-relaxed">{desc}</p>
+        </div>
+        
+        <div className="w-full md:w-64">
+          <label className={`flex flex-col items-center justify-center h-32 w-full border-2 border-dashed rounded-[2px] cursor-pointer transition-all ${attached ? 'border-green-300 bg-green-50/50' : 'border-neutral-200 hover:bg-neutral-50 group-hover:border-[#f97316]/30'}`}>
+            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+              {attached ? (
+                <CheckCircle2 className="h-8 w-8 text-green-500 mb-2" />
+              ) : (
+                <ArrowRight className="h-6 w-6 text-neutral-300 mb-2 -rotate-90 group-hover:text-[#f97316] group-hover:scale-110 transition-all" />
+              )}
+              <p className={`text-[9px] font-black uppercase tracking-widest ${attached ? 'text-green-600' : 'text-neutral-400 group-hover:text-[#f97316]'}`}>
+                {attached ? 'Documento Enviado' : 'Clique para enviar'}
+              </p>
+              <p className="text-[8px] font-bold text-neutral-300 uppercase mt-1">PDF, JPG, JPEG ou PNG</p>
+            </div>
+            <input type="file" className="hidden" onChange={(e) => e.target.files?.[0] && onUpload(e.target.files[0])} />
+          </label>
+        </div>
+      </div>
+    </Card>
   );
 }

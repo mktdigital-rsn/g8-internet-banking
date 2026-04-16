@@ -13,7 +13,8 @@ import {
   Search,
   LogOut,
   RotateCw,
-  CreditCard
+  CreditCard,
+  Clock
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -113,6 +114,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return name.replace(/^\d+(\.\d+)*\s*/, '').split(' ')[0] || "Cliente";
   };
 
+  const [timeLeft, setTimeLeft] = React.useState(900); // 15 minutes in seconds
+
+  React.useEffect(() => {
+    if (timeLeft <= 0) return;
+    const interval = setInterval(() => {
+      setTimeLeft(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [timeLeft]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="flex h-screen bg-[#0c0a09] text-white overflow-hidden font-sans">
       {/* Sidebar */}
@@ -130,8 +147,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <AvatarFallback className="bg-neutral-800 text-white font-black uppercase">{cleanName(userName)[0]}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[10px] text-primary font-black uppercase tracking-[0.2em] mb-1">Status Platinum</span>
-              <span className="text-xl font-black text-white leading-tight truncate">{cleanName(userName)}</span>
+              <span className="text-[10px] text-[#f97316] font-black uppercase tracking-[0.2em] mb-1">Status Platinum</span>
+              <span className="text-xl font-black text-white leading-tight truncate mb-2">{cleanName(userName)}</span>
+              
+              <div className="flex items-center gap-3 pt-2 border-t border-white/5">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-white/300 font-black uppercase tracking-widest">Agência</span>
+                  <span className="text-[11px] font-mono font-black text-white/80">{accountInfo.agency}</span>
+                </div>
+                <div className="w-px h-4 bg-white/10" />
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-white/300 font-black uppercase tracking-widest">Conta</span>
+                  <span className="text-[11px] font-mono font-black text-white/80">{accountInfo.account}</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -168,36 +197,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 flex flex-col relative overflow-hidden">
         {/* Top Header */}
         <header className="h-24 flex items-center justify-between px-10 z-10 shrink-0 border-b border-white/5 bg-[#09090b]">
-          <div className="flex items-center max-w-sm w-full">
+          <div className="flex items-center max-w-[280px] xl:max-w-sm w-full">
             <div className="relative w-full group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/20 group-focus-within:text-[#f97316] transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60 group-focus-within:text-[#f97316] transition-colors" />
               <Input 
                 placeholder="Pesquisar transações..." 
-                className="w-full bg-white/[0.03] border-white/5 pl-12 focus:bg-white/[0.06] focus:border-[#f97316]/30 rounded-md h-12 transition-all font-bold placeholder:text-white/20 text-sm" 
+                className="w-full bg-white/[0.12] border-white/20 pl-12 focus:bg-white/[0.2] focus:border-[#f97316]/60 rounded-md h-12 transition-all font-black placeholder:text-white/60 text-sm" 
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-10 xl:gap-16">
-            {/* Account Info Section */}
-            <div className="hidden lg:flex flex-col items-center justify-center h-12 border-r border-white/5 pr-10 xl:pr-16">
-               <span className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em] mb-2 leading-none">Resumo da Conta</span>
-               <div className="flex items-center gap-6">
-                  <div className="flex flex-col items-center">
-                     <span className="text-[7px] text-[#f97316] font-black uppercase tracking-tighter mb-0.5">AGÊNCIA</span>
-                     <span className="text-sm font-mono font-black text-white leading-none tracking-wider">{accountInfo.agency}</span>
-                  </div>
-                  <div className="w-px h-6 bg-white/10" />
-                  <div className="flex flex-col items-center">
-                     <span className="text-[7px] text-[#f97316] font-black uppercase tracking-tighter mb-0.5">CONTA</span>
-                     <span className="text-sm font-mono font-black text-white leading-none tracking-wider">{accountInfo.account}</span>
-                  </div>
-               </div>
-            </div>
-
+          <div className="flex items-center gap-8 xl:gap-12">
             {/* Balance Section */}
-            <div className="flex flex-col items-end justify-center h-12 border-r border-white/5 pr-10 xl:pr-16">
-              <span className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em] mb-2 leading-none">Saldo Líquido</span>
+            <div className="flex flex-col items-end justify-center h-12 border-r border-white/10 pr-8 xl:pr-12">
+              <span className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em] mb-2 leading-none">Saldo Líquido</span>
               <div className="flex items-center gap-4">
                 {isLoadingData ? (
                   <div className="h-6 w-32 bg-white/5 animate-pulse rounded-md" />
@@ -211,21 +224,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
 
             {/* Profile Section */}
-            <Link href="/dashboard/conta" className="flex items-center gap-4 cursor-pointer group">
-              <div className="text-right flex flex-col justify-center hidden sm:flex">
-                <p className="text-base font-black text-white group-hover:text-[#f97316] transition-colors leading-none truncate max-w-[200px] xl:max-w-[300px]">
-                  {cleanName(userName)}
-                </p>
-                <p className="text-[10px] text-white/20 uppercase font-black tracking-widest mt-1.5 leading-none">PLATINUM ELITE</p>
+            <div className="flex items-center gap-6 xl:gap-8 relative">
+              <div className="hidden lg:flex flex-col items-center gap-1.5 px-3 py-1.5 bg-white/[0.06] border border-white/10 rounded-md">
+                 <div className="flex items-center gap-2">
+                    <Clock className="h-3 w-3 text-[#f97316] animate-pulse" />
+                    <span className="text-[9px] font-black text-[#f97316] uppercase tracking-widest">Sessão Segura</span>
+                 </div>
+                 <span className="text-xs font-mono font-black text-white tabular-nums leading-none">{formatTime(timeLeft)}</span>
               </div>
-              <div className="relative">
-                <div className="absolute -inset-1 bg-gradient-to-r from-[#f97316] to-orange-500 rounded-md blur opacity-0 group-hover:opacity-20 transition-opacity" />
-                <Avatar className="h-12 w-12 border border-white/10 rounded-md relative z-10">
-                  <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
-                  <AvatarFallback className="bg-[#f97316] text-white font-black">{cleanName(userName)[0]}</AvatarFallback>
-                </Avatar>
-              </div>
-            </Link>
+
+              <Link href="/dashboard/conta" className="flex items-center gap-4 cursor-pointer group">
+                <div className="text-right flex flex-col justify-center hidden sm:flex">
+                  <p className="text-base font-black text-white group-hover:text-[#f97316] transition-colors leading-none truncate max-w-[200px] xl:max-w-[300px]">
+                    {cleanName(userName)}
+                  </p>
+                  <p className="text-[10px] text-white/20 uppercase font-black tracking-widest mt-1.5 leading-none">PLATINUM ELITE</p>
+                </div>
+                <div className="relative">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-[#f97316] to-orange-500 rounded-md blur opacity-0 group-hover:opacity-20 transition-opacity" />
+                  <Avatar className="h-12 w-12 border border-white/10 rounded-md relative z-10">
+                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
+                    <AvatarFallback className="bg-[#f97316] text-white font-black">{cleanName(userName)[0]}</AvatarFallback>
+                  </Avatar>
+                </div>
+              </Link>
+            </div>
           </div>
         </header>
 

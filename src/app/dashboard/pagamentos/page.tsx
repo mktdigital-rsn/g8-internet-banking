@@ -32,6 +32,8 @@ import {
   ListChecks,
   Eye,
   Ban,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -86,10 +88,10 @@ export default function PagamentosPage() {
   const [pinId, setPinId] = useState("");
   const [transactionId, setTransactionId] = useState("");
   
-  // Scheduling State
   const [paymentMode, setPaymentMode] = useState<"now" | "schedule">("now");
   const [scheduleDate, setScheduleDate] = useState("");
   const [agendamentos, setAgendamentos] = useState(mockAgendamentos);
+  const [editingAgendamento, setEditingAgendamento] = useState<any>(null);
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -446,63 +448,182 @@ export default function PagamentosPage() {
 
             {/* ──── Section Overlay: Agendamentos ──── */}
             {activeSection === "agendamentos" && (
-              <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-300">
-                <div className="w-full max-w-3xl bg-white rounded-sm shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden max-h-[85vh] flex flex-col">
-                  <div className="flex items-center justify-between p-8 border-b border-neutral-100 shrink-0">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316]">
-                        <CalendarClock className="h-5 w-5" />
+              <div className="fixed inset-0 z-[100] bg-[#0c0a09]/98 backdrop-blur-xl mt-20 overflow-y-auto flex justify-center items-center p-4 py-8 ">
+                <div className="w-full max-w-3xl bg-white rounded-sm shadow-[0_0_100px_rgba(0,0,0,0.5)] h-fit flex flex-col relative animate-in fade-in zoom-in-95 duration-300">
+                  
+                  {/* Header & Edit Context */}
+                  <div className={`shrink-0 transition-all duration-500 overflow-hidden ${editingAgendamento ? 'bg-neutral-900' : 'bg-white border-b border-neutral-100'}`}>
+                    {/* Top Bar */}
+                    <div className="p-6 md:p-8 flex items-center justify-between border-b border-white/5">
+                      <div className="flex items-center gap-5">
+                        <div className={`w-14 h-14 rounded-sm flex items-center justify-center shadow-lg transition-all duration-500 ${editingAgendamento ? 'bg-[#f97316] text-white scale-110 shadow-orange-500/20' : 'bg-[#f97316]/10 text-[#f97316]'}`}>
+                          {editingAgendamento ? <Pencil className="h-7 w-7" /> : <CalendarClock className="h-7 w-7" />}
+                        </div>
+                        <div className="space-y-0.5">
+                          <h2 className={`text-xl md:text-xl font-black uppercase tracking-tight leading-none ${editingAgendamento ? 'text-white' : 'text-[#0c0a09]'}`}>
+                            {editingAgendamento ? 'Ajustar Data' : 'Agendamentos'}
+                          </h2>
+                          <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${editingAgendamento ? 'text-[#f97316]' : 'text-neutral-400'}`}>
+                            {editingAgendamento ? editingAgendamento.beneficiario : `${agendamentos.length} transações programadas`}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h2 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">Agendamentos</h2>
-                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">{agendamentos.length} pagamentos agendados</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Button
-                        onClick={() => { setActiveSection(null); }}
-                        variant="outline"
-                        className="h-10 px-5 rounded-sm border-neutral-200 font-black text-[9px] uppercase tracking-widest text-neutral-400 hover:text-[#0c0a09] hover:border-neutral-300"
+                      <button 
+                        onClick={() => { setActiveSection(null); setEditingAgendamento(null); }}
+                        className={`p-4 rounded-sm transition-all ${editingAgendamento ? 'hover:bg-white/10 text-white/50 hover:text-white' : 'hover:bg-neutral-50 text-neutral-300 hover:text-[#0c0a09]'}`}
                       >
-                        <X className="h-4 w-4" />
-                      </Button>
+                        <X className="h-6 w-6" />
+                      </button>
                     </div>
-                  </div>
-                  <div className="flex-1 overflow-y-auto p-8 space-y-4">
-                    <Button
-                      onClick={() => { 
-                        setActiveSection(null); 
-                        setPaymentMode("schedule");
-                        toast.info("Digite o código de barras do boleto que deseja agendar.");
-                        setTimeout(() => {
-                          document.getElementById("barcode-input")?.focus();
-                          document.getElementById("barcode-input")?.scrollIntoView({ behavior: "smooth", block: "center" });
-                        }, 400);
-                      }}
-                      className="w-full h-14 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-xs uppercase tracking-widest shadow-lg shadow-orange-200/30 transition-all active:scale-[0.98] mb-2"
-                    >
-                      <CalendarClock className="h-4 w-4 mr-2" />
-                      Novo Agendamento
-                    </Button>
-                    {agendamentos.map((ag) => (
-                      <div key={ag.id} className="p-6 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between group hover:shadow-lg hover:border-[#f97316]/20 transition-all">
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <p className="text-sm font-black text-[#0c0a09] uppercase tracking-tight truncate">{ag.beneficiario}</p>
-                          <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Vencimento: {ag.data}</p>
-                          <p className="text-[9px] font-mono text-neutral-300 truncate">{ag.barcode}</p>
+
+                    {/* Edit Options (Only visible when editing) */}
+                    {editingAgendamento && (
+                      <div className="p-6 space-y-4 animate-in slide-in-from-top-4 duration-500 ">
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
+                          <div className="md:col-span-6 space-y-4">
+                            <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] ml-1">Nova Data de Pagamento</label>
+                            <div className="flex items-center gap-4 p-5 bg-white/5 rounded-sm border border-white/10 focus-within:border-[#f97316] transition-all">
+                              <Calendar className="h-5 w-5 text-[#f97316] shrink-0" />
+                              <Input
+                                type="date"
+                                value={editingAgendamento.tempDate || ""}
+                                onChange={(e) => setEditingAgendamento({...editingAgendamento, tempDate: e.target.value})}
+                                min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
+                                className="h-2 bg-transparent border-0 px-0 text-white font-black text-xl focus:ring-0 w-full cursor-pointer placeholder:text-white/20"
+                              />
+                            </div>
+                          </div>
+                          <div className="md:col-span-6 flex gap-3 h-[48px]">
+                             <Button 
+                               onClick={() => {
+                                 if (!editingAgendamento.tempDate) return toast.error("Selecione uma data.");
+                                 const [y, m, d] = editingAgendamento.tempDate.split("-");
+                                 const formattedDate = `${d}/${m}/${y}`;
+                                 setAgendamentos(prev => prev.map(ag => ag.id === editingAgendamento.id ? { ...ag, data: formattedDate } : ag));
+                                 toast.success("Agendamento atualizado com sucesso!");
+                                 setEditingAgendamento(null);
+                               }}
+                               className="flex-1 bg-[#f97316] hover:bg-orange-600 text-white font-black uppercase text-xs rounded-sm tracking-[0.2em] shadow-2xl shadow-orange-500/20"
+                             >
+                               Salvar Alteração
+                             </Button>
+                             <Button 
+                               onClick={() => setEditingAgendamento(null)}
+                               variant="ghost" 
+                               className="px-6 text-white/40 hover:text-white hover:bg-white/10 font-black uppercase text-[10px] rounded-sm tracking-widest"
+                             >
+                               Cancelar
+                             </Button>
+                          </div>
                         </div>
-                        <div className="text-right shrink-0 ml-4">
-                          <p className="text-lg font-black text-[#f97316] font-mono tracking-tight">{ag.valor}</p>
-                          <Badge className="bg-amber-50 text-amber-600 border-0 text-[8px] font-black uppercase tracking-widest">{ag.status}</Badge>
+                        <div className="p-4 bg-orange-500/10 rounded-sm border border-orange-500/20 flex items-center gap-4">
+                           <AlertCircle className="h-5 w-5 text-[#f97316] shrink-0" />
+                           <p className="text-[10px] font-black text-orange-200/60 uppercase leading-none tracking-widest">A alteração de data está sujeita à disponibilidade de saldo no dia escolhido.</p>
                         </div>
-                      </div>
-                    ))}
-                    {agendamentos.length === 0 && (
-                      <div className="p-16 text-center space-y-4">
-                        <CalendarClock className="h-12 w-12 text-neutral-200 mx-auto" />
-                        <p className="text-sm font-black text-neutral-400 uppercase tracking-widest">Nenhum agendamento</p>
                       </div>
                     )}
+                  </div>
+
+                  {/* List View */}
+                  <div className="p-8 space-y-6">
+                    {!editingAgendamento && (
+                      <div className="flex flex-col md:flex-row gap-4 mb-4">
+                        <button
+                          onClick={() => { setActiveSection(null); setPaymentMode("schedule"); setTimeout(() => document.getElementById("barcode-input")?.focus(), 400); }}
+                          className="flex-1 h-16 bg-[#0c0a09] hover:bg-neutral-800 text-white rounded-sm font-black text-xs uppercase tracking-[0.2em] shadow-xl group flex items-center justify-center transition-all"
+                        >
+                          <CalendarClock className="h-5 w-5 mr-3 text-[#f97316] group-hover:scale-110 transition-transform" />
+                          Novo Agendamento
+                        </button>
+                        <div className="flex-1 p-5 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between">
+                           <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest leading-none">Total Pendente</span>
+                           <span className="text-xl font-black text-[#0c0a09] font-mono leading-none">R$ 887,15</span>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="max-h-[250px] overflow-y-auto pr-2 space-y-4 no-scrollbar scroll-smooth">
+                      {agendamentos.map((ag) => (
+                        <div 
+                          key={ag.id} 
+                          className={`p-6 rounded-sm border transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-6 relative group overflow-hidden ${editingAgendamento?.id === ag.id ? 'bg-orange-50 border-[#f97316] scale-[1.01] shadow-xl' : 'bg-white border-neutral-100 hover:border-[#f97316]/30 hover:shadow-2xl hover:shadow-black/5'}`}
+                        >
+                          <div className="absolute top-0 left-0 w-1 h-full bg-[#f97316] opacity-0 group-hover:opacity-100 transition-opacity" />
+                          
+                          <div className="space-y-3 min-w-0 flex-1">
+                            <div className="space-y-1">
+                              <p className="text-[9px] font-black text-neutral-300 uppercase tracking-[0.3em] leading-none">Beneficiário</p>
+                              <p className="text-base font-black text-[#0c0a09] uppercase tracking-tight truncate">{ag.beneficiario}</p>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3">
+                              <div className="flex items-center gap-2 bg-neutral-900 px-3 py-1.5 rounded-sm">
+                                <Calendar className="h-3 w-3 text-[#f97316]" />
+                                <span className="text-[10px] font-black text-white uppercase tracking-widest">{ag.data}</span>
+                              </div>
+                              <span className="text-[10px] font-mono text-neutral-300 truncate tracking-widest opacity-60">{ag.barcode}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-between md:justify-end gap-8 border-t md:border-t-0 md:border-l border-neutral-100 pt-6 md:pt-0 md:pl-8">
+                            <div className="text-right">
+                               <p className="text-[9px] font-black text-neutral-300 uppercase tracking-[0.3em] mb-1">Valor Total</p>
+                               <p className="text-2xl font-black text-[#f97316] font-mono leading-none">{ag.valor}</p>
+                            </div>
+                            
+                            {!editingAgendamento && (
+                              <div className="flex items-center gap-2">
+                                <button 
+                                  onClick={() => {
+                                     const parts = ag.data.split("/");
+                                     const mappedDate = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : "";
+                                     setEditingAgendamento({ ...ag, tempDate: mappedDate });
+                                  }}
+                                  className="w-12 h-12 bg-neutral-50 hover:bg-[#f97316]/10 border border-neutral-200 hover:border-[#f97316]/30 flex items-center justify-center text-neutral-400 hover:text-[#f97316] transition-all rounded-sm shadow-sm"
+                                  title="Editar data"
+                                >
+                                  <Pencil className="h-5 w-5" />
+                                </button>
+                                <button 
+                                  onClick={() => {
+                                     if (window.confirm(`Cancelar permanentemente o agendamento de ${ag.valor} para ${ag.beneficiario}?`)) {
+                                        setAgendamentos(prev => prev.filter(item => item.id !== ag.id));
+                                        toast.success("Agendamento cancelado.");
+                                     }
+                                  }}
+                                  className="w-12 h-12 bg-neutral-50 hover:bg-red-50 border border-neutral-200 hover:border-red-200 flex items-center justify-center text-neutral-400 hover:text-red-600 transition-all rounded-sm shadow-sm"
+                                  title="Excluir"
+                                >
+                                  <Trash2 className="h-5 w-5" />
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {agendamentos.length === 0 && (
+                      <div className="py-32 text-center space-y-6">
+                        <div className="w-20 h-20 bg-neutral-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-neutral-100">
+                          <CalendarClock className="h-10 w-10 text-neutral-200" />
+                        </div>
+                        <div className="space-y-2">
+                          <p className="text-lg font-black text-[#0c0a09] uppercase tracking-tight">Tudo em dia!</p>
+                          <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Você não possui nenhum pagamento agendado no momento.</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer Info */}
+                  <div className="p-8 border-t border-neutral-50 bg-neutral-50/50 flex flex-col md:flex-row items-center justify-between gap-4">
+                     <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest text-center md:text-left">
+                       As transações são processadas às 07:00h do dia agendado.
+                     </p>
+                     <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-emerald-500" />
+                        <span className="text-[10px] font-black text-[#0c0a09] uppercase tracking-widest">Ambiente Seguro G8</span>
+                     </div>
                   </div>
                 </div>
               </div>
