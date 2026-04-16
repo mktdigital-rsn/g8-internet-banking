@@ -165,7 +165,8 @@ export default function PagamentosPage() {
     setIsLoading(true);
     try {
       const res = await api.post("/api/users/solicitar-pin", { 
-        amount: String(boletoData?.valorTotal || boletoData?.valor || "0") 
+        amount: String(boletoData?.valorTotal || boletoData?.valor || "0"),
+        deviceId: temporaryDeviceId
       });
 
       if (res.data) {
@@ -191,7 +192,8 @@ export default function PagamentosPage() {
       // 1. Validar PIN
       await api.post("/api/users/validar-pin", { 
         pin: smsCode, 
-        pinId: pinId 
+        pinId: pinId,
+        deviceId: temporaryDeviceId
       });
 
       // 2. Efetivar Pagamento
