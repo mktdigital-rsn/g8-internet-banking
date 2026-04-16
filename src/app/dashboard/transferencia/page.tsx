@@ -182,6 +182,49 @@ export default function TransferenciaPage() {
     const handleFinalize = async () => {
         setIsLoading(true);
         setStep('confirming');
+
+        const finalizeSuccess = (finalId: string) => {
+            setTransactionId(finalId);
+            setStep('success');
+            setIsLoading(false);
+            toast.success("Transferência realizada com sucesso!");
+        };
+
+        const searchWithRetry = async (attempts = 0) => {
+            const maxAttempts = 8; // Dá uns 20-30 segundos de busca
+            try {
+                console.log(`🔍 [TRANSFERENCIA SYNC] Tentativa ${attempts + 1}/${maxAttempts}...`);
+                const extratoRes = await api.get("/api/banco/extrato/buscar");
+                const items = extratoRes.data.transacoes || extratoRes.data.data?.transacoes || [];
+                
+                const targetVal = Math.abs(parseInt(amount) / 100);
+
+                const match = items.find((item: any) => {
+                    const itemVal = Math.abs(parseFloat(String(item.valor).replace(/[R$\s]/g, "").replace(",", ".")));
+                    return Math.abs(itemVal - targetVal) < 0.01;
+                });
+
+                if (match && (match.idDoBancoLiquidante || match.id || match.id_transaction)) {
+                    const finalId = match.idDoBancoLiquidante || match.id || match.id_transaction;
+                    finalizeSuccess(finalId);
+                } else if (attempts < maxAttempts) {
+                    setTimeout(() => searchWithRetry(attempts + 1), 3000);
+                } else {
+                    setErrorMessage("Não conseguimos confirmar a transação. Verifique seu extrato em instantes.");
+                    setStep('error');
+                    setIsLoading(false);
+                }
+            } catch (e) {
+                if (attempts < maxAttempts) {
+                    setTimeout(() => searchWithRetry(attempts + 1), 3000);
+                } else {
+                    setErrorMessage("Erro de conexão ao validar transferência. Verifique seu extrato.");
+                    setStep('error');
+                    setIsLoading(false);
+                }
+            }
+        };
+
         try {
             // 1. Explicitly validate PIN before transfer
             await api.post("/api/users/validar-pin", {
@@ -201,14 +244,28 @@ export default function TransferenciaPage() {
             };
 
             const res = await api.post('/api/banco/pagamentos/transferencia-interna', payload);
-            setTransactionId(res.data?.id || res.data?.transactionId || "SUCCESS-" + Date.now());
-            setStep('success');
+            const raw = res.data?.data || res.data;
+            const directId = raw?.id || raw?.transactionId || raw?.id_transaction || raw?.idDoBancoLiquidante;
+            
+            if (directId) {
+                finalizeSuccess(directId);
+            } else {
+                searchWithRetry();
+            }
         } catch (err: any) {
             console.error("❌ [TRANSFERÊNCIA ERROR]:", err.response?.status, err.response?.data || err.message);
-            setErrorMessage(err.response?.data?.message || "Transação recusada. Verifique seu saldo ou PIN.");
-            setStep('error');
-        } finally {
-            setIsLoading(false);
+            
+            // Se for timeout ou erro de servidor (500+), pode ter funcionado no fundo
+            const isTimeout = !err.response || err.response.status >= 500 || err.code === 'ECONNABORTED';
+            
+            if (isTimeout) {
+                toast.info("Processamento lento no banco. Verificando extrato...");
+                searchWithRetry();
+            } else {
+                setErrorMessage(err.response?.data?.message || "Transação recusada. Verifique seu saldo ou PIN.");
+                setStep('error');
+                setIsLoading(false);
+            }
         }
     };
 

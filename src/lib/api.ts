@@ -14,6 +14,7 @@ export const getDeviceId = () => {
 
 const api = axios.create({
   baseURL: BASE_URL,
+  timeout: 90000, // 90 seconds to handle slow Cronos processing
   headers: {
     'Content-Type': 'application/json',
   },

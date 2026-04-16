@@ -42,6 +42,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
 import Link from "next/link";
 
 export default function ExtratoGeralPage() {
@@ -69,21 +70,41 @@ export default function ExtratoGeralPage() {
 
     useEffect(() => {
         const fetchExtrato = async () => {
+            const controller = new AbortController();
+            setIsLoading(true);
             try {
-                const response = await api.get("/api/banco/extrato/buscar");
+                const startTime = Date.now();
+                console.log("🚀 [EXTRATO] Iniciando busca...");
+                
+                // Passar datas se disponíveis para o backend tentar filtrar por lá
+                const response = await api.get("/api/banco/extrato/buscar", {
+                    params: {
+                        data_inicio: startDate,
+                        data_fim: endDate,
+                        limit: 100 // Tentar limitar a 100 itens pra ser mais rápido
+                    },
+                    signal: controller.signal
+                });
 
-                if (response.data && Array.isArray(response.data.data)) {
-                    setItems(response.data.data);
+                console.log(`✅ [EXTRATO] Recebido em ${Date.now() - startTime}ms`);
+
+                if (response.data && (response.data.data || response.data.transacoes)) {
+                   const rawItems = response.data.data || response.data.transacoes || [];
+                   setItems(Array.isArray(rawItems) ? rawItems : []);
                 }
-            } catch (err) {
+            } catch (err: any) {
+                if (err.name === 'CanceledError') return;
                 console.error("Error fetching extrato:", err);
+                toast.error("O banco demorou a responder o extrato. Tente recarregar.");
             } finally {
                 setIsLoading(false);
             }
+
+            return () => controller.abort();
         };
 
         fetchExtrato();
-    }, []);
+    }, [startDate, endDate]); // Recarregar se as datas mudarem no filtro principal
 
     const getNatureza = (metodo: string) => {
         switch (metodo) {

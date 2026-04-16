@@ -23,6 +23,7 @@ import { Separator } from "@/components/ui/separator";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import api from "@/lib/api";
 import { useSetAtom } from "jotai";
 import { temporaryDeviceIdAtom, balanceAtom, isBalanceLoadingAtom } from "@/store/auth";
 
@@ -60,9 +61,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const token = localStorage.getItem("token");
         const apiUrl = "https://g8api.bskpay.com.br";
 
-        const userRes = await axios.get(`${apiUrl}/api/users/data`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        const userRes = await api.get("/api/users/data");
 
         if (userRes.data) {
           const u = userRes.data;
@@ -91,9 +90,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const userToken = localStorage.getItem("userToken");
         const apiUrl = "https://g8api.bskpay.com.br";
 
-        const balanceRes = await axios.get(`${apiUrl}/api/banco/saldo/getSaldo`, {
-          headers: { Authorization: `Bearer ${token}`, 'userToken': userToken || "" }
-        });
+        const balanceRes = await api.get("/api/banco/saldo/getSaldo");
 
         if (balanceRes.data) {
           const valor = balanceRes.data.valor || 0;
