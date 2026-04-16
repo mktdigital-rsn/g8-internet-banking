@@ -49,6 +49,7 @@ export default function ExtratoGeralPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [exportingType, setExportingType] = useState<'pdf' | 'xls' | null>(null);
     const [filter, setFilter] = React.useState("all");
+    const [methodFilter, setMethodFilter] = React.useState("all");
     const [chartPeriod, setChartPeriod] = React.useState<"day" | "week" | "month">("week");
     const [searchTerm, setSearchTerm] = React.useState("");
     const [startDate, setStartDate] = React.useState("");
@@ -212,7 +213,13 @@ export default function ExtratoGeralPage() {
                 (filter === "in" && item.tipo === "CREDITO") ||
                 (filter === "out" && item.tipo === "DEBITO");
 
-            const searchString = `${item.pagadorNome} ${item.RecebinteNome} ${item.metodoFormatado}`.toLowerCase();
+            const matchesMethod = methodFilter === "all" ||
+                (methodFilter === "PIX" && item.metodo === "TRANSFERENCIA_PIX") ||
+                (methodFilter === "P2P" && item.metodo === "TRANSFERENCIA_INTERNA") ||
+                (methodFilter === "BOLETO" && item.metodo === "PAGAMENTO_BOLETO") ||
+                (methodFilter === "TARIFA" && item.metodo === "TARIFA");
+
+            const searchString = `${item.pagadorNome} ${item.RecebinteNome} ${item.metodoFormatado} ${item.idDoBancoLiquidante}`.toLowerCase();
             const matchesSearch = searchString.includes(searchTerm.toLowerCase());
 
             let matchesDate = true;
@@ -226,9 +233,9 @@ export default function ExtratoGeralPage() {
                 if (endDate && isoDate > endDate) matchesDate = false;
             }
 
-            return matchesFilter && matchesSearch && matchesDate;
+            return matchesFilter && matchesMethod && matchesSearch && matchesDate;
         });
-    }, [items, filter, searchTerm, startDate, endDate]);
+    }, [items, filter, methodFilter, searchTerm, startDate, endDate]);
 
     const chartData = useMemo(() => {
         let referenceDate = new Date();
@@ -603,17 +610,31 @@ export default function ExtratoGeralPage() {
 
                 {/* Filter & List Area */}
                 <div className="bg-white rounded-md p-4 md:p-8 border border-neutral-100 shadow-sm space-y-10">
-                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6 pb-6 border-b border-neutral-100">
-                        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 flex-wrap w-full">
-                            <Tabs value={filter} onValueChange={(val: any) => setFilter(val)} className="w-full sm:w-auto flex justify-center">
-                                <TabsList className="bg-neutral-100/50 rounded-md p-0.5 h-10 gap-0.5 border border-neutral-200/20">
-                                    <TabsTrigger value="all" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#f97316] transition-all font-sans">Todas</TabsTrigger>
-                                    <TabsTrigger value="in" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-green-600 transition-all font-sans">Entrada</TabsTrigger>
-                                    <TabsTrigger value="out" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-red-500 transition-all font-sans">Saída</TabsTrigger>
-                                </TabsList>
-                            </Tabs>
+                    <div className="flex flex-col gap-6 pb-6 border-b border-neutral-100">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6 flex-wrap w-full">
+                            <div className="flex flex-col sm:flex-row items-center gap-4">
+                                <Tabs value={filter} onValueChange={(val: any) => setFilter(val)} className="w-full sm:w-auto">
+                                    <TabsList className="bg-neutral-100/50 rounded-md p-0.5 h-10 gap-0.5 border border-neutral-200/20">
+                                        <TabsTrigger value="all" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#f97316] transition-all font-sans">Todas</TabsTrigger>
+                                        <TabsTrigger value="in" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-green-600 transition-all font-sans">Entrada</TabsTrigger>
+                                        <TabsTrigger value="out" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-red-500 transition-all font-sans">Saída</TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
 
-                            <div className="flex items-center gap-1 md:gap-2 bg-neutral-100/50 rounded-md p-0.5 border border-neutral-200/20 w-fit mx-auto md:mx-0 overflow-x-auto no-scrollbar">
+                                <div className="h-6 w-px bg-neutral-200 hidden sm:block mx-2" />
+
+                                <Tabs value={methodFilter} onValueChange={(val: any) => setMethodFilter(val)} className="w-full sm:w-auto">
+                                    <TabsList className="bg-neutral-100/50 rounded-md p-0.5 h-10 gap-1 border border-neutral-200/20">
+                                        <TabsTrigger value="all" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[#0c0a09] data-[state=active]:text-white transition-all">Métodos</TabsTrigger>
+                                        <TabsTrigger value="PIX" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[#f97316] data-[state=active]:text-white transition-all">PIX</TabsTrigger>
+                                        <TabsTrigger value="P2P" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[#ea580c] data-[state=active]:text-white transition-all">P2P</TabsTrigger>
+                                        <TabsTrigger value="BOLETO" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[#c2410c] data-[state=active]:text-white transition-all">BOLETO</TabsTrigger>
+                                        <TabsTrigger value="TARIFA" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-neutral-500 data-[state=active]:text-white transition-all">TARIFA</TabsTrigger>
+                                    </TabsList>
+                                </Tabs>
+                            </div>
+
+                            <div className="flex items-center gap-1 md:gap-2 bg-neutral-100/50 rounded-md p-0.5 border border-neutral-200/20 w-fit overflow-x-auto no-scrollbar ml-auto">
                                 <div className="relative group shrink-0">
                                     <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400 font-black" />
                                     <Input

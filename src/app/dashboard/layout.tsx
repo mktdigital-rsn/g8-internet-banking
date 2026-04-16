@@ -24,7 +24,7 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import { useSetAtom } from "jotai";
-import { temporaryDeviceIdAtom } from "@/store/auth";
+import { temporaryDeviceIdAtom, balanceAtom, isBalanceLoadingAtom } from "@/store/auth";
 
 interface MenuItem {
   icon: any;
@@ -51,6 +51,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
    const [balance, setBalance] = React.useState("");
    const [accountInfo, setAccountInfo] = React.useState({ agency: "", account: "" });
    const [isLoadingData, setIsLoadingData] = React.useState(true);
+   const setGlobalBalance = useSetAtom(balanceAtom);
+   const setGlobalBalanceLoading = useSetAtom(isBalanceLoadingAtom);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -94,9 +96,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         });
 
         if (balanceRes.data) {
-          setBalance(new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(balanceRes.data.valor || 0));
+          const valor = balanceRes.data.valor || 0;
+          setBalance(new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(valor));
+          setGlobalBalance(valor);
         }
         setIsLoadingData(false);
+        setGlobalBalanceLoading(false);
       } catch (err) {
         console.error("Error updating balance:", err);
       }
@@ -104,25 +109,71 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     fetchBalance();
   }, [pathname]);
 
-  const handleLogout = () => {
-    setTemporaryDeviceId("");
-    localStorage.clear();
-    router.push("/");
-  };
-
   const cleanName = (name: string) => {
     return name.replace(/^\d+(\.\d+)*\s*/, '').split(' ')[0] || "Cliente";
   };
 
-  const [timeLeft, setTimeLeft] = React.useState(900); // 15 minutes in seconds
+  const SESSION_DURATION = 900; // 15 minutes in seconds
+  const [timeLeft, setTimeLeft] = React.useState<number | null>(null);
+  const isFirstMount = React.useRef(true);
 
+  const handleLogout = React.useCallback(() => {
+    setTemporaryDeviceId("");
+    localStorage.clear();
+    router.push("/");
+  }, [router, setTemporaryDeviceId]);
+
+  const refreshSession = React.useCallback(() => {
+    const expiresAt = Date.now() + SESSION_DURATION * 1000;
+    localStorage.setItem("sessionExpiresAt", expiresAt.toString());
+    setTimeLeft(SESSION_DURATION);
+  }, []);
+
+  // Initial load and sync
   React.useEffect(() => {
-    if (timeLeft <= 0) return;
+    const expiresAt = localStorage.getItem("sessionExpiresAt");
+    if (expiresAt) {
+      const remaining = Math.floor((parseInt(expiresAt) - Date.now()) / 1000);
+      if (remaining <= 0) {
+        handleLogout();
+      } else {
+        setTimeLeft(remaining);
+      }
+    } else {
+      refreshSession();
+    }
+  }, [handleLogout, refreshSession]);
+
+  // Reset timer on navigation (but not on initial mount/F5)
+  React.useEffect(() => {
+    if (isFirstMount.current) {
+      isFirstMount.current = false;
+      return;
+    }
+    refreshSession();
+  }, [pathname, refreshSession]);
+
+  // Countdown logic
+  React.useEffect(() => {
+    if (timeLeft === null) return;
+    
+    if (timeLeft <= 0) {
+      handleLogout();
+      return;
+    }
+
     const interval = setInterval(() => {
-      setTimeLeft(prev => prev - 1);
+      setTimeLeft(prev => {
+        if (prev === null || prev <= 0) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
     }, 1000);
+    
     return () => clearInterval(interval);
-  }, [timeLeft]);
+  }, [timeLeft, handleLogout]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -230,7 +281,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     <Clock className="h-3 w-3 text-[#f97316] animate-pulse" />
                     <span className="text-[9px] font-black text-[#f97316] uppercase tracking-widest">Sessão Segura</span>
                  </div>
-                 <span className="text-xs font-mono font-black text-white tabular-nums leading-none">{formatTime(timeLeft)}</span>
+                 <span className="text-xs font-mono font-black text-white tabular-nums leading-none">
+                   {timeLeft !== null ? formatTime(timeLeft) : "00:00"}
+                 </span>
               </div>
 
               <Link href="/dashboard/conta" className="flex items-center gap-4 cursor-pointer group">

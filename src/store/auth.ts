@@ -1,4 +1,9 @@
+import { atom } from "jotai";
 import { atomWithStorage, createJSONStorage } from "jotai/utils";
+
+export const balanceAtom = atom<number>(0);
+export const isBalanceLoadingAtom = atom<boolean>(true);
+
 
 const memoryStorage: Storage = {
   length: 0,

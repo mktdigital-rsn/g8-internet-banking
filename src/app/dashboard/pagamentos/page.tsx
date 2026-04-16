@@ -203,28 +203,39 @@ export default function PagamentosPage() {
       });
 
       if (res.data) {
-        setStep("success");
-        toast.success("Pagamento realizado com sucesso!");
-
-        // 1. Tentar pegar ID direto da resposta do pagamento (Varredura de campos comuns)
-        const raw = res.data.data || res.data;
-        const directId = raw.idDoBancoLiquidante || raw.transactionId || raw.id || raw.auth || raw.nsu || raw.protocolo || raw.receiptId || raw.receipt_id;
+        console.log("🔍 [BOLETO RESPONSE]:", res.data);
         
+        // 1. Varredura profunda para capturar id_transaction (Cronos style)
+        const getNestedId = (obj: any): string | null => {
+          if (!obj || typeof obj !== 'object') return null;
+          return obj.id_transaction || obj.idDoBancoLiquidante || obj.transactionId || obj.id || obj.transaction_id || obj.auth || obj.nsu;
+        };
+
+        const directId = getNestedId(res.data) || getNestedId(res.data.data) || getNestedId(res.data.response) || getNestedId(res.data.result);
+        
+        const finalizeSuccess = (finalId: string) => {
+          setTransactionId(finalId);
+          setStep("success");
+          setIsLoading(false);
+          toast.success("Pagamento realizado com sucesso!");
+          console.log("✅ Pagamento finalizado com ID capturado:", finalId);
+        };
+
         if (directId) {
-          setTransactionId(directId);
-          console.log("✅ ID encontrado diretamente:", directId);
+          finalizeSuccess(directId);
+          return; 
         }
         
-        // 2. Fallback: Buscar no extrato com retentativas (banco pode demorar a processar)
+        // 2. Fallback: Se chegou aqui é porque a Cronos sacaneou e não mandou o ID no JSON principal
+        toast.info("Pagamento aceito! Sincronizando comprovante...");
         let attempts = 0;
-        const maxAttempts = 3;
+        const maxAttempts = 5; // Aumentado para dar mais tempo ao banco
 
         const searchWithRetry = async () => {
-          if (directId && !String(directId).startsWith("PAG")) return; 
           attempts++;
 
           try {
-            console.log(`🔍 [BUSCA EXTRATO] Tentativa ${attempts}...`);
+            console.log(`🔍 [BUSCA EXTRATO] Tentativa ${attempts}/${maxAttempts}...`);
             const extratoRes = await api.get("/api/banco/extrato/buscar");
             const items = extratoRes.data.transacoes || extratoRes.data.data?.transacoes || [];
             
@@ -235,26 +246,28 @@ export default function PagamentosPage() {
                return Math.abs(itemVal - targetVal) < 0.01;
             });
 
-            if (match && (match.idDoBancoLiquidante || match.id || match.nsu)) {
-              const finalId = match.idDoBancoLiquidante || match.id || match.nsu;
-              setTransactionId(finalId);
-              console.log("✅ ID encontrado no extrato!", finalId);
+            if (match && (match.idDoBancoLiquidante || match.id_transaction || match.id || match.nsu)) {
+              const finalId = match.idDoBancoLiquidante || match.id_transaction || match.id || match.nsu;
+              finalizeSuccess(finalId);
             } else if (attempts < maxAttempts) {
-              setTimeout(searchWithRetry, 3000); // Tenta de novo em 3s
-            } else if (!directId) {
-              setTransactionId("PAG-" + Math.random().toString(36).substring(7).toUpperCase());
+              setTimeout(searchWithRetry, 2500); 
+            } else {
+              // Se falhar após todas as tentativas, mostra erro e não vai para a tela de sucesso
+              setIsLoading(false);
+              toast.error("Pagamento processado, mas não conseguimos capturar o comprovante. Verifique seu extrato em instantes.");
             }
           } catch (e) {
             console.error("Erro na busca do extrato:", e);
             if (attempts < maxAttempts) {
-              setTimeout(searchWithRetry, 3000);
-            } else if (!directId) {
-              setTransactionId("ERR-" + Date.now().toString().slice(-6));
+              setTimeout(searchWithRetry, 2500);
+            } else {
+              setIsLoading(false);
+              toast.error("Erro ao sincronizar dados do pagamento.");
             }
           }
         };
 
-        setTimeout(searchWithRetry, 2500);
+        searchWithRetry();
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Erro ao processar pagamento.");

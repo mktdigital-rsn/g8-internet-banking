@@ -33,6 +33,17 @@ api.interceptors.request.use(
       
       if (userToken) {
         config.headers.userToken = userToken;
+        config.headers.usertoken = userToken;
+      }
+
+      // Important: Some endpoints require deviceId in headers to avoid 524/502
+      const tempId = localStorage.getItem('temporaryDeviceId')?.replace(/"/g, '');
+      const defaultId = localStorage.getItem('deviceId');
+      const finalDeviceId = tempId || defaultId;
+
+      if (finalDeviceId) {
+        config.headers['deviceId'] = finalDeviceId;
+        config.headers['device-id'] = finalDeviceId;
       }
 
     }

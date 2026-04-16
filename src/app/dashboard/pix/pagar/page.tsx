@@ -32,7 +32,7 @@ import { Building2, Fingerprint, CheckCircle2, Download, Smartphone as Smartphon
 import Link from "next/link";
 import { toast } from "sonner";
 import { useAtomValue } from "jotai";
-import { temporaryDeviceIdAtom } from "@/store/auth";
+import { temporaryDeviceIdAtom, balanceAtom, isBalanceLoadingAtom } from "@/store/auth";
 
 function PixPagarContent() {
   const searchParams = useSearchParams();
@@ -56,13 +56,13 @@ function PixPagarContent() {
   const [recipientBank, setRecipientBank] = useState(urlBank);
   const [recipientDocument, setRecipientDocument] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const balanceValue = useAtomValue(balanceAtom);
+  const isBalanceLoading = useAtomValue(isBalanceLoadingAtom);
   const [userPhone, setUserPhone] = useState("");
   const [pinId, setPinId] = useState("");
   const [searchResult, setSearchResult] = useState<any>(null);
   const [uuid, setUuid] = useState("");
   const [endToEndId, setEndToEndId] = useState("");
-  const [balanceValue, setBalanceValue] = useState<number>(0);
-  const [isBalanceLoading, setIsBalanceLoading] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,21 +127,7 @@ function PixPagarContent() {
     };
     fetchProfile();
 
-    // Fetch balance
-    const fetchBalance = async () => {
-      setIsBalanceLoading(true);
-      try {
-        const res = await api.get("/api/banco/saldo/getSaldo");
-        if (res.data && typeof res.data.valor !== 'undefined') {
-          setBalanceValue(res.data.valor);
-        }
-      } catch (err) {
-        console.error("Error fetching balance:", err);
-      } finally {
-        setIsBalanceLoading(false);
-      }
-    };
-    fetchBalance();
+    fetchProfile();
   }, []);
 
   useEffect(() => {
