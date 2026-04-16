@@ -196,6 +196,7 @@ export default function TransferenciaPage() {
                 recebedorConta: receiver?.conta,
                 recebedorDigito: receiver?.digito,
                 valor: parseInt(amount) / 100,
+                pin: pin,
                 deviceId: temporaryDeviceId
             };
 
@@ -455,7 +456,7 @@ export default function TransferenciaPage() {
 
                                         <div className="w-full max-w-sm space-y-8">
                                             <Input 
-                                                type="password"
+                                                type="text"
                                                 maxLength={6}
                                                 value={pin}
                                                 onChange={(e) => setPin(e.target.value.replace(/\D/g, "").substring(0, 6))}

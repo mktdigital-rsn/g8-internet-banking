@@ -206,35 +206,55 @@ export default function PagamentosPage() {
         setStep("success");
         toast.success("Pagamento realizado com sucesso!");
 
-        // 1. Tentar pegar ID direto da resposta do pagamento (mais rápido)
-        const directId = res.data.transactionId || res.data.id || res.data.data?.id || res.data.data?.transactionId;
+        // 1. Tentar pegar ID direto da resposta do pagamento (Varredura de campos comuns)
+        const raw = res.data.data || res.data;
+        const directId = raw.idDoBancoLiquidante || raw.transactionId || raw.id || raw.auth || raw.nsu || raw.protocolo || raw.receiptId || raw.receipt_id;
+        
         if (directId) {
           setTransactionId(directId);
-          console.log("✅ ID da transação capturado diretamente:", directId);
+          console.log("✅ ID encontrado diretamente:", directId);
         }
         
-        // 2. Fallback: Buscar no extrato (Sync de segurança)
-        setTimeout(async () => {
-          if (directId) return; // Se já temos, não precisa buscar
+        // 2. Fallback: Buscar no extrato com retentativas (banco pode demorar a processar)
+        let attempts = 0;
+        const maxAttempts = 3;
+
+        const searchWithRetry = async () => {
+          if (directId && !String(directId).startsWith("PAG")) return; 
+          attempts++;
 
           try {
+            console.log(`🔍 [BUSCA EXTRATO] Tentativa ${attempts}...`);
             const extratoRes = await api.get("/api/banco/extrato/buscar");
             const items = extratoRes.data.transacoes || extratoRes.data.data?.transacoes || [];
             
-            const match = items.find((item: any) => 
-               Math.abs(item.valor) === Math.abs(boletoData.valor) && 
-               (item.metodo === "BOLETO" || item.tipoFormatado?.toUpperCase().includes("BOLETO"))
-            );
+            const targetVal = Math.abs(parseFloat(String(boletoData.valorTotal || boletoData.valor).replace(/[R$\s]/g, "").replace(",", ".")));
 
-            if (match && (match.idDoBancoLiquidante || match.id)) {
-              setTransactionId(match.idDoBancoLiquidante || match.id);
-            } else {
-              setTransactionId("PAG" + Math.random().toString(36).substring(7).toUpperCase());
+            const match = items.find((item: any) => {
+               const itemVal = Math.abs(parseFloat(String(item.valor).replace(/[R$\s]/g, "").replace(",", ".")));
+               return Math.abs(itemVal - targetVal) < 0.01;
+            });
+
+            if (match && (match.idDoBancoLiquidante || match.id || match.nsu)) {
+              const finalId = match.idDoBancoLiquidante || match.id || match.nsu;
+              setTransactionId(finalId);
+              console.log("✅ ID encontrado no extrato!", finalId);
+            } else if (attempts < maxAttempts) {
+              setTimeout(searchWithRetry, 3000); // Tenta de novo em 3s
+            } else if (!directId) {
+              setTransactionId("PAG-" + Math.random().toString(36).substring(7).toUpperCase());
             }
           } catch (e) {
-            setTransactionId("PAG" + Math.random().toString(36).substring(7).toUpperCase());
+            console.error("Erro na busca do extrato:", e);
+            if (attempts < maxAttempts) {
+              setTimeout(searchWithRetry, 3000);
+            } else if (!directId) {
+              setTransactionId("ERR-" + Date.now().toString().slice(-6));
+            }
           }
-        }, 2500);
+        };
+
+        setTimeout(searchWithRetry, 2500);
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Erro ao processar pagamento.");
