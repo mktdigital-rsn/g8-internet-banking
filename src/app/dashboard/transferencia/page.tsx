@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import api from "@/lib/api";
 import axios from "axios";
+import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAtomValue } from "jotai";
 import { temporaryDeviceIdAtom } from "@/store/auth";
@@ -224,6 +225,37 @@ export default function TransferenciaPage() {
         setTargetAgencia("");
         setTargetConta("");
         setTargetDigito("");
+    };
+
+    const handlePrintReceipt = async () => {
+        if (!transactionId) {
+            toast.error("ID da transação não localizado.");
+            return;
+        }
+
+        try {
+            const response = await api.get(`/api/banco/extrato/imprimir-item/${transactionId}`, {
+                responseType: 'blob'
+            });
+
+            if (response.data.size === 0) {
+                toast.info("O comprovante está sendo processado. Tente novamente em 5 segundos.");
+                return;
+            }
+
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `comprovante_transferencia_${transactionId}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error("❌ [RECEIPT ERROR]:", err);
+            toast.error("Erro ao gerar comprovante. Verifique o extrato.");
+        }
     };
 
     return (
@@ -467,9 +499,9 @@ export default function TransferenciaPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="max-w-lg mx-auto"
                                 >
-                                    <Card className="bg-orange-500 border-0 p-1 rounded-md shadow-2xl">
+                                    <Card className="bg-orange-400 border-0 p-1 rounded-md shadow-2xl">
                                         <div className="bg-white p-10 rounded-md space-y-8 text-center">
-                                            <div className="w-20 h-20 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto text-orange-500 mb-4">
+                                            <div className="w-20 h-20 bg-orange-400/10 rounded-full flex items-center justify-center mx-auto text-orange-400 mb-4">
                                                 <CheckCircle2 size={48} strokeWidth={3}/>
                                             </div>
                                             <div className="space-y-1">
@@ -480,7 +512,7 @@ export default function TransferenciaPage() {
                                             <div className="border-y border-neutral-100 py-6 space-y-4">
                                                 <div className="flex justify-between items-center text-[10px] uppercase font-black">
                                                     <span className="text-[#0c0a09]/30">Valor</span>
-                                                    <span className="text-xl text-orange-500">{formatCurrency(amount)}</span>
+                                                    <span className="text-xl text-orange-400">{formatCurrency(amount)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-[10px] uppercase font-black">
                                                     <span className="text-[#0c0a09]/30">Protocolo</span>
@@ -489,8 +521,14 @@ export default function TransferenciaPage() {
                                             </div>
 
                                             <div className="grid grid-cols-2 gap-4 pt-4">
-                                                <Button variant="outline" className="h-12 border-neutral-100 bg-white rounded-sm font-black text-[10px] uppercase hover:bg-neutral-50 shadow-sm">Comprovante</Button>
-                                                <Button onClick={resetFlow} className="h-12 bg-[#0c0a09] text-white hover:bg-emerald-500 rounded-sm font-black text-[10px] uppercase shadow-lg shadow-black/10">Nova Transf.</Button>
+                                                <Button 
+                                                    variant="outline" 
+                                                    onClick={handlePrintReceipt}
+                                                    className="h-12 border-neutral-100 bg-white rounded-sm font-black text-[10px] uppercase hover:bg-neutral-50 shadow-sm"
+                                                >
+                                                    Comprovante
+                                                </Button>
+                                                <Button onClick={resetFlow} className="h-12 bg-[#0c0a09] text-white hover:bg-[#f97316] rounded-sm font-black text-[10px] uppercase shadow-lg shadow-black/10">Nova Transf.</Button>
                                             </div>
                                         </div>
                                     </Card>

@@ -32,6 +32,7 @@ api.interceptors.request.use(
       
       if (userToken) {
         config.headers.userToken = userToken;
+        config.headers.usertoken = userToken;
       }
     }
     return config;
