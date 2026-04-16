@@ -467,9 +467,9 @@ export default function TransferenciaPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="max-w-lg mx-auto"
                                 >
-                                    <Card className="bg-emerald-500 border-0 p-1 rounded-md shadow-2xl">
+                                    <Card className="bg-orange-500 border-0 p-1 rounded-md shadow-2xl">
                                         <div className="bg-white p-10 rounded-md space-y-8 text-center">
-                                            <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto text-emerald-500 mb-4">
+                                            <div className="w-20 h-20 bg-orange-500/10 rounded-full flex items-center justify-center mx-auto text-orange-500 mb-4">
                                                 <CheckCircle2 size={48} strokeWidth={3}/>
                                             </div>
                                             <div className="space-y-1">
@@ -480,7 +480,7 @@ export default function TransferenciaPage() {
                                             <div className="border-y border-neutral-100 py-6 space-y-4">
                                                 <div className="flex justify-between items-center text-[10px] uppercase font-black">
                                                     <span className="text-[#0c0a09]/30">Valor</span>
-                                                    <span className="text-xl text-emerald-500">{formatCurrency(amount)}</span>
+                                                    <span className="text-xl text-orange-500">{formatCurrency(amount)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-[10px] uppercase font-black">
                                                     <span className="text-[#0c0a09]/30">Protocolo</span>
