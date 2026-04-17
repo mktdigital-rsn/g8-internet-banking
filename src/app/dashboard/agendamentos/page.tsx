@@ -43,6 +43,31 @@ const MOCK_AGENDAMENTOS: Agendamento[] = [
   { id: "4", type: "ted", beneficiario: "Investimentos S.A.", valor: 5000.00, data: "2026-04-18", status: "pending" },
 ];
 
+function StatusBadge({ valor }: { valor: number }) {
+  if (valor >= 5000) {
+    return (
+      <Badge className="bg-purple-600/10 text-purple-600 border-0 px-2 py-0 h-5 font-black text-[9px] uppercase tracking-widest rounded-sm flex items-center gap-1">
+        <div className="w-1.5 h-1.5 bg-purple-600 rounded-full animate-pulse" />
+        ANALISE ESPECIAL
+      </Badge>
+    );
+  }
+  if (valor >= 1000) {
+    return (
+      <Badge className="bg-rose-600/10 text-rose-600 border-0 px-2 py-0 h-5 font-black text-[9px] uppercase tracking-widest rounded-sm flex items-center gap-1">
+        <Clock className="h-3 w-3" />
+        ALTA PRIORIDADE
+      </Badge>
+    );
+  }
+  return (
+    <Badge className="bg-orange-600/10 text-orange-600 border-0 px-2 py-0 h-5 font-black text-[9px] uppercase tracking-widest rounded-sm flex items-center gap-1">
+      <CheckCircle2 className="h-3 w-3" />
+      AGENDADO
+    </Badge>
+  );
+}
+
 export default function AgendamentosPage() {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>(MOCK_AGENDAMENTOS);
   const [search, setSearch] = useState("");
@@ -59,6 +84,7 @@ export default function AgendamentosPage() {
     valor: "",
     data: "",
   });
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   const filtered = agendamentos.filter(ag => {
     const matchesSearch = ag.beneficiario.toLowerCase().includes(search.toLowerCase());
@@ -73,22 +99,47 @@ export default function AgendamentosPage() {
     }
   };
 
+  const handleEdit = (ag: Agendamento) => {
+    setNewAgendamento({
+      type: ag.type,
+      beneficiario: ag.beneficiario,
+      valor: ag.valor.toString(),
+      data: ag.data,
+    });
+    setEditingId(ag.id);
+    setIsAdding(true);
+  };
+
   const handleAdd = () => {
     if (!newAgendamento.beneficiario || !newAgendamento.valor || !newAgendamento.data) {
       return toast.error("Preencha todos os campos.");
     }
-    const ag: Agendamento = {
-      id: Math.random().toString(36).substr(2, 9),
-      type: newAgendamento.type,
-      beneficiario: newAgendamento.beneficiario,
-      valor: parseFloat(newAgendamento.valor),
-      data: newAgendamento.data,
-      status: "pending"
-    };
-    setAgendamentos([ag, ...agendamentos]);
+
+    if (editingId) {
+      setAgendamentos(prev => prev.map(a => a.id === editingId ? {
+        ...a,
+        type: newAgendamento.type,
+        beneficiario: newAgendamento.beneficiario,
+        valor: parseFloat(newAgendamento.valor),
+        data: newAgendamento.data
+      } : a));
+      toast.success("Agendamento atualizado com sucesso!");
+    } else {
+      const ag: Agendamento = {
+        id: Math.random().toString(36).substr(2, 9),
+        type: newAgendamento.type,
+        beneficiario: newAgendamento.beneficiario,
+        valor: parseFloat(newAgendamento.valor),
+        data: newAgendamento.data,
+        status: "pending"
+      };
+      setAgendamentos([ag, ...agendamentos]);
+      toast.success("Pagamento agendado com sucesso!");
+    }
+    
     setIsAdding(false);
+    setEditingId(null);
     setNewAgendamento({ type: "pix", beneficiario: "", valor: "", data: "" });
-    toast.success("Pagamento agendado com sucesso!");
   };
 
   return (
@@ -107,7 +158,11 @@ export default function AgendamentosPage() {
           </p>
         </div>
         <Button 
-          onClick={() => setIsAdding(true)}
+          onClick={() => {
+            setEditingId(null);
+            setNewAgendamento({ type: "pix", beneficiario: "", valor: "", data: "" });
+            setIsAdding(true);
+          }}
           className="h-14 px-8 bg-orange-600 hover:bg-orange-700 text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all shadow-xl shadow-orange-600/20 group"
         >
           <CalendarClock className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform" />
@@ -160,7 +215,7 @@ export default function AgendamentosPage() {
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-[10px] font-black text-orange-700 uppercase tracking-widest opacity-60">{ag.type}</span>
                         <div className="w-1 h-1 bg-orange-200 rounded-full" />
-                        <span className="text-[10px] font-black text-orange-600 uppercase tracking-widest">Pendente</span>
+                        <StatusBadge valor={ag.valor} />
                       </div>
                       <h3 className="text-lg font-black text-[#0c0a09] uppercase tracking-tight">{ag.beneficiario}</h3>
                     </div>
@@ -181,7 +236,10 @@ export default function AgendamentosPage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                       <button className="w-10 h-10 flex items-center justify-center bg-neutral-50 hover:bg-orange-50 text-neutral-300 hover:text-orange-600 rounded-sm transition-all border border-neutral-100 hover:border-orange-200">
+                       <button 
+                        onClick={() => handleEdit(ag)}
+                        className="w-10 h-10 flex items-center justify-center bg-neutral-50 hover:bg-orange-50 text-neutral-300 hover:text-orange-600 rounded-sm transition-all border border-neutral-100 hover:border-orange-200"
+                       >
                           <Pencil className="h-4 w-4" />
                        </button>
                        <button 
@@ -258,12 +316,17 @@ export default function AgendamentosPage() {
                   <CalendarClock className="h-6 w-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">Novo Agendamento</h2>
+                  <h2 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">
+                    {editingId ? "Editar Agendamento" : "Novo Agendamento"}
+                  </h2>
                   <p className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em]">Programação transacional</p>
                 </div>
               </div>
               <button 
-                onClick={() => setIsAdding(false)}
+                onClick={() => {
+                  setIsAdding(false);
+                  setEditingId(null);
+                }}
                 className="p-2 rounded-sm hover:bg-neutral-50 transition-colors text-neutral-400"
               >
                 <X className="h-6 w-6" />
@@ -332,10 +395,13 @@ export default function AgendamentosPage() {
                   onClick={handleAdd}
                   className="flex-1 h-14 bg-orange-600 hover:bg-orange-700 text-white rounded-sm font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-orange-600/20"
                 >
-                  Confirmar Agendamento <ArrowRight className="h-4 w-4 ml-2" />
+                  {editingId ? "Salvar Alterações" : "Confirmar Agendamento"} <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
                 <Button 
-                  onClick={() => setIsAdding(false)}
+                  onClick={() => {
+                    setIsAdding(false);
+                    setEditingId(null);
+                  }}
                   variant="outline"
                   className="px-8 h-14 border-neutral-100 text-neutral-400 hover:bg-neutral-50 font-black uppercase tracking-[0.2em] text-[10px]"
                 >

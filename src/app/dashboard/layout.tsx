@@ -146,14 +146,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [handleLogout, refreshSession]);
 
-  // Reset timer on navigation (but not on initial mount/F5)
-  React.useEffect(() => {
-    if (isFirstMount.current) {
-      isFirstMount.current = false;
-      return;
-    }
-    refreshSession();
-  }, [pathname, refreshSession]);
+
 
   // Countdown logic
   React.useEffect(() => {

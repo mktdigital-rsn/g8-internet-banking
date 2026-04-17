@@ -22,6 +22,7 @@ import {
   Loader2,
   FileText,
   FileUp,
+  Trash2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -128,8 +129,56 @@ export default function MaquininhasPage() {
 
     // Dynamic Lists
     contatos: [{ nome: "", cpf: "", email: "", tipoResponsavel: "", dataNascimento: "", nacionalidade: "Brasileira", funcao: "", telefone: "" }],
-    contasBancarias: [{ tipoConta: "Conta Corrente", banco: "", agencia: "", conta: "", digito: "" }]
+    contasBancarias: [{ tipoConta: "Conta Corrente", banco: "", agencia: "", conta: "", digito: "" }],
+    // Document objects to store file info
+    documents: {} as Record<string, { name: string, url: string }[]>
   });
+
+  const [bancosList, setBancosList] = useState<{ code: string, name: string }[]>([
+    { code: "065", name: "G8 Bank" },
+    { code: "382", name: "FIDUCIA I S.C.M. S/A" },
+    { code: "001", name: "Banco do Brasil" },
+    { code: "033", name: "Santander" },
+    { code: "104", name: "Caixa Econômica Federal" },
+    { code: "237", name: "Bradesco" },
+    { code: "341", name: "Itaú Unibanco" },
+  ]);
+
+  useEffect(() => {
+    const fetchBanks = async () => {
+      try {
+        const res = await fetch("https://brasilapi.com.br/api/banks/v1");
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          const formatted = data
+            .filter(b => b.code && b.name)
+            .map(b => ({
+              code: String(b.code).padStart(3, '0'),
+              name: b.name
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
+          
+          // Ensure G8 and Fiducia are at the top
+          const important = [
+            { code: "065", name: "G8 Bank" },
+            { code: "382", name: "FIDUCIA I S.C.M. S/A" }
+          ];
+          
+          const filtered = formatted.filter(b => b.code !== "065" && b.code !== "382");
+          setBancosList([...important, ...filtered]);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar bancos:", err);
+      }
+    };
+    fetchBanks();
+  }, []);
+
+  const normalizeFileName = (type: string, originalName: string) => {
+    const extension = originalName.split('.').pop();
+    const cleanType = type.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    return `${cleanType}.${extension}`;
+  };
 
   const maskCpfCnpj = (val: string) => {
     const v = val.replace(/\D/g, "");
@@ -137,6 +186,34 @@ export default function MaquininhasPage() {
       return v.replace(/(\d{3})(\d{3})(\d{3})(\d{1,2})/, "$1.$2.$3-$4").substring(0, 14);
     }
     return v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{1,2})/, "$1.$2.$3/$4-$5").substring(0, 18);
+  };
+
+  const handleCnpjLookup = async (cnpj: string) => {
+    const cleanCnpj = cnpj.replace(/\D/g, "");
+    if (cleanCnpj.length === 14) {
+      try {
+        const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
+        const data = await res.json();
+        if (data && !data.message) {
+          setFormData(prev => ({
+            ...prev,
+            razaoSocial: data.razao_social || prev.razaoSocial,
+            nomeFantasia: data.nome_fantasia || data.razao_social || prev.nomeFantasia,
+            cnae: data.cnae_fiscal || prev.cnae,
+            cep: data.cep || prev.cep,
+            rua: data.logradouro || prev.rua,
+            numero: data.numero || prev.numero,
+            complemento: data.complemento || prev.complemento,
+            bairro: data.bairro || prev.bairro,
+            cidade: data.municipio || prev.cidade,
+            estado: data.uf || prev.estado
+          }));
+          toast.success("Dados da empresa importados com sucesso!");
+        }
+      } catch (err) {
+        console.error("Erro ao buscar CNPJ:", err);
+      }
+    }
   };
 
   const maskCep = (val: string) => {
@@ -201,11 +278,47 @@ export default function MaquininhasPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const updateAttachedDoc = (docTitle: string) => {
-    if (!attachedDocs.includes(docTitle)) {
-      setAttachedDocs(prev => [...prev, docTitle]);
-      toast.success(`${docTitle} anexado com sucesso!`);
+  const handleFileUpload = (docType: string, file: File) => {
+    const normalizedName = normalizeFileName(docType, file.name);
+    const fakeUrl = URL.createObjectURL(file);
+    
+    setFormData(prev => {
+      const currentDocs = prev.documents[docType] || [];
+      const maxFiles = docType === "Foto da Fachada" ? 3 : 1;
+      
+      if (currentDocs.length >= maxFiles) {
+        toast.error(`Limite de arquivos para ${docType} atingido.`);
+        return prev;
+      }
+      
+      return {
+        ...prev,
+        documents: {
+          ...prev.documents,
+          [docType]: [...currentDocs, { name: normalizedName, url: fakeUrl }]
+        }
+      };
+    });
+    
+    if (!attachedDocs.includes(docType)) {
+      setAttachedDocs(prev => [...prev, docType]);
     }
+    toast.success(`${docType} anexado como ${normalizedName}!`);
+  };
+
+  const removeDoc = (docType: string, index: number) => {
+    setFormData(prev => {
+      const newDocs = [...(prev.documents[docType] || [])];
+      newDocs.splice(index, 1);
+      
+      const newDocuments = { ...prev.documents, [docType]: newDocs };
+      
+      if (newDocs.length === 0) {
+        setAttachedDocs(prevAttached => prevAttached.filter(d => d !== docType));
+      }
+      
+      return { ...prev, documents: newDocuments };
+    });
   };
 
   const addContato = () => {
@@ -329,7 +442,8 @@ export default function MaquininhasPage() {
       pais: "Brasil",
       quantidade: "1",
       contatos: [{ nome: "", cpf: "", email: "", tipoResponsavel: "", dataNascimento: "", nacionalidade: "Brasileira", funcao: "", telefone: "" }],
-      contasBancarias: [{ tipoConta: "Conta Corrente", banco: "", agencia: "", conta: "", digito: "" }]
+      contasBancarias: [{ tipoConta: "Conta Corrente", banco: "", agencia: "", conta: "", digito: "" }],
+      documents: {}
     });
   };
 
@@ -507,7 +621,17 @@ export default function MaquininhasPage() {
                     onChange={(v) => updateField("tipoEstabelecimento", v)}
                     options={["Pessoa Física", "Pessoa Jurídica"]}
                   />
-                  <FormField label="CPF/CNPJ" required value={formData.cnpjCpf} onChange={(v) => updateField("cnpjCpf", maskCpfCnpj(v))} placeholder="XXX.XXX.XXX-XX" />
+                  <FormField 
+                    label="CPF/CNPJ" 
+                    required 
+                    value={formData.cnpjCpf} 
+                    onChange={(v) => {
+                      const masked = maskCpfCnpj(v);
+                      updateField("cnpjCpf", masked);
+                      if (masked.length > 14) handleCnpjLookup(masked);
+                    }} 
+                    placeholder="XXX.XXX.XXX-XX" 
+                  />
                   <FormField label="Razão Social" value={formData.razaoSocial} onChange={(v) => updateField("razaoSocial", v)} placeholder="Razão Social da Empresa" />
                   
                   <FormSelect 
@@ -645,17 +769,23 @@ export default function MaquininhasPage() {
                           label="Tipo de Conta" 
                           value={conta.tipoConta} 
                           onChange={(v) => updateConta(idx, "tipoConta", v)}
-                          options={["Conta Corrente", "Conta Poupança", "Conta Pagamento"]}
+                          options={["Conta Corrente", "Conta Poupança (EM BREVE)", "Conta Pagamento (EM BREVE)"]}
                         />
-                        <FormField label="Código do Banco" value={conta.banco} onChange={(v) => updateConta(idx, "banco", v)} placeholder="Pesquisar banco..." />
-                        <FormField label="Agência" value={conta.agencia} onChange={(v) => updateConta(idx, "agencia", v)} placeholder="0000" />
-                        
+                        <FormSelect
+                          label="Banco"
+                          value={conta.banco}
+                          onChange={(v) => updateConta(idx, "banco", v)}
+                          options={bancosList.map(b => `${b.code} - ${b.name}`)}
+                        />
                         <div className="flex gap-4">
                           <div className="flex-1">
-                            <FormField label="Conta" value={conta.conta} onChange={(v) => updateConta(idx, "conta", v)} placeholder="000000" />
+                            <FormField label="Agência" value={conta.agencia} onChange={(v) => updateConta(idx, "agencia", v.replace(/\D/g, "").substring(0, 4))} placeholder="0000" />
+                          </div>
+                          <div className="flex-[2]">
+                            <FormField label="Conta" value={conta.conta} onChange={(v) => updateConta(idx, "conta", v.replace(/\D/g, "").substring(0, 12))} placeholder="000000" />
                           </div>
                           <div className="w-24">
-                            <FormField label="Dígito" value={conta.digito} onChange={(v) => updateConta(idx, "digito", v)} placeholder="X" />
+                            <FormField label="Dígito" value={conta.digito} onChange={(v) => updateConta(idx, "digito", v.replace(/\D/g, "").substring(0, 1))} placeholder="X" />
                           </div>
                         </div>
                       </div>
@@ -792,38 +922,58 @@ export default function MaquininhasPage() {
               <DocumentUploadCard 
                 title="Contrato Assinado" 
                 desc="Documento que formaliza a parceria com a G8 Pay"
-                attached={attachedDocs.includes("Contrato Assinado")}
-                onUpload={() => updateAttachedDoc("Contrato Assinado")}
+                attached={(formData.documents["Contrato Assinado"]?.length || 0) > 0}
+                files={formData.documents["Contrato Assinado"] || []}
+                onUpload={(f) => handleFileUpload("Contrato Assinado", f)}
+                onRemove={(idx) => removeDoc("Contrato Assinado", idx)}
               />
               <DocumentUploadCard 
-                title="Contrato / Estatuto Social" 
+                title="Contrat / Estatuto Social" 
                 desc="Cópia do instrumento de constituição ou Ficha Cadastral Jacesp"
-                attached={attachedDocs.includes("Contrato / Estatuto Social")}
-                onUpload={() => updateAttachedDoc("Contrato / Estatuto Social")}
+                attached={(formData.documents["Contrat / Estatuto Social"]?.length || 0) > 0}
+                files={formData.documents["Contrat / Estatuto Social"] || []}
+                onUpload={(f) => handleFileUpload("Contrat / Estatuto Social", f)}
+                onRemove={(idx) => removeDoc("Contrat / Estatuto Social", idx)}
               />
               <DocumentUploadCard 
                 title="Cartão CNPJ (RCFB)" 
                 desc="Comprovante de inscrição e de situação cadastral atualizado"
-                attached={attachedDocs.includes("Cartão CNPJ (RCFB)")}
-                onUpload={() => updateAttachedDoc("Cartão CNPJ (RCFB)")}
+                attached={(formData.documents["Cartão CNPJ (RCFB)"]?.length || 0) > 0}
+                files={formData.documents["Cartão CNPJ (RCFB)"] || []}
+                onUpload={(f) => handleFileUpload("Cartão CNPJ (RCFB)", f)}
+                onRemove={(idx) => removeDoc("Cartão CNPJ (RCFB)", idx)}
               />
               <DocumentUploadCard 
-                title="RG/CNH do representante legal" 
-                desc="Documento de identificação com foto do sócio administrador"
-                attached={attachedDocs.includes("RG/CNH do representante legal")}
-                onUpload={() => updateAttachedDoc("RG/CNH do representante legal")}
+                title="RG/CNH (Frente)" 
+                desc="Foto da parte frontal do documento"
+                attached={(formData.documents["RG/CNH (Frente)"]?.length || 0) > 0}
+                files={formData.documents["RG/CNH (Frente)"] || []}
+                onUpload={(f) => handleFileUpload("RG/CNH (Frente)", f)}
+                onRemove={(idx) => removeDoc("RG/CNH (Frente)", idx)}
+              />
+              <DocumentUploadCard 
+                title="RG/CNH (Verso)" 
+                desc="Foto da parte traseira do documento"
+                attached={(formData.documents["RG/CNH (Verso)"]?.length || 0) > 0}
+                files={formData.documents["RG/CNH (Verso)"] || []}
+                onUpload={(f) => handleFileUpload("RG/CNH (Verso)", f)}
+                onRemove={(idx) => removeDoc("RG/CNH (Verso)", idx)}
               />
               <DocumentUploadCard 
                 title="Comprovante de endereço da empresa" 
                 desc="Contas de consumo (luz, água, telefone) dos últimos 90 dias"
-                attached={attachedDocs.includes("Comprovante de endereço da empresa")}
-                onUpload={() => updateAttachedDoc("Comprovante de endereço da empresa")}
+                attached={(formData.documents["Comprovante de endereço da empresa"]?.length || 0) > 0}
+                files={formData.documents["Comprovante de endereço da empresa"] || []}
+                onUpload={(f) => handleFileUpload("Comprovante de endereço da empresa", f)}
+                onRemove={(idx) => removeDoc("Comprovante de endereço da empresa", idx)}
               />
               <DocumentUploadCard 
                 title="Foto da Fachada" 
-                desc="Registro visual da frente do estabelecimento comercial"
-                attached={attachedDocs.includes("Foto da Fachada")}
-                onUpload={() => updateAttachedDoc("Foto da Fachada")}
+                desc="Envie até 3 fotos do estabelecimento"
+                attached={(formData.documents["Foto da Fachada"]?.length || 0) > 0}
+                files={formData.documents["Foto da Fachada"] || []}
+                onUpload={(f) => handleFileUpload("Foto da Fachada", f)}
+                onRemove={(idx) => removeDoc("Foto da Fachada", idx)}
               />
             </div>
 
@@ -1096,38 +1246,82 @@ function FormSelect({
       >
         <option value="" disabled>Selecione...</option>
         {options.map((opt) => (
-          <option key={opt} value={opt}>{opt}</option>
+          <option key={opt} value={opt} disabled={opt.includes("(EM BREVE)")}>{opt}</option>
         ))}
       </select>
     </div>
   );
 }
 
-function DocumentUploadCard({ title, desc, attached, onUpload }: { title: string; desc: string; attached?: boolean; onUpload: (file: File) => void }) {
+function DocumentUploadCard({ 
+  title, 
+  desc, 
+  attached, 
+  files = [], 
+  onUpload, 
+  onRemove 
+}: { 
+  title: string; 
+  desc: string; 
+  attached?: boolean; 
+  files?: { name: string, url: string }[];
+  onUpload: (file: File) => void;
+  onRemove: (index: number) => void;
+}) {
   return (
-    <Card className={`p-8 group hover:border-[#f97316]/50 transition-all duration-300 rounded-[2px] ${attached ? 'bg-green-50/30 border-green-200' : ''}`}>
-      <div className="flex flex-col md:flex-row items-center gap-8">
-        <div className="flex-1 space-y-2 text-center md:text-left">
+    <Card className={`p-8 group hover:border-[#f97316]/50 transition-all duration-300 rounded-[2px] ${attached ? 'bg-green-50/10 border-green-200' : 'bg-white'}`}>
+      <div className="flex flex-col md:flex-row items-start gap-8">
+        <div className="flex-1 space-y-4 text-center md:text-left">
           <div className="flex items-center gap-3 justify-center md:justify-start">
-            <div className={`w-10 h-10 rounded-[2px] flex items-center justify-center shrink-0 ${attached ? 'bg-green-500 text-white' : 'bg-blue-50 text-blue-500'}`}>
-               <Package className="h-5 w-5" />
+            <div className={`w-10 h-10 rounded-[2px] flex items-center justify-center shrink-0 ${attached ? 'bg-green-500 text-white' : 'bg-orange-50 text-[#f97316]'}`}>
+               <FileText className="h-5 w-5" />
             </div>
-            <h4 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">{title}</h4>
-            {attached && <Badge className="bg-green-500 text-white border-0 text-[8px] font-black uppercase">Anexado</Badge>}
+            <div>
+              <h4 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">{title}</h4>
+              <p className="text-[10px] font-bold text-neutral-400 leading-tight uppercase tracking-widest">{desc}</p>
+            </div>
           </div>
-          <p className="text-xs font-bold text-neutral-400 leading-relaxed">{desc}</p>
+
+          {files.length > 0 && (
+            <div className="grid grid-cols-1 gap-2 mt-4">
+              {files.map((file, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 bg-white border border-neutral-100 rounded-sm shadow-sm animate-in fade-in slide-in-from-left-2 transition-all">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-8 h-8 bg-green-50 rounded-sm flex items-center justify-center text-green-600 shrink-0">
+                      <CheckCircle2 className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-black text-[#0c0a09] truncate uppercase">{file.name}</p>
+                      <button 
+                        onClick={() => window.open(file.url, '_blank')}
+                        className="text-[9px] font-black text-[#f97316] uppercase hover:underline"
+                      >
+                        Visualizar Arquivo
+                      </button>
+                    </div>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => onRemove(idx)}
+                    className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         
-        <div className="w-full md:w-64">
-          <label className={`flex flex-col items-center justify-center h-32 w-full border-2 border-dashed rounded-[2px] cursor-pointer transition-all ${attached ? 'border-green-300 bg-green-50/50' : 'border-neutral-200 hover:bg-neutral-50 group-hover:border-[#f97316]/30'}`}>
-            <div className="flex flex-col items-center justify-center pt-5 pb-6">
-              {attached ? (
-                <CheckCircle2 className="h-8 w-8 text-green-500 mb-2" />
-              ) : (
-                <ArrowRight className="h-6 w-6 text-neutral-300 mb-2 -rotate-90 group-hover:text-[#f97316] group-hover:scale-110 transition-all" />
-              )}
-              <p className={`text-[9px] font-black uppercase tracking-widest ${attached ? 'text-green-600' : 'text-neutral-400 group-hover:text-[#f97316]'}`}>
-                {attached ? 'Documento Enviado' : 'Clique para enviar'}
+        <div className="w-full md:w-64 shrink-0">
+          <label className={`flex flex-col items-center justify-center h-40 w-full border-2 border-dashed rounded-[2px] cursor-pointer transition-all ${attached ? 'border-green-300 bg-green-50/30' : 'border-neutral-200 hover:bg-neutral-50 group-hover:border-[#f97316]/30 bg-white'}`}>
+            <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
+              <div className={`w-12 h-12 rounded-full mb-3 flex items-center justify-center transition-all ${attached ? 'bg-green-100 text-green-600' : 'bg-neutral-100 text-neutral-400 group-hover:bg-[#f97316]/10 group-hover:text-[#f97316]'}`}>
+                <FileUp className="h-6 w-6" />
+              </div>
+              <p className={`text-[10px] font-black uppercase tracking-widest ${attached ? 'text-green-600' : 'text-neutral-500 group-hover:text-[#f97316]'}`}>
+                {attached ? 'Adicionar mais' : 'Clique para enviar'}
               </p>
               <p className="text-[8px] font-bold text-neutral-300 uppercase mt-1">PDF, JPG, JPEG ou PNG</p>
             </div>

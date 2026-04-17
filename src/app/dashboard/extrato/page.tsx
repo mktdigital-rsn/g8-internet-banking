@@ -675,7 +675,7 @@ export default function ExtratoGeralPage() {
                                         type="date"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        className="h-8 md:h-9 w-[110px] md:w-[130px] bg-transparent border-0 pl-7 md:pl-8 text-[8px] md:text-[9px] font-black uppercase focus-visible:ring-0 cursor-pointer"
+                                        className="h-8 md:h-9 w-[110px] md:w-[130px] bg-transparent border-0 pl-7 md:pl-8 text-[12px] font-black uppercase focus-visible:ring-0 cursor-pointer"
                                     />
                                 </div>
                                 <span className="text-neutral-300 text-[10px]">/</span>
@@ -685,7 +685,7 @@ export default function ExtratoGeralPage() {
                                         type="date"
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
-                                        className="h-8 md:h-9 w-[110px] md:w-[130px] bg-transparent border-0 pl-7 md:pl-8 text-[8px] md:text-[9px] font-black uppercase focus-visible:ring-0 cursor-pointer"
+                                        className="h-8 md:h-9 w-[110px] md:w-[130px] bg-transparent border-0 pl-7 md:pl-8 text-[12px] font-black uppercase focus-visible:ring-0 cursor-pointer"
                                     />
                                 </div>
                             </div>
@@ -779,8 +779,8 @@ export default function ExtratoGeralPage() {
                                                 </div>
                                                 <div className="text-right flex items-center gap-2 md:gap-3">
                                                     <div className="text-right shrink-0">
-                                                        <p className="text-[11px] md:text-sm font-black text-[#0c0a09] font-mono">{dateParts[0].split("-").reverse().join("/")}</p>
-                                                        <p className="text-[9px] md:text-[11px] font-bold tracking-widest">{dateParts[1]}</p>
+                                                        <p className="text-[14px] font-black text-[#0c0a09] font-mono">{dateParts[0].split("-").reverse().join("/")}</p>
+                                                        <p className="text-[12px] font-bold tracking-widest">{dateParts[1]}</p>
                                                     </div>
                                                     <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
                                                 </div>
