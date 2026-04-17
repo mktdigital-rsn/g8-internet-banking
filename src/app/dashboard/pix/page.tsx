@@ -30,6 +30,15 @@ import { Input } from "@/components/ui/input";
 import { Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
+const PixIcon = (props: any) => (
+  <svg {...props} viewBox="0 0 100 100" fill="currentColor">
+    <rect x="35" y="5" width="30" height="30" rx="6" transform="rotate(45 50 20)" />
+    <rect x="35" y="65" width="30" height="30" rx="6" transform="rotate(45 50 80)" />
+    <rect x="5" y="35" width="30" height="30" rx="6" transform="rotate(45 20 50)" />
+    <rect x="65" y="35" width="30" height="30" rx="6" transform="rotate(45 80 50)" />
+  </svg>
+);
+
 export default function PixPage() {
   const router = useRouter();
   const [pixKey, setPixKey] = React.useState("");
@@ -115,16 +124,16 @@ export default function PixPage() {
                         <div className="space-y-6">
                             <h2 className="text-xl font-black text-[#0c0a09] tracking-tight uppercase tracking-[0.1em]">Como você quer transferir?</h2>
                             
-                            <Card className="p-8 rounded-sm border-0 shadow-2xl shadow-orange-200/30 bg-gradient-to-br from-[#f97316] to-[#ea580c] relative overflow-hidden group">
-                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent)]" />
+                            <Card className="p-8 rounded-sm border border-orange-100 shadow-xl shadow-orange-100/20 bg-orange-50 relative overflow-hidden group">
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(249,115,22,0.05),transparent)]" />
                                 <div className="space-y-8 relative z-10">
-                                    <div className="flex items-center gap-4 text-white">
-                                        <div className="w-10 h-10 bg-white/20 rounded-sm flex items-center justify-center">
+                                    <div className="flex items-center gap-4 text-orange-600">
+                                        <div className="w-10 h-10 bg-orange-600/10 rounded-sm flex items-center justify-center">
                                             <Key className="h-5 w-5" />
                                         </div>
                                         <div className="flex flex-col">
                                             <span className="font-black uppercase tracking-widest text-[10px]">Chave Imediata</span>
-                                            <span className="text-[9px] font-bold text-white/60 uppercase tracking-widest">Pague Agora via PIX</span>
+                                            <span className="text-[9px] font-bold text-orange-600/60 uppercase tracking-widest">Pague Agora via PIX</span>
                                         </div>
                                     </div>
 
@@ -135,12 +144,12 @@ export default function PixPage() {
                                                 value={pixKey}
                                                 onChange={(e) => handleKeyChange(e.target.value)}
                                                 onKeyDown={(e) => { if (e.key === 'Enter') handleContinue(); }}
-                                                className="h-14 bg-white border-0 rounded-sm pl-6 pr-12 font-black text-sm focus:ring-4 focus:ring-white/30 transition-all text-[#0c0a09] placeholder:text-neutral-400 shadow-lg"
+                                                className="h-14 bg-white border border-orange-100 rounded-sm pl-6 pr-12 font-black text-sm focus:ring-4 focus:ring-orange-100 transition-all text-[#0c0a09] placeholder:text-neutral-400 shadow-sm"
                                             />
                                             {pixKey && (
                                                 <button 
                                                     onClick={() => { setPixKey(""); }}
-                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-neutral-300 hover:text-[#f97316] transition-colors"
+                                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-orange-300 hover:text-orange-600 transition-colors"
                                                 >
                                                     <X size={20} />
                                                 </button>
@@ -158,14 +167,14 @@ export default function PixPage() {
                             </Card>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <Link href="/dashboard/pix/contatos" className="flex items-center gap-4 p-6 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-sm hover:shadow-2xl hover:shadow-orange-200/50 transition-all group relative overflow-hidden">
-                                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent)]" />
-                                   <div className="w-12 h-12 bg-white/20 rounded-sm flex items-center justify-center text-white group-hover:scale-110 group-hover:bg-white/30 transition-all relative z-10">
+                                <Link href="/dashboard/pix/contatos" className="flex items-center gap-4 p-6 bg-white border border-orange-100 rounded-sm hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-100/20 transition-all group relative overflow-hidden">
+                                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(249,115,22,0.03),transparent)]" />
+                                   <div className="w-12 h-12 bg-orange-50 rounded-sm flex items-center justify-center text-orange-600 group-hover:scale-110 group-hover:bg-orange-100 transition-all relative z-10">
                                       <Contact2 className="h-6 w-6" />
                                    </div>
                                    <div className="text-left relative z-10">
-                                      <span className="block font-black text-white text-sm uppercase tracking-tight leading-none mb-1">Escolher contato</span>
-                                      <span className="text-[9px] text-white/60 font-black uppercase tracking-widest">Seus favoritos</span>
+                                      <span className="block font-black text-orange-700 text-sm uppercase tracking-tight leading-none mb-1">Escolher contato</span>
+                                      <span className="text-[9px] text-orange-600/60 font-black uppercase tracking-widest">Seus favoritos</span>
                                    </div>
                                 </Link>
                                 <button disabled className="flex items-center gap-4 p-6 bg-neutral-50 rounded-xl border border-neutral-100 transition-all opacity-40 cursor-not-allowed group relative grayscale">
@@ -220,24 +229,24 @@ export default function PixPage() {
                     {/* Right Sidebar: Promo */}
                     <div className="lg:col-span-3 space-y-8">
                         {/* Banner Card Premium */}
-                        <Card className="rounded-md border-0 shadow-2xl shadow-black/5 bg-gradient-to-br from-[#f97316] to-[#ea580c] overflow-hidden relative group cursor-pointer h-[380px]">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] group-hover:scale-150 transition-transform duration-1000 -mr-20 -mt-20" />
-                            <div className="p-8 space-y-4 relative z-10 text-white">
-                                <Badge className="bg-white/20 text-white border-0 text-[8px] font-black tracking-[0.3em] backdrop-blur-md mb-1">G8 PREMIUM</Badge>
-                                <h3 className="text-xl font-black leading-tight max-w-[180px] drop-shadow-[0_2px_4px_rgba(0,0,0,0.1)]">
+                        <Card className="rounded-md border border-orange-100 shadow-xl shadow-orange-100/10 bg-orange-50 overflow-hidden relative group cursor-pointer h-[380px]">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-orange-200/20 rounded-full blur-[80px] group-hover:scale-150 transition-transform duration-1000 -mr-20 -mt-20" />
+                            <div className="p-8 space-y-4 relative z-10 text-[#0c0a09]">
+                                <Badge className="bg-orange-600/10 text-orange-600 border-0 text-[8px] font-black tracking-[0.3em] backdrop-blur-md mb-1">G8 PREMIUM</Badge>
+                                <h3 className="text-xl font-black leading-tight max-w-[180px] text-orange-700">
                                     Experiência que te move.
                                 </h3>
-                                <p className="text-xs font-bold text-white/80 leading-relaxed max-w-[160px]">
+                                <p className="text-xs font-bold text-orange-600/60 leading-relaxed max-w-[160px]">
                                     Benefícios exclusivos para o seu dia a dia.
                                 </p>
-                                <Button className="bg-white text-[#f97316] hover:bg-neutral-50 px-6 h-9 rounded-full font-black text-[9px] uppercase tracking-widest shadow-xl shadow-black/10 mt-2 active:scale-95 transition-all">
+                                <Button className="bg-orange-600 text-white hover:bg-orange-700 px-6 h-9 rounded-full font-black text-[9px] uppercase tracking-widest shadow-xl shadow-orange-600/20 mt-2 active:scale-95 transition-all">
                                     Explorar Agora
                                 </Button>
                             </div>
                             
                             <div className="absolute bottom-0 right-0 w-full h-[220px] flex items-end justify-end translate-y-8 group-hover:translate-y-2 transition-transform duration-700">
                                  <Image 
-                                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=shopping&backgroundColor=ff7711&radius=50" 
+                                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky&backgroundColor=ffedd5&radius=50" 
                                     alt="Benefit" 
                                     width={200} 
                                     height={200} 
@@ -265,12 +274,12 @@ function PixAction({
     customColor?: string
 }) {
    const content = (
-    <div className={`flex flex-col items-center justify-center w-full min-h-[160px] ${customColor || 'bg-gradient-to-br from-[#f97316] to-[#ea580c]'} rounded-sm hover:shadow-2xl hover:shadow-orange-200/50 hover:scale-[1.03] transition-all group cursor-pointer p-6 relative overflow-hidden`}>
-       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent)]" />
-       <div className="w-12 h-12 flex items-center justify-center mb-4 text-white bg-white/20 rounded-sm group-hover:scale-110 group-hover:bg-white/30 transition-all relative z-10">
+    <div className={`flex flex-col items-center justify-center w-full min-h-[160px] ${customColor || 'bg-white border border-orange-100'} rounded-sm hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-100/20 hover:scale-[1.03] transition-all group cursor-pointer p-6 relative overflow-hidden`}>
+       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(249,115,22,0.03),transparent)]" />
+       <div className={`w-12 h-12 flex items-center justify-center mb-4 ${customColor ? 'text-white bg-white/20' : 'text-orange-600 bg-orange-50'} rounded-sm group-hover:scale-110 group-hover:bg-orange-100 transition-all relative z-10`}>
           <Icon className="h-6 w-6 stroke-[2.5]" />
        </div>
-       <span className="text-[11px] font-black text-white text-center px-1 uppercase tracking-widest leading-tight relative z-10">{label}</span>
+       <span className={`text-[11px] font-black ${customColor ? 'text-white' : 'text-orange-700'} text-center px-1 uppercase tracking-widest leading-tight relative z-10`}>{label}</span>
     </div>
   );
 

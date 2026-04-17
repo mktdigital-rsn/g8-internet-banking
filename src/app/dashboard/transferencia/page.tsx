@@ -323,9 +323,9 @@ export default function TransferenciaPage() {
                 {/* Header */}
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
                     <div className="space-y-1">
-                        <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 text-[10px] font-black tracking-[0.3em] uppercase px-3 py-1 mb-2">G8 Transactional</Badge>
+                        <Badge className="bg-orange-600/10 text-orange-600 border-0 text-[10px] font-black tracking-[0.3em] uppercase px-3 py-1 mb-2">G8 Transactional</Badge>
                         <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none text-[#0c0a09]">
-                            Transferir <span className="text-[#f97316]">RECURSOS</span>
+                            Transferir <span className="text-orange-600">RECURSOS</span>
                         </h1>
                     </div>
                 </header>
@@ -350,7 +350,7 @@ export default function TransferenciaPage() {
                                     />
                                     <TransferOption
                                         icon={ArrowRightLeft}
-                                        title="TED / DOC"
+                                        title="TED"
                                         description="Para outros bancos. Disponível em dias úteis até as 17h."
                                         onClick={() => { }}
                                         disabled
@@ -616,13 +616,13 @@ export default function TransferenciaPage() {
                     {/* Sidebar Area */}
                     <aside className="lg:col-span-4 space-y-8">
                         {/* Balance Card */}
-                        <div className="bg-[#f97316] border-0 p-8 rounded-md space-y-4 shadow-2xl shadow-orange-500/20 group relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000" />
-                            <div className="flex items-center gap-3 text-white relative z-10 font-black">
+                        <div className="bg-orange-50 border border-orange-100 p-8 rounded-md space-y-4 shadow-xl shadow-orange-100/20 group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-600/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000" />
+                            <div className="flex items-center gap-3 text-orange-600 relative z-10 font-black">
                                 <Wallet size={16} />
                                 <span className="text-[10px] font-black uppercase tracking-widest">Saldo Disponível</span>
                             </div>
-                            <p className="text-4xl font-black font-mono tracking-tighter text-white relative z-10">{balance}</p>
+                            <p className="text-4xl font-black font-mono tracking-tighter text-orange-700 relative z-10">{balance}</p>
                         </div>
 
                         {/* Recent Favorites */}
@@ -681,30 +681,30 @@ function TransferOption({
             onClick={onClick}
             disabled={disabled}
             className={`w-full group p-8 rounded-md text-left transition-all relative overflow-hidden flex flex-col justify-between h-[240px] border ${premium
-                    ? 'bg-[#f97316] border-0 text-white shadow-2xl shadow-orange-500/30 active:scale-[0.98]'
+                    ? 'bg-orange-50 border-orange-100 text-orange-700 shadow-xl shadow-orange-100/20 active:scale-[0.98]'
                     : disabled
                         ? 'bg-neutral-50 border-neutral-100 opacity-40 cursor-not-allowed grayscale'
-                        : 'bg-[#f97316]/10 border-orange-100 hover:shadow-2xl hover:border-orange-200 active:scale-[0.98]'
+                        : 'bg-white border-orange-100 hover:bg-orange-50 hover:shadow-xl hover:border-orange-200 active:scale-[0.98]'
                 }`}
         >
-            {premium && <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />}
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/40 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />
 
-            <div className={`w-14 h-14 rounded-md flex items-center justify-center mb-6 transition-transform group-hover:rotate-6 ${premium ? 'bg-white/20' : 'bg-white text-[#f97316] border border-orange-100 shadow-sm'
+            <div className={`w-14 h-14 rounded-md flex items-center justify-center mb-6 transition-transform group-hover:rotate-6 ${premium ? 'bg-orange-600/10 text-orange-600' : 'bg-orange-50 text-orange-600 border border-orange-100 shadow-sm'
                 }`}>
                 <Icon size={28} strokeWidth={2.5} />
             </div>
 
             <div className="space-y-2 relative z-10">
                 <div className="flex items-center gap-2">
-                    <h3 className={`text-xl font-black tracking-tight ${premium ? 'text-white' : 'text-[#f97316]'}`}>{title}</h3>
+                    <h3 className={`text-xl font-black tracking-tight ${premium ? 'text-orange-700' : 'text-orange-600'}`}>{title}</h3>
                     {disabled && <Badge className="bg-[#0c0a09]/10 text-[#0c0a09] text-[8px] font-black uppercase border-0">Breve</Badge>}
                 </div>
-                <p className={`text-[11px] font-black leading-relaxed ${premium ? 'text-white/70' : 'text-[#f97316]'}`}>
+                <p className={`text-[11px] font-black leading-relaxed ${premium ? 'text-orange-600/70' : 'text-orange-600'}`}>
                     {description}
                 </p>
             </div>
 
-            <div className={`flex items-center gap-2 mt-4 font-black uppercase text-[9px] tracking-[0.2em] transform translate-x-0 group-hover:translate-x-2 transition-transform ${premium ? 'text-white' : 'text-[#f97316]'
+            <div className={`flex items-center gap-2 mt-4 font-black uppercase text-[9px] tracking-[0.2em] transform translate-x-0 group-hover:translate-x-2 transition-transform ${premium ? 'text-orange-700' : 'text-orange-600'
                 }`}>
                 {disabled ? 'Indisponível' : 'Começar'} <ArrowRight size={14} />
             </div>
@@ -716,13 +716,13 @@ function SimpleAction({ icon: Icon, label, onClick }: { icon: any, label: string
     return (
         <button 
             onClick={onClick}
-            className="flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-sm hover:shadow-2xl hover:shadow-orange-200/50 hover:scale-[1.03] transition-all active:scale-[0.98] group relative overflow-hidden"
+            className="flex flex-col items-center justify-center p-6 bg-white border border-orange-100 rounded-sm hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-100/20 hover:scale-[1.03] transition-all active:scale-[0.98] group relative overflow-hidden"
         >
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent)]" />
-            <div className="w-10 h-10 bg-white/20 rounded-sm flex items-center justify-center text-white mb-3 group-hover:scale-110 group-hover:bg-white/30 transition-all relative z-10">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/30 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-125" />
+            <div className="w-10 h-10 bg-orange-50 rounded-sm flex items-center justify-center text-orange-600 mb-3 group-hover:scale-110 group-hover:bg-orange-100 transition-all relative z-10">
                 <Icon size={18} />
             </div>
-            <span className="text-[9px] font-black uppercase tracking-widest text-white relative z-10">{label}</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-orange-700 relative z-10">{label}</span>
         </button>
     );
 }

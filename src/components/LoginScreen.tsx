@@ -400,7 +400,7 @@ export default function LoginScreen() {
                     <button
                       type="button"
                       onClick={removeLastPair}
-                      className="h-14 bg-red-600/20 hover:bg-red-600/40 text-red-500 font-black text-[10px] uppercase rounded-[2px] border border-red-500/20"
+                      className="h-14 bg-red-500 hover:bg-red-400 text-white font-black text-[10px] uppercase rounded-[2px] shadow-lg transition-all"
                     >
                       APAGAR
                     </button>

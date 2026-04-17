@@ -26,7 +26,8 @@ import {
     Fingerprint,
     CheckCircle2,
     CalendarDays,
-    ArrowUpDown
+    ArrowUpDown,
+    QrCode
 } from "lucide-react";
 import {
     AreaChart,
@@ -44,6 +45,15 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import Link from "next/link";
+
+const PixIcon = (props: any) => (
+  <svg {...props} viewBox="0 0 100 100" fill="currentColor">
+    <rect x="35" y="5" width="30" height="30" rx="6" transform="rotate(45 50 20)" />
+    <rect x="35" y="65" width="30" height="30" rx="6" transform="rotate(45 50 80)" />
+    <rect x="5" y="35" width="30" height="30" rx="6" transform="rotate(45 20 50)" />
+    <rect x="65" y="35" width="30" height="30" rx="6" transform="rotate(45 80 50)" />
+  </svg>
+);
 
 export default function ExtratoGeralPage() {
     const [items, setItems] = useState<any[]>([]);
@@ -218,12 +228,15 @@ export default function ExtratoGeralPage() {
         }
     };
 
-    const getIconForMetodo = (metodo: string) => {
+    const getIconForMetodo = (metodo: string): any => {
         switch (metodo) {
-            case "TRANSFERENCIA_PIX": return Smartphone;
-            case "TRANSFERENCIA": return ArrowRightLeft;
-            case "TARIFA": return AlertCircle;
-            case "PAGAMENTO": return CreditCard;
+            case "TRANSFERENCIA_PIX": return PixIcon;
+            case "TRANSFERENCIA":
+            case "TRANSFERENCIA_INTERNA": return ArrowRightLeft;
+            case "TARIFA":
+            case "MENSALIDADE_CLUBE_BENEFICIOS": return AlertCircle;
+            case "PAGAMENTO":
+            case "PAGAMENTO_BOLETO": return CreditCard;
             default: return FileText;
         }
     };
@@ -235,10 +248,10 @@ export default function ExtratoGeralPage() {
                 (filter === "out" && item.tipo === "DEBITO");
 
             const matchesMethod = methodFilter === "all" ||
-                (methodFilter === "PIX" && item.metodo === "TRANSFERENCIA_PIX") ||
-                (methodFilter === "P2P" && item.metodo === "TRANSFERENCIA_INTERNA") ||
-                (methodFilter === "BOLETO" && item.metodo === "PAGAMENTO_BOLETO") ||
-                (methodFilter === "TARIFA" && item.metodo === "TARIFA");
+                (methodFilter === "PIX" && (item.metodo === "TRANSFERENCIA_PIX" || item.metodoFormatado?.toUpperCase().includes("PIX"))) ||
+                (methodFilter === "P2P" && (item.metodo === "TRANSFERENCIA_INTERNA" || item.metodo === "TRANSFERENCIA" || item.metodoFormatado?.toUpperCase().includes("P2P"))) ||
+                (methodFilter === "BOLETO" && (item.metodo === "PAGAMENTO_BOLETO" || item.metodo === "PAGAMENTO" || item.metodoFormatado?.toUpperCase().includes("BOLETO"))) ||
+                (methodFilter === "TARIFA" && (item.metodo === "TARIFA" || item.metodo === "MENSALIDADE_CLUBE_BENEFICIOS" || item.metodoFormatado?.toUpperCase().includes("TARIFA")));
 
             const searchString = `${item.pagadorNome} ${item.RecebinteNome} ${item.metodoFormatado} ${item.idDoBancoLiquidante}`.toLowerCase();
             const matchesSearch = searchString.includes(searchTerm.toLowerCase());
@@ -544,7 +557,7 @@ export default function ExtratoGeralPage() {
                             </p>
                         </div>
                     </Card>
-                    <Card className="bg-rose-500 border-0 rounded-[2px] p-6 flex flex-row items-center gap-5 shadow-xl shadow-rose-900/10 relative overflow-hidden group cursor-pointer transition-all duration-500 min-h-[110px]">
+                    <Card className="bg-red-600 border-0 rounded-[2px] p-6 flex flex-row items-center gap-5 shadow-xl shadow-red-900/10 relative overflow-hidden group cursor-pointer transition-all duration-500 min-h-[110px]">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
                         <div className="w-12 h-12 bg-white/20 rounded-[2px] flex items-center justify-center text-white border border-white/10 shadow-inner shrink-0 group-hover:-rotate-12 transition-transform relative z-10">
                             <ArrowUpRight className="h-6 w-6 stroke-[2.5]" />
@@ -600,8 +613,8 @@ export default function ExtratoGeralPage() {
                                         <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                     </linearGradient>
                                     <linearGradient id="colorExit" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#ef4444" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                                        <stop offset="5%" stopColor="#dc2626" stopOpacity={0.2} />
+                                        <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -623,7 +636,7 @@ export default function ExtratoGeralPage() {
                                     formatter={(value: any) => [formatCurrency(value), ""]}
                                 />
                                 <Area type="monotone" dataKey="entries" stroke="#10b981" fillOpacity={1} fill="url(#colorEntry)" strokeWidth={4} activeDot={{ r: 6 }} />
-                                <Area type="monotone" dataKey="exits" stroke="#ef4444" fillOpacity={1} fill="url(#colorExit)" strokeWidth={4} activeDot={{ r: 6 }} />
+                                <Area type="monotone" dataKey="exits" stroke="#dc2626" fillOpacity={1} fill="url(#colorExit)" strokeWidth={4} activeDot={{ r: 6 }} />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -734,8 +747,11 @@ export default function ExtratoGeralPage() {
                                             className="flex flex-col sm:grid sm:grid-cols-12 items-start sm:items-center px-6 py-6 sm:py-5 bg-white hover:bg-neutral-50/50 rounded-md border border-neutral-50 hover:border-neutral-200 hover:shadow-xl transition-all duration-300 group cursor-pointer gap-4 sm:gap-6"
                                         >
                                             <div className="flex items-center gap-3 md:gap-4 col-span-5 min-w-0 w-full">
-                                                <div className={`w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-[5px] flex items-center justify-center p-2.5 transition-all ${t.tipo === 'CREDITO' ? 'text-green-500 bg-green-50' : 'text-[#f97316] bg-neutral-50' } group-hover:scale-110`}>
-                                                    {t.tipo === 'CREDITO' ? <PlusCircle className="h-full w-full stroke-[2.5]" /> : <MinusCircle className="h-full w-full stroke-[2.5]" />}
+                                                <div className={`w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-[5px] flex items-center justify-center p-2.5 transition-all ${
+                                                    t.metodo === "TRANSFERENCIA_PIX" ? 'bg-[#32BCAD]/10 text-[#32BCAD]' :
+                                                    t.tipo === 'CREDITO' ? 'text-green-500 bg-green-50' : 'text-red-500 bg-red-50'
+                                                } group-hover:scale-110`}>
+                                                    <Icon className={`h-full w-full ${t.metodo === "TRANSFERENCIA_PIX" ? "" : "stroke-[2.5]"}`} />
                                                 </div>
                                                 <div className="min-w-0 flex-1">
                                                     <p className="font-black text-xs md:text-sm text-[#0c0a09] leading-tight mb-1 truncate uppercase">{description}</p>

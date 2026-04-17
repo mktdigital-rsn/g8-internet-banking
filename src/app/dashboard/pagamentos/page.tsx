@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import api from "@/lib/api";
-import { 
-  Barcode, 
-  QrCode, 
-  Calendar, 
-  History, 
-  FileText, 
-  ShieldCheck, 
+import {
+  Barcode,
+  QrCode,
+  Calendar,
+  History,
+  FileText,
+  ShieldCheck,
   Smartphone,
   CreditCard,
   Building2,
@@ -69,29 +69,29 @@ const mockComprovantes = [
 export default function PagamentosPage() {
   const router = useRouter();
   const temporaryDeviceId = useAtomValue(temporaryDeviceIdAtom);
-  
+
   // State Machine
   const [step, setStep] = useState<"landing" | "review" | "sms" | "success">("landing");
-  
+
   // Section modals
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  
+
   // Data State
   const [barcode, setBarcode] = useState("");
   const [isConsulting, setIsConsulting] = useState(false);
   const [boletoData, setBoletoData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [userBalance, setUserBalance] = useState<number | null>(null);
-  
+
   // Security State
   const [smsCode, setSmsCode] = useState("");
   const [pinId, setPinId] = useState("");
   const [transactionId, setTransactionId] = useState("");
-  
+
   // Real History State
   const [pagamentosHistory, setPagamentosHistory] = useState<any[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-  
+
   const [paymentMode, setPaymentMode] = useState<"now" | "schedule">("now");
   const [scheduleDate, setScheduleDate] = useState("");
   const [agendamentos, setAgendamentos] = useState(mockAgendamentos);
@@ -117,15 +117,15 @@ export default function PagamentosPage() {
     try {
       const res = await api.get("/api/banco/extrato/buscar");
       const items = res.data.transacoes || res.data.data?.transacoes || res.data.data || [];
-      
+
       // Filtro inteligente para Boletos/Pagamentos
-      const filtered = (Array.isArray(items) ? items : []).filter((item: any) => 
-        item.metodo === "PAGAMENTO_BOLETO" || 
-        item.metodo === "PAGAMENTO" || 
+      const filtered = (Array.isArray(items) ? items : []).filter((item: any) =>
+        item.metodo === "PAGAMENTO_BOLETO" ||
+        item.metodo === "PAGAMENTO" ||
         String(item.metodoFormatado || "").toUpperCase().includes("BOLETO") ||
         String(item.metodoFormatado || "").toUpperCase().includes("PAGAMENTO")
       );
-      
+
       setPagamentosHistory(filtered);
     } catch (err) {
       console.error("Erro ao buscar histórico:", err);
@@ -146,18 +146,18 @@ export default function PagamentosPage() {
       toast.error("Aguarde concluir o login com QR antes de realizar pagamentos.");
       return;
     }
-    
+
     setIsConsulting(true);
     try {
-      const res = await api.post("/api/banco/pagamentos/consultar-boleto", { 
+      const res = await api.post("/api/banco/pagamentos/consultar-boleto", {
         linhaDigitavel: barcode.replace(/\D/g, ""),
         deviceId: temporaryDeviceId
       });
-      
+
       if (res.data) {
         const rawData = res.data.data || res.data;
         const details = rawData.data || rawData;
-        
+
         // Helper para formatar data YYYY-MM-DD para DD/MM/YYYY
         const formatDate = (dateStr: string) => {
           if (!dateStr || typeof dateStr !== 'string' || !dateStr.includes("-")) return dateStr;
@@ -192,7 +192,7 @@ export default function PagamentosPage() {
   const handleRequestSms = async () => {
     setIsLoading(true);
     try {
-      const res = await api.post("/api/users/solicitar-pin", { 
+      const res = await api.post("/api/users/solicitar-pin", {
         amount: String(boletoData?.valorTotal || boletoData?.valor || "0"),
         deviceId: temporaryDeviceId
       });
@@ -218,8 +218,8 @@ export default function PagamentosPage() {
     setIsLoading(true);
     try {
       // 1. Validar PIN
-      await api.post("/api/users/validar-pin", { 
-        pin: smsCode, 
+      await api.post("/api/users/validar-pin", {
+        pin: smsCode,
         pinId: pinId,
         deviceId: temporaryDeviceId
       });
@@ -232,7 +232,7 @@ export default function PagamentosPage() {
 
       if (res.data) {
         console.log("🔍 [BOLETO RESPONSE]:", res.data);
-        
+
         // 1. Varredura profunda para capturar id_transaction (Cronos style)
         const getNestedId = (obj: any): string | null => {
           if (!obj || typeof obj !== 'object') return null;
@@ -240,7 +240,7 @@ export default function PagamentosPage() {
         };
 
         const directId = getNestedId(res.data) || getNestedId(res.data.data) || getNestedId(res.data.response) || getNestedId(res.data.result);
-        
+
         const finalizeSuccess = (finalId: string) => {
           setTransactionId(finalId);
           setStep("success");
@@ -251,9 +251,9 @@ export default function PagamentosPage() {
 
         if (directId) {
           finalizeSuccess(directId);
-          return; 
+          return;
         }
-        
+
         // 2. Fallback: Se chegou aqui é porque a Cronos sacaneou e não mandou o ID no JSON principal
         toast.info("Pagamento aceito! Sincronizando comprovante...");
         let attempts = 0;
@@ -266,19 +266,19 @@ export default function PagamentosPage() {
             console.log(`🔍 [BUSCA EXTRATO] Tentativa ${attempts}/${maxAttempts}...`);
             const extratoRes = await api.get("/api/banco/extrato/buscar");
             const items = extratoRes.data.transacoes || extratoRes.data.data?.transacoes || [];
-            
+
             const targetVal = Math.abs(parseFloat(String(boletoData.valorTotal || boletoData.valor).replace(/[R$\s]/g, "").replace(",", ".")));
 
             const match = items.find((item: any) => {
-               const itemVal = Math.abs(parseFloat(String(item.valor).replace(/[R$\s]/g, "").replace(",", ".")));
-               return Math.abs(itemVal - targetVal) < 0.01;
+              const itemVal = Math.abs(parseFloat(String(item.valor).replace(/[R$\s]/g, "").replace(",", ".")));
+              return Math.abs(itemVal - targetVal) < 0.01;
             });
 
             if (match && (match.idDoBancoLiquidante || match.id_transaction || match.id || match.nsu)) {
               const finalId = match.idDoBancoLiquidante || match.id_transaction || match.id || match.nsu;
               finalizeSuccess(finalId);
             } else if (attempts < maxAttempts) {
-              setTimeout(searchWithRetry, 2500); 
+              setTimeout(searchWithRetry, 2500);
             } else {
               // Se falhar após todas as tentativas, mostra erro e não vai para a tela de sucesso
               setIsLoading(false);
@@ -311,7 +311,7 @@ export default function PagamentosPage() {
     }
 
     toast.info("Gerando comprovante...");
-    
+
     try {
       const response = await api.get(`/api/banco/extrato/imprimir-item/${transactionId}`, {
         responseType: 'blob'
@@ -340,15 +340,15 @@ export default function PagamentosPage() {
   return (
     <div className="p-4 md:p-8 xl:p-12 flex flex-col xl:flex-row gap-8 xl:gap-12 h-full overflow-y-auto w-full no-scrollbar bg-[#f8f9fa] relative">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#f97316]/5 rounded-full blur-[120px] -mr-64 -mt-64 pointer-events-none" />
-      
+
       <div className="flex-1 space-y-12 relative z-10">
         {/* Step-based Content */}
         {step === "landing" && (
           <>
             <div className="space-y-4">
-              <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">Serviços Financeiros</Badge>
+              <Badge variant="secondary" className="bg-orange-600/10 text-orange-600 border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">Serviços Financeiros</Badge>
               <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">
-                Área <span className="text-[#f97316]">PAGAMENTOS</span>
+                Área <span className="text-orange-600">PAGAMENTOS</span>
               </h1>
               <p className="text-sm md:text-base text-neutral-400 font-bold max-w-2xl">
                 Pague boletos, tributos e contas de consumo com rapidez e segurança G8 Bank.
@@ -358,9 +358,9 @@ export default function PagamentosPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
               <div className="lg:col-span-8 space-y-12">
                 {/* Boleto input card */}
-                <div className="bg-white p-8 md:p-12 rounded-sm border border-neutral-100 shadow-2xl shadow-black/[0.03] space-y-8 relative overflow-hidden group">
+                <div className="bg-orange-50 p-8 md:p-12 rounded-sm border border-neutral-100 shadow-2xl shadow-black/[0.03] space-y-8 relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-[#f97316]/5 rounded-full blur-3xl -mr-32 -mt-32" />
-                  
+
                   <div className="space-y-2 relative z-10">
                     <h2 className="text-2xl font-black text-[#0c0a09] tracking-tight">Pagar novo boleto</h2>
                     <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest leading-loose">Cole a linha digitável ou escaneie o código</p>
@@ -371,7 +371,7 @@ export default function PagamentosPage() {
                       <div className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within/input:text-[#f97316] transition-colors">
                         <Barcode className="h-6 w-6" />
                       </div>
-                      <Input 
+                      <Input
                         id="barcode-input"
                         placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
                         className="h-16 pl-16 bg-neutral-50 border-neutral-200 rounded-sm text-sm font-black tracking-widest focus:ring-2 focus:ring-[#f97316]/20 focus:border-[#f97316]/30 transition-all placeholder:text-neutral-300 text-[#0c0a09]"
@@ -379,10 +379,10 @@ export default function PagamentosPage() {
                         onChange={(e) => setBarcode(e.target.value)}
                       />
                     </div>
-                    <Button 
-                        onClick={handleConsultBoleto}
-                        disabled={isConsulting}
-                        className="h-16 px-10 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl shadow-black/10 shrink-0"
+                    <Button
+                      onClick={handleConsultBoleto}
+                      disabled={isConsulting}
+                      className="h-16 px-10 bg-orange-600 hover:bg-orange-700 text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl shadow-orange-600/20 shrink-0"
                     >
                       {isConsulting ? "PROCESSANDO..." : "CONFERIR BOLETO"}
                       {!isConsulting && <ArrowRight className="h-5 w-5 ml-2" />}
@@ -391,28 +391,28 @@ export default function PagamentosPage() {
 
                   {/* Quick actions */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-                    <div className="p-6 bg-[#0c0a09] rounded-sm hover:shadow-xl transition-all group/qr cursor-pointer flex items-center gap-6 border border-white/5">
-                      <div className="w-14 h-14 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316] group-hover/qr:scale-110 transition-transform">
+                    <div className="p-6 bg-white border border-orange-100 rounded-sm hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-100/20 transition-all group/qr cursor-pointer flex items-center gap-6">
+                      <div className="w-14 h-14 bg-orange-50 rounded-sm flex items-center justify-center text-orange-600 group-hover/qr:scale-110 transition-transform">
                         <QrCode className="h-7 w-7 stroke-[2.5]" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-black text-white uppercase tracking-widest">Ler QR Code</span>
-                        <span className="text-[10px] font-bold text-white/40 mt-1">Use a câmera do seu celular</span>
+                        <span className="text-sm font-black text-orange-700 uppercase tracking-widest">Ler QR Code</span>
+                        <span className="text-[10px] font-bold text-orange-600/40 mt-1">Use a câmera do seu celular</span>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-white/20 ml-auto group-hover/qr:text-[#f97316] transition-colors" />
+                      <ChevronRight className="h-5 w-5 text-orange-200 ml-auto group-hover/qr:text-orange-600 transition-colors" />
                     </div>
-                    <div 
+                    <div
                       onClick={() => setActiveSection("historico")}
-                      className="p-6 bg-[#0c0a09] rounded-sm hover:shadow-xl transition-all group/rec cursor-pointer flex items-center gap-6 border border-white/5"
+                      className="p-6 bg-white border border-orange-100 rounded-sm hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-100/20 transition-all group/rec cursor-pointer flex items-center gap-6"
                     >
-                      <div className="w-14 h-14 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316] group-hover/rec:scale-110 transition-transform">
+                      <div className="w-14 h-14 bg-orange-50 rounded-sm flex items-center justify-center text-orange-600 group-hover/rec:scale-110 transition-transform">
                         <History className="h-7 w-7 stroke-[2.5]" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-black text-white uppercase tracking-widest">Recentes</span>
-                        <span className="text-[10px] font-bold text-white/40 mt-1">Re-pague uma conta</span>
+                        <span className="text-sm font-black text-orange-700 uppercase tracking-widest">Recentes</span>
+                        <span className="text-[10px] font-bold text-orange-600/40 mt-1">Re-pague uma conta</span>
                       </div>
-                      <ChevronRight className="h-5 w-5 text-white/20 ml-auto group-hover/rec:text-[#f97316] transition-colors" />
+                      <ChevronRight className="h-5 w-5 text-orange-200 ml-auto group-hover/rec:text-orange-600 transition-colors" />
                     </div>
                   </div>
                 </div>
@@ -425,24 +425,24 @@ export default function PagamentosPage() {
                       { icon: CalendarClock, label: "Agendamentos", key: "agendamentos", count: agendamentos.length },
                       { icon: ListChecks, label: "Histórico", key: "historico", count: pagamentosHistory.length },
                       { icon: ShieldCheck, label: "DDA", key: "dda", count: 0 },
-                  
+
                     ].map((opt, i) => (
-                       <div 
-                         key={i} 
-                         onClick={() => setActiveSection(opt.key)}
-                         className="flex flex-col items-center justify-center w-full min-h-[160px] bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-sm hover:shadow-2xl hover:shadow-orange-200/50 hover:scale-[1.03] transition-all group cursor-pointer p-6 relative overflow-hidden"
-                       >
-                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,255,255,0.15),transparent)]" />
-                          {opt.count > 0 && (
-                            <div className="absolute top-3 right-3 w-6 h-6 bg-white rounded-sm flex items-center justify-center shadow-md">
-                              <span className="text-[9px] font-black text-[#f97316]">{opt.count}</span>
-                            </div>
-                          )}
-                          <div className="w-12 h-12 flex items-center justify-center mb-4 text-white bg-white/20 rounded-sm group-hover:scale-110 group-hover:bg-white/30 transition-all relative z-10">
-                              <opt.icon className="h-6 w-6 stroke-[2.5]" />
+                      <div
+                        key={i}
+                        onClick={() => setActiveSection(opt.key)}
+                        className="flex flex-col items-center justify-center w-full min-h-[160px] bg-white border border-orange-100 rounded-sm hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-100/20 hover:scale-[1.03] transition-all group cursor-pointer p-6 relative overflow-hidden"
+                      >
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/40 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />
+                        {opt.count > 0 && (
+                          <div className="absolute top-3 right-3 w-6 h-6 bg-orange-50 rounded-sm flex items-center justify-center shadow-md border border-orange-100">
+                            <span className="text-[9px] font-black text-orange-600">{opt.count}</span>
                           </div>
-                          <span className="text-[11px] font-black text-white text-center px-1 uppercase tracking-widest leading-tight relative z-10">{opt.label}</span>
-                       </div>
+                        )}
+                        <div className="w-12 h-12 flex items-center justify-center mb-4 text-orange-600 bg-orange-50 rounded-sm group-hover:scale-110 group-hover:bg-orange-100 transition-all relative z-10">
+                          <opt.icon className="h-6 w-6 stroke-[2.5]" />
+                        </div>
+                        <span className="text-[11px] font-black text-orange-700 text-center px-1 uppercase tracking-widest leading-tight relative z-10">{opt.label}</span>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -450,44 +450,44 @@ export default function PagamentosPage() {
 
               {/* Sidebar / DDA Card */}
               <div className="lg:col-span-4 space-y-10">
-                <Card className="rounded-sm border-0 shadow-2xl shadow-black/5 bg-[#0c0a09] p-10 space-y-8 relative overflow-hidden group cursor-pointer border border-white/5">
-                  <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#f97316]/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
+                <Card className="rounded-sm border border-orange-100 shadow-xl shadow-orange-100/10 bg-orange-50 p-10 space-y-8 relative overflow-hidden group cursor-pointer">
+                  <div className="absolute -top-32 -right-32 w-64 h-64 bg-orange-600/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
                   <div className="relative z-10 space-y-6">
-                    <Badge className="bg-[#f97316] text-white border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest">Segurança G8</Badge>
-                    <h3 className="text-3xl font-black text-white leading-tight">
+                    <Badge className="bg-orange-600 text-white border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest">Segurança G8</Badge>
+                    <h3 className="text-3xl font-black text-orange-700 leading-tight">
                       Evite fraudes <br />
-                      no seu <span className="text-[#f97316]">DDA.</span>
+                      no seu <span className="text-orange-600">DDA.</span>
                     </h3>
-                    <p className="text-sm text-white/50 leading-relaxed font-medium">
+                    <p className="text-sm text-orange-600/50 leading-relaxed font-medium">
                       Ative o Débito Direto Autorizado e visualize todos os boletos emitidos no seu CPF automaticamente.
                     </p>
-                    <Button 
+                    <Button
                       onClick={() => setActiveSection("dda")}
-                      className="w-full h-14 bg-white/10 hover:bg-[#f97316] text-white rounded-sm font-black text-[10px] uppercase tracking-widest transition-all border border-white/10 hover:border-[#f97316]"
+                      className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white rounded-sm font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-orange-600/20"
                     >
                       Ativar DDA <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </div>
 
-                  <div className="pt-6 border-t border-white/5 space-y-4 relative z-10">
+                  <div className="pt-6 border-t border-orange-100 space-y-4 relative z-10">
                     {[
                       { icon: ShieldCheck, text: "Proteção contra boletos falsos" },
                       { icon: Eye, text: "Visualize antes de pagar" },
                       { icon: Ban, text: "Bloqueie cobranças indevidas" },
                     ].map((item, i) => (
                       <div key={i} className="flex items-center gap-3">
-                        <item.icon className="h-4 w-4 text-[#f97316] shrink-0" />
-                        <span className="text-xs font-bold text-white/40">{item.text}</span>
+                        <item.icon className="h-4 w-4 text-orange-600 shrink-0" />
+                        <span className="text-xs font-bold text-orange-600/40">{item.text}</span>
                       </div>
                     ))}
                   </div>
                 </Card>
 
                 {/* Horário info */}
-                <div className="p-6 bg-white border border-neutral-100 rounded-sm shadow-sm space-y-4 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[#f97316]" />
+                <div className="p-6 bg-orange-50  border border-neutral-100 rounded-sm shadow-sm space-y-4 relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-orange-600" />
                   <div className="flex items-center gap-3">
-                    <Clock className="h-5 w-5 text-[#f97316]" />
+                    <Clock className="h-5 w-5 text-orange-600" />
                     <span className="text-xs font-black text-[#0c0a09] uppercase tracking-widest">Horários de pagamento</span>
                   </div>
                   <div className="space-y-3">
@@ -513,188 +513,7 @@ export default function PagamentosPage() {
               </div>
             </div>
 
-            {/* ──── Section Overlay: Agendamentos ──── */}
-            {activeSection === "agendamentos" && (
-              <div className="fixed inset-0 z-[100] bg-[#0c0a09]/98 backdrop-blur-xl mt-20 overflow-y-auto flex justify-center items-center p-4 py-8 ">
-                <div className="w-full max-w-3xl bg-white rounded-sm shadow-[0_0_100px_rgba(0,0,0,0.5)] h-fit flex flex-col relative animate-in fade-in zoom-in-95 duration-300">
-                  
-                  {/* Header & Edit Context */}
-                  <div className={`shrink-0 transition-all duration-500 overflow-hidden ${editingAgendamento ? 'bg-neutral-900' : 'bg-white border-b border-neutral-100'}`}>
-                    {/* Top Bar */}
-                    <div className="p-6 md:p-8 flex items-center justify-between border-b border-white/5">
-                      <div className="flex items-center gap-5">
-                        <div className={`w-14 h-14 rounded-sm flex items-center justify-center shadow-lg transition-all duration-500 ${editingAgendamento ? 'bg-[#f97316] text-white scale-110 shadow-orange-500/20' : 'bg-[#f97316]/10 text-[#f97316]'}`}>
-                          {editingAgendamento ? <Pencil className="h-7 w-7" /> : <CalendarClock className="h-7 w-7" />}
-                        </div>
-                        <div className="space-y-0.5">
-                          <h2 className={`text-xl md:text-xl font-black uppercase tracking-tight leading-none ${editingAgendamento ? 'text-white' : 'text-[#0c0a09]'}`}>
-                            {editingAgendamento ? 'Ajustar Data' : 'Agendamentos'}
-                          </h2>
-                          <p className={`text-[10px] font-black uppercase tracking-[0.2em] ${editingAgendamento ? 'text-[#f97316]' : 'text-neutral-400'}`}>
-                            {editingAgendamento ? editingAgendamento.beneficiario : `${agendamentos.length} transações programadas`}
-                          </p>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => { setActiveSection(null); setEditingAgendamento(null); }}
-                        className={`p-4 rounded-sm transition-all ${editingAgendamento ? 'hover:bg-white/10 text-white/50 hover:text-white' : 'hover:bg-neutral-50 text-neutral-300 hover:text-[#0c0a09]'}`}
-                      >
-                        <X className="h-6 w-6" />
-                      </button>
-                    </div>
 
-                    {/* Edit Options (Only visible when editing) */}
-                    {editingAgendamento && (
-                      <div className="p-6 space-y-4 animate-in slide-in-from-top-4 duration-500 ">
-                        <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-end">
-                          <div className="md:col-span-6 space-y-4">
-                            <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] ml-1">Nova Data de Pagamento</label>
-                            <div className="flex items-center gap-4 p-5 bg-white/5 rounded-sm border border-white/10 focus-within:border-[#f97316] transition-all">
-                              <Calendar className="h-5 w-5 text-[#f97316] shrink-0" />
-                              <Input
-                                type="date"
-                                value={editingAgendamento.tempDate || ""}
-                                onChange={(e) => setEditingAgendamento({...editingAgendamento, tempDate: e.target.value})}
-                                min={new Date(Date.now() + 86400000).toISOString().split('T')[0]}
-                                className="h-2 bg-transparent border-0 px-0 text-white font-black text-xl focus:ring-0 w-full cursor-pointer placeholder:text-white/20"
-                              />
-                            </div>
-                          </div>
-                          <div className="md:col-span-6 flex gap-3 h-[48px]">
-                             <Button 
-                               onClick={() => {
-                                 if (!editingAgendamento.tempDate) return toast.error("Selecione uma data.");
-                                 const [y, m, d] = editingAgendamento.tempDate.split("-");
-                                 const formattedDate = `${d}/${m}/${y}`;
-                                 setAgendamentos(prev => prev.map(ag => ag.id === editingAgendamento.id ? { ...ag, data: formattedDate } : ag));
-                                 toast.success("Agendamento atualizado com sucesso!");
-                                 setEditingAgendamento(null);
-                               }}
-                               className="flex-1 bg-[#f97316] hover:bg-orange-600 text-white font-black uppercase text-xs rounded-sm tracking-[0.2em] shadow-2xl shadow-orange-500/20"
-                             >
-                               Salvar Alteração
-                             </Button>
-                             <Button 
-                               onClick={() => setEditingAgendamento(null)}
-                               variant="ghost" 
-                               className="px-6 text-white/40 hover:text-white hover:bg-white/10 font-black uppercase text-[10px] rounded-sm tracking-widest"
-                             >
-                               Cancelar
-                             </Button>
-                          </div>
-                        </div>
-                        <div className="p-4 bg-orange-500/10 rounded-sm border border-orange-500/20 flex items-center gap-4">
-                           <AlertCircle className="h-5 w-5 text-[#f97316] shrink-0" />
-                           <p className="text-[10px] font-black text-orange-200/60 uppercase leading-none tracking-widest">A alteração de data está sujeita à disponibilidade de saldo no dia escolhido.</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* List View */}
-                  <div className="p-8 space-y-6">
-                    {!editingAgendamento && (
-                      <div className="flex flex-col md:flex-row gap-4 mb-4">
-                        <button
-                          onClick={() => { setActiveSection(null); setPaymentMode("schedule"); setTimeout(() => document.getElementById("barcode-input")?.focus(), 400); }}
-                          className="flex-1 h-16 bg-[#0c0a09] hover:bg-neutral-800 text-white rounded-sm font-black text-xs uppercase tracking-[0.2em] shadow-xl group flex items-center justify-center transition-all"
-                        >
-                          <CalendarClock className="h-5 w-5 mr-3 text-[#f97316] group-hover:scale-110 transition-transform" />
-                          Novo Agendamento
-                        </button>
-                        <div className="flex-1 p-5 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between">
-                           <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest leading-none">Total Pendente</span>
-                           <span className="text-xl font-black text-[#0c0a09] font-mono leading-none">R$ 887,15</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="max-h-[250px] overflow-y-auto pr-2 space-y-4 no-scrollbar scroll-smooth">
-                      {agendamentos.map((ag) => (
-                        <div 
-                          key={ag.id} 
-                          className={`p-6 rounded-sm border transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-6 relative group overflow-hidden ${editingAgendamento?.id === ag.id ? 'bg-orange-50 border-[#f97316] scale-[1.01] shadow-xl' : 'bg-white border-neutral-100 hover:border-[#f97316]/30 hover:shadow-2xl hover:shadow-black/5'}`}
-                        >
-                          <div className="absolute top-0 left-0 w-1 h-full bg-[#f97316] opacity-0 group-hover:opacity-100 transition-opacity" />
-                          
-                          <div className="space-y-3 min-w-0 flex-1">
-                            <div className="space-y-1">
-                              <p className="text-[9px] font-black text-neutral-300 uppercase tracking-[0.3em] leading-none">Beneficiário</p>
-                              <p className="text-base font-black text-[#0c0a09] uppercase tracking-tight truncate">{ag.beneficiario}</p>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3">
-                              <div className="flex items-center gap-2 bg-neutral-900 px-3 py-1.5 rounded-sm">
-                                <Calendar className="h-3 w-3 text-[#f97316]" />
-                                <span className="text-[10px] font-black text-white uppercase tracking-widest">{ag.data}</span>
-                              </div>
-                              <span className="text-[10px] font-mono text-neutral-300 truncate tracking-widest opacity-60">{ag.barcode}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center justify-between md:justify-end gap-8 border-t md:border-t-0 md:border-l border-neutral-100 pt-6 md:pt-0 md:pl-8">
-                            <div className="text-right">
-                               <p className="text-[9px] font-black text-neutral-300 uppercase tracking-[0.3em] mb-1">Valor Total</p>
-                               <p className="text-2xl font-black text-[#f97316] font-mono leading-none">{ag.valor}</p>
-                            </div>
-                            
-                            {!editingAgendamento && (
-                              <div className="flex items-center gap-2">
-                                <button 
-                                  onClick={() => {
-                                     const parts = ag.data.split("/");
-                                     const mappedDate = parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : "";
-                                     setEditingAgendamento({ ...ag, tempDate: mappedDate });
-                                  }}
-                                  className="w-12 h-12 bg-neutral-50 hover:bg-[#f97316]/10 border border-neutral-200 hover:border-[#f97316]/30 flex items-center justify-center text-neutral-400 hover:text-[#f97316] transition-all rounded-sm shadow-sm"
-                                  title="Editar data"
-                                >
-                                  <Pencil className="h-5 w-5" />
-                                </button>
-                                <button 
-                                  onClick={() => {
-                                     if (window.confirm(`Cancelar permanentemente o agendamento de ${ag.valor} para ${ag.beneficiario}?`)) {
-                                        setAgendamentos(prev => prev.filter(item => item.id !== ag.id));
-                                        toast.success("Agendamento cancelado.");
-                                     }
-                                  }}
-                                  className="w-12 h-12 bg-neutral-50 hover:bg-red-50 border border-neutral-200 hover:border-red-200 flex items-center justify-center text-neutral-400 hover:text-red-600 transition-all rounded-sm shadow-sm"
-                                  title="Excluir"
-                                >
-                                  <Trash2 className="h-5 w-5" />
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {agendamentos.length === 0 && (
-                      <div className="py-32 text-center space-y-6">
-                        <div className="w-20 h-20 bg-neutral-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-neutral-100">
-                          <CalendarClock className="h-10 w-10 text-neutral-200" />
-                        </div>
-                        <div className="space-y-2">
-                          <p className="text-lg font-black text-[#0c0a09] uppercase tracking-tight">Tudo em dia!</p>
-                          <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest">Você não possui nenhum pagamento agendado no momento.</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Footer Info */}
-                  <div className="p-8 border-t border-neutral-50 bg-neutral-50/50 flex flex-col md:flex-row items-center justify-between gap-4">
-                     <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest text-center md:text-left">
-                       As transações são processadas às 07:00h do dia agendado.
-                     </p>
-                     <div className="flex items-center gap-2">
-                        <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                        <span className="text-[10px] font-black text-[#0c0a09] uppercase tracking-widest">Ambiente Seguro G8</span>
-                     </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {/* ──── Section Overlay: Histórico ──── */}
             {activeSection === "historico" && (
@@ -745,8 +564,8 @@ export default function PagamentosPage() {
                       </div>
                     ) : (
                       pagamentosHistory.map((item, idx) => (
-                        <div 
-                          key={idx} 
+                        <div
+                          key={idx}
                           onClick={() => {
                             const id = item.idDoBancoLiquidante || item.id_transaction || item.id || item.nsu;
                             if (id) {
@@ -848,7 +667,7 @@ export default function PagamentosPage() {
               </div>
             )}
 
-      
+
           </>
         )}
 
@@ -860,7 +679,7 @@ export default function PagamentosPage() {
               </Button>
               <h2 className="text-3xl font-black text-[#0c0a09] tracking-tighter uppercase">Confirme os dados</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
               <div className="md:col-span-8 space-y-8">
                 <div className="bg-white p-10 rounded-sm border border-neutral-100 shadow-2xl space-y-8">
@@ -902,22 +721,20 @@ export default function PagamentosPage() {
                       <div className="flex items-center bg-white rounded-sm border border-neutral-200 p-1 gap-1">
                         <button
                           onClick={() => { setPaymentMode("now"); setScheduleDate(""); }}
-                          className={`flex items-center gap-2 px-5 py-2.5 rounded-sm font-black text-[9px] uppercase tracking-widest transition-all ${
-                            paymentMode === "now"
-                              ? "bg-[#0c0a09] text-white shadow-md"
-                              : "text-neutral-400 hover:text-[#0c0a09]"
-                          }`}
+                          className={`flex items-center gap-2 px-5 py-2.5 rounded-sm font-black text-[9px] uppercase tracking-widest transition-all ${paymentMode === "now"
+                            ? "bg-[#0c0a09] text-white shadow-md"
+                            : "text-neutral-400 hover:text-[#0c0a09]"
+                            }`}
                         >
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           Agora
                         </button>
                         <button
                           onClick={() => setPaymentMode("schedule")}
-                          className={`flex items-center gap-2 px-5 py-2.5 rounded-sm font-black text-[9px] uppercase tracking-widest transition-all ${
-                            paymentMode === "schedule"
-                              ? "bg-[#0c0a09] text-white shadow-md"
-                              : "text-neutral-400 hover:text-[#0c0a09]"
-                          }`}
+                          className={`flex items-center gap-2 px-5 py-2.5 rounded-sm font-black text-[9px] uppercase tracking-widest transition-all ${paymentMode === "schedule"
+                            ? "bg-[#0c0a09] text-white shadow-md"
+                            : "text-neutral-400 hover:text-[#0c0a09]"
+                            }`}
                         >
                           <CalendarClock className="h-3.5 w-3.5" />
                           Agendar
@@ -930,15 +747,13 @@ export default function PagamentosPage() {
                         <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-2">Vencimento</p>
                         <p className="text-lg font-black text-[#0c0a09] tracking-tight">{boletoData.vencimento}</p>
                       </div>
-                      <div className={`p-4 rounded-sm border-2 transition-colors ${
-                        paymentMode === "schedule" && !scheduleDate 
-                          ? "bg-[#f97316]/5 border-[#f97316]/30" 
-                          : "bg-white border-neutral-100"
-                      }`}>
-                        <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-2">Data de Pagamento</p>
-                        <p className={`text-lg font-black tracking-tight ${
-                          paymentMode === "now" ? "text-[#0c0a09]" : scheduleDate ? "text-[#f97316]" : "text-[#f97316]/40"
+                      <div className={`p-4 rounded-sm border-2 transition-colors ${paymentMode === "schedule" && !scheduleDate
+                        ? "bg-[#f97316]/5 border-[#f97316]/30"
+                        : "bg-white border-neutral-100"
                         }`}>
+                        <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-2">Data de Pagamento</p>
+                        <p className={`text-lg font-black tracking-tight ${paymentMode === "now" ? "text-[#0c0a09]" : scheduleDate ? "text-[#f97316]" : "text-[#f97316]/40"
+                          }`}>
                           {paymentMode === "now" ? "Hoje" : scheduleDate ? new Date(scheduleDate + "T12:00:00").toLocaleDateString("pt-BR") : "Selecione →"}
                         </p>
                       </div>
@@ -976,7 +791,7 @@ export default function PagamentosPage() {
                     </div>
                   )}
 
-                  <Button 
+                  <Button
                     onClick={() => {
                       if (paymentMode === "schedule") {
                         if (!scheduleDate) {
@@ -1004,18 +819,17 @@ export default function PagamentosPage() {
                       handleRequestSms();
                     }}
                     disabled={isLoading || (userBalance !== null && boletoData.valor > userBalance) || (paymentMode === "schedule" && !scheduleDate)}
-                    className={`w-full h-20 rounded-sm font-black text-lg uppercase tracking-widest shadow-2xl transition-all ${
-                      userBalance !== null && boletoData.valor > userBalance 
-                      ? "bg-red-500/10 text-red-500 border border-red-200 cursor-not-allowed hover:bg-red-500/10 shadow-none" 
+                    className={`w-full h-20 rounded-sm font-black text-lg uppercase tracking-widest shadow-2xl transition-all ${userBalance !== null && boletoData.valor > userBalance
+                      ? "bg-red-500/10 text-red-500 border border-red-200 cursor-not-allowed hover:bg-red-500/10 shadow-none"
                       : paymentMode === "schedule"
                         ? "bg-[#0c0a09] hover:bg-[#f97316] text-white shadow-black/10"
                         : "bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white shadow-black/20"
-                    }`}
+                      }`}
                   >
                     {isLoading ? "PROCESSANDO..." : (
-                      userBalance !== null && boletoData.valor > userBalance 
-                        ? "Saldo insuficiente" 
-                        : paymentMode === "schedule" 
+                      userBalance !== null && boletoData.valor > userBalance
+                        ? "Saldo insuficiente"
+                        : paymentMode === "schedule"
                           ? <><CalendarClock className="h-5 w-5 mr-3" /> AGENDAR PAGAMENTO</>
                           : "AUTORIZAR PAGAMENTO"
                     )}
@@ -1032,7 +846,7 @@ export default function PagamentosPage() {
                     </div>
                     <h4 className="text-xs font-black text-[#0c0a09] uppercase tracking-widest">Aviso Importante</h4>
                   </div>
-                  
+
                   <div className="space-y-4">
                     <p className="text-xs font-bold text-neutral-500 leading-relaxed">
                       Certifique-se de que os dados acima correspondam ao boleto que você deseja pagar.
@@ -1052,122 +866,122 @@ export default function PagamentosPage() {
 
         {step === "sms" && (
           <div className="max-w-xl mx-auto flex flex-col items-center text-center space-y-10 py-12 animate-in fade-in zoom-in-95 duration-500">
-             <div className="w-20 h-20 bg-[#f97316]/10 rounded-[4px] flex items-center justify-center text-[#f97316] shadow-xl relative group">
-                <Smartphone className="h-10 w-10 animate-bounce text-[#f97316]" />
-             </div>
-             
-             <div className="space-y-4">
-                <h2 className="text-4xl font-black text-[#0c0a09] uppercase tracking-tighter">Validação de Segurança</h2>
-                <p className="text-base font-bold text-neutral-400 uppercase tracking-widest leading-relaxed px-10">
-                  Enviamos um código para o seu celular cadastrado.
-                </p>
-             </div>
+            <div className="w-20 h-20 bg-[#f97316]/10 rounded-[4px] flex items-center justify-center text-[#f97316] shadow-xl relative group">
+              <Smartphone className="h-10 w-10 animate-bounce text-[#f97316]" />
+            </div>
 
-             <div className="w-full max-w-xs space-y-8">
-                <Input 
-                  value={smsCode}
-                  onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").substring(0, 6))}
-                  className="h-20 text-center font-black text-4xl tracking-[0.5em] border-2 border-neutral-100 rounded-sm focus:border-[#f97316] bg-white shadow-2xl"
-                  placeholder="0 0 0 0 0"
-                />
-                <div className="flex flex-col gap-4 w-full">
-                  <Button 
-                    onClick={handleFinalizePayment}
-                    disabled={isLoading || smsCode.length < 5}
-                    className="w-full h-16 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 disabled:opacity-50"
-                  >
-                    {isLoading ? "PROCESSANDO..." : "CONFIRMAR PAGAMENTO"}
-                  </Button>
-                  <button className="text-[10px] font-black text-[#f97316] uppercase tracking-widest hover:underline transition-colors py-2">
-                    Reenviar código em 00:59
-                  </button>
-                </div>
-             </div>
+            <div className="space-y-4">
+              <h2 className="text-4xl font-black text-[#0c0a09] uppercase tracking-tighter">Validação de Segurança</h2>
+              <p className="text-base font-bold text-neutral-400 uppercase tracking-widest leading-relaxed px-10">
+                Enviamos um código para o seu celular cadastrado.
+              </p>
+            </div>
+
+            <div className="w-full max-w-xs space-y-8">
+              <Input
+                value={smsCode}
+                onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").substring(0, 6))}
+                className="h-20 text-center font-black text-4xl tracking-[0.5em] border-2 border-neutral-100 rounded-sm focus:border-[#f97316] bg-white shadow-2xl"
+                placeholder="0 0 0 0 0"
+              />
+              <div className="flex flex-col gap-4 w-full">
+                <Button
+                  onClick={handleFinalizePayment}
+                  disabled={isLoading || smsCode.length < 5}
+                  className="w-full h-16 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isLoading ? "PROCESSANDO..." : "CONFIRMAR PAGAMENTO"}
+                </Button>
+                <button className="text-[10px] font-black text-[#f97316] uppercase tracking-widest hover:underline transition-colors py-2">
+                  Reenviar código em 00:59
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
         {step === "success" && (
           <div className="max-w-2xl mx-auto flex flex-col items-center space-y-10 py-8 animate-in fade-in slide-in-from-top-4 duration-700">
-             <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-600 shadow-2xl relative border-4 border-white">
-                <CheckCircle2 className="h-12 w-12" />
-             </div>
-             
-             <div className="text-center space-y-2">
-                <h2 className="text-4xl font-black text-[#0c0a09] tracking-tighter uppercase">Pagamento Realizado!</h2>
-                <p className="text-base font-bold text-neutral-400 uppercase tracking-widest">Sua conta foi liquidada com sucesso.</p>
-             </div>
+            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-600 shadow-2xl relative border-4 border-white">
+              <CheckCircle2 className="h-12 w-12" />
+            </div>
 
-             <div className="w-full bg-white rounded-sm border border-neutral-100 p-10 shadow-2xl space-y-8 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full blur-3xl -mr-16 -mt-16" />
-                
-                <div className="space-y-8 relative z-10">
-                   <div className="flex flex-col items-center border-b border-neutral-50 pb-8 text-center">
-                      <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2 opacity-60">Valor Total Pago</span>
-                      <span className="text-5xl font-black text-[#f97316] tracking-tighter">{formatCurrency(boletoData?.valor)}</span>
-                   </div>
-                   
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
-                      <div className="space-y-6">
-                        <div className="space-y-1">
-                          <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Beneficiário</p>
-                          <p className="text-base font-black text-[#0c0a09] uppercase leading-tight">{boletoData?.beneficiario}</p>
-                          {boletoData?.documentoBeneficiario && (
-                            <p className="text-[11px] font-medium text-neutral-500">{boletoData.documentoBeneficiario}</p>
-                          )}
-                          {boletoData?.bancoBeneficiario && (
-                            <p className="text-[11px] font-bold text-[#f97316] uppercase mt-1 flex items-center gap-1">
-                              <Building2 className="h-3 w-3" />
-                              {boletoData.bancoBeneficiario}
-                            </p>
-                          )}
-                        </div>
+            <div className="text-center space-y-2">
+              <h2 className="text-4xl font-black text-[#0c0a09] tracking-tighter uppercase">Pagamento Realizado!</h2>
+              <p className="text-base font-bold text-neutral-400 uppercase tracking-widest">Sua conta foi liquidada com sucesso.</p>
+            </div>
 
-                        <div className="space-y-1 pt-6 border-t border-neutral-50">
-                          <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Pagador</p>
-                          <p className="text-sm font-black text-[#0c0a09] uppercase">{boletoData?.pagadorNome || "NOME NÃO INFORMADO"}</p>
-                        </div>
-                      </div>
+            <div className="w-full bg-white rounded-sm border border-neutral-100 p-10 shadow-2xl space-y-8 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full blur-3xl -mr-16 -mt-16" />
 
-                      <div className="space-y-6">
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Vencimento</p>
-                            <p className="text-sm font-black text-[#0c0a09]">{boletoData?.vencimento}</p>
-                          </div>
-                          <div className="space-y-1 text-right">
-                            <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Data Pagamento</p>
-                            <p className="text-sm font-black text-[#0c0a09]">{boletoData?.dataPagamento || new Date().toLocaleDateString('pt-BR')}</p>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1 pt-6 border-t border-neutral-50">
-                          <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Autenticação</p>
-                          <p className="text-[11px] font-black text-neutral-400 font-mono break-all leading-relaxed uppercase">{transactionId}</p>
-                        </div>
-                      </div>
-                   </div>
+              <div className="space-y-8 relative z-10">
+                <div className="flex flex-col items-center border-b border-neutral-50 pb-8 text-center">
+                  <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2 opacity-60">Valor Total Pago</span>
+                  <span className="text-5xl font-black text-[#f97316] tracking-tighter">{formatCurrency(boletoData?.valor)}</span>
                 </div>
-             </div>
 
-             <div className="w-full flex gap-4 pt-10">
-                <Button onClick={handlePrintReceipt} className="flex-1 h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 group transition-all">
-                   <Download className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                   COMPROVANTE
-                </Button>
-                <Button 
-                  onClick={() => {
-                    setStep("landing");
-                    setBoletoData(null);
-                    setBarcode("");
-                    setSmsCode("");
-                    setTransactionId("");
-                  }}
-                  variant="outline" 
-                  className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-sm font-black text-lg uppercase tracking-widest hover:border-[#f97316] hover:text-[#f97316] hover:bg-orange-50 transition-all"
-                >
-                   NOVO PAGAMENTO
-                </Button>
-             </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+                  <div className="space-y-6">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Beneficiário</p>
+                      <p className="text-base font-black text-[#0c0a09] uppercase leading-tight">{boletoData?.beneficiario}</p>
+                      {boletoData?.documentoBeneficiario && (
+                        <p className="text-[11px] font-medium text-neutral-500">{boletoData.documentoBeneficiario}</p>
+                      )}
+                      {boletoData?.bancoBeneficiario && (
+                        <p className="text-[11px] font-bold text-[#f97316] uppercase mt-1 flex items-center gap-1">
+                          <Building2 className="h-3 w-3" />
+                          {boletoData.bancoBeneficiario}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-1 pt-6 border-t border-neutral-50">
+                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Pagador</p>
+                      <p className="text-sm font-black text-[#0c0a09] uppercase">{boletoData?.pagadorNome || "NOME NÃO INFORMADO"}</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Vencimento</p>
+                        <p className="text-sm font-black text-[#0c0a09]">{boletoData?.vencimento}</p>
+                      </div>
+                      <div className="space-y-1 text-right">
+                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Data Pagamento</p>
+                        <p className="text-sm font-black text-[#0c0a09]">{boletoData?.dataPagamento || new Date().toLocaleDateString('pt-BR')}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1 pt-6 border-t border-neutral-50">
+                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Autenticação</p>
+                      <p className="text-[11px] font-black text-neutral-400 font-mono break-all leading-relaxed uppercase">{transactionId}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full flex gap-4 pt-10">
+              <Button onClick={handlePrintReceipt} className="flex-1 h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 group transition-all">
+                <Download className="h-6 w-6 group-hover:scale-110 transition-transform" />
+                COMPROVANTE
+              </Button>
+              <Button
+                onClick={() => {
+                  setStep("landing");
+                  setBoletoData(null);
+                  setBarcode("");
+                  setSmsCode("");
+                  setTransactionId("");
+                }}
+                variant="outline"
+                className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-sm font-black text-lg uppercase tracking-widest hover:border-[#f97316] hover:text-[#f97316] hover:bg-orange-50 transition-all"
+              >
+                NOVO PAGAMENTO
+              </Button>
+            </div>
           </div>
         )}
       </div>

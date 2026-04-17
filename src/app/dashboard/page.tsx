@@ -20,6 +20,7 @@ import {
    ArrowLeft,
    Download,
    Diamond,
+   QrCode,
    LucideIcon
 } from "lucide-react";
 import {
@@ -39,6 +40,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import api from "@/lib/api";
 import Link from "next/link";
+
+const PixIcon = (props: any) => (
+  <svg {...props} viewBox="0 0 100 100" fill="currentColor">
+    <rect x="35" y="5" width="30" height="30" rx="6" transform="rotate(45 50 20)" />
+    <rect x="35" y="65" width="30" height="30" rx="6" transform="rotate(45 50 80)" />
+    <rect x="5" y="35" width="30" height="30" rx="6" transform="rotate(45 20 50)" />
+    <rect x="65" y="35" width="30" height="30" rx="6" transform="rotate(45 80 50)" />
+  </svg>
+);
 
 const chartData = {
    day: [
@@ -73,12 +83,15 @@ const maturityItems = [
    { id: 3, label: "Seguro. Saúde", company: "SulAmérica", value: "R$ 800", icon: Landmark, color: "bg-purple-100 text-purple-600" },
 ];
 
-const getIconForMetodo = (metodo: string): LucideIcon => {
+const getIconForMetodo = (metodo: string): any => {
    switch (metodo) {
-      case "TRANSFERENCIA_PIX": return ScanLine;
-      case "TRANSFERENCIA": return Landmark;
-      case "TARIFA": return MoreHorizontal;
-      case "PAGAMENTO": return CreditCard;
+      case "TRANSFERENCIA_PIX": return PixIcon;
+      case "TRANSFERENCIA":
+      case "TRANSFERENCIA_INTERNA": return Landmark;
+      case "TARIFA":
+      case "MENSALIDADE_CLUBE_BENEFICIOS": return MoreHorizontal;
+      case "PAGAMENTO":
+      case "PAGAMENTO_BOLETO": return CreditCard;
       default: return Landmark;
    }
 };
@@ -87,8 +100,8 @@ export default function DashboardHome() {
     const [userName, setUserName] = useState("");
     const [balance, setBalance] = useState("");
     const [cardNumber, setCardNumber] = useState("");
-    const [realTransactions, setRealTransactions] = useState<any[]>([]);
     const [allTransactions, setAllTransactions] = useState<any[]>([]);
+    const [filter, setFilter] = useState("Todas");
     const [isLoadingTransactions, setIsLoadingTransactions] = useState(true);
     const [isLoadingData, setIsLoadingData] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
@@ -128,7 +141,6 @@ export default function DashboardHome() {
 
             if (extratoRes.data && Array.isArray(extratoRes.data.data)) {
                setAllTransactions(extratoRes.data.data);
-               setRealTransactions(extratoRes.data.data.slice(0, 5));
             }
           } finally {
              setIsLoadingTransactions(false);
@@ -269,6 +281,20 @@ export default function DashboardHome() {
    const prevMaturity = () => {
       setCurrentIndex(prev => (prev === 0 ? maturityItems.length - 1 : prev - 1));
    };
+
+   const filteredTransactions = React.useMemo(() => {
+      let filtered = allTransactions;
+      if (filter === "Pix") {
+         filtered = allTransactions.filter(t => t.metodo === "TRANSFERENCIA_PIX" || t.metodoFormatado?.toUpperCase().includes("PIX"));
+      } else if (filter === "P2P") {
+         filtered = allTransactions.filter(t => t.metodo === "TRANSFERENCIA_INTERNA" || t.metodo === "TRANSFERENCIA" || t.metodoFormatado?.toUpperCase().includes("P2P"));
+      } else if (filter === "Boleto") {
+         filtered = allTransactions.filter(t => t.metodo === "PAGAMENTO_BOLETO" || t.metodo === "PAGAMENTO" || t.metodoFormatado?.toUpperCase().includes("BOLETO"));
+      } else if (filter === "Tarifa") {
+         filtered = allTransactions.filter(t => t.metodo === "TARIFA" || t.metodo === "MENSALIDADE_CLUBE_BENEFICIOS" || t.metodoFormatado?.toUpperCase().includes("TARIFA"));
+      }
+      return filtered.slice(0, 5);
+   }, [allTransactions, filter]);
 
    return (
       <div className="p-4 md:p-6 2xl:p-10 flex flex-col xl:flex-row gap-8 2xl:gap-12 h-full overflow-y-auto w-full no-scrollbar">
@@ -419,14 +445,16 @@ export default function DashboardHome() {
                      <p className="text-sm 2xl:text-base font-bold text-neutral-400 hidden sm:block uppercase tracking-widest">Últimas 5 operações</p>
                   </div>
                   <div className="flex gap-4">
-                     <Select defaultValue="Todas">
+                     <Select value={filter} onValueChange={(val) => val && setFilter(val)}>
                         <SelectTrigger className="w-[180px] 2xl:w-[200px] bg-white border-white/10 rounded-md h-12 2xl:h-14 shadow-sm font-bold px-8 text-[#0c0a09] transition-all hover:bg-neutral-50">
                            <SelectValue placeholder="Filtrar" />
                         </SelectTrigger>
                         <SelectContent className="rounded-md border-0 shadow-2xl font-bold">
                            <SelectItem value="Todas">Todas Operações</SelectItem>
                            <SelectItem value="Pix">Apenas Pix</SelectItem>
-                           <SelectItem value="Cartão">Cartão G8</SelectItem>
+                           <SelectItem value="P2P">Transferência P2P</SelectItem>
+                           <SelectItem value="Boleto">Pagamentos</SelectItem>
+                           <SelectItem value="Tarifa">Taxas e Tarifas</SelectItem>
                         </SelectContent>
                      </Select>
                   </div>
@@ -441,14 +469,14 @@ export default function DashboardHome() {
                         </div>
                         <p className="text-xs font-black uppercase text-neutral-400 tracking-[0.3em] animate-pulse">Sincronizando registros...</p>
                      </div>
-                  ) : realTransactions.length === 0 ? (
+                  ) : filteredTransactions.length === 0 ? (
                      <div className="p-24 text-center bg-white/50 border border-dashed border-neutral-200 rounded-md space-y-6">
                         <TrendingUp className="h-12 w-12 text-neutral-200 mx-auto" />
                         <p className="text-neutral-400 font-bold uppercase text-xs tracking-widest">Aguardando sua primeira transação</p>
                      </div>
                   ) : (
                      <div className="grid gap-6">
-                        {realTransactions.map((t, idx) => {
+                        {filteredTransactions.map((t, idx) => {
                            const TransactionIcon = getIconForMetodo(t.metodo);
                            const displayName = t.tipo === "CREDITO" ? (t.pagadorNome || "Depósito Recebido") : (t.RecebinteNome || "Pagamento Efetuado");
                            const dateOnly = t.dataDaTransacaoFormatada?.split(" ")[0] || "---";
@@ -460,8 +488,11 @@ export default function DashboardHome() {
                                  className="flex items-center justify-between p-6 2xl:p-10 bg-white rounded-md border border-neutral-100 shadow-sm hover:shadow-2xl hover:shadow-orange-100/30 hover:-translate-y-1.5 transition-all duration-500 cursor-pointer group"
                               >
                                  <div className="flex items-center gap-8 2xl:gap-10">
-                                    <div className={`w-16 h-16 2xl:w-20 2xl:h-20 rounded-md flex items-center justify-center p-4 transition-all shadow-sm ${t.tipo === 'CREDITO' ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'}`}>
-                                       <TransactionIcon className="h-full w-full stroke-[2]" />
+                                    <div className={`w-16 h-16 2xl:w-20 2xl:h-20 rounded-md flex items-center justify-center p-4 transition-all shadow-sm ${
+                                       t.metodo === "TRANSFERENCIA_PIX" ? 'bg-[#32BCAD]/10 text-[#32BCAD]' : 
+                                       t.tipo === 'CREDITO' ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'
+                                    }`}>
+                                       <TransactionIcon className={`h-full w-full ${t.metodo === "TRANSFERENCIA_PIX" ? "" : "stroke-[2]"}`} />
                                     </div>
                                     <div className="space-y-2 min-w-0">
                                        <p className="font-black text-xl 2xl:text-2xl text-[#0c0a09] leading-none group-hover:text-[#f97316] transition-colors truncate max-w-[300px] 2xl:max-w-[450px]">{displayName}</p>
@@ -589,8 +620,8 @@ export default function DashboardHome() {
                      </div>
                   </div>
                   <div className="space-y-4">
-                     <h3 className="font-black text-3xl 2xl:text-4xl tracking-tighter">Impulsione o G8!</h3>
-                     <p className="text-sm 2xl:text-base font-medium text-white/50 px-4 leading-relaxed">Ganhe <span className="text-[#f97316] font-black">R$ 50,00</span> por cada convite aceito.</p>
+                     <h3 className="font-black text-3xl 2xl:text-4xl tracking-tighter">Expanda sua Rede!</h3>
+                     <p className="text-sm 2xl:text-base font-medium text-white/50 px-4 leading-relaxed">Compartilhe o G8 Digital com seus parceiros e amigos e cresçam juntos.</p>
                   </div>
                   <Button className="w-full bg-white text-[#0c0a09] hover:bg-[#f97316] hover:text-white transition-all duration-500 rounded-md h-14 2xl:h-16 font-black uppercase tracking-widest text-xs 2xl:text-base shadow-xl shadow-black/20">
                      Compartilhar Agora
