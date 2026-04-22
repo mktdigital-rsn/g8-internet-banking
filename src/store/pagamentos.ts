@@ -1,0 +1,31 @@
+import { atom } from "jotai";
+
+interface CobrancaData {
+  valor: number;
+  pagadorNome: string;
+  pagadorTaxNumber: string;
+  pagadorEmail: string;
+  pagadorCep: string;
+  pagadorBairro: string;
+  pagadorRua: string;
+  pagadorCidade: string;
+  pagadorUf: string;
+  pagadorNumero: string;
+  dataVencimento: string;
+}
+
+export const cobrancaDataAtom = atom<CobrancaData>({
+  valor: 0,
+  pagadorNome: "",
+  pagadorTaxNumber: "",
+  pagadorEmail: "",
+  pagadorCep: "",
+  pagadorBairro: "",
+  pagadorRua: "",
+  pagadorCidade: "",
+  pagadorUf: "",
+  pagadorNumero: "",
+  dataVencimento: "",
+});
+
+export const cobrancaHtmlAtom = atom<string | null>(null);

@@ -14,7 +14,8 @@ import {
   LogOut,
   RotateCw,
   CreditCard,
-  Clock
+  Clock,
+  Banknote
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -32,6 +33,7 @@ const menuItems: MenuItem[] = [
   { icon: Wallet, label: "Pagamentos", href: "/dashboard/pagamentos" },
   { icon: ArrowUpRight, label: "Transferência", href: "/dashboard/transferencia" },
   { icon: Smartphone, label: "PIX", href: "/dashboard/pix" },
+  { icon: Banknote, label: "Cobranças", href: "/dashboard/cobrancas" },
   { icon: Clock, label: "Agendamentos", href: "/dashboard/agendamentos" },
   { icon: FileText, label: "Extrato", href: "/dashboard/extrato" },
   { icon: CreditCard, label: "Cartões", href: "/dashboard/cartoes" },
