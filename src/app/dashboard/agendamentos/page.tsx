@@ -34,13 +34,34 @@ interface Agendamento {
   valor: number;
   data: string;
   status: "pending" | "failed";
+  category?: string;
 }
 
 const MOCK_AGENDAMENTOS: Agendamento[] = [
-  { id: "1", type: "pix", beneficiario: "Mercado Central LTDA", valor: 450.00, data: "2026-04-20", status: "pending" },
-  { id: "2", type: "boleto", beneficiario: "Condomínio Ed. Solar", valor: 1250.80, data: "2026-04-25", status: "pending" },
-  { id: "3", type: "transfer", beneficiario: "Ana Beatriz Silva", valor: 1500.00, data: "2026-05-02", status: "pending" },
-  { id: "4", type: "ted", beneficiario: "Investimentos S.A.", valor: 5000.00, data: "2026-04-18", status: "pending" },
+  { id: "1", type: "pix", beneficiario: "Mercado Central LTDA", valor: 450.00, data: "2026-04-20", status: "pending", category: "Alimentação" },
+  { id: "2", type: "boleto", beneficiario: "Condomínio Ed. Solar", valor: 1250.80, data: "2026-04-25", status: "pending", category: "Aluguel" },
+  { id: "3", type: "transfer", beneficiario: "Ana Beatriz Silva", valor: 1500.00, data: "2026-05-02", status: "pending", category: "Outros" },
+  { id: "4", type: "ted", beneficiario: "Investimentos S.A.", valor: 5000.00, data: "2026-04-18", status: "pending", category: "Marketing" },
+];
+
+const CATEGORIES = [
+  "Alimentação",
+  "Aluguel",
+  "Compras",
+  "Contabilidade",
+  "Contas de consumo",
+  "Despesas pessoais",
+  "Empréstimo",
+  "Estornos",
+  "Faturas",
+  "Impostos e encargos",
+  "Marketing",
+  "Outros",
+  "Pagamento de fornecedor",
+  "Pagamento de funcionários",
+  "Retirada para própria conta PF",
+  "Saque",
+  "Transporte e mobilidade"
 ];
 
 function StatusBadge({ valor }: { valor: number }) {
@@ -78,18 +99,40 @@ export default function AgendamentosPage() {
     beneficiario: string;
     valor: string;
     data: string;
+    pixKey?: string;
+    agency?: string;
+    account?: string;
+    bank?: string;
+    barcode?: string;
+    category?: string;
   }>({
     type: "pix",
     beneficiario: "",
     valor: "",
     data: "",
+    pixKey: "",
+    agency: "",
+    account: "",
+    bank: "",
+    barcode: "",
+    category: "Outros",
   });
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" });
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const filtered = agendamentos.filter(ag => {
     const matchesSearch = ag.beneficiario.toLowerCase().includes(search.toLowerCase());
     const matchesTab = activeTab === "todos" || ag.type === activeTab;
-    return matchesSearch && matchesTab;
+    
+    let matchesDate = true;
+    if (dateRange.start) {
+      matchesDate = matchesDate && new Date(ag.data) >= new Date(dateRange.start);
+    }
+    if (dateRange.end) {
+      matchesDate = matchesDate && new Date(ag.data) <= new Date(dateRange.end);
+    }
+
+    return matchesSearch && matchesTab && matchesDate;
   });
 
   const handleDelete = (id: string) => {
@@ -103,8 +146,13 @@ export default function AgendamentosPage() {
     setNewAgendamento({
       type: ag.type,
       beneficiario: ag.beneficiario,
-      valor: ag.valor.toString(),
+      valor: formatBRL((ag.valor * 100).toFixed(0)),
       data: ag.data,
+      pixKey: "",
+      agency: "",
+      account: "",
+      bank: "",
+      barcode: "",
     });
     setEditingId(ag.id);
     setIsAdding(true);
@@ -120,8 +168,9 @@ export default function AgendamentosPage() {
         ...a,
         type: newAgendamento.type,
         beneficiario: newAgendamento.beneficiario,
-        valor: parseFloat(newAgendamento.valor),
-        data: newAgendamento.data
+        valor: parseFloat(newAgendamento.valor.replace(/[^0-9,]/g, '').replace(',', '.')),
+        data: newAgendamento.data,
+        category: newAgendamento.category || "Outros"
       } : a));
       toast.success("Agendamento atualizado com sucesso!");
     } else {
@@ -129,9 +178,10 @@ export default function AgendamentosPage() {
         id: Math.random().toString(36).substr(2, 9),
         type: newAgendamento.type,
         beneficiario: newAgendamento.beneficiario,
-        valor: parseFloat(newAgendamento.valor),
+        valor: parseFloat(newAgendamento.valor.replace(/[^0-9,]/g, '').replace(',', '.')),
         data: newAgendamento.data,
-        status: "pending"
+        status: "pending",
+        category: newAgendamento.category || "Outros"
       };
       setAgendamentos([ag, ...agendamentos]);
       toast.success("Pagamento agendado com sucesso!");
@@ -139,7 +189,32 @@ export default function AgendamentosPage() {
     
     setIsAdding(false);
     setEditingId(null);
-    setNewAgendamento({ type: "pix", beneficiario: "", valor: "", data: "" });
+    setNewAgendamento({ 
+      type: "pix", 
+      beneficiario: "", 
+      valor: "", 
+      data: "",
+      pixKey: "",
+      agency: "",
+      account: "",
+      bank: "",
+      barcode: "",
+    });
+  };
+
+  const formatBRL = (value: string) => {
+    const cleanValue = value.replace(/\D/g, "");
+    const numberValue = parseFloat(cleanValue) / 100;
+    if (isNaN(numberValue)) return "";
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(numberValue);
+  };
+
+  const handleValorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatBRL(e.target.value);
+    setNewAgendamento({ ...newAgendamento, valor: formatted });
   };
 
   return (
@@ -160,7 +235,18 @@ export default function AgendamentosPage() {
         <Button 
           onClick={() => {
             setEditingId(null);
-            setNewAgendamento({ type: "pix", beneficiario: "", valor: "", data: "" });
+            setNewAgendamento({ 
+              type: "pix", 
+              beneficiario: "", 
+              valor: "", 
+              data: "",
+              pixKey: "",
+              agency: "",
+              account: "",
+              bank: "",
+              barcode: "",
+              category: "Outros",
+            });
             setIsAdding(true);
           }}
           className="h-14 px-8 bg-orange-600 hover:bg-orange-700 text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all shadow-xl shadow-orange-600/20 group"
@@ -173,28 +259,66 @@ export default function AgendamentosPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
         {/* Filters and List */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="flex flex-col md:flex-row gap-4 items-center bg-white p-4 rounded-sm border border-neutral-100 shadow-sm">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
-              <Input 
-                placeholder="Buscar por beneficiário..." 
-                className="pl-12 h-12 bg-neutral-50 border-neutral-100 rounded-sm font-bold text-sm"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
+          <div className="flex flex-col gap-6 bg-white p-6 rounded-sm border border-neutral-100 shadow-sm relative z-20">
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              <div className="relative flex-1 w-full">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
+                <Input 
+                  placeholder="Buscar por beneficiário..." 
+                  className="pl-12 h-12 bg-neutral-50 border-neutral-100 rounded-sm font-bold text-sm"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+              <div className="flex items-center gap-2 p-1 bg-neutral-100 rounded-sm w-full md:w-auto overflow-x-auto no-scrollbar">
+                {(["todos", "pix", "transfer", "boleto", "ted"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all whitespace-nowrap ${
+                      activeTab === tab ? "bg-white text-orange-600 shadow-sm" : "text-neutral-400 hover:text-neutral-600"
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-2 p-1 bg-neutral-100 rounded-sm">
-              {(["todos", "pix", "transfer", "boleto", "ted"] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all ${
-                    activeTab === tab ? "bg-white text-orange-600 shadow-sm" : "text-neutral-400 hover:text-neutral-600"
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
+
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-4 pt-4 border-t border-neutral-50">
+              <div className="flex items-center gap-2 shrink-0">
+                <Calendar className="h-4 w-4 text-orange-600" />
+                <span className="text-[13px] font-black text-neutral-400 uppercase tracking-widest whitespace-nowrap">Filtrar por Período</span>
+              </div>
+              <div className="flex flex-wrap xl:flex-nowrap items-center gap-4 flex-1">
+                <div className="w-full m:w-30 md:w-36 lg:w-50  relative my-2">
+                  <span className="absolute -top-2.5 left-3 px-1 bg-white text-[10px] font-black text-[#ff7711] uppercase tracking-widest z-10">De</span>
+                  <Input 
+                    type="date"
+                    className="h-12 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all w-full"
+                    value={dateRange.start}
+                    onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                  />
+                </div>
+                <div className="w-full sm:w-30 md:w-36 lg:w-50 relative">
+                  <span className="absolute -top-2.5 left-3 px-1 bg-white text-[10px] font-black text-[#ff7711] uppercase tracking-widest z-10">Até</span>
+                  <Input 
+                    type="date"
+                    className="h-12 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all w-full"
+                    value={dateRange.end}
+                    onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                  />
+                </div>
+                {(dateRange.start || dateRange.end) && (
+                  <button 
+                    onClick={() => setDateRange({ start: "", end: "" })}
+                    className="flex items-center gap-2 px-4 h-12 text-red-500 hover:bg-red-50 rounded-sm transition-colors font-black text-[10px] uppercase tracking-widest whitespace-nowrap"
+                  >
+                    <X className="h-4 w-4" />
+                    Limpar
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -203,7 +327,8 @@ export default function AgendamentosPage() {
               <Card key={ag.id} className="p-6 bg-white border border-neutral-100 rounded-sm hover:border-orange-200 hover:shadow-xl hover:shadow-orange-100/10 transition-all group relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/40 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />
                 
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+                <div className="overflow-x-auto custom-scrollbar">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10 min-w-max md:min-w-0 pb-2 md:pb-0">
                   <div className="flex items-center gap-5">
                     <div className="w-14 h-14 bg-orange-50 rounded-sm flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform shadow-sm border border-orange-100/50">
                       {ag.type === "pix" && <Smartphone className="h-6 w-6" />}
@@ -214,6 +339,8 @@ export default function AgendamentosPage() {
                     <div>
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-[10px] font-black text-orange-700 uppercase tracking-widest opacity-60">{ag.type}</span>
+                        <div className="w-1 h-1 bg-orange-200 rounded-full" />
+                        <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">{ag.category}</span>
                         <div className="w-1 h-1 bg-orange-200 rounded-full" />
                         <StatusBadge valor={ag.valor} />
                       </div>
@@ -251,7 +378,8 @@ export default function AgendamentosPage() {
                     </div>
                   </div>
                 </div>
-              </Card>
+              </div>
+            </Card>
             ))}
 
             {filtered.length === 0 && (
@@ -293,7 +421,7 @@ export default function AgendamentosPage() {
              <div className="space-y-4">
                {[
                  { title: "Limite Diário", text: "Agendamentos consomem o limite do dia da execução." },
-                 { title: "Horário", text: "Processamento ocorre às 07:00h do dia agendado." },
+                 { title: "Horário", text: "Processamento ocorre às 10:00h do dia agendado." },
                  { title: "Saldo", text: "Caso não haja saldo, a transação será cancelada." }
                ].map((item, i) => (
                  <div key={i} className="space-y-1">
@@ -358,24 +486,101 @@ export default function AgendamentosPage() {
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Beneficiário / Empresa</label>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Categoria da Transação</label>
+                    <select
+                      value={newAgendamento.category}
+                      onChange={(e) => setNewAgendamento({ ...newAgendamento, category: e.target.value })}
+                      className="w-full h-14 bg-neutral-50 border border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all outline-none appearance-none cursor-pointer"
+                      style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1rem' }}
+                    >
+                      {CATEGORIES.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Beneficiário / Empresa</label>
                   <Input 
                     placeholder="Nome completo ou Razão Social"
-                    className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-bold"
+                    className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all"
                     value={newAgendamento.beneficiario}
                     onChange={(e) => setNewAgendamento({ ...newAgendamento, beneficiario: e.target.value })}
                   />
                 </div>
+
+                {/* DYNAMIC FIELDS START */}
+                {newAgendamento.type === "pix" && (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Chave PIX</label>
+                    <Input 
+                      placeholder="CPF, CNPJ, E-mail, Celular ou Chave Aleatória"
+                      className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all"
+                      value={newAgendamento.pixKey}
+                      onChange={(e) => setNewAgendamento({ ...newAgendamento, pixKey: e.target.value })}
+                    />
+                  </div>
+                )}
+
+                {(newAgendamento.type === "transfer" || newAgendamento.type === "ted") && (
+                  <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
+                    {newAgendamento.type === "ted" && (
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Banco Destino</label>
+                        <Input 
+                          placeholder="Ex: 001 - Banco do Brasil"
+                          className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all"
+                          value={newAgendamento.bank}
+                          onChange={(e) => setNewAgendamento({ ...newAgendamento, bank: e.target.value })}
+                        />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Agência</label>
+                        <Input 
+                          placeholder="0001"
+                          className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all"
+                          value={newAgendamento.agency}
+                          onChange={(e) => setNewAgendamento({ ...newAgendamento, agency: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Conta Corrente</label>
+                        <Input 
+                          placeholder="00000000-0"
+                          className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all"
+                          value={newAgendamento.account}
+                          onChange={(e) => setNewAgendamento({ ...newAgendamento, account: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {newAgendamento.type === "boleto" && (
+                  <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Linha Digitável / Código de Barras</label>
+                    <Input 
+                      placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
+                      className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all"
+                      value={newAgendamento.barcode}
+                      onChange={(e) => setNewAgendamento({ ...newAgendamento, barcode: e.target.value })}
+                    />
+                  </div>
+                )}
+                {/* DYNAMIC FIELDS END */}
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Valor (R$)</label>
+                    <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Valor do Pagamento</label>
                     <Input 
-                      placeholder="0,00"
-                      className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-bold"
+                      placeholder="R$ 0,00"
+                      className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all font-mono"
                       value={newAgendamento.valor}
-                      onChange={(e) => setNewAgendamento({ ...newAgendamento, valor: e.target.value })}
+                      onChange={handleValorChange}
                     />
                   </div>
                   <div className="space-y-2">

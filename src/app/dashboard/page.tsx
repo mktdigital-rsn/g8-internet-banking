@@ -311,7 +311,7 @@ export default function DashboardHome() {
                       </div>
                    ) : (
                       <>
-                         <h1 className="text-4xl md:text-5xl 2xl:text-7xl font-black tracking-tighter text-[#0c0a09]">Olá, {userName.replace(/^\d+(\.\d+)*\s*/, '').split(' ')[0]}!</h1>
+                         <h1 className="text-4xl md:text-5xl 2xl:text-6xl font-black tracking-tighter text-[#0c0a09]">Olá, {userName.replace(/^\d+(\.\d+)*\s*/, '').split(' ')[0]}!</h1>
                          <p className="text-sm md:text-base 2xl:text-2xl text-neutral-400 font-bold opacity-70">Aqui está o resumo das suas finanças hoje.</p>
                       </>
                    )}
@@ -323,16 +323,16 @@ export default function DashboardHome() {
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row flex-wrap gap-8 2xl:gap-12 items-start lg:items-stretch">
+            <div className="flex flex-col min-[1440px]:flex-row gap-8 2xl:gap-12 items-start min-[1440px]:items-stretch">
                {/* Card Summary */}
-               <div className="space-y-8 flex flex-col flex-1 min-w-0 w-full lg:max-w-[480px] 2xl:max-w-[550px]">
+               <div className="space-y-8 flex flex-col flex-1 min-w-0 w-full min-[1440px]:max-w-[750px]">
                   <div className="flex items-center justify-between h-12">
                      <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-[#0c0a09]">Meu Resumo</h2>
                   </div>
 
                   <div className="relative group cursor-pointer w-full">
                      <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-md blur-lg opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                     <div className="relative h-64 2xl:h-72 w-full bg-[#0c0a09] text-white p-8 2xl:p-10 rounded-md shadow-2xl flex flex-col justify-between overflow-hidden border border-white/10 group-hover:scale-[1.02] transition-all duration-500">
+                     <div className="relative h-72 2xl:h-80 w-full bg-[#0c0a09] text-white p-8 2xl:p-10 rounded-md shadow-2xl flex flex-col justify-between overflow-hidden border border-white/10 group-hover:scale-[1.02] transition-all duration-500">
                         {/* Design elements */}
                         <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors duration-700" />
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
@@ -340,7 +340,7 @@ export default function DashboardHome() {
 
                         <div className="flex justify-between items-start z-10">
                            <div className="flex flex-col">
-                              <span className="font-black tracking-tighter text-3xl 2xl:text-4xl italic opacity-95 uppercase leading-none text-white drop-shadow-md">G8PAY</span>
+                              <span className="font-black tracking-tighter text-2xl 2xl:text-3xl italic opacity-95 uppercase leading-none text-white drop-shadow-md">G8PAY</span>
                               <span className="text-[10px] 2xl:text-xs text-orange-400/80 font-black uppercase tracking-[0.3em] mt-3 mb-1">Elite Finance &bull; 2026</span>
                            </div>
                            <div className="flex flex-col items-end gap-3">
@@ -363,7 +363,7 @@ export default function DashboardHome() {
                                   {isLoadingData ? (
                                      <div className="h-8 2xl:h-12 w-48 bg-white/10 animate-pulse rounded-md" />
                                   ) : (
-                                     <p className="text-lg 2xl:text-4xl font-mono tracking-[0.35em] text-white drop-shadow-sm font-medium">{cardNumber}</p>
+                                     <p className="text-lg 2xl:text-2xl font-mono tracking-[0.35em] text-white drop-shadow-sm font-medium">{cardNumber}</p>
                                   )}
                                </div>
                                <div className="text-right shrink-0">
@@ -371,7 +371,7 @@ export default function DashboardHome() {
                                   {isLoadingData ? (
                                      <div className="h-10 2xl:h-16 w-32 bg-white/10 animate-pulse rounded-md" />
                                   ) : (
-                                     <span className="text-3xl 2xl:text-8xl font-black italic text-white leading-none tracking-tighter">VISA</span>
+                                     <span className="text-3xl 2xl:text-5xl font-black italic text-white leading-none tracking-tighter">VISA</span>
                                   )}
                                </div>
                             </div>
@@ -381,7 +381,7 @@ export default function DashboardHome() {
                </div>
 
                {/* Maturity Section Carousel */}
-               <div className="space-y-8 flex flex-col w-full lg:w-[350px] 2xl:w-[400px] shrink-0 min-w-0 justify-center">
+               <div className="space-y-8 flex flex-col w-full min-[1440px]:w-[320px] shrink-0 min-w-0 justify-center">
                   <div className="flex items-center justify-between h-12">
                      <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-[#0c0a09] truncate pr-2">Vencimentos</h2>
                      <div className="flex gap-3 shrink-0">
@@ -403,14 +403,14 @@ export default function DashboardHome() {
                   <div className="relative overflow-hidden flex-1 group/carousel h-[300px] 2xl:h-[320px]">
                      <div 
                         className="flex gap-6 transition-transform duration-1000 cubic-bezier(0.4, 0, 0.2, 1) h-full items-center" 
-                        style={{ transform: `translateX(-${currentIndex * ( (mounted ? (window.innerWidth >= 1536 ? 400 : window.innerWidth >= 1024 ? 350 : (window.innerWidth - 64)) : 350) + 24)}px)` }}
+                        style={{ transform: mounted && window.innerWidth >= 1440 ? `translateX(-${currentIndex * 344}px)` : `translateX(calc(-${currentIndex} * (100% + 24px)))` }}
                      >
                         {maturityItems.map((item) => {
                            const MaturityIcon = item.icon;
                            return (
                               <div
                                  key={item.id}
-                                 className="flex-shrink-0 w-full lg:w-[350px] 2xl:w-[400px] bg-white border border-neutral-100 rounded-md p-10 2xl:p-12 shadow-sm hover:shadow-2xl hover:shadow-orange-100/50 hover:-translate-y-2 transition-all duration-500 cursor-pointer group flex flex-col justify-between h-[90%] 2xl:h-[95%]"
+                                 className="flex-shrink-0 w-full min-[1440px]:w-[320px] bg-white border border-neutral-100 rounded-md p-10 2xl:p-12 shadow-sm hover:shadow-2xl hover:shadow-orange-100/50 hover:-translate-y-2 transition-all duration-500 cursor-pointer group flex flex-col justify-between h-[90%] 2xl:h-[95%]"
                               >
                                  <div className="flex justify-between items-start">
                                     <div className={`w-16 h-16 2xl:w-20 2xl:h-20 rounded-md ${item.color.split(' ')[0]} ${item.color.split(' ')[1]} flex items-center justify-center group-hover:rotate-[10deg] transition-transform shadow-sm`}>
@@ -538,7 +538,7 @@ export default function DashboardHome() {
                          {isLoadingData ? (
                             <div className="h-12 2xl:h-20 w-64 bg-black/5 animate-pulse rounded-md" />
                          ) : (
-                            <p className="text-3xl 2xl:text-8xl font-black text-[#0c0a09] font-mono tracking-tighter drop-shadow-xl">{balance}</p>
+                            <p className="text-3xl 2xl:text-6xl font-black text-[#0c0a09] font-mono tracking-tighter drop-shadow-xl">{balance}</p>
                          )}
                          {!isLoadingData && <div className="w-5 h-5 rounded-sm bg-green-500 animate-pulse" />}
                       </div>

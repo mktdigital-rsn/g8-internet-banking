@@ -16,7 +16,7 @@ import {
     CreditCard,
     Smartphone,
     ArrowRightLeft,
-    AlertCircle,
+    Phone,
     Diamond,
     ArrowLeft,
     ChevronRight,
@@ -58,7 +58,7 @@ const PixIcon = (props: any) => (
 export default function PixExtratoPage() {
     const [items, setItems] = React.useState<any[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
-    const [exportingType, setExportingType] = React.useState<'pdf' | 'xls' | null>(null);
+    const [exportingType, setExportingType] = React.useState<'pdf' | 'xls' | 'csv' | null>(null);
     const [filter, setFilter] = React.useState("all");
     const [chartPeriod, setChartPeriod] = React.useState<"day" | "week" | "month">("week");
     const [searchTerm, setSearchTerm] = React.useState("");
@@ -67,15 +67,26 @@ export default function PixExtratoPage() {
     const [selectedTransaction, setSelectedTransaction] = React.useState<any>(null);
 
     React.useEffect(() => {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const firstDay = `${year}-${month}-01`;
-        const today = `${year}-${month}-${day}`;
-        setStartDate(firstDay);
-        setEndDate(today);
-    }, []);
+        const updateDates = () => {
+            const now = new Date();
+            const todayStr = now.toISOString().split('T')[0];
+            
+            if (chartPeriod === "day") {
+                setStartDate(todayStr);
+                setEndDate(todayStr);
+            } else if (chartPeriod === "week") {
+                const weekAgo = new Date();
+                weekAgo.setDate(now.getDate() - 7);
+                setStartDate(weekAgo.toISOString().split('T')[0]);
+                setEndDate(todayStr);
+            } else if (chartPeriod === "month") {
+                const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+                setStartDate(firstDay.toISOString().split('T')[0]);
+                setEndDate(todayStr);
+            }
+        };
+        updateDates();
+    }, [chartPeriod]);
 
     React.useEffect(() => {
         const fetchPixExtrato = async () => {
@@ -118,7 +129,7 @@ export default function PixExtratoPage() {
         }
     };
 
-    const handleExport = async (format: 'pdf' | 'xls') => {
+    const handleExport = async (format: 'pdf' | 'xls' | 'csv') => {
         setExportingType(format);
         try {
             const token = localStorage.getItem("token");
@@ -139,7 +150,6 @@ export default function PixExtratoPage() {
                 }
                 if (filter !== "all") params.append('tipo', filter === "in" ? "CREDITO" : "DEBITO");
                 
-                // Forçar apenas transações PIX no PDF da página de PIX
                 params.append('metodo', 'TRANSFERENCIA_PIX');
 
                 const response = await axios.get(`${apiUrl}/api/banco/extrato/exportar-pdf?${params.toString()}`, {
@@ -153,7 +163,42 @@ export default function PixExtratoPage() {
                 const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', `extrato_pix_${startDate || 'inicial'}_a_${endDate || 'hoje'}.pdf`);
+                link.setAttribute('download', `extrato_pix_${startDate || 'inicial'}.pdf`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
+            } else if (format === 'xls') {
+                const headers = ["Data/Hora", "ID Transação", "Tipo", "Método", "Natureza", "Origem", "Destino", "Valor"];
+                let html = `
+                    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                    <head><meta charset="utf-8" /><style>table { border-collapse: collapse; } td { border: 1px solid #ccc; }</style></head>
+                    <body><table>
+                        <tr>${headers.map(h => `<th style="background: #f97316; color: white;">${h}</th>`).join('')}</tr>
+                `;
+
+                filteredItems.forEach((item: any) => {
+                    const natureza = getNatureza(item.metodo);
+                    const row = [
+                        item.dataDaTransacaoFormatada,
+                        item.idDoBancoLiquidante || item.itemId || "",
+                        item.tipoFormatado,
+                        item.metodoFormatado,
+                        natureza,
+                        item.pagadorNome || "",
+                        item.RecebinteNome || "",
+                        item.valorFormatado
+                    ];
+                    html += `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`;
+                });
+
+                html += `</table></body></html>`;
+
+                const blob = new Blob([html], { type: 'application/vnd.ms-excel' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `extrato_pix_${startDate || 'inicial'}.xls`);
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
@@ -162,19 +207,16 @@ export default function PixExtratoPage() {
                 const headers = ["Data/Hora", "ID Transação", "Tipo", "Método", "Natureza", "Origem", "Destino", "Valor"];
                 const header = "sep=;\n" + headers.join(";") + "\n";
 
-                const rows = filteredItems.map(item => {
+                const rows = filteredItems.map((item: any) => {
                     const natureza = getNatureza(item.metodo);
-                    const origem = item.pagadorNome || "";
-                    const destino = item.RecebinteNome || "";
-
                     return [
                         item.dataDaTransacaoFormatada,
                         item.idDoBancoLiquidante || item.itemId || "",
                         item.tipoFormatado,
                         item.metodoFormatado,
                         natureza,
-                        origem,
-                        destino,
+                        item.pagadorNome || "",
+                        item.RecebinteNome || "",
                         item.valorFormatado.replace("R$", "").trim().replace(".", ",")
                     ].join(";");
                 }).join("\n");
@@ -183,7 +225,7 @@ export default function PixExtratoPage() {
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', `extrato_pix_${startDate || 'inicial'}_a_${endDate || 'hoje'}.csv`);
+                link.setAttribute('download', `extrato_pix_${startDate || 'inicial'}.csv`);
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
@@ -342,7 +384,7 @@ export default function PixExtratoPage() {
         return Object.values(groups).sort((a, b) => a.timestamp - b.timestamp);
     }, [filteredItems, chartPeriod, endDate]);
 
-    const totals = filteredItems.reduce((acc, item) => {
+    const totals = filteredItems.reduce((acc: any, item: any) => {
         if (item.tipo === "CREDITO") acc.in += item.valor;
         else acc.out += item.valor;
         return acc;
@@ -520,12 +562,21 @@ export default function PixExtratoPage() {
                             PDF
                         </Button>
                         <Button
+                            onClick={() => handleExport('csv')}
+                            disabled={!!exportingType}
+                            variant="outline"
+                            className="flex-1 sm:flex-none h-10 md:h-11 border-neutral-100 bg-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all text-neutral-400 hover:text-black"
+                        >
+                            {exportingType === 'csv' ? <div className="h-4 w-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-green-600" />} 
+                            CSV
+                        </Button>
+                        <Button
                             onClick={() => handleExport('xls')}
                             disabled={!!exportingType}
                             className="flex-1 sm:flex-none h-10 md:h-11 bg-[#f97316] hover:bg-[#c2410c] text-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all font-sans"
                         >
                             {exportingType === 'xls' ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4" />} 
-                            Planilha
+                            XLS
                         </Button>
                     </div>
                 </div>
@@ -561,7 +612,7 @@ export default function PixExtratoPage() {
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-1000" />
                         <div className="w-12 h-12 bg-white/10 rounded-[2px] flex items-center justify-center text-white border border-white/20 shadow-inner group-hover:scale-110 transition-transform shrink-0 relative z-10">
-                            <AlertCircle className="h-6 w-6" />
+                            <Phone className="h-6 w-6" />
                         </div>
                         <div className="flex flex-col justify-center relative z-10 min-w-0">
                             <h3 className="text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 24h</h3>

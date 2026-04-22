@@ -366,8 +366,8 @@ export default function PagamentosPage() {
                     <p className="text-xs font-bold text-neutral-400 uppercase tracking-widest leading-loose">Cole a linha digitável ou escaneie o código</p>
                   </div>
 
-                  <div className="flex flex-col md:flex-row gap-4 relative z-10">
-                    <div className="flex-1 relative group/input">
+                  <div className="flex flex-col md:flex-row gap-2 md:gap-4 relative z-10 items-stretch">
+                    <div className="flex-[4] relative group/input">
                       <div className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within/input:text-[#f97316] transition-colors">
                         <Barcode className="h-6 w-6" />
                       </div>
@@ -382,25 +382,14 @@ export default function PagamentosPage() {
                     <Button
                       onClick={handleConsultBoleto}
                       disabled={isConsulting}
-                      className="h-16 px-10 bg-orange-600 hover:bg-orange-700 text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all active:scale-95 shadow-xl shadow-orange-600/20 shrink-0"
+                      className="flex-1 h-16 px-6 bg-orange-600 hover:bg-orange-700 text-white rounded-sm font-black uppercase tracking-widest text-[10px] transition-all active:scale-95 shadow-xl shadow-orange-600/20"
                     >
-                      {isConsulting ? "PROCESSANDO..." : "CONFERIR BOLETO"}
-                      {!isConsulting && <ArrowRight className="h-5 w-5 ml-2" />}
+                      {isConsulting ? "PROCESSANDO..." : "CONFERIR"}
+                      {!isConsulting && <ArrowRight className="h-4 w-4 ml-2" />}
                     </Button>
                   </div>
 
-                  {/* Quick actions */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10">
-                    <div className="p-6 bg-white border border-orange-100 rounded-sm hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-100/20 transition-all group/qr cursor-pointer flex items-center gap-6">
-                      <div className="w-14 h-14 bg-orange-50 rounded-sm flex items-center justify-center text-orange-600 group-hover/qr:scale-110 transition-transform">
-                        <QrCode className="h-7 w-7 stroke-[2.5]" />
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-black text-orange-700 uppercase tracking-widest">Ler QR Code</span>
-                        <span className="text-[10px] font-bold text-orange-600/40 mt-1">Use a câmera do seu celular</span>
-                      </div>
-                      <ChevronRight className="h-5 w-5 text-orange-200 ml-auto group-hover/qr:text-orange-600 transition-colors" />
-                    </div>
+                  <div className="grid grid-cols-1 gap-4 relative z-10">
                     <div
                       onClick={() => setActiveSection("historico")}
                       className="p-6 bg-white border border-orange-100 rounded-sm hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-100/20 transition-all group/rec cursor-pointer flex items-center gap-6"
@@ -429,10 +418,16 @@ export default function PagamentosPage() {
                     ].map((opt, i) => (
                       <div
                         key={i}
-                        onClick={() => setActiveSection(opt.key)}
+                        onClick={() => {
+                          if (opt.key === "agendamentos") router.push("/dashboard/agendamentos");
+                          else setActiveSection(opt.key);
+                        }}
                         className="flex flex-col items-center justify-center w-full min-h-[160px] bg-white border border-orange-100 rounded-sm hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-100/20 hover:scale-[1.03] transition-all group cursor-pointer p-6 relative overflow-hidden"
                       >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/40 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />
+                        {opt.key === "dda" && (
+                          <Badge className="absolute top-2 left-2 bg-neutral-200 text-neutral-500 border-0 text-[7px] font-black uppercase tracking-widest rounded-full px-2 py-0.5 z-20">Em breve</Badge>
+                        )}
                         {opt.count > 0 && (
                           <div className="absolute top-3 right-3 w-6 h-6 bg-orange-50 rounded-sm flex items-center justify-center shadow-md border border-orange-100">
                             <span className="text-[9px] font-black text-orange-600">{opt.count}</span>
@@ -462,10 +457,12 @@ export default function PagamentosPage() {
                       Ative o Débito Direto Autorizado e visualize todos os boletos emitidos no seu CPF automaticamente.
                     </p>
                     <Button
-                      onClick={() => setActiveSection("dda")}
-                      className="w-full h-14 bg-orange-600 hover:bg-orange-700 text-white rounded-sm font-black text-[10px] uppercase tracking-widest transition-all shadow-xl shadow-orange-600/20"
+                      disabled
+                      className="w-full h-14 bg-neutral-200 text-neutral-400 rounded-sm font-black text-[10px] uppercase tracking-widest transition-all cursor-not-allowed group/dda"
                     >
-                      Ativar DDA <ArrowRight className="h-4 w-4 ml-2" />
+                      <span className="flex items-center gap-2">
+                        Ativar DDA <Badge className="bg-neutral-300 text-neutral-500 border-0 text-[8px] font-black">Em breve</Badge>
+                      </span>
                     </Button>
                   </div>
 
@@ -493,17 +490,17 @@ export default function PagamentosPage() {
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-neutral-400">Boletos</span>
-                      <span className="text-xs font-black text-[#0c0a09]">Até 22h</span>
+                      <span className="text-xs font-black text-[#0c0a09]">Até 17h</span>
                     </div>
                     <Separator className="bg-neutral-50" />
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-neutral-400">Tributos</span>
-                      <span className="text-xs font-black text-[#0c0a09]">Até 20h</span>
+                      <span className="text-xs font-black text-[#0c0a09]">Até 17h</span>
                     </div>
                     <Separator className="bg-neutral-50" />
                     <div className="flex justify-between items-center">
                       <span className="text-xs font-bold text-neutral-400">Convênios</span>
-                      <span className="text-xs font-black text-[#0c0a09]">Até 21h</span>
+                      <span className="text-xs font-black text-[#0c0a09]">Até 17h</span>
                     </div>
                   </div>
                   <p className="text-[10px] font-bold text-neutral-300 leading-normal">
@@ -657,10 +654,10 @@ export default function PagamentosPage() {
                     </div>
 
                     <Button
-                      onClick={() => { setActiveSection(null); toast.info("Ativação do DDA será disponibilizada em breve."); }}
-                      className="w-full h-14 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-xs uppercase tracking-widest shadow-xl shadow-black/10 transition-all"
+                      disabled
+                      className="w-full h-14 bg-neutral-200 text-neutral-400 rounded-sm font-black text-xs uppercase tracking-widest shadow-xl shadow-black/10 transition-all cursor-not-allowed"
                     >
-                      Ativar DDA na minha conta <ArrowRight className="h-4 w-4 ml-2" />
+                      Ativar DDA na minha conta <Badge className="ml-2 bg-neutral-300 text-neutral-500 border-0 text-[8px] font-black">Em breve</Badge>
                     </Button>
                   </div>
                 </div>

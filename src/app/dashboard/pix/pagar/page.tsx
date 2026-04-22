@@ -789,7 +789,7 @@ function PixPagarContent() {
                       {pixCode || identifier}
                     </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-8">
                     {recipientDocument && (
                       <div>
                         <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-2 opacity-60">Documento</p>
@@ -798,8 +798,8 @@ function PixPagarContent() {
                     )}
                     <div>
                       <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-2 opacity-60">Instituição</p>
-                      <p className="text-xl font-black text-[#0c0a09] uppercase tracking-tighter">
-                        {isSearching ? "..." : (recipientBank || "Outro Banco")}
+                      <p className="text-sm font-black text-[#0c0a09] uppercase tracking-tight leading-relaxed">
+                        {isSearching ? "Buscando..." : (recipientBank || "Instituição não informada")}
                       </p>
                     </div>
                   </div>
@@ -941,14 +941,9 @@ function PixPagarContent() {
               SAIBA MAIS
             </button>
           </div>
-          <div className="absolute bottom-0 right-0 w-[240px] h-full flex items-end justify-end translate-y-10 group-hover:translate-y-4 transition-transform duration-700">
-            <Image
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=shopping"
-              alt="Profile Premium"
-              width={180}
-              height={180}
-              className="object-contain relative z-10 scale-125"
-            />
+          <div className="absolute bottom-0 right-0 w-[240px] h-[300px] flex items-end justify-end pointer-events-none">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#ff7711] to-transparent z-10" />
+            <Diamond className="h-48 w-48 text-white/5 -mb-10 -mr-10 rotate-12" />
           </div>
         </Card>
 

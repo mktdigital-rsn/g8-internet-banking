@@ -359,8 +359,8 @@ export default function TransferenciaPage() {
                                         <h2 className="text-[12px] font-black text-[#0c0a09] uppercase tracking-[0.2em] mb-6">Serviços Adicionais</h2>
                                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
                                             <SimpleAction icon={History} label="Extrato" onClick={() => router.push('/dashboard/extrato')} />
-                                            <SimpleAction icon={Star} label="Favoritos" />
-                                            <SimpleAction icon={Globe} label="Exterior" />
+                                            <SimpleAction icon={Star} label="Favoritos" badge="Em breve" />
+                                            <SimpleAction icon={Globe} label="Exterior" badge="Em breve" />
                                             <SimpleAction icon={Search} label="Comprovantes" />
                                         </div>
                                     </div>
@@ -557,7 +557,7 @@ export default function TransferenciaPage() {
                                 >
                                     <Card className="bg-orange-400 border-0 p-1 rounded-md shadow-2xl">
                                         <div className="bg-white p-10 rounded-md space-y-8 text-center">
-                                            <div className="w-20 h-20 bg-orange-400/10 rounded-full flex items-center justify-center mx-auto text-orange-400 mb-4">
+                                            <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto text-emerald-500 mb-4">
                                                 <CheckCircle2 size={48} strokeWidth={3} />
                                             </div>
                                             <div className="space-y-1">
@@ -584,7 +584,7 @@ export default function TransferenciaPage() {
                                                 >
                                                     Comprovante
                                                 </Button>
-                                                <Button onClick={resetFlow} className="h-12 bg-[#0c0a09] text-white hover:bg-[#f97316] rounded-sm font-black text-[10px] uppercase shadow-lg shadow-black/10">Nova Transf.</Button>
+                                                <Button onClick={resetFlow} className="h-12 bg-[#0c0a09] hover:bg-orange-600 text-white rounded-sm font-black text-[9px] uppercase shadow-lg shadow-black/10">Voltar p/ área de transferência</Button>
                                             </div>
                                         </div>
                                     </Card>
@@ -712,13 +712,21 @@ function TransferOption({
     );
 }
 
-function SimpleAction({ icon: Icon, label, onClick }: { icon: any, label: string, onClick?: () => void }) {
+function SimpleAction({ icon: Icon, label, onClick, badge }: { icon: any, label: string, onClick?: () => void, badge?: string }) {
     return (
         <button 
             onClick={onClick}
-            className="flex flex-col items-center justify-center p-6 bg-white border border-orange-100 rounded-sm hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-100/20 hover:scale-[1.03] transition-all active:scale-[0.98] group relative overflow-hidden"
+            disabled={!!badge}
+            className={`flex flex-col items-center justify-center p-6 bg-white border border-orange-100 rounded-sm transition-all relative overflow-hidden group w-full ${!!badge ? 'opacity-60 grayscale cursor-not-allowed' : 'hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-100/20 hover:scale-[1.03] active:scale-[0.98]'}`}
         >
             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/30 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-125" />
+            
+            {badge && (
+                <Badge className="absolute top-2 left-2 bg-orange-600/10 text-orange-600 border-0 text-[7px] font-black uppercase tracking-tight px-1.5 py-0 z-20">
+                    {badge}
+                </Badge>
+            )}
+
             <div className="w-10 h-10 bg-orange-50 rounded-sm flex items-center justify-center text-orange-600 mb-3 group-hover:scale-110 group-hover:bg-orange-100 transition-all relative z-10">
                 <Icon size={18} />
             </div>

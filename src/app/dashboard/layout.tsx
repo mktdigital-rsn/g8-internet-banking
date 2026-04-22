@@ -15,7 +15,9 @@ import {
   RotateCw,
   CreditCard,
   Clock,
-  Banknote
+  Banknote,
+  Cpu,
+  User
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,28 +30,39 @@ import api from "@/lib/api";
 import { useSetAtom } from "jotai";
 import { temporaryDeviceIdAtom, balanceAtom, isBalanceLoadingAtom } from "@/store/auth";
 
-const menuItems: MenuItem[] = [
-  { icon: Home, label: "Resumo", href: "/dashboard" },
-  { icon: Wallet, label: "Pagamentos", href: "/dashboard/pagamentos" },
-  { icon: ArrowUpRight, label: "Transferência", href: "/dashboard/transferencia" },
-  { icon: Smartphone, label: "PIX", href: "/dashboard/pix" },
-  { icon: Banknote, label: "Cobranças", href: "/dashboard/cobrancas" },
-  { icon: Clock, label: "Agendamentos", href: "/dashboard/agendamentos" },
-  { icon: FileText, label: "Extrato", href: "/dashboard/extrato" },
-  { icon: CreditCard, label: "Cartões", href: "/dashboard/cartoes" },
-  { icon: CreditCard, label: "Maquininhas", href: "/dashboard/maquininhas" },
-  { icon: Smartphone, label: "Recargas", href: "/dashboard/recargas", disabled: true, badge: "EM BREVE" },
-  { icon: UserCircle, label: "Conta", href: "/dashboard/conta" },
-  { icon: HelpCircle, label: "Ajuda", href: "/dashboard/ajuda" },
-];
-
 interface MenuItem {
   icon: any;
   label: string;
   href: string;
   disabled?: boolean;
   badge?: string;
+  type?: 'link' | 'separator';
 }
+
+const menuGroups: { label?: string; items: MenuItem[] }[] = [
+  {
+    items: [{ icon: Home, label: "Resumo", href: "/dashboard" }]
+  },
+  {
+    items: [
+      { icon: Clock, label: "Agendamentos", href: "/dashboard/agendamentos" },
+      { icon: Banknote, label: "Cobranças", href: "/dashboard/cobrancas" },
+      { icon: CreditCard, label: "Cartões", href: "/dashboard/cartoes" },
+      { icon: FileText, label: "Extrato", href: "/dashboard/extrato" },
+      { icon: Wallet, label: "Pagamentos", href: "/dashboard/pagamentos" },
+      { icon: Smartphone, label: "PIX", href: "/dashboard/pix" },
+      { icon: Cpu, label: "POS/MAQUI.", href: "/dashboard/maquininhas" },
+      { icon: Smartphone, label: "Recargas", href: "/dashboard/recargas", disabled: true, badge: "EM BREVE" },
+      { icon: ArrowUpRight, label: "Transferência", href: "/dashboard/transferencia" },
+    ]
+  },
+  {
+    items: [
+      { icon: UserCircle, label: "Perfil", href: "/dashboard/conta" },
+      { icon: HelpCircle, label: "Ajuda", href: "/dashboard/ajuda" },
+    ]
+  }
+];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
    const pathname = usePathname();
@@ -65,9 +78,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   React.useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const apiUrl = "https://g8api.bskpay.com.br";
-
         const userRes = await api.get("/api/users/data");
 
         if (userRes.data) {
@@ -93,10 +103,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   React.useEffect(() => {
     const fetchBalance = async () => {
       try {
-        const token = localStorage.getItem("token");
-        const userToken = localStorage.getItem("userToken");
-        const apiUrl = "https://g8api.bskpay.com.br";
-
         const balanceRes = await api.get("/api/banco/saldo/getSaldo");
 
         if (balanceRes.data) {
@@ -111,7 +117,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     };
     fetchBalance();
-  }, [pathname]);
+  }, [pathname, setGlobalBalance, setGlobalBalanceLoading]);
 
   const cleanName = (name: string) => {
     return name.replace(/^\d+(\.\d+)*\s*/, '').split(' ')[0] || "Cliente";
@@ -119,7 +125,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const SESSION_DURATION = 900; // 15 minutes in seconds
   const [timeLeft, setTimeLeft] = React.useState<number | null>(null);
-  const isFirstMount = React.useRef(true);
 
   const handleLogout = React.useCallback(() => {
     setTemporaryDeviceId("");
@@ -147,8 +152,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       refreshSession();
     }
   }, [handleLogout, refreshSession]);
-
-
 
   // Countdown logic
   React.useEffect(() => {
@@ -178,93 +181,102 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const THEME_BG = "bg-[#141210]"; // Slightly lighter than #0c0a09
+
   return (
-    <div className="flex h-screen bg-[#0c0a09] text-white overflow-hidden font-sans">
-      {/* Sidebar - Made background match main theme bg */}
-      <aside className="w-72 2xl:w-80 flex flex-col p-6 2xl:p-10 space-y-8 z-20 relative bg-[#0c0a09] shrink-0">
-        <div className="absolute top-0 left-0 w-full h-[400px] bg-[#0c0a09] pointer-events-none opacity-50" />
-        
+    <div className={`flex h-screen ${THEME_BG} text-white overflow-hidden font-sans`}>
+      {/* Sidebar */}
+      <aside className={`w-72 2xl:w-80 flex flex-col p-6 2xl:p-10 space-y-8 z-20 relative ${THEME_BG} shrink-0`}>
         <div className="px-2 relative z-10">
           <Image src="/logo_g8_official.png" alt="G8Pay" width={180} height={60} className="object-contain 2xl:scale-110" />
         </div>
 
-        <div className="flex flex-col space-y-5 relative z-10 flex-1 min-h-0 overflow-y-auto" style={{ scrollbarWidth: 'thin', scrollbarColor: '#ffffff20 transparent' }}>
-          <div className="flex items-center gap-4 p-5 bg-white/[0.04] rounded-md border border-white/5 shadow-2xl">
-            <Avatar className="h-14 w-14 border-2 border-[#ff7711]/40 rounded-md">
+        <div className="flex flex-col space-y-5 relative z-10 flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
+          {/* User Card with Yellowish Background */}
+          <div className="flex-shrink-0 flex items-center gap-4 p-4 bg-[#ffaa00]/10 rounded-md border border-[#ffaa00]/20 shadow-2xl relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-2 opacity-10">
+               <User className="h-10 w-10 text-[#ffaa00]" />
+            </div>
+            <Avatar className="h-12 w-12 border-2 border-[#ff7711] rounded-md shadow-lg shrink-0">
               <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
               <AvatarFallback className="bg-neutral-800 text-white font-black uppercase">{cleanName(userName)[0]}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[10px] text-[#f97316] font-black uppercase tracking-[0.2em] mb-1">Status Platinum</span>
-              <span className="text-xl font-black text-white leading-tight truncate mb-2">{cleanName(userName)}</span>
+              <span className="text-[9px] text-[#ff7711] font-black uppercase tracking-[0.2em] mb-0.5">Status Platinum</span>
+              <span className="text-lg font-black text-white leading-tight truncate mb-1.5">{cleanName(userName)}</span>
               
-              <div className="flex flex-col gap-2 pt-2 border-t border-white/5">
+              <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
                 <div className="flex flex-col">
-                  <span className="text-[9px] text-white/30 font-black uppercase tracking-widest leading-none mb-1">Banco</span>
-                  <span className="text-[11px] font-mono font-black text-white/80 leading-none">065 • G8 BANK</span>
+                  <span className="text-[8px] text-[#ffaa00]/60 font-black uppercase tracking-widest leading-none mb-1">Banco</span>
+                  <span className="text-[10px] font-mono font-black text-white leading-none">065 • G8 BANK</span>
                 </div>
-                <div className="flex items-center gap-6">
+                <div className="flex items-center gap-4">
                   <div className="flex flex-col">
-                    <span className="text-[9px] text-white/30 font-black uppercase tracking-widest leading-none mb-1">Ag</span>
-                    <span className="text-[11px] font-mono font-black text-white/80 leading-none">{accountInfo.agency}</span>
+                    <span className="text-[8px] text-[#ffaa00]/60 font-black uppercase tracking-widest leading-none mb-1">Ag</span>
+                    <span className="text-[10px] font-mono font-black text-white leading-none">{accountInfo.agency}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[9px] text-white/30 font-black uppercase tracking-widest leading-none mb-1">C-C</span>
-                    <span className="text-[11px] font-mono font-black text-white/80 leading-none">{accountInfo.account}</span>
+                    <span className="text-[8px] text-[#ffaa00]/60 font-black uppercase tracking-widest leading-none mb-1">C/C</span>
+                    <span className="text-[10px] font-mono font-black text-white leading-none">{accountInfo.account}</span>
                   </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <nav className="space-y-1 font-bold">
-            {menuItems.map((item) => {
-              const isActive = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.label}
-                  href={item.disabled ? "#" : item.href}
-                  onClick={(e) => item.disabled && e.preventDefault()}
-                  className={`flex items-center gap-5 px-6 py-3 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
-                    ? "text-white bg-[#ff7711] shadow-lg shadow-orange-600/20"
-                    : item.disabled
-                      ? "opacity-40 cursor-not-allowed grayscale"
-                      : "text-white hover:bg-white hover:text-[#f97316]"
-                    }`}
-                >
-                  <item.icon className={`h-5 w-5 relative z-10 ${isActive ? "text-white" : item.disabled ? "text-white/40" : "text-white group-hover:text-[#f97316]"}`} />
-                  <div className="flex items-center justify-between flex-1 relative z-10">
-                    <span className={`text-xs uppercase tracking-[0.15em] font-black ${isActive ? "text-white" : item.disabled ? "text-white/40" : "text-white group-hover:text-[#f97316] transition-colors duration-300"}`}>{item.label}</span>
-                    {item.badge && (
-                      <span className="bg-white/10 text-white font-black text-[7px] px-1.5 py-0.5 rounded-sm tracking-tighter">
-                        {item.badge}
-                      </span>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
+          <nav className="space-y-4">
+            {menuGroups.map((group, gIdx) => (
+              <div key={gIdx} className="space-y-1">
+                {group.items.map((item) => {
+                  const isActive = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.disabled ? "#" : item.href}
+                      onClick={(e) => item.disabled && e.preventDefault()}
+                      className={`flex items-center gap-5 px-6 py-3 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
+                        ? "text-white bg-[#ff7711] shadow-lg shadow-orange-600/20"
+                        : item.disabled
+                          ? "opacity-50 cursor-not-allowed grayscale"
+                          : "text-white/80 hover:bg-white hover:text-[#ff7711]"
+                        }`}
+                    >
+                      <item.icon className={`h-5 w-5 relative z-10 ${isActive ? "text-white" : item.disabled ? "text-white/40" : "text-white/60 group-hover:text-[#ff7711]"}`} />
+                      <div className="flex items-center justify-between flex-1 relative z-10">
+                        <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isActive ? "text-white" : item.disabled ? "text-white/40" : "text-white/80 group-hover:text-[#ff7711] transition-colors duration-300"}`}>{item.label}</span>
+                        {item.badge && (
+                          <span className={`font-black text-[7px] px-1.5 py-0.5 rounded-sm tracking-tighter ${item.badge === "EM BREVE" ? "bg-[#ffaa00] text-black" : "bg-white/10 text-white"}`}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
+                    </Link>
+                  );
+                })}
+                {gIdx < menuGroups.length - 1 && <Separator className="bg-white/5 my-4" />}
+              </div>
+            ))}
           </nav>
         </div>
 
         <div className="mt-auto relative z-10 pt-6 border-t border-white/5">
-          <button onClick={handleLogout} className="flex items-center gap-5 px-6 py-5 w-full text-white hover:bg-white hover:text-[#f97316] rounded-md transition-all border border-transparent group">
-            <LogOut className="h-5 w-5 text-white group-hover:text-[#f97316]" />
-            <span className="text-xs font-black uppercase tracking-widest text-white group-hover:text-[#f97316]">Encerrar Sessão</span>
+          <button onClick={handleLogout} className="flex items-center gap-5 px-5 py-4 w-full text-white/60 hover:bg-white hover:text-[#ff7711] rounded-md transition-all border border-transparent group">
+            <LogOut className="h-5 w-5 text-white/60 group-hover:text-[#ff7711]" />
+            <span className="text-[11px] font-black uppercase tracking-widest text-white/60 group-hover:text-[#ff7711]">Encerrar Sessão</span>
           </button>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col relative overflow-hidden">
-        {/* Top Header - Made background match side background */}
-        <header className="h-24 flex items-center justify-between px-10 z-10 shrink-0 bg-[#0c0a09]">
+        {/* Top Header */}
+        <header className={`h-24 flex items-center justify-between px-10 z-10 shrink-0 ${THEME_BG}`}>
           <div className="flex items-center max-w-[280px] xl:max-w-sm w-full">
             <div className="relative w-full group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/60 group-focus-within:text-[#f97316] transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#ff7711] transition-colors" />
               <Input 
                 placeholder="Pesquisar transações..." 
-                className="w-full bg-white/[0.12] border-white/20 pl-12 focus:bg-white/[0.2] focus:border-[#f97316]/60 rounded-md h-12 transition-all font-black placeholder:text-white/60 text-sm" 
+                className="w-full bg-white/[0.08] border-white/5 pl-12 focus:bg-white/[0.12] focus:border-[#ff7711]/60 rounded-md h-12 transition-all font-black placeholder:text-white/30 text-white text-sm" 
               />
             </div>
           </div>
@@ -272,7 +284,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-8 xl:gap-12">
             {/* Balance Section */}
             <div className="flex flex-col items-end justify-center h-12 border-r border-white/10 pr-8 xl:pr-12">
-              <span className="text-[10px] text-white/40 font-black uppercase tracking-[0.2em] mb-2 leading-none">Saldo Líquido</span>
+              <span className="text-[10px] text-white/60 font-black uppercase tracking-[0.2em] mb-2 leading-none">Saldo Líquido</span>
               <div className="flex items-center gap-4">
                 {isLoadingData ? (
                   <div className="h-6 w-32 bg-white/5 animate-pulse rounded-md" />
@@ -280,35 +292,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <span className="text-2xl xl:text-3xl font-black text-white font-mono tracking-tighter">{balance}</span>
                 )}
                 <button onClick={() => window.location.reload()} className="group/sync">
-                   <RotateCw className="h-4 w-4 text-[#f97316] group-hover/sync:rotate-180 transition-transform duration-700" />
+                   <RotateCw className="h-4 w-4 text-[#ff7711] group-hover/sync:rotate-180 transition-transform duration-700" />
                 </button>
               </div>
             </div>
 
             {/* Profile Section */}
             <div className="flex items-center gap-6 xl:gap-8 relative">
-              <div className="hidden lg:flex flex-col items-center gap-1.5 px-3 py-1.5 bg-white/[0.06] border border-white/10 rounded-md">
+              <div className="hidden lg:flex flex-col items-center gap-1.5 px-4 py-2 bg-[#ffaa00]/10 border border-[#ffaa00]/20 rounded-md shadow-lg">
                  <div className="flex items-center gap-2">
-                    <Clock className="h-3 w-3 text-[#f97316] animate-pulse" />
-                    <span className="text-[9px] font-black text-[#f97316] uppercase tracking-widest">Sessão Segura</span>
+                    <Clock className="h-3 w-3 text-[#ffaa00] animate-pulse" />
+                    <span className="text-[9px] font-black text-[#ffaa00] uppercase tracking-widest">Sessão Segura</span>
                  </div>
-                 <span className="text-xs font-mono font-black text-white tabular-nums leading-none">
+                 <span className="text-sm font-mono font-black text-white tabular-nums leading-none">
                    {timeLeft !== null ? formatTime(timeLeft) : "00:00"}
                  </span>
               </div>
 
               <Link href="/dashboard/conta" className="flex items-center gap-4 cursor-pointer group">
                 <div className="text-right flex flex-col justify-center hidden sm:flex">
-                  <p className="text-base font-black text-white group-hover:text-[#f97316] transition-colors leading-none truncate max-w-[200px] xl:max-w-[300px]">
+                  <p className="text-base font-black text-white group-hover:text-[#ff7711] transition-colors leading-none truncate max-w-[200px] xl:max-w-[300px]">
                     {cleanName(userName)}
                   </p>
-                  <p className="text-[10px] text-white/20 uppercase font-black tracking-widest mt-1.5 leading-none">PLATINUM ELITE</p>
+                  <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mt-1.5 leading-none">PLATINUM ELITE</p>
                 </div>
                 <div className="relative">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-[#f97316] to-orange-500 rounded-md blur opacity-0 group-hover:opacity-20 transition-opacity" />
-                  <Avatar className="h-12 w-12 border border-white/10 rounded-md relative z-10">
+                  <div className="absolute -inset-1 bg-gradient-to-r from-[#ff7711] to-[#ffaa00] rounded-md blur opacity-0 group-hover:opacity-20 transition-opacity" />
+                  <Avatar className="h-12 w-12 border border-white/5 rounded-md relative z-10 shadow-lg">
                     <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
-                    <AvatarFallback className="bg-[#f97316] text-white font-black">{cleanName(userName)[0]}</AvatarFallback>
+                    <AvatarFallback className="bg-[#ff7711] text-white font-black">{cleanName(userName)[0]}</AvatarFallback>
                   </Avatar>
                 </div>
               </Link>
