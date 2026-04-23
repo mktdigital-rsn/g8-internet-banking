@@ -361,7 +361,7 @@ export default function TransferenciaPage() {
                                             <SimpleAction icon={History} label="Extrato" onClick={() => router.push('/dashboard/extrato')} />
                                             <SimpleAction icon={Star} label="Favoritos" badge="Em breve" />
                                             <SimpleAction icon={Globe} label="Exterior" badge="Em breve" />
-                                            <SimpleAction icon={Search} label="Comprovantes" />
+                                            <SimpleAction icon={Search} label="Comprovantes" onClick={() => router.push('/dashboard/comprovantes')} />
                                         </div>
                                     </div>
                                 </motion.div>

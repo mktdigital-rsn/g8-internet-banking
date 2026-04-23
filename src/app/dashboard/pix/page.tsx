@@ -209,7 +209,7 @@ export default function PixPage() {
                                      <h2 className="text-xl font-black text-[#0c0a09] tracking-tight uppercase tracking-[0.1em]">Suporte G8</h2>
                                      <div className="grid grid-cols-2 gap-4">
                                          <PixAction icon={HelpCircle} label="Suporte" href="https://wa.me/5551996297077" />
-                                         <PixAction icon={MessageCircle} label="Chat 24H" href="https://wa.me/5551996297077" customColor="bg-[#0c0a09]" />
+                                         <PixAction icon={MessageCircle} label="Chat 09h as 18h" href="https://wa.me/5551996297077" customColor="bg-[#0c0a09]" />
                                      </div>
                                  </div>
                              </div>

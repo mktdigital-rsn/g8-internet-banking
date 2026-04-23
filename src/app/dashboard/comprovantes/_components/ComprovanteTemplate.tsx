@@ -1,17 +1,13 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import axios from "axios";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import {
     ArrowUpRight,
     ArrowDownLeft,
     Search,
     Download,
     MoreVertical,
-    PlusCircle,
-    MinusCircle,
     FileText,
     Calendar,
     Filter,
@@ -29,8 +25,7 @@ import {
     CheckCircle2,
     CalendarDays,
     ArrowUpDown,
-    Users,
-    QrCode
+    Smartphone as MobileIcon
 } from "lucide-react";
 import {
     AreaChart,
@@ -41,34 +36,47 @@ import {
     Tooltip,
     ResponsiveContainer
 } from "recharts";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
+import api from "@/lib/api";
+import { toast } from "sonner";
 
-const PixIcon = (props: any) => (
-  <svg {...props} viewBox="0 0 100 100" fill="currentColor">
-    <rect x="35" y="5" width="30" height="30" rx="6" transform="rotate(45 50 20)" />
-    <rect x="35" y="65" width="30" height="30" rx="6" transform="rotate(45 50 80)" />
-    <rect x="5" y="35" width="30" height="30" rx="6" transform="rotate(45 20 50)" />
-    <rect x="65" y="35" width="30" height="30" rx="6" transform="rotate(45 80 50)" />
-  </svg>
-);
+interface ComprovanteTemplateProps {
+    title: string;
+    description: string;
+    filterMetodo: (item: any) => boolean;
+    icon: any;
+    backHref: string;
+    protocolPrefix?: string;
+    exportMetodo?: string;
+}
 
-export default function PixExtratoPage() {
-    const [items, setItems] = React.useState<any[]>([]);
-    const [isLoading, setIsLoading] = React.useState(true);
-    const [exportingType, setExportingType] = React.useState<'pdf' | 'xls' | 'csv' | null>(null);
-    const [filter, setFilter] = React.useState("all");
-    const [chartPeriod, setChartPeriod] = React.useState<"day" | "week" | "month">("week");
-    const [searchTerm, setSearchTerm] = React.useState("");
-    const [startDate, setStartDate] = React.useState("");
-    const [endDate, setEndDate] = React.useState("");
-    const [selectedTransaction, setSelectedTransaction] = React.useState<any>(null);
+export default function ComprovanteTemplate({ 
+    title, 
+    description,
+    filterMetodo, 
+    icon: Icon, 
+    backHref,
+    protocolPrefix = "COMP",
+    exportMetodo
+}: ComprovanteTemplateProps) {
+    const [items, setItems] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [exportingType, setExportingType] = useState<'pdf' | 'xls' | 'csv' | null>(null);
+    const [filter, setFilter] = useState("all");
+    const [chartPeriod, setChartPeriod] = useState<"day" | "week" | "month">("week");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
 
-    React.useEffect(() => {
+    useEffect(() => {
         const updateDates = () => {
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
@@ -90,60 +98,65 @@ export default function PixExtratoPage() {
         updateDates();
     }, [chartPeriod]);
 
-    React.useEffect(() => {
-        const fetchPixExtrato = async () => {
+    useEffect(() => {
+        const fetchExtrato = async () => {
             try {
-                const token = localStorage.getItem("token");
-                const userToken = localStorage.getItem("userToken");
-                const apiUrl = "https://g8api.bskpay.com.br";
-
-                const response = await axios.get(`${apiUrl}/api/banco/extrato/buscar`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'userToken': userToken || ""
-                    }
-                });
-
-                if (response.data && Array.isArray(response.data.data)) {
-                    const allItems = response.data.data;
-                    const pixOnly = allItems.filter((item: any) =>
-                        item.metodo === "TRANSFERENCIA_PIX" ||
-                        item.metodoFormatado?.toUpperCase().includes("PIX")
-                    );
-                    setItems(pixOnly);
+                const response = await api.get("/api/banco/extrato/buscar");
+                if (response.data && (response.data.data || response.data.transacoes)) {
+                    const allItems = response.data.data || response.data.transacoes || [];
+                    const filtered = allItems.filter(filterMetodo);
+                    setItems(filtered);
                 }
             } catch (err) {
-                console.error("Error fetching pix extrato:", err);
+                console.error(`Error fetching ${title}:`, err);
+                toast.error("Erro ao carregar dados do banco.");
             } finally {
                 setIsLoading(false);
             }
         };
-
-        fetchPixExtrato();
-    }, []);
+        fetchExtrato();
+    }, [title, filterMetodo]);
 
     const getNatureza = (metodo: string) => {
-        switch (metodo) {
-            case "TRANSFERENCIA_PIX": return "PIX P2P / QR Code";
-            case "TRANSFERENCIA": return "Transferência Bancária";
-            case "TARIFA": return "Taxa de Serviço";
-            default: return "Transação PIX";
-        }
+        const m = metodo?.toUpperCase() || "";
+        if (m.includes("PIX")) return "Transferência Instantânea";
+        if (m.includes("BOLETO")) return "Pagamento de Títulos";
+        if (m.includes("INTERNA") || m.includes("P2P")) return "Transferência entre Contas";
+        if (m.includes("TED") || m.includes("DOC")) return "Transferência Bancária";
+        if (m.includes("TARIFA")) return "Tarifa Bancária";
+        return "Diversos";
     };
 
     const handleExport = async (format: 'pdf' | 'xls' | 'csv') => {
         setExportingType(format);
         try {
-            const token = localStorage.getItem("token");
-            const userToken = localStorage.getItem("userToken");
-            const apiUrl = "https://g8api.bskpay.com.br";
+            const params = new URLSearchParams();
+            if (startDate) {
+                params.append('startDate', startDate);
+                params.append('dataInicial', startDate);
+                params.append('data_inicio', startDate);
+            }
+            if (endDate) {
+                params.append('endDate', endDate);
+                params.append('dataFinal', endDate);
+                params.append('data_fim', endDate);
+            }
+            if (filter !== "all") params.append('tipo', filter === "in" ? "CREDITO" : "DEBITO");
+
+            if (exportMetodo) {
+                params.append('metodo', exportMetodo);
+                params.append('method', exportMetodo);
+                params.append('natureza', exportMetodo);
+            }
 
             if (format === 'pdf') {
                 const doc = new jsPDF();
                 
                 // --- HEADER SECTION ---
                 try {
-                    doc.addImage("/logo_g8_boleto.png", "PNG", 14, 10, 32, 10);
+                    // Using logo_g8_boleto.png which is designed for white backgrounds
+                    // Dimensions: 249x77 (ratio ~3.2)
+                    doc.addImage("/logo_g8_white.png", "PNG", 14, 10, 32, 10);
                 } catch (e) {
                     doc.setFont("helvetica", "bold");
                     doc.setFontSize(20);
@@ -154,7 +167,7 @@ export default function PixExtratoPage() {
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(16);
                 doc.setTextColor(12, 10, 9);
-                const reportTitle = "Extrato de PIX";
+                const reportTitle = title === "Extrato Analítico" ? title : `Extrato: ${title}`;
                 const titleWidth = doc.getTextWidth(reportTitle);
                 const pageWidth = doc.internal.pageSize.getWidth();
                 doc.text(reportTitle, (pageWidth - titleWidth) / 2, 20);
@@ -203,7 +216,7 @@ export default function PixExtratoPage() {
                         fillColor: [252, 252, 252] 
                     },
                     columnStyles: {
-                        6: { halign: 'right', fontStyle: 'bold' }
+                        6: { halign: 'right', fontStyle: 'bold' } 
                     },
                     margin: { left: 14, right: 14 }
                 });
@@ -216,9 +229,34 @@ export default function PixExtratoPage() {
                     doc.text(`Página ${i} de ${totalPages} | Gerado em: ${new Date().toLocaleString('pt-BR')}`, pageWidth - 14, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
                 }
 
-                doc.save(`extrato_pix_${startDate || 'inicial'}.pdf`);
+                doc.save(`comprovantes_${title.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}.pdf`);
+            } else if (format === 'csv') {
+                const headers = ["Data/Hora", "Identificação", "Tipo", "Método", "Natureza", "Origem", "Destino", "Valor"];
+                const headerContent = "sep=;\n" + headers.join(";") + "\n";
+                const rows = filteredItems.map((item: any) => {
+                    return [
+                        item.dataDaTransacaoFormatada,
+                        item.idDoBancoLiquidante || item.itemId || "",
+                        item.tipoFormatado,
+                        item.metodoFormatado,
+                        getNatureza(item.metodo),
+                        item.pagadorNome || "",
+                        item.RecebinteNome || "",
+                        item.valorFormatado.replace("R$", "").trim().replace(".", ",")
+                    ].join(";");
+                }).join("\n");
+
+                const blob = new Blob(["\uFEFF", headerContent, rows], { type: 'text/csv;charset=utf-8' });
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.setAttribute('download', `comprovantes_${title.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url);
             } else if (format === 'xls') {
-                const headers = ["Data/Hora", "ID Transação", "Tipo", "Método", "Natureza", "Origem", "Destino", "Valor"];
+                const headers = ["Data/Hora", "Identificação", "Tipo", "Método", "Natureza", "Origem", "Destino", "Valor"];
                 let html = `
                     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                     <head><meta charset="utf-8" /><style>table { border-collapse: collapse; } td { border: 1px solid #ccc; }</style></head>
@@ -227,13 +265,12 @@ export default function PixExtratoPage() {
                 `;
 
                 filteredItems.forEach((item: any) => {
-                    const natureza = getNatureza(item.metodo);
                     const row = [
                         item.dataDaTransacaoFormatada,
                         item.idDoBancoLiquidante || item.itemId || "",
                         item.tipoFormatado,
                         item.metodoFormatado,
-                        natureza,
+                        getNatureza(item.metodo),
                         item.pagadorNome || "",
                         item.RecebinteNome || "",
                         item.valorFormatado
@@ -247,72 +284,38 @@ export default function PixExtratoPage() {
                 const url = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = url;
-                link.setAttribute('download', `extrato_pix_${startDate || 'inicial'}.xls`);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                window.URL.revokeObjectURL(url);
-            } else {
-                const headers = ["Data/Hora", "ID Transação", "Tipo", "Método", "Natureza", "Origem", "Destino", "Valor"];
-                const header = "sep=;\n" + headers.join(";") + "\n";
-
-                const rows = filteredItems.map((item: any) => {
-                    const natureza = getNatureza(item.metodo);
-                    return [
-                        item.dataDaTransacaoFormatada,
-                        item.idDoBancoLiquidante || item.itemId || "",
-                        item.tipoFormatado,
-                        item.metodoFormatado,
-                        natureza,
-                        item.pagadorNome || "",
-                        item.RecebinteNome || "",
-                        item.valorFormatado.replace("R$", "").trim().replace(".", ",")
-                    ].join(";");
-                }).join("\n");
-
-                const blob = new Blob(["\uFEFF", header, rows], { type: 'text/csv;charset=utf-8' });
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', `extrato_pix_${startDate || 'inicial'}.csv`);
+                link.setAttribute('download', `comprovantes_${title.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}.xls`);
                 document.body.appendChild(link);
                 link.click();
                 link.remove();
                 window.URL.revokeObjectURL(url);
             }
         } catch (err) {
-            console.error("Error exporting pix:", err);
-            alert("Erro ao exportar arquivo.");
+            console.error("Export error:", err);
+            toast.error("Erro ao exportar arquivo.");
         } finally {
             setExportingType(null);
         }
     };
 
-    const handlePrintReceipt = async (id: string, description: string) => {
+    const handlePrintReceipt = async (id: string, desc: string) => {
         if (!id) return;
         try {
-            const token = localStorage.getItem("token");
-            const apiUrl = "https://g8api.bskpay.com.br";
-
-            const response = await axios.get(`${apiUrl}/api/banco/extrato/imprimir-item/${id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                },
+            const response = await api.get(`/api/banco/extrato/imprimir-item/${id}`, {
                 responseType: 'blob'
             });
-
             const blob = new Blob([response.data], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
-            link.setAttribute('download', `comprovante_pix_${description.replace(/\s+/g, '_').toLowerCase()}.pdf`);
+            link.setAttribute('download', `comprovante_${desc.replace(/\s+/g, '_').toLowerCase()}.pdf`);
             document.body.appendChild(link);
             link.click();
             link.remove();
             window.URL.revokeObjectURL(url);
         } catch (err) {
-            console.error("Error printing pix receipt:", err);
-            alert("Erro ao gerar comprovante.");
+            console.error("Print error:", err);
+            toast.error("Erro ao gerar comprovante.");
         }
     };
 
@@ -322,16 +325,14 @@ export default function PixExtratoPage() {
                 (filter === "in" && item.tipo === "CREDITO") ||
                 (filter === "out" && item.tipo === "DEBITO");
 
-            const searchString = `${item.pagadorNome} ${item.RecebinteNome} ${item.metodoFormatado}`.toLowerCase();
+            const searchString = `${item.pagadorNome} ${item.RecebinteNome} ${item.metodoFormatado} ${item.idDoBancoLiquidante}`.toLowerCase();
             const matchesSearch = searchString.includes(searchTerm.toLowerCase());
 
             let matchesDate = true;
             if (startDate || endDate) {
                 if (!item.dataDaTransacaoFormatada) return false;
-                // Detect format: YYYY-MM-DD vs DD-MM-YYYY
                 const parts = item.dataDaTransacaoFormatada.split(" ")[0].replace(/\//g, "-").split("-");
                 const isoDate = parts[0].length === 4 ? parts.join("-") : parts.reverse().join("-");
-
                 if (startDate && isoDate < startDate) matchesDate = false;
                 if (endDate && isoDate > endDate) matchesDate = false;
             }
@@ -383,7 +384,6 @@ export default function PixExtratoPage() {
         } else if (chartPeriod === 'month') {
             const firstDay = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
             const diffDays = Math.floor((referenceDate.getTime() - firstDay.getTime()) / (24 * 3600000));
-            // Ensure we don't crash if range is too large
             const loopLimit = Math.min(diffDays, 31);
             for (let i = 0; i <= loopLimit; i++) {
                 const d = new Date(firstDay);
@@ -401,25 +401,21 @@ export default function PixExtratoPage() {
 
         filteredItems.forEach(item => {
             if (!item.dataDaTransacaoFormatada) return;
-            
             const [datePart, timePart] = item.dataDaTransacaoFormatada.split(" ");
             const parts = datePart.replace(/\//g, "-").split("-").map(Number);
-            
             let day, month, year;
             if (parts[0] > 1000) { [year, month, day] = parts; } 
             else { [day, month, year] = parts; }
-            
-            const [hour, min, sec] = (timePart || "00:00:00").split(":").map(Number);
-            const itemDate = new Date(year, month - 1, day, hour, min, sec);
-            if (isNaN(itemDate.getTime())) return;
+            const [hour] = (timePart || "00").split(":").map(Number);
+            const itemDate = new Date(year, month - 1, day);
 
             let key = "";
             if (chartPeriod === 'day') {
                 if (itemDate.toDateString() === referenceDate.toDateString()) {
-                    key = `H-${itemDate.getHours()}`;
+                    key = `H-${hour}`;
                 }
             } else {
-                key = `D-${itemDate.getFullYear()}-${itemDate.getMonth()}-${itemDate.getDate()}`;
+                key = `D-${year}-${month - 1}-${day}`;
             }
 
             if (key && groups[key]) {
@@ -434,8 +430,8 @@ export default function PixExtratoPage() {
     }, [filteredItems, chartPeriod, endDate]);
 
     const totals = filteredItems.reduce((acc: any, item: any) => {
-        if (item.tipo === "CREDITO") acc.in += item.valor;
-        else acc.out += item.valor;
+        if (item.tipo === "CREDITO") acc.in += Math.abs(item.valor);
+        else acc.out += Math.abs(item.valor);
         return acc;
     }, { in: 0, out: 0 });
 
@@ -445,7 +441,8 @@ export default function PixExtratoPage() {
 
     return (
         <div className="p-4 md:p-6 xl:p-12 flex flex-col gap-10 h-full overflow-y-auto w-full no-scrollbar bg-[#f8f9fa] relative px-4 md:px-8 xl:px-12">
-            {/* Receipt Modal Overlay */}
+            
+            {/* Modal Overlay Copiado do Pix Extrato */}
             {selectedTransaction && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-500 overflow-y-auto">
                     <Card className="w-full max-w-lg bg-white rounded-[5px] overflow-hidden shadow-2xl relative border-white/20 animate-in zoom-in-95 duration-300 my-auto">
@@ -462,13 +459,13 @@ export default function PixExtratoPage() {
                             <div className="p-6 md:p-10 space-y-8 relative z-10">
                                 <div className="text-center space-y-3">
                                     <div className="relative inline-block">
-                                        <div className="absolute -inset-4 bg-[#f97316]/10 rounded-full blur-xl" />
-                                        <div className="w-16 h-16 bg-[#0c0a09] rounded-[5px] flex items-center justify-center text-[#f97316] mx-auto shadow-2xl relative border border-white/5">
-                                            <Diamond className="h-8 w-8 fill-[#f97316]/20" />
+                                        <div className="absolute -inset-4 bg-orange-500/10 rounded-full blur-xl" />
+                                        <div className="w-16 h-16 bg-[#0c0a09] rounded-[5px] flex items-center justify-center text-orange-500 mx-auto shadow-2xl relative border border-white/5">
+                                            <Icon size={28} />
                                         </div>
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-black text-[#0c0a09] tracking-tighter uppercase leading-none">Comprovante PIX</h2>
+                                        <h2 className="text-xl font-black text-[#0c0a09] tracking-tighter uppercase leading-none">Comprovante {title}</h2>
                                         <div className="flex items-center justify-center gap-2 mt-1">
                                             <CheckCircle2 className="h-3 w-3 text-green-500" />
                                             <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.2em]">Autenticação Digital G8</p>
@@ -477,8 +474,8 @@ export default function PixExtratoPage() {
                                 </div>
 
                                 <div className="text-center py-2">
-                                    <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.3em] mb-2">Valor Total</p>
-                                    <p className="text-5xl font-black text-[#f97316] font-mono tracking-tighter">
+                                    <p className="text-[10px] text-neutral-400 font-black uppercase tracking-[0.3em] mb-2">Valor Total</p>
+                                    <p className="text-5xl font-black text-orange-500 font-mono tracking-tighter">
                                         {selectedTransaction.tipo === 'CREDITO' ? '+' : '-'} {selectedTransaction.valorFormatado}
                                     </p>
                                 </div>
@@ -495,18 +492,6 @@ export default function PixExtratoPage() {
                                                 {selectedTransaction.pagadorTaxNumber?.present ? selectedTransaction.pagadorTaxNumber.value : (selectedTransaction.pagadorTaxNumber || "---")}
                                             </p>
                                         </div>
-                                        <div className="pt-3 border-t border-neutral-200/50 space-y-2">
-                                            <div className="flex justify-between items-center text-[10px]">
-                                                <span className="text-neutral-400 font-bold">Banco</span>
-                                                <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{selectedTransaction.pagadorInstituicao || "G8 BANK (382)"}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-[10px]">
-                                                <span className="text-neutral-400 font-bold">Ag/Conta</span>
-                                                <span className="font-black text-[#0c0a09] font-mono tracking-tighter text-right">
-                                                    {selectedTransaction.pagadorAgencia || "0001"} &bull; {selectedTransaction.pagadorConta || "0000000-0"}
-                                                </span>
-                                            </div>
-                                        </div>
                                     </div>
 
                                     <div className="space-y-4 p-5 rounded-md bg-neutral-50/80 border border-neutral-100">
@@ -520,18 +505,6 @@ export default function PixExtratoPage() {
                                                 {selectedTransaction.RecebinteTaxNumber?.present ? selectedTransaction.RecebinteTaxNumber.value : (selectedTransaction.RecebinteTaxNumber || "---")}
                                             </p>
                                         </div>
-                                        <div className="pt-3 border-t border-neutral-200/50 space-y-2">
-                                            <div className="flex justify-between items-center text-[10px]">
-                                                <span className="text-neutral-400 font-bold">Banco</span>
-                                                <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{selectedTransaction.RecebinteInstituicao || "BANCO DESTINO"}</span>
-                                            </div>
-                                            <div className="flex justify-between items-center text-[10px]">
-                                                <span className="text-neutral-400 font-bold">Ag/Conta</span>
-                                                <span className="font-black text-[#0c0a09] font-mono tracking-tighter text-right">
-                                                    {selectedTransaction.RecebinteAgencia || "---"} &bull; {selectedTransaction.RecebinteConta || "---"}
-                                                </span>
-                                            </div>
-                                        </div>
                                     </div>
                                 </div>
 
@@ -539,7 +512,7 @@ export default function PixExtratoPage() {
                                     <div className="grid grid-cols-2 gap-12">
                                         <div>
                                             <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Metodologia</p>
-                                            <Badge className="bg-[#f97316]/5 text-[#f97316] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-[5px]">
+                                            <Badge className="bg-orange-500/5 text-orange-600 border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-[5px]">
                                                 {selectedTransaction.metodoFormatado}
                                             </Badge>
                                         </div>
@@ -553,10 +526,10 @@ export default function PixExtratoPage() {
 
                                     <div className="p-4 rounded-[5px] bg-[#0c0a09] text-white/50 space-y-2 border border-white/5 shadow-2xl">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <Fingerprint className="h-3 w-3 text-[#f97316]" />
-                                            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[#f97316]">Identificador End-to-End</p>
+                                            <Fingerprint className="h-3 w-3 text-orange-500" />
+                                            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-orange-500">Protocolo de Segurança</p>
                                         </div>
-                                        <p className="text-[9px] font-mono font-bold break-all leading-relaxed whitespace-pre-wrap">{selectedTransaction.codigoDeIdentificacao}</p>
+                                        <p className="text-[9px] font-mono font-bold break-all leading-relaxed">{selectedTransaction.codigoDeIdentificacao || selectedTransaction.idDoBancoLiquidante}</p>
                                     </div>
                                 </div>
 
@@ -566,7 +539,7 @@ export default function PixExtratoPage() {
                                             selectedTransaction.idDoBancoLiquidante || selectedTransaction.itemId || selectedTransaction.id,
                                             selectedTransaction.tipo === "CREDITO" ? (selectedTransaction.pagadorNome || "Transacao") : (selectedTransaction.RecebinteNome || "Transacao")
                                         )}
-                                        className="flex-1 h-14 bg-[#0c0a09] text-white hover:bg-[#f97316] rounded-[5px] font-black uppercase tracking-widest text-[11px] transition-all shadow-xl shadow-black/10 group active:scale-95"
+                                        className="flex-1 h-14 bg-[#0c0a09] text-white hover:bg-orange-500 rounded-[5px] font-black uppercase tracking-widest text-[11px] transition-all shadow-xl shadow-black/10 group active:scale-95"
                                     >
                                         <Download className="h-4 w-4 mr-2 group-hover:-translate-y-1 transition-transform" /> Baixar Comprovante
                                     </Button>
@@ -587,34 +560,35 @@ export default function PixExtratoPage() {
             <div className="flex-1 space-y-12 min-w-0">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 px-2">
                     <div className="flex items-center gap-4 md:gap-6">
-                        <Link href="/dashboard/pix">
+                        <Link href={backHref}>
                             <Button variant="outline" size="icon" className="rounded-[5px] border-neutral-100 bg-white hover:bg-neutral-50 h-12 w-12 md:h-14 md:w-14 shadow-sm active:scale-95 transition-all outline-none">
-                                <ArrowLeft className="h-5 w-5 md:h-6 md:w-6 text-[#f97316]" />
+                                <ArrowLeft className="h-5 w-5 md:h-6 md:w-6 text-orange-500" />
                             </Button>
                         </Link>
                         <div className="space-y-1">
-                            <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-2 md:px-3 py-0.5 md:py-1 font-black text-[8px] md:text-[10px] uppercase tracking-[0.25em] rounded-[5px]">PIX Dynamic Flow</Badge>
-                            <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-[#0c0a09] leading-none flex items-center gap-2 md:gap-3 lowercase">
-                                <span className="capitalize">{new URLSearchParams(window.location.search).get('title') || 'Extrato de PIX'}</span>
-                                <Diamond className="h-5 w-5 md:h-7 md:w-7 text-[#f97316] animate-pulse" />
+                            <Badge variant="secondary" className="bg-orange-500/10 text-orange-600 border-0 px-2 md:px-3 py-0.5 md:py-1 font-black text-[8px] md:text-[10px] uppercase tracking-[0.25em] rounded-[5px]">Comprovantes {protocolPrefix}</Badge>
+                            <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-[#0c0a09] leading-none flex items-center gap-2 md:gap-3">
+                                {title}
+                                <Icon className="h-5 w-5 md:h-7 md:w-7 text-orange-500 animate-pulse" />
                             </h1>
                         </div>
                     </div>
+
                     <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto">
                         <Button
                             onClick={() => handleExport('pdf')}
                             disabled={!!exportingType}
                             variant="outline"
-                            className="flex-1 sm:flex-none h-10 md:h-11 border-neutral-100 bg-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all text-neutral-400 hover:text-black"
+                            className="flex-1 sm:flex-none h-10 md:h-12 border-neutral-100 bg-white rounded-[5px] px-4 md:px-6 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all text-neutral-400 hover:text-black outline-none"
                         >
-                            {exportingType === 'pdf' ? <div className="h-4 w-4 border-2 border-[#f97316] border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-[#f97316]" />} 
+                            {exportingType === 'pdf' ? <div className="h-4 w-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-orange-500" />} 
                             PDF
                         </Button>
                         <Button
                             onClick={() => handleExport('csv')}
                             disabled={!!exportingType}
                             variant="outline"
-                            className="flex-1 sm:flex-none h-10 md:h-11 border-neutral-100 bg-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all text-neutral-400 hover:text-black"
+                            className="flex-1 sm:flex-none h-10 md:h-12 border-neutral-100 bg-white rounded-[5px] px-4 md:px-6 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all text-neutral-400 hover:text-black outline-none"
                         >
                             {exportingType === 'csv' ? <div className="h-4 w-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-green-600" />} 
                             CSV
@@ -622,7 +596,7 @@ export default function PixExtratoPage() {
                         <Button
                             onClick={() => handleExport('xls')}
                             disabled={!!exportingType}
-                            className="flex-1 sm:flex-none h-10 md:h-11 bg-[#f97316] hover:bg-[#c2410c] text-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all font-sans"
+                            className="flex-1 sm:flex-none h-10 md:h-12 bg-orange-500 hover:bg-orange-600 text-white rounded-[5px] px-4 md:px-6 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all outline-none"
                         >
                             {exportingType === 'xls' ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4" />} 
                             XLS
@@ -657,15 +631,15 @@ export default function PixExtratoPage() {
                     </Card>
                     <Card 
                         onClick={() => window.open("https://wa.me/5551996297077", "_blank")}
-                        className="rounded-[2px] border-0 shadow-xl bg-[#f97316] p-6 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex flex-row items-center gap-5 active:scale-95 transition-all min-h-[110px]"
+                        className="rounded-[2px] border-0 shadow-xl bg-orange-500 p-6 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex flex-row items-center gap-5 active:scale-95 transition-all min-h-[110px]"
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-1000" />
                         <div className="w-12 h-12 bg-white/10 rounded-[2px] flex items-center justify-center text-white border border-white/20 shadow-inner group-hover:scale-110 transition-transform shrink-0 relative z-10">
                             <Phone className="h-6 w-6" />
                         </div>
                         <div className="flex flex-col justify-center relative z-10 min-w-0">
-                            <h3 className="text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09h às 18h</h3>
-                            <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central de Assistência G8</p>
+                            <h3 className="text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09:00 as 18:00</h3>
+                            <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central G8</p>
                         </div>
                     </Card>
                 </div>
@@ -674,55 +648,41 @@ export default function PixExtratoPage() {
                 <Card className="rounded-md border border-neutral-100 bg-white p-6 md:p-10 shadow-sm relative overflow-hidden flex flex-col h-[350px] transition-all hover:shadow-lg">
                     <div className="flex items-center justify-between mb-8">
                         <div className="space-y-1">
-                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.4em]">Visão Geral PIX</p>
+                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.4em]">Visão Geral {title}</p>
                             <h4 className="text-xl font-black text-[#0c0a09] tracking-tighter uppercase">ANÁLISE DE VOLUMES</h4>
                         </div>
                         <Tabs value={chartPeriod} onValueChange={(val: any) => setChartPeriod(val)} className="w-fit">
                             <TabsList className="bg-neutral-50 rounded-sm p-0.5 h-8 gap-0.5 border border-neutral-100">
-                                <TabsTrigger value="day" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316] transition-all font-sans">Dia</TabsTrigger>
-                                <TabsTrigger value="week" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316] transition-all font-sans">Semana</TabsTrigger>
-                                <TabsTrigger value="month" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316] transition-all font-sans">Mês</TabsTrigger>
+                                <TabsTrigger value="day" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-orange-500 transition-all">Dia</TabsTrigger>
+                                <TabsTrigger value="week" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-orange-500 transition-all">Semana</TabsTrigger>
+                                <TabsTrigger value="month" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-orange-500 transition-all">Mês</TabsTrigger>
                             </TabsList>
                         </Tabs>
                     </div>
                     <div className="flex-1 w-full min-h-0 relative">
                         {isLoading && (
                             <div className="absolute inset-0 bg-white/50 z-20 flex items-center justify-center">
-                                <div className="h-4 w-4 bg-[#f97316] rounded-full animate-ping" />
+                                <div className="h-4 w-4 bg-orange-500 rounded-full animate-ping" />
                             </div>
                         )}
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                 <defs>
-                                    <linearGradient id="colorEntry" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                                    <linearGradient id={`gradientEntry`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
                                         <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                                     </linearGradient>
-                                    <linearGradient id="colorExit" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#dc2626" stopOpacity={0.2} />
+                                    <linearGradient id={`gradientExit`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#dc2626" stopOpacity={0.3} />
                                         <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
                                     </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis
-                                    dataKey="name"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
-                                />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 'bold', fontSize: '11px' }}
-                                    labelFormatter={(label, payload) => payload[0]?.payload?.full || label}
-                                    formatter={(value: any) => [formatCurrency(value), ""]}
-                                />
-                                <Area type="monotone" dataKey="entries" stroke="#10b981" fillOpacity={1} fill="url(#colorEntry)" strokeWidth={4} activeDot={{ r: 6 }} />
-                                <Area type="monotone" dataKey="exits" stroke="#dc2626" fillOpacity={1} fill="url(#colorExit)" strokeWidth={4} activeDot={{ r: 6 }} />
+                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }} dy={10} />
+                                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }} />
+                                <Tooltip contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 'bold', fontSize: '11px' }} />
+                                <Area type="monotone" dataKey="entries" stroke="#10b981" fillOpacity={1} fill={`url(#gradientEntry)`} strokeWidth={4} />
+                                <Area type="monotone" dataKey="exits" stroke="#dc2626" fillOpacity={1} fill={`url(#gradientExit)`} strokeWidth={4} />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>
@@ -731,116 +691,70 @@ export default function PixExtratoPage() {
                 {/* Filter & List Area */}
                 <div className="bg-white rounded-[5px] border border-neutral-100 p-4 md:p-8 shadow-sm">
                     <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-6 pb-6 border-b border-neutral-100">
-                        <div className="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-8 flex-wrap w-full">
-                            <Tabs value={filter} onValueChange={(val: any) => setFilter(val)} className="w-full sm:w-auto flex justify-center">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-6 flex-wrap w-full">
+                            <Tabs value={filter} onValueChange={(val: any) => setFilter(val)} className="w-full sm:w-auto">
                                 <TabsList className="bg-neutral-100/50 rounded-[5px] p-0.5 h-10 gap-0.5 border border-neutral-200/20">
-                                    <TabsTrigger value="all" className="rounded-[5px] h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#f97316] transition-all">Todas</TabsTrigger>
-                                    <TabsTrigger value="in" className="rounded-[5px] h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-green-600 transition-all">Entrada</TabsTrigger>
-                                    <TabsTrigger value="out" className="rounded-[5px] h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-red-500 transition-all">Saída</TabsTrigger>
+                                    <TabsTrigger value="all" className="rounded-[5px] h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-orange-500 transition-all">Todas</TabsTrigger>
+                                    <TabsTrigger value="in" className="rounded-[5px] h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-green-600 transition-all">Entrada</TabsTrigger>
+                                    <TabsTrigger value="out" className="rounded-[5px] h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-red-500 transition-all">Saída</TabsTrigger>
                                 </TabsList>
                             </Tabs>
-                            <div className="flex items-center gap-1 md:gap-2 bg-neutral-100/50 rounded-[5px] p-0.5 border border-neutral-200/20 w-fit mx-auto md:mx-0 overflow-x-auto no-scrollbar">
+
+                            <div className="flex items-center gap-2 bg-neutral-100/50 rounded-[5px] p-0.5 border border-neutral-200/20 w-fit overflow-x-auto no-scrollbar ml-auto">
                                 <div className="relative group shrink-0">
-                                    <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400 group-hover:text-[#f97316] transition-colors" />
+                                    <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400" />
                                     <Input
                                         type="date"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        className="h-8 md:h-9 w-[110px] md:w-[120px] bg-transparent border-0 pl-7 md:pl-8 text-[8px] md:text-[9px] font-black uppercase focus-visible:ring-0 cursor-pointer"
+                                        className="h-9 w-[160px] bg-transparent border-0 pl-8 text-[12px] font-black uppercase focus-visible:ring-0 cursor-pointer"
                                     />
                                 </div>
-                                <span className="text-neutral-300 font-bold opacity-30 text-[10px]">/</span>
+                                <span className="text-neutral-300">/</span>
                                 <div className="relative group shrink-0">
-                                    <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400 group-hover:text-[#f97316] transition-colors" />
+                                    <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400" />
                                     <Input
                                         type="date"
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
-                                        className="h-8 md:h-9 w-[110px] md:w-[120px] bg-transparent border-0 pl-7 md:pl-8 text-[8px] md:text-[9px] font-black uppercase focus-visible:ring-0 cursor-pointer"
+                                        className="h-9 w-[160px] bg-transparent border-0 pl-8 text-[12px] font-black uppercase focus-visible:ring-0 cursor-pointer"
                                     />
                                 </div>
                             </div>
+
                         </div>
                     </div>
 
                     <div className="space-y-4 pt-6">
-                        <div className="hidden sm:grid grid-cols-12 px-6 pb-2 text-[9px] font-black text-neutral-500 uppercase tracking-[0.3em] gap-4">
-                            <span className="col-span-5 flex items-center gap-2"><PixIcon className="h-3.5 w-3.5" /> Beneficiário / Pagador</span>
-                            <span className="col-span-3 flex items-center justify-center gap-2 text-center"><Diamond className="h-3 w-3" /> Tipo de Operação</span>
-                            <span className="col-span-2 flex items-center justify-end gap-2 text-right"><CreditCard className="h-3 w-3" /> Valor Total</span>
-                            <span className="col-span-2 flex items-center justify-end gap-2 text-right"><Calendar className="h-3 w-3" /> Horário</span>
-                        </div>
-
                         {isLoading ? (
-                            <div className="space-y-4">
-                                {[1, 2, 3, 4, 5].map(i => (
-                                    <div key={i} className="grid grid-cols-12 items-center px-6 py-5 bg-white rounded-[5px] border border-neutral-50 animate-pulse gap-6">
-                                        <div className="col-span-12 h-12 bg-neutral-50 rounded-[5px]" />
-                                    </div>
-                                ))}
-                            </div>
+                            <div className="py-20 text-center uppercase font-black text-neutral-300">Carregando transações...</div>
                         ) : filteredItems.length === 0 ? (
-                            <div className="py-24 text-center bg-white/50 rounded-[5px] border border-dashed border-neutral-200 flex flex-col items-center space-y-4">
-                                <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center text-neutral-200">
-                                    <Smartphone className="h-8 w-8" />
-                                </div>
-                                <div className="space-y-1">
-                                    <p className="text-neutral-400 font-black uppercase text-[10px] tracking-widest">Nenhuma transação PIX localizada</p>
-                                    <p className="text-neutral-300 text-[9px] font-medium italic">Seu fluxo está vazio para os filtros selecionados.</p>
-                                </div>
-                            </div>
+                            <div className="py-20 text-center uppercase font-black text-neutral-300">Nenhum comprovante encontrado</div>
                         ) : (
                             <div className="space-y-2">
                                 {filteredItems.map((t, idx) => {
-                                    const description = t.tipo === "CREDITO" ? (t.pagadorNome || "Recebido") : (t.RecebinteNome || "Enviado");
+                                    const description = t.tipo === "CREDITO" ? (t.pagadorNome || "Recebido") : (t.RecebinteNome || "Pago");
                                     const dateParts = t.dataDaTransacaoFormatada.split(" ");
-
                                     return (
                                         <div
                                             key={idx}
                                             onClick={() => setSelectedTransaction(t)}
-                                            className="flex flex-col sm:grid sm:grid-cols-12 items-start sm:items-center px-6 py-6 sm:py-5 bg-white hover:bg-neutral-50/50 rounded-[5px] border border-neutral-50 hover:border-neutral-200 transition-all duration-300 group cursor-pointer gap-4 sm:gap-6"
+                                            className="flex items-center justify-between px-6 py-5 bg-white hover:bg-neutral-50/50 rounded-[5px] border border-neutral-50 hover:border-neutral-200 transition-all cursor-pointer group"
                                         >
-                                            <div className="flex items-center gap-3 md:gap-4 col-span-5 min-w-0 w-full">
-                                                <div className={`w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-[5px] flex items-center justify-center p-2.5 transition-all bg-[#32BCAD]/10 text-[#32BCAD] group-hover:scale-110`}>
-                                                    <PixIcon className="h-full w-full" />
+                                            <div className="flex items-center gap-4 flex-1 min-w-0">
+                                                <div className="w-10 h-10 shrink-0 rounded-[5px] flex items-center justify-center p-2.5 bg-orange-500/10 text-orange-600 group-hover:scale-110">
+                                                    <Icon size={20} />
                                                 </div>
                                                 <div className="min-w-0 flex-1">
-                                                    <p className="font-black text-xs md:text-sm text-[#0c0a09] leading-tight mb-1 truncate uppercase">{description}</p>
-                                                    <p className="text-[8px] md:text-[9px] font-black text-neutral-400 opacity-60 uppercase tracking-widest truncate">ID: {t.codigoDeIdentificacao || t.idDoBancoLiquidante}</p>
-                                                </div>
-                                                <div className="sm:hidden text-right shrink-0">
-                                                    <p className={`font-black text-lg font-mono tracking-tighter ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-red-500'}`}>
-                                                        {t.tipo === 'CREDITO' ? '+' : '-'}{t.valorFormatado.replace('R$', '').trim()}
-                                                    </p>
+                                                    <p className="font-black text-xs text-[#0c0a09] uppercase truncate">{description}</p>
+                                                    <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest truncate">{t.metodoFormatado} • #{t.idDoBancoLiquidante?.slice(-8).toUpperCase() || 'REF'}</p>
                                                 </div>
                                             </div>
-
-                                            <div className="hidden sm:flex col-span-3 flex-col items-center">
-                                                <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-widest border-0 px-3 py-1.5 h-7 flex items-center justify-center w-full max-w-[140px] rounded-[5px] ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50/50' : 'text-neutral-400 bg-neutral-50'}`}>
-                                                    {t.metodoFormatado}
-                                                </Badge>
-                                            </div>
-
-                                            <div className="hidden sm:block col-span-2 text-right">
-                                                <p className={`font-black text-lg font-mono tracking-tighter ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-red-500'}`}>
+                                            <div className="text-right ml-4">
+                                                <p className={`font-black text-sm font-mono tracking-tighter ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-red-500'}`}>
                                                     {t.tipo === 'CREDITO' ? '+' : '-'} {t.valorFormatado}
                                                 </p>
-                                            </div>
-
-                                            <div className="flex sm:col-span-2 items-center justify-between sm:justify-end gap-3 w-full sm:w-auto text-neutral-300 group-hover:text-[#f97316] transition-colors border-t sm:border-t-0 border-neutral-50 pt-3 sm:pt-0">
-                                                <div className="sm:hidden">
-                                                    <Badge variant="outline" className={`text-[8px] font-black uppercase tracking-widest border-0 px-2 py-1 rounded-[5px] ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50/50' : 'text-neutral-400 bg-neutral-50'}`}>
-                                                        {t.metodoFormatado}
-                                                    </Badge>
-                                                </div>
-                                                <div className="text-right flex items-center gap-2 md:gap-3">
-                                                    <div className="text-right shrink-0">
-                                                        <p className="text-[11px] md:text-sm font-black text-[#0c0a09] font-mono">{dateParts[0].split("-").reverse().join("/")}</p>
-                                                        <p className="text-[9px] md:text-[11px] font-bold tracking-widest">{dateParts[1]}</p>
-                                                    </div>
-                                                    <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
-                                                </div>
+                                                <p className="text-[9px] font-black text-neutral-300 uppercase">{dateParts[0].split("-").reverse().join("/")}</p>
                                             </div>
                                         </div>
                                     );
@@ -853,3 +767,4 @@ export default function PixExtratoPage() {
         </div>
     );
 }
+

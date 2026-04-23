@@ -2,6 +2,8 @@
 
 import React, { useMemo, useState, useEffect } from "react";
 import api from "@/lib/api";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
     ArrowUpRight,
     ArrowDownLeft,
@@ -154,31 +156,84 @@ export default function ExtratoGeralPage() {
         setExportingType(format);
         try {
             if (format === 'pdf') {
-                const params = new URLSearchParams();
-                if (startDate) {
-                    params.append('startDate', startDate);
-                    params.append('dataInicial', startDate);
-                    params.append('data_inicio', startDate);
+                const doc = new jsPDF();
+                
+                // --- HEADER SECTION ---
+                try {
+                    doc.addImage("/logo_g8_boleto.png", "PNG", 14, 10, 32, 10);
+                } catch (e) {
+                    doc.setFont("helvetica", "bold");
+                    doc.setFontSize(20);
+                    doc.setTextColor(12, 10, 9);
+                    doc.text("G8PAY", 14, 20);
                 }
-                if (endDate) {
-                    params.append('endDate', endDate);
-                    params.append('dataFinal', endDate);
-                    params.append('data_fim', endDate);
-                }
-                if (filter !== "all") params.append('tipo', filter === "in" ? "CREDITO" : "DEBITO");
+                
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(16);
+                doc.setTextColor(12, 10, 9);
+                const reportTitle = "Extrato Analítico";
+                const titleWidth = doc.getTextWidth(reportTitle);
+                const pageWidth = doc.internal.pageSize.getWidth();
+                doc.text(reportTitle, (pageWidth - titleWidth) / 2, 20);
+                
+                doc.setFontSize(8);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(100, 100, 100);
+                doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 14, 28);
+                doc.text(`Período: ${startDate || 'Início'} até ${endDate || 'Hoje'}`, 14, 33);
 
-                const response = await api.get(`/api/banco/extrato/exportar-pdf?${params.toString()}`, {
-                    responseType: 'blob'
+                doc.setDrawColor(241, 245, 249);
+                doc.line(14, 38, pageWidth - 14, 38);
+
+                // --- TABLE SECTION ---
+                const tableHeaders = [["Data/Hora", "Identificação", "Método", "Natureza", "Origem", "Destino", "Valor"]];
+                const tableBody = filteredItems.map((item: any) => [
+                    item.dataDaTransacaoFormatada,
+                    item.idDoBancoLiquidante || item.id || "REF",
+                    item.metodoFormatado,
+                    getNatureza(item.metodo),
+                    item.pagadorNome || "CLIENTE G8",
+                    item.RecebinteNome || "PAGAMENTO G8",
+                    `${item.tipo === 'CREDITO' ? '+' : '-'} ${item.valorFormatado}`
+                ]);
+
+                autoTable(doc, {
+                    startY: 45,
+                    head: tableHeaders,
+                    body: tableBody,
+                    theme: 'grid',
+                    headStyles: { 
+                        fillColor: [255, 255, 255], 
+                        textColor: [12, 10, 9],
+                        fontSize: 8,
+                        fontStyle: 'bold',
+                        lineWidth: 0.1,
+                        lineColor: [200, 200, 200]
+                    },
+                    bodyStyles: { 
+                        fontSize: 7,
+                        textColor: [50, 50, 50],
+                        lineWidth: 0.1,
+                        lineColor: [230, 230, 230]
+                    },
+                    alternateRowStyles: { 
+                        fillColor: [252, 252, 252] 
+                    },
+                    columnStyles: {
+                        6: { halign: 'right', fontStyle: 'bold' }
+                    },
+                    margin: { left: 14, right: 14 }
                 });
 
-                const url = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-                const link = document.createElement('a');
-                link.href = url;
-                link.setAttribute('download', `extrato_${startDate || 'inicial'}.pdf`);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                window.URL.revokeObjectURL(url);
+                const totalPages = (doc as any).internal.getNumberOfPages();
+                for (let i = 1; i <= totalPages; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(150, 150, 150);
+                    doc.text(`Página ${i} de ${totalPages} | Gerado em: ${new Date().toLocaleString('pt-BR')}`, pageWidth - 14, doc.internal.pageSize.getHeight() - 10, { align: 'right' });
+                }
+
+                doc.save(`extrato_${startDate || 'inicial'}.pdf`);
             } else if (format === 'xls') {
                 const headers = ["Data/Hora", "Identificação", "Tipo", "Método", "Natureza", "Origem", "Destino", "Valor"];
                 let html = `
@@ -631,7 +686,7 @@ export default function ExtratoGeralPage() {
                             <Phone className="h-6 w-6" />
                         </div>
                         <div className="flex flex-col justify-center relative z-10 min-w-0">
-                            <h3 className="text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 24h</h3>
+                            <h3 className="text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09:00 as 18:00</h3>
                             <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central de Assistência G8</p>
                         </div>
                     </Card>

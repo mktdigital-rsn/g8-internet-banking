@@ -960,7 +960,7 @@ function PixPagarContent() {
               <div className="w-10 h-10 bg-[#ff7711] rounded-md flex items-center justify-center mb-4 text-white group-hover:scale-110 transition-all">
                 <MessageCircle className="h-5 w-5" />
               </div>
-              <span className="font-black text-[9px] text-[#0c0a09] uppercase tracking-widest">Chat 24H</span>
+              <span className="font-black text-[9px] text-[#0c0a09] uppercase tracking-widest">Chat 09h as 18h</span>
             </button>
           </div>
         </div>

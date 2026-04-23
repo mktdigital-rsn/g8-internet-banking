@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 
 import { usePathname, useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Link from "next/link";
 import axios from "axios";
 import api from "@/lib/api";
@@ -151,6 +152,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (expiresAt) {
       const remaining = Math.floor((parseInt(expiresAt) - Date.now()) / 1000);
       if (remaining <= 0) {
+        toast.error("Sua sessão expirou por inatividade. Por favor, faça login novamente.");
         handleLogout();
       } else {
         setTimeLeft(remaining);
@@ -165,6 +167,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (timeLeft === null) return;
     
     if (timeLeft <= 0) {
+      toast.error("Sua sessão expirou. Para sua segurança, você foi desconectado.");
       handleLogout();
       return;
     }

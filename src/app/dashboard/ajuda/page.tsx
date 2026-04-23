@@ -31,7 +31,7 @@ const faqs = [
   {
     category: "Segurança",
     questions: [
-      { q: "O que fazer em caso de perda do celular?", a: "Entre em contato imediatamente com nossa central 24h para bloquear o acesso à sua conta e senhas." },
+      { q: "O que fazer em caso de perda do celular?", a: "Entre em contato imediatamente com nossa central para bloquear o acesso à sua conta e senhas." },
       { q: "Como habilitar a biometria?", a: "Você pode habilitar o reconhecimento facial ou digital nas configurações de segurança do aplicativo mobile." }
     ]
   },
