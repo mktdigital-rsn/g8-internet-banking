@@ -304,9 +304,9 @@ export default function LoginScreen() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 text-neutral-400 2xl:gap-5">
-            <ShieldCheck className="text-green-500 h-5 w-5 2xl:h-7 2xl:w-7" />
-            <span className="text-[10px] 2xl:text-xs font-bold uppercase tracking-[0.2em]">SSL SECURE PROTOCOL</span>
+          <div className="p-3 bg-amber-200/20 border border-amber-500/20 rounded-sm inline-flex items-center gap-3 text-white 2xl:gap-5 shadow-lg shadow-amber-400/10 w-fit">
+            <ShieldCheck className="h-4 w-4 2xl:h-6 2xl:w-6 opacity-90" />
+            <span className="text-[9px] 2xl:text-xs font-bold uppercase tracking-[0.2em] leading-none">SSL SECURE PROTOCOL</span>
           </div>
         </div>
 
@@ -478,13 +478,13 @@ export default function LoginScreen() {
                       </div>
 
                       <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.8 }}
-                        className="flex items-center gap-3 text-white/40"
+                        className="flex items-center gap-3 bg-amber-200/20 p-4 rounded-sm shadow-xl shadow-amber-400/20 animate-bounce"
                       >
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-xs font-bold uppercase tracking-widest">Redirecionando para o painel...</span>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        <span className="text-[10px] 2xl:text-xs font-bold uppercase tracking-[0.3em] text-white">Redirecionando para o painel...</span>
                       </motion.div>
                     </motion.div>
                   ) : (

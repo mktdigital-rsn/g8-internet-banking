@@ -237,7 +237,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       className={`flex items-center gap-5 px-6 py-3 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
                         ? "text-white bg-[#ff7711] shadow-lg shadow-orange-600/20"
                         : item.disabled
-                          ? "opacity-50 cursor-not-allowed grayscale"
+                          ? "opacity-60 cursor-not-allowed"
                           : "text-white/80 hover:bg-white hover:text-[#ff7711]"
                         }`}
                     >
@@ -245,7 +245,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <div className="flex items-center justify-between flex-1 relative z-10">
                         <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isActive ? "text-white" : item.disabled ? "text-white/40" : "text-white/80 group-hover:text-[#ff7711] transition-colors duration-300"}`}>{item.label}</span>
                         {item.badge && (
-                          <span className={`font-black text-[7px] px-1.5 py-0.5 rounded-sm tracking-tighter ${item.badge === "EM BREVE" ? "bg-[#ffaa00] text-black" : "bg-white/10 text-white"}`}>
+                          <span className={`font-black text-[9px] px-1.5 py-0.5 rounded-sm tracking-tighter ${item.badge === "EM BREVE" ? "bg-[#ffdd00] text-black" : "bg-white/10 text-white"}`}>
                             {item.badge}
                           </span>
                         )}

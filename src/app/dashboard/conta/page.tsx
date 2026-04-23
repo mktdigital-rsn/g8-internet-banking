@@ -128,7 +128,7 @@ export default function ContaPage() {
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">PLATINUM</p>
-                    <img src="/logo_g8_official.png" className="h-4 invert opacity-80" />
+                    <img src="/logo_g8_official.png" className="h-6 object-contain" />
                   </div>
                   <CreditCard className="h-8 w-8 text-primary opacity-80" />
                 </div>
@@ -138,7 +138,9 @@ export default function ContaPage() {
                   <div className="flex justify-between items-end">
                     <div className="space-y-1">
                       <p className="text-[8px] font-black text-white/40 uppercase tracking-widest">Titular</p>
-                      <p className="text-xs font-black uppercase text-white/80">{userData?.name}</p>
+                      <p className="text-xs font-black uppercase text-white/80">
+                        {userData?.name?.split(' ')[0]} {userData?.name?.split(' ').slice(1).map(() => '****').join(' ')}
+                      </p>
                     </div>
                     <div className="flex flex-col items-end">
                       <p className="text-[8px] font-black text-neutral-400 uppercase tracking-widest">EXP</p>
@@ -151,12 +153,26 @@ export default function ContaPage() {
 
             {/* Account Details Card */}
             <div className="bg-white p-8 rounded-sm border border-neutral-100 shadow-xl space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary/10 rounded-sm flex items-center justify-center text-primary">
-                  <Building className="h-5 w-5" />
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-sm flex items-center justify-center text-primary">
+                      <Building className="h-5 w-5" />
+                    </div>
+                    <h3 className="text-sm  font-black text-[#0c0a09] uppercase tracking-tight">Dados da Conta</h3>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-8 border-primary/80 text-[#f97316]  font-bold text-[10px] uppercase tracking-widest rounded-sm hover:bg-primary/5 active:scale-95 transition-all"
+                    onClick={() => {
+                      const msg = `Esta é minha conta no banco G8PAY:\n\nNome: ${userData?.name}\nCPF/CNPJ: ${userData?.taxNumber}\nBanco: ${userData?.bankNumber || '384'} - G8 PAY \nAgência: ${userData?.accountBranch || '0001'}\nConta: ${userData?.accountNumber}`;
+                      navigator.clipboard.writeText(msg);
+                      toast.success("Dados da conta formatados para compartilhamento!");
+                    }}
+                  >
+                    Compartilhar
+                  </Button>
                 </div>
-                <h3 className="text-lg font-black text-[#0c0a09] uppercase tracking-tighter">Dados de Conta</h3>
-              </div>
 
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-4 bg-neutral-50 rounded-sm border border-neutral-100 group cursor-pointer" onClick={() => handleCopy(userData?.bankNumber || '384', 'bank')}>
