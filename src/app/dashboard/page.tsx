@@ -40,6 +40,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import api from "@/lib/api";
 import Link from "next/link";
+import { useAtomValue } from "jotai";
+import { userAtom, balanceAtom, isUserLoadingAtom, isBalanceLoadingAtom } from "@/store/auth";
 
 const PixIcon = (props: any) => (
   <svg {...props} viewBox="0 0 100 100" fill="currentColor">
@@ -110,44 +112,48 @@ export default function DashboardHome() {
 
    const [mounted, setMounted] = React.useState(false);
 
+   const user = useAtomValue(userAtom);
+   const globalBalance = useAtomValue(balanceAtom);
+   const isUserLoading = useAtomValue(isUserLoadingAtom);
+   const isGlobalBalanceLoading = useAtomValue(isBalanceLoadingAtom);
+
+   React.useEffect(() => {
+      if (user) {
+         setUserName(user.name || user.nome || "Cliente");
+         
+         const rawAcc = user.accountNumber || user.account || user.conta;
+         const accNum = (rawAcc && typeof rawAcc === 'object' && 'present' in rawAcc)
+            ? (rawAcc.present ? String(rawAcc.value) : "0000")
+            : String(rawAcc || "0000");
+            
+         setCardNumber(`**** **** **** ${accNum.slice(-4)}`);
+         setIsLoadingData(false);
+      }
+   }, [user]);
+
+   React.useEffect(() => {
+      setBalance(new Intl.NumberFormat("pt-BR", {
+         style: "currency",
+         currency: "BRL"
+      }).format(globalBalance || 0));
+      if (!isGlobalBalanceLoading) {
+         setIsLoadingData(false);
+      }
+   }, [globalBalance, isGlobalBalanceLoading]);
+
    React.useEffect(() => {
       setMounted(true);
-      const fetchData = async () => {
+      const fetchTransactions = async () => {
          try {
-            const [userRes, balanceRes, extratoRes] = await Promise.all([
-               api.get("/api/users/data"),
-               api.get("/api/banco/saldo/getSaldo").catch(() => ({ data: { valor: 0 } })),
-               api.get("/api/banco/extrato/buscar").catch(() => ({ data: { data: [] } }))
-            ]);
-
-            if (userRes.data) {
-               const u = userRes.data;
-               setUserName(u.name || u.nome || "Cliente");
-               
-               const rawAcc = u.accountNumber || u.account || u.conta;
-               const accNum = (rawAcc && typeof rawAcc === 'object' && 'present' in rawAcc)
-                  ? (rawAcc.present ? String(rawAcc.value) : "0000")
-                  : String(rawAcc || "0000");
-                  
-               setCardNumber(`**** **** **** ${accNum.slice(-4)}`);
-            }
-
-            if (balanceRes.data) {
-               setBalance(new Intl.NumberFormat("pt-BR", {
-                  style: "currency",
-                  currency: "BRL"
-               }).format(balanceRes.data.valor || 0));
-            }
-
+            const extratoRes = await api.get("/api/banco/extrato/buscar").catch(() => ({ data: { data: [] } }));
             if (extratoRes.data && Array.isArray(extratoRes.data.data)) {
                setAllTransactions(extratoRes.data.data);
             }
           } finally {
              setIsLoadingTransactions(false);
-             setIsLoadingData(false);
           }
       };
-      fetchData();
+      fetchTransactions();
    }, []);
 
    // Auto-carousel effect for maturity cards

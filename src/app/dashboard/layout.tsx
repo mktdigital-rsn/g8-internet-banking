@@ -27,8 +27,8 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
 import api from "@/lib/api";
-import { useSetAtom } from "jotai";
-import { temporaryDeviceIdAtom, balanceAtom, isBalanceLoadingAtom } from "@/store/auth";
+import { useSetAtom, useAtom } from "jotai";
+import { temporaryDeviceIdAtom, balanceAtom, isBalanceLoadingAtom, userAtom, isUserLoadingAtom } from "@/store/auth";
 
 interface MenuItem {
   icon: any;
@@ -74,6 +74,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
    const [isLoadingData, setIsLoadingData] = React.useState(true);
    const setGlobalBalance = useSetAtom(balanceAtom);
    const setGlobalBalanceLoading = useSetAtom(isBalanceLoadingAtom);
+   const [user, setUser] = useAtom(userAtom);
+   const setIsUserLoading = useSetAtom(isUserLoadingAtom);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -82,6 +84,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         if (userRes.data) {
           const u = userRes.data;
+          setUser(u);
           setUserName(u.name || u.nome || "Cliente");
           
           const extract = (val: any) => (val && typeof val === 'object' && 'present' in val) 
@@ -95,10 +98,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         }
       } catch (err) {
         console.error("Error fetching user data:", err);
+      } finally {
+        setIsUserLoading(false);
       }
     };
     fetchData();
-  }, []);
+  }, [setUser, setIsUserLoading]);
 
   React.useEffect(() => {
     const fetchBalance = async () => {
@@ -114,6 +119,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setGlobalBalanceLoading(false);
       } catch (err) {
         console.error("Error updating balance:", err);
+        setIsLoadingData(false);
+        setGlobalBalanceLoading(false);
       }
     };
     fetchBalance();

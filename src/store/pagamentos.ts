@@ -1,5 +1,10 @@
 import { atom } from "jotai";
 
+export interface CobrancaResult {
+  html: string;
+  dataVencimento: string;
+}
+
 interface CobrancaData {
   valor: number;
   pagadorNome: string;
@@ -12,6 +17,9 @@ interface CobrancaData {
   pagadorUf: string;
   pagadorNumero: string;
   dataVencimento: string;
+  isRecorrente?: boolean;
+  quantidadeMeses?: number;
+  results?: CobrancaResult[];
 }
 
 export const cobrancaDataAtom = atom<CobrancaData>({

@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { User, Mail, MapPin, Hash, Building2, ArrowLeft, Send, Loader2, Badge } from "lucide-react";
-import { cleanTaxNumber, cleanCep, removeAccents } from "@/lib/utils";
+import { cleanTaxNumber, cleanCep, removeAccents, cn } from "@/lib/utils";
 import api from "@/lib/api";
 import axios from "axios";
 import { toast } from "sonner";
+import { Switch } from "@/components/ui/switch";
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Repeat, CalendarCheck, Layers } from "lucide-react";
 
 export default function PagadorDataPage() {
   const router = useRouter();
@@ -33,6 +36,10 @@ export default function PagadorDataPage() {
     pagadorNumero: cobrancaData.pagadorNumero,
     dataVencimento: cobrancaData.dataVencimento || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   });
+
+  const [isRecorrente, setIsRecorrente] = React.useState(false);
+  const [diaVencimento, setDiaVencimento] = React.useState(new Date().getDate());
+  const [quantidadeMeses, setQuantidadeMeses] = React.useState(2);
 
   const handleCepBlur = async () => {
     const cep = cleanCep(formData.pagadorCep);
@@ -66,7 +73,7 @@ export default function PagadorDataPage() {
 
     setIsLoading(true);
     try {
-      const payload = {
+      const generatePayload = (vencimento: string) => ({
         valor: cobrancaData.valor,
         pagadorNome: removeAccents(formData.pagadorNome),
         pagadorTaxNumber: cleanTaxNumber(formData.pagadorTaxNumber),
@@ -75,22 +82,73 @@ export default function PagadorDataPage() {
         pagadorBairro: removeAccents(formData.pagadorBairro),
         pagadorRua: removeAccents(`${formData.pagadorRua}, ${formData.pagadorNumero}`),
         pagadorEmail: formData.pagadorEmail.toLowerCase().trim(),
-        dataVencimento: formData.dataVencimento,
-      };
-
-      const response = await api.post("/api/banco/pagamentos/gerar-boleto-cobranca", payload, {
-        responseType: 'text',
-        transformResponse: [(data) => data]
+        dataVencimento: vencimento,
       });
-      
-      if (response.data) {
-        setCobrancaHtml(response.data);
-        setCobrancaData({ ...cobrancaData, ...formData });
-        router.push("/dashboard/cobrancas/sucesso");
+
+      if (isRecorrente) {
+        const dates: string[] = [];
+        const now = new Date();
+        for (let i = 1; i <= quantidadeMeses; i++) {
+          const d = new Date(now.getFullYear(), now.getMonth() + i, diaVencimento);
+          // Ajuste para meses que não tem o dia selecionado (ex: dia 31 em fevereiro)
+          if (d.getDate() !== diaVencimento) d.setDate(0);
+          
+          const year = d.getFullYear();
+          const month = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          dates.push(`${year}-${month}-${day}`);
+        }
+
+        const toastId = toast.loading(`Gerando ${quantidadeMeses} cobranças recorrentes...`);
+        
+        try {
+          const promises = dates.map(date => 
+            api.post("/api/banco/pagamentos/gerar-boleto-cobranca", generatePayload(date), {
+              responseType: 'text',
+              transformResponse: [(data) => data]
+            })
+          );
+
+          const results = await Promise.all(promises);
+          
+          toast.dismiss(toastId);
+          toast.success(`${results.length} boletos gerados com sucesso!`);
+          
+          const cobrancaResults = results.map((res, index) => ({
+            html: res.data,
+            dataVencimento: dates[index]
+          }));
+
+          setCobrancaHtml(results[0].data);
+          setCobrancaData({ 
+            ...cobrancaData, 
+            ...formData, 
+            dataVencimento: dates[0],
+            isRecorrente: true,
+            quantidadeMeses,
+            results: cobrancaResults
+          });
+          router.push("/dashboard/cobrancas/sucesso");
+        } catch (err) {
+          toast.dismiss(toastId);
+          throw err;
+        }
+      } else {
+        const payload = generatePayload(formData.dataVencimento);
+        const response = await api.post("/api/banco/pagamentos/gerar-boleto-cobranca", payload, {
+          responseType: 'text',
+          transformResponse: [(data) => data]
+        });
+        
+        if (response.data) {
+          setCobrancaHtml(response.data);
+          setCobrancaData({ ...cobrancaData, ...formData, isRecorrente: false });
+          router.push("/dashboard/cobrancas/sucesso");
+        }
       }
     } catch (error: any) {
       console.error("❌ [COBRANCA ERROR]:", error);
-      toast.error("Erro ao gerar boleto. Verifique os dados e tente novamente.");
+      toast.error("Erro ao gerar as cobranças. Verifique os dados e tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -164,14 +222,70 @@ export default function PagadorDataPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Data de Vencimento</label>
-                <Input 
-                  type="date"
-                  value={formData.dataVencimento}
-                  onChange={(e) => setFormData({...formData, dataVencimento: e.target.value})}
-                  className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
-                />
+              <div className="space-y-4 pt-4 border-t border-neutral-100">
+                <div className="flex items-center justify-between p-4 bg-orange-50/50 rounded-sm border border-orange-100/50 group hover:border-orange-500/30 transition-all">
+                  <div className="space-y-1">
+                    <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316] flex items-center gap-2">
+                       <Repeat className={cn("h-4 w-4 transition-all", isRecorrente ? "rotate-180 text-orange-600" : "text-neutral-400")} />
+                       Cobrança Recorrente
+                    </label>
+                    <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">Gerar vários boletos mensais automaticamente</p>
+                  </div>
+                  <Switch 
+                    checked={isRecorrente}
+                    onCheckedChange={setIsRecorrente}
+                    className="data-[state=checked]:bg-[#f97316]"
+                  />
+                </div>
+
+                {isRecorrente ? (
+                  <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black uppercase tracking-widest text-[#f97316] flex items-center gap-2">
+                        <CalendarCheck className="h-3.5 w-3.5" /> Dia do Venc.
+                      </label>
+                      <Input 
+                        type="text"
+                        inputMode="numeric"
+                        value={diaVencimento}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          if (val === "" || (Number(val) >= 1 && Number(val) <= 31)) {
+                            setDiaVencimento(val === "" ? 0 : Number(val));
+                          }
+                        }}
+                        className="h-12 bg-neutral-50 border-neutral-100 font-black focus:border-[#f97316] transition-all rounded-sm text-center"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[11px] font-black uppercase tracking-widest text-[#f97316] flex items-center gap-2">
+                        <Layers className="h-3.5 w-3.5" /> Qtd. Meses
+                      </label>
+                      <Input 
+                        type="text"
+                        inputMode="numeric"
+                        value={quantidadeMeses}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, "");
+                          if (val === "" || (Number(val) >= 1 && Number(val) <= 24)) {
+                            setQuantidadeMeses(val === "" ? 0 : Number(val));
+                          }
+                        }}
+                        className="h-12 bg-neutral-50 border-neutral-100 font-black focus:border-[#f97316] transition-all rounded-sm text-center"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-2 animate-in fade-in duration-300">
+                    <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Data de Vencimento</label>
+                    <Input 
+                      type="date"
+                      value={formData.dataVencimento}
+                      onChange={(e) => setFormData({...formData, dataVencimento: e.target.value})}
+                      className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                    />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

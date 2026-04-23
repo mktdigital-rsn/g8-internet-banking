@@ -34,6 +34,7 @@ import {
   Ban,
   Pencil,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -236,10 +237,23 @@ export default function PagamentosPage() {
         // 1. Varredura profunda para capturar id_transaction (Cronos style)
         const getNestedId = (obj: any): string | null => {
           if (!obj || typeof obj !== 'object') return null;
-          return obj.id_transaction || obj.idDoBancoLiquidante || obj.transactionId || obj.id || obj.transaction_id || obj.auth || obj.nsu;
+          
+          // Busca direta
+          const found = obj.id_transaction || obj.idDoBancoLiquidante || obj.transactionId || obj.id || obj.transaction_id || obj.auth || obj.nsu;
+          if (found) return String(found);
+
+          // Busca em profundidade de um nível (comum em wrappers)
+          for (const key in obj) {
+            if (obj[key] && typeof obj[key] === 'object') {
+              const nested = obj[key].id_transaction || obj[key].idDoBancoLiquidante || obj[key].transactionId || obj[key].id || obj[key].nsu;
+              if (nested) return String(nested);
+            }
+          }
+
+          return null;
         };
 
-        const directId = getNestedId(res.data) || getNestedId(res.data.data) || getNestedId(res.data.response) || getNestedId(res.data.result);
+        const directId = getNestedId(res.data);
 
         const finalizeSuccess = (finalId: string) => {
           setTransactionId(finalId);
@@ -251,55 +265,17 @@ export default function PagamentosPage() {
 
         if (directId) {
           finalizeSuccess(directId);
-          return;
+        } else {
+          // Redireciona IMEDIATAMENTE para o sucesso, sem prender o usuário no PIN
+          // A busca pelo ID real continuará na tela de sucesso
+          setTransactionId(""); // Indica que ainda estamos buscando o ID real
+          setStep("success");
+          setIsLoading(false);
+          toast.success("Pagamento aceito!");
         }
-
-        // 2. Fallback: Se chegou aqui é porque a Cronos sacaneou e não mandou o ID no JSON principal
-        toast.info("Pagamento aceito! Sincronizando comprovante...");
-        let attempts = 0;
-        const maxAttempts = 5; // Aumentado para dar mais tempo ao banco
-
-        const searchWithRetry = async () => {
-          attempts++;
-
-          try {
-            console.log(`🔍 [BUSCA EXTRATO] Tentativa ${attempts}/${maxAttempts}...`);
-            const extratoRes = await api.get("/api/banco/extrato/buscar");
-            const items = extratoRes.data.transacoes || extratoRes.data.data?.transacoes || [];
-
-            const targetVal = Math.abs(parseFloat(String(boletoData.valorTotal || boletoData.valor).replace(/[R$\s]/g, "").replace(",", ".")));
-
-            const match = items.find((item: any) => {
-              const itemVal = Math.abs(parseFloat(String(item.valor).replace(/[R$\s]/g, "").replace(",", ".")));
-              return Math.abs(itemVal - targetVal) < 0.01;
-            });
-
-            if (match && (match.idDoBancoLiquidante || match.id_transaction || match.id || match.nsu)) {
-              const finalId = match.idDoBancoLiquidante || match.id_transaction || match.id || match.nsu;
-              finalizeSuccess(finalId);
-            } else if (attempts < maxAttempts) {
-              setTimeout(searchWithRetry, 2500);
-            } else {
-              // Se falhar após todas as tentativas, mostra erro e não vai para a tela de sucesso
-              setIsLoading(false);
-              toast.error("Pagamento processado, mas não conseguimos capturar o comprovante. Verifique seu extrato em instantes.");
-            }
-          } catch (e) {
-            console.error("Erro na busca do extrato:", e);
-            if (attempts < maxAttempts) {
-              setTimeout(searchWithRetry, 2500);
-            } else {
-              setIsLoading(false);
-              toast.error("Erro ao sincronizar dados do pagamento.");
-            }
-          }
-        };
-
-        searchWithRetry();
       }
     } catch (err: any) {
       toast.error(err.response?.data?.message || "Erro ao processar pagamento.");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -898,90 +874,174 @@ export default function PagamentosPage() {
         )}
 
         {step === "success" && (
-          <div className="max-w-2xl mx-auto flex flex-col items-center space-y-10 py-8 animate-in fade-in slide-in-from-top-4 duration-700">
-            <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-600 shadow-2xl relative border-4 border-white">
-              <CheckCircle2 className="h-12 w-12" />
-            </div>
-
-            <div className="text-center space-y-2">
-              <h2 className="text-4xl font-black text-[#0c0a09] tracking-tighter uppercase">Pagamento Realizado!</h2>
-              <p className="text-base font-bold text-neutral-400 uppercase tracking-widest">Sua conta foi liquidada com sucesso.</p>
-            </div>
-
-            <div className="w-full bg-white rounded-sm border border-neutral-100 p-10 shadow-2xl space-y-8 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full blur-3xl -mr-16 -mt-16" />
-
-              <div className="space-y-8 relative z-10">
-                <div className="flex flex-col items-center border-b border-neutral-50 pb-8 text-center">
-                  <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2 opacity-60">Valor Total Pago</span>
-                  <span className="text-5xl font-black text-[#f97316] tracking-tighter">{formatCurrency(boletoData?.valor)}</span>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
-                  <div className="space-y-6">
-                    <div className="space-y-1">
-                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Beneficiário</p>
-                      <p className="text-base font-black text-[#0c0a09] uppercase leading-tight">{boletoData?.beneficiario}</p>
-                      {boletoData?.documentoBeneficiario && (
-                        <p className="text-[11px] font-medium text-neutral-500">{boletoData.documentoBeneficiario}</p>
-                      )}
-                      {boletoData?.bancoBeneficiario && (
-                        <p className="text-[11px] font-bold text-[#f97316] uppercase mt-1 flex items-center gap-1">
-                          <Building2 className="h-3 w-3" />
-                          {boletoData.bancoBeneficiario}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="space-y-1 pt-6 border-t border-neutral-50">
-                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Pagador</p>
-                      <p className="text-sm font-black text-[#0c0a09] uppercase">{boletoData?.pagadorNome || "NOME NÃO INFORMADO"}</p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Vencimento</p>
-                        <p className="text-sm font-black text-[#0c0a09]">{boletoData?.vencimento}</p>
-                      </div>
-                      <div className="space-y-1 text-right">
-                        <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Data Pagamento</p>
-                        <p className="text-sm font-black text-[#0c0a09]">{boletoData?.dataPagamento || new Date().toLocaleDateString('pt-BR')}</p>
-                      </div>
-                    </div>
-
-                    <div className="space-y-1 pt-6 border-t border-neutral-50">
-                      <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Autenticação</p>
-                      <p className="text-[11px] font-black text-neutral-400 font-mono break-all leading-relaxed uppercase">{transactionId}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full flex gap-4 pt-10">
-              <Button onClick={handlePrintReceipt} className="flex-1 h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 group transition-all">
-                <Download className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                COMPROVANTE
-              </Button>
-              <Button
-                onClick={() => {
-                  setStep("landing");
-                  setBoletoData(null);
-                  setBarcode("");
-                  setSmsCode("");
-                  setTransactionId("");
-                }}
-                variant="outline"
-                className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-sm font-black text-lg uppercase tracking-widest hover:border-[#f97316] hover:text-[#f97316] hover:bg-orange-50 transition-all"
-              >
-                NOVO PAGAMENTO
-              </Button>
-            </div>
-          </div>
+          <SuccessStep 
+            boletoData={boletoData} 
+            transactionId={transactionId} 
+            setTransactionId={setTransactionId}
+            handlePrintReceipt={handlePrintReceipt}
+            onNewPayment={() => {
+              setStep("landing");
+              setBoletoData(null);
+              setBarcode("");
+              setSmsCode("");
+              setTransactionId("");
+            }}
+            formatCurrency={formatCurrency}
+          />
         )}
       </div>
     </div>
   );
 }
+
+// --- Componente Auxiliar para Tela de Sucesso com busca em background ---
+function SuccessStep({ boletoData, transactionId, setTransactionId, handlePrintReceipt, onNewPayment, formatCurrency }: any) {
+  const [isSyncing, setIsSyncing] = useState(!transactionId);
+  const [syncError, setSyncError] = useState(false);
+
+  useEffect(() => {
+    if (!transactionId) {
+      let attempts = 0;
+      const maxAttempts = 10; // Mais fôlego para o background
+
+      const searchWithRetry = async () => {
+        attempts++;
+        try {
+          console.log(`[SYNC SUCCESS] Tentativa ${attempts}...`);
+          const extratoRes = await api.get("/api/banco/extrato/buscar");
+          const items = extratoRes.data.transacoes || extratoRes.data.data?.transacoes || [];
+          
+          const targetVal = Math.abs(parseFloat(String(boletoData.valorTotal || boletoData.valor).replace(/[R$\s]/g, "").replace(",", ".")));
+
+          const match = items.find((item: any) => {
+            const itemVal = Math.abs(parseFloat(String(item.valor).replace(/[R$\s]/g, "").replace(",", ".")));
+            return Math.abs(itemVal - targetVal) < 0.01;
+          });
+
+          if (match && (match.idDoBancoLiquidante || match.id_transaction || match.id || match.nsu)) {
+            const finalId = match.idDoBancoLiquidante || match.id_transaction || match.id || match.nsu;
+            setTransactionId(finalId);
+            setIsSyncing(false);
+          } else if (attempts < maxAttempts) {
+            setTimeout(searchWithRetry, 3000);
+          } else {
+            setSyncError(true);
+            setIsSyncing(false);
+          }
+        } catch (e) {
+          if (attempts < maxAttempts) setTimeout(searchWithRetry, 3000);
+          else {
+            setSyncError(true);
+            setIsSyncing(false);
+          }
+        }
+      };
+      
+      searchWithRetry();
+    } else {
+      setIsSyncing(false);
+    }
+  }, [transactionId, boletoData, setTransactionId]);
+
+  return (
+    <div className="max-w-2xl mx-auto flex flex-col items-center space-y-10 py-8 animate-in fade-in slide-in-from-top-4 duration-700">
+      <div className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center text-green-600 shadow-2xl relative border-4 border-white">
+        <CheckCircle2 className="h-12 w-12" />
+      </div>
+
+      <div className="text-center space-y-2">
+        <h2 className="text-4xl font-black text-[#0c0a09] tracking-tighter uppercase">Pagamento Realizado!</h2>
+        <p className="text-base font-bold text-neutral-400 uppercase tracking-widest">Sua conta foi liquidada com sucesso.</p>
+      </div>
+
+      <div className="w-full bg-white rounded-sm border border-neutral-100 p-10 shadow-2xl space-y-8 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full blur-3xl -mr-16 -mt-16" />
+
+        <div className="space-y-8 relative z-10">
+          <div className="flex flex-col items-center border-b border-neutral-50 pb-8 text-center">
+            <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2 opacity-60">Valor Total Pago</span>
+            <span className="text-5xl font-black text-[#f97316] tracking-tighter">{formatCurrency(boletoData?.valor)}</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
+            <div className="space-y-6">
+              <div className="space-y-1">
+                <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Beneficiário</p>
+                <p className="text-sm font-black text-[#0c0a09] uppercase leading-tight">{boletoData?.beneficiario}</p>
+                {boletoData?.documentoBeneficiario && (
+                  <p className="text-[11px] font-medium text-neutral-500">{boletoData.documentoBeneficiario}</p>
+                )}
+                {boletoData?.bancoBeneficiario && (
+                  <p className="text-[11px] font-bold text-[#f97316] uppercase mt-1 flex items-center gap-1">
+                    <Building2 className="h-3 w-3" />
+                    {boletoData.bancoBeneficiario}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-1 pt-6 border-t border-neutral-50">
+                <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Pagador</p>
+                <p className="text-sm font-black text-[#0c0a09] uppercase">{boletoData?.pagadorNome || "NOME NÃO INFORMADO"}</p>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Vencimento</p>
+                  <p className="text-sm font-black text-[#0c0a09]">{boletoData?.vencimento}</p>
+                </div>
+                <div className="space-y-1 text-right">
+                  <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Data Pagamento</p>
+                  <p className="text-sm font-black text-[#0c0a09]">{boletoData?.dataPagamento || new Date().toLocaleDateString('pt-BR')}</p>
+                </div>
+              </div>
+
+              <div className="space-y-1 pt-6 border-t border-neutral-50">
+                <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest opacity-60">Autenticação</p>
+                {isSyncing ? (
+                  <div className="flex items-center gap-2 text-neutral-300">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span className="text-[10px] font-black uppercase tracking-widest animate-pulse">Sincronizando ID...</span>
+                  </div>
+                ) : syncError ? (
+                  <p className="text-[10px] font-bold text-red-400 uppercase tracking-tight">ID disponível no extrato</p>
+                ) : (
+                  <p className="text-[11px] font-black text-neutral-400 font-mono break-all leading-relaxed uppercase">{transactionId}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="w-full flex gap-4 pt-10">
+        <Button 
+          onClick={handlePrintReceipt} 
+          disabled={isSyncing}
+          className="flex-[2] h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-70"
+        >
+          {isSyncing ? (
+            <>
+              <Loader2 className="h-6 w-6 animate-spin" />
+              GERANDO...
+            </>
+          ) : (
+            <>
+              <Download className="h-6 w-6" />
+              COMPROVANTE
+            </>
+          )}
+        </Button>
+        <Button
+          onClick={onNewPayment}
+          variant="outline"
+          className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-sm font-black text-lg uppercase tracking-widest hover:border-[#f97316] hover:text-[#f97316] transition-all"
+        >
+          NOVO PAGAMENTO
+        </Button>
+      </div>
+    </div>
+  );
+}
+
