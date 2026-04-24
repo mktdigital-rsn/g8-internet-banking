@@ -25,7 +25,8 @@ import {
     Send,
     Loader2,
     FileSpreadsheet,
-    FileBox
+    FileBox,
+    RotateCw
 } from "lucide-react";
 import {
     AreaChart,
@@ -48,6 +49,7 @@ import { useAtom } from "jotai";
 import { cobrancaDataAtom } from "@/store/pagamentos";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import axios from "axios";
 
 export default function GestaoCobrancasPage() {
     const router = useRouter();
@@ -75,6 +77,21 @@ export default function GestaoCobrancasPage() {
             const fetchCobrancas = async () => {
                 setIsLoading(true);
                 try {
+                    // --- USER REQUESTED LOGS (PROD) ---
+                    try {
+                        const listRes = await api.get("/api/banco/pagamentos/listar-boletos?page=1");
+                        console.log("DEBUG [PROD]: GET /api/banco/pagamentos/listar-boletos?page=1 ->", listRes.data);
+                        
+                        const firstBoletoId = listRes.data?.data?.items?.[0]?.id || listRes.data?.data?.[0]?.id;
+                        if (firstBoletoId) {
+                            const consultRes = await api.get(`/api/banco/pagamentos/consultar-boleto/${firstBoletoId}`);
+                            console.log(`DEBUG [PROD]: GET /api/banco/pagamentos/consultar-boleto/${firstBoletoId} ->`, consultRes.data);
+                        }
+                    } catch (e) {
+                        console.error("DEBUG [PROD]: Error calling production endpoints:", e);
+                    }
+                    // ---------------------------
+
                     const response = await api.get("/api/banco/extrato/buscar", { params: { limit: 100 } });
                     
                     let baseItems = [];
@@ -264,6 +281,25 @@ export default function GestaoCobrancasPage() {
         router.push("/dashboard/cobrancas/pagador");
     };
 
+    const handleTestAPI = async () => {
+        toast.info("Testando API de Boletos...");
+        try {
+            const listRes = await api.get("/api/banco/pagamentos/listar-boletos?page=1");
+            console.log("DEBUG [TEST BUTTON]: GET /api/banco/pagamentos/listar-boletos?page=1 ->", listRes.data);
+            toast.success("API Listar retornou com sucesso (Ver Console)");
+            
+            const firstBoletoId = listRes.data?.data?.items?.[0]?.id || listRes.data?.data?.[0]?.id;
+            if (firstBoletoId) {
+                const consultRes = await api.get(`/api/banco/pagamentos/consultar-boleto/${firstBoletoId}`);
+                console.log(`DEBUG [TEST BUTTON]: GET /api/banco/pagamentos/consultar-boleto/${firstBoletoId} ->`, consultRes.data);
+                toast.success("API Consultar retornou com sucesso (Ver Console)");
+            }
+        } catch (e: any) {
+            console.error("DEBUG [TEST BUTTON ERROR]:", e);
+            toast.error(`Erro na API: ${e.response?.status || e.message}`);
+        }
+    };
+
     if (view === "create") {
          return (
             <div className="p-4 md:p-10 space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-700 max-w-7xl mx-auto">
@@ -312,7 +348,17 @@ export default function GestaoCobrancasPage() {
                     <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">Gestão de Boletos</h1>
                     <p className="text-sm text-neutral-400 font-bold italic">Acompanhe seu fluxo de caixa e emissão de cobranças em tempo real.</p>
                 </div>
-                <Button onClick={() => setView("create")} className="h-12 md:h-14 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm px-8 font-black text-xs md:text-sm uppercase tracking-widest flex items-center gap-3 shadow-xl transition-all active:scale-95 group"><PlusCircle className="h-5 w-5 group-hover:rotate-90 transition-transform" />Gerar Novo Boleto</Button>
+                <div className="flex items-center gap-3">
+                    <Button 
+                        onClick={handleTestAPI}
+                        variant="outline"
+                        className="h-12 md:h-14 border-[#0c0a09]/10 hover:bg-[#0c0a09]/5 text-[#0c0a09] rounded-sm px-6 font-black text-xs uppercase tracking-widest flex items-center gap-3 transition-all"
+                    >
+                        <RotateCw className="h-4 w-4" />
+                        Testar API
+                    </Button>
+                    <Button onClick={() => setView("create")} className="h-12 md:h-14 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm px-8 font-black text-xs md:text-sm uppercase tracking-widest flex items-center gap-3 shadow-xl transition-all active:scale-95 group"><PlusCircle className="h-5 w-5 group-hover:rotate-90 transition-transform" />Gerar Novo Boleto</Button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">

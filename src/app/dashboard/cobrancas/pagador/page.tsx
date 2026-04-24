@@ -7,7 +7,7 @@ import { cobrancaDataAtom, cobrancaHtmlAtom } from "@/store/pagamentos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { User, Mail, MapPin, Hash, Building2, ArrowLeft, Send, Loader2, Badge } from "lucide-react";
+import { User, Mail, MapPin, Hash, Building2, ArrowLeft, Send, Loader2, Badge, Phone } from "lucide-react";
 import { cleanTaxNumber, cleanCep, removeAccents, cn } from "@/lib/utils";
 import api from "@/lib/api";
 import axios from "axios";
@@ -34,6 +34,7 @@ export default function PagadorDataPage() {
     pagadorCidade: cobrancaData.pagadorCidade,
     pagadorUf: cobrancaData.pagadorUf,
     pagadorNumero: cobrancaData.pagadorNumero,
+    pagadorTelefone: cobrancaData.pagadorTelefone || "",
     dataVencimento: cobrancaData.dataVencimento || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   });
 
@@ -71,6 +72,11 @@ export default function PagadorDataPage() {
       return;
     }
 
+    if (isRecorrente && (!diaVencimento || !quantidadeMeses)) {
+      toast.error("Por favor, preencha o dia de vencimento e a quantidade de meses.");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const generatePayload = (vencimento: string) => ({
@@ -86,48 +92,85 @@ export default function PagadorDataPage() {
       });
 
       if (isRecorrente) {
-        const dates: string[] = [];
-        const now = new Date();
-        for (let i = 1; i <= quantidadeMeses; i++) {
-          const d = new Date(now.getFullYear(), now.getMonth() + i, diaVencimento);
-          // Ajuste para meses que não tem o dia selecionado (ex: dia 31 em fevereiro)
-          if (d.getDate() !== diaVencimento) d.setDate(0);
-          
-          const year = d.getFullYear();
-          const month = String(d.getMonth() + 1).padStart(2, '0');
-          const day = String(d.getDate()).padStart(2, '0');
-          dates.push(`${year}-${month}-${day}`);
-        }
-
-        const toastId = toast.loading(`Gerando ${quantidadeMeses} cobranças recorrentes...`);
-        
+        const toastId = toast.loading(`Criando grupo de cobrança recorrente...`);
         try {
-          const promises = dates.map(date => 
-            api.post("/api/banco/pagamentos/gerar-boleto-cobranca", generatePayload(date), {
-              responseType: 'text',
-              transformResponse: [(data) => data]
-            })
-          );
+          // Calcular a primeira data de vencimento (início no próximo mês conforme padrão anterior)
+          const now = new Date();
+          const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, diaVencimento);
+          if (nextMonth.getDate() !== diaVencimento) nextMonth.setDate(0); // Ajuste para meses curtos
+          
+          const firstDate = nextMonth.toISOString().split('T')[0];
+          
+          // 1. Definindo o Modelo de Cobrança (Grupo)
+          const groupName = `REC-${formData.pagadorNome.split(' ')[0].toUpperCase()}-${Date.now()}`;
+          
+          await api.post("/api/banco/cobranca-grupo", {
+            nome: groupName,
+            valor: cobrancaData.valor,
+            vencimento: firstDate,
+            tipo: "common",
+            descricao: `Recorrência de ${quantidadeMeses} meses para ${formData.pagadorNome}`,
+            recorrencia: {
+              quantidade: quantidadeMeses,
+              frequencia: 30, // dias
+              vencimento: firstDate
+            }
+          });
 
-          const results = await Promise.all(promises);
+          // 2. Cadastro dos Pagadores (Item)
+          await api.post(`/api/banco/cobranca-grupo/${groupName}/item`, {
+            nome: removeAccents(formData.pagadorNome),
+            documento: cleanTaxNumber(formData.pagadorTaxNumber),
+            cep: cleanCep(formData.pagadorCep),
+            cidade: removeAccents(formData.pagadorCidade),
+            bairro: removeAccents(formData.pagadorBairro),
+            endereco: removeAccents(formData.pagadorRua),
+            uf: formData.pagadorUf,
+            numero: formData.pagadorNumero,
+            email: formData.pagadorEmail.toLowerCase().trim(),
+            telefone: formData.pagadorTelefone.replace(/\D/g, "") || "11999999999"
+          });
+
+          // 3. Geração dos Boletos (Trigger Bulk)
+          await api.post(`/api/banco/cobranca-grupo/${groupName}/gerar-boletos`);
           
           toast.dismiss(toastId);
-          toast.success(`${results.length} boletos gerados com sucesso!`);
-          
-          const cobrancaResults = results.map((res, index) => ({
-            html: res.data,
-            dataVencimento: dates[index]
-          }));
+          toast.success("Processamento em lote iniciado com sucesso!");
 
-          setCobrancaHtml(results[0].data);
+          // Buscar itens do grupo para obter os boletos gerados (se o backend já os criou)
+          // Se não estiverem prontos, a tela de sucesso mostrará um estado de processamento.
+          let cobrancaResults: any[] = [];
+          try {
+            const itemsRes = await api.get(`/api/banco/cobranca-grupo/${groupName}/itens`);
+            const items = itemsRes.data?.data || itemsRes.data?.items || itemsRes.data || [];
+            
+            if (Array.isArray(items) && items.length > 0) {
+              cobrancaResults = items.map((item: any) => ({
+                html: item.html || item.boletoHtml || item.boleto_html || "",
+                dataVencimento: item.vencimento || item.dueDate || item.dataVencimento
+              }));
+              
+              if (cobrancaResults[0]?.html) {
+                setCobrancaHtml(cobrancaResults[0].html);
+              } else {
+                setCobrancaHtml("<h1>PROCESSANDO</h1><p>Seus boletos estão sendo registrados. Em alguns instantes eles aparecerão no seu painel.</p>");
+              }
+            } else {
+              setCobrancaHtml("<h1>SOLICITAÇÃO RECEBIDA</h1><p>O grupo de cobrança foi criado e os boletos estão na fila de registro.</p>");
+            }
+          } catch (e) {
+            console.warn("Could not fetch items immediately, proceeding to success page", e);
+            setCobrancaHtml("<h1>GRUPO REGISTRADO</h1><p>Sua solicitação de cobrança em lote foi recebida com sucesso.</p>");
+          }
+
           setCobrancaData({ 
             ...cobrancaData, 
             ...formData, 
-            dataVencimento: dates[0],
             isRecorrente: true,
             quantidadeMeses,
             results: cobrancaResults
           });
+          
           router.push("/dashboard/cobrancas/sucesso");
         } catch (err) {
           toast.dismiss(toastId);
@@ -217,6 +260,19 @@ export default function PagadorDataPage() {
                     value={formData.pagadorEmail}
                     onChange={(e) => setFormData({...formData, pagadorEmail: e.target.value})}
                     placeholder="cliente@email.com"
+                    className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Telefone de Contato</label>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
+                  <Input 
+                    value={formData.pagadorTelefone}
+                    onChange={(e) => setFormData({...formData, pagadorTelefone: e.target.value})}
+                    placeholder="(11) 99999-9999"
                     className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                   />
                 </div>
