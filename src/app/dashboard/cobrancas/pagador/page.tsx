@@ -34,6 +34,7 @@ export default function PagadorDataPage() {
     pagadorCidade: cobrancaData.pagadorCidade,
     pagadorUf: cobrancaData.pagadorUf,
     pagadorNumero: cobrancaData.pagadorNumero,
+    pagadorComplemento: cobrancaData.pagadorComplemento || "",
     pagadorTelefone: cobrancaData.pagadorTelefone || "",
     dataVencimento: cobrancaData.dataVencimento || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
   });
@@ -127,6 +128,7 @@ export default function PagadorDataPage() {
             endereco: removeAccents(formData.pagadorRua),
             uf: formData.pagadorUf,
             numero: formData.pagadorNumero,
+            complemento: removeAccents(formData.pagadorComplemento),
             email: formData.pagadorEmail.toLowerCase().trim(),
             telefone: formData.pagadorTelefone.replace(/\D/g, "") || "11999999999"
           });
@@ -399,6 +401,16 @@ export default function PagadorDataPage() {
                   value={formData.pagadorBairro}
                   onChange={(e) => setFormData({...formData, pagadorBairro: e.target.value})}
                   placeholder="Seu bairro"
+                  className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Complemento (Opcional)</label>
+                <Input 
+                  value={formData.pagadorComplemento}
+                  onChange={(e) => setFormData({...formData, pagadorComplemento: e.target.value})}
+                  placeholder="Ex: Apto 101, Sala 2"
                   className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                 />
               </div>

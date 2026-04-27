@@ -17,6 +17,7 @@ interface CobrancaData {
   pagadorCidade: string;
   pagadorUf: string;
   pagadorNumero: string;
+  pagadorComplemento?: string;
   dataVencimento: string;
   isRecorrente?: boolean;
   quantidadeMeses?: number;
@@ -35,6 +36,7 @@ export const cobrancaDataAtom = atom<CobrancaData>({
   pagadorCidade: "",
   pagadorUf: "",
   pagadorNumero: "",
+  pagadorComplemento: "",
   dataVencimento: "",
 });
 
