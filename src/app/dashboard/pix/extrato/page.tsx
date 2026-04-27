@@ -47,6 +47,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 const PixIcon = (props: any) => (
   <svg {...props} viewBox="0 0 100 100" fill="currentColor">
@@ -67,6 +68,12 @@ export default function PixExtratoPage() {
     const [startDate, setStartDate] = React.useState("");
     const [endDate, setEndDate] = React.useState("");
     const [selectedTransaction, setSelectedTransaction] = React.useState<any>(null);
+    const [mounted, setMounted] = React.useState(false);
+    const searchParams = useSearchParams();
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
 
     React.useEffect(() => {
         const updateDates = () => {
@@ -595,7 +602,7 @@ export default function PixExtratoPage() {
                         <div className="space-y-1">
                             <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-2 md:px-3 py-0.5 md:py-1 font-black text-[8px] md:text-[10px] uppercase tracking-[0.25em] rounded-[5px]">PIX Dynamic Flow</Badge>
                             <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-[#0c0a09] leading-none flex items-center gap-2 md:gap-3 lowercase">
-                                <span className="capitalize">{new URLSearchParams(window.location.search).get('title') || 'Extrato de PIX'}</span>
+                                <span className="capitalize">{mounted ? (searchParams.get('title') || 'Extrato de PIX') : 'Extrato de PIX'}</span>
                                 <Diamond className="h-5 w-5 md:h-7 md:w-7 text-[#f97316] animate-pulse" />
                             </h1>
                         </div>
@@ -691,40 +698,42 @@ export default function PixExtratoPage() {
                                 <div className="h-4 w-4 bg-[#f97316] rounded-full animate-ping" />
                             </div>
                         )}
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <defs>
-                                    <linearGradient id="colorEntry" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                                    </linearGradient>
-                                    <linearGradient id="colorExit" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#dc2626" stopOpacity={0.2} />
-                                        <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                                <XAxis
-                                    dataKey="name"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
-                                />
-                                <Tooltip
-                                    contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 'bold', fontSize: '11px' }}
-                                    labelFormatter={(label, payload) => payload[0]?.payload?.full || label}
-                                    formatter={(value: any) => [formatCurrency(value), ""]}
-                                />
-                                <Area type="monotone" dataKey="entries" stroke="#10b981" fillOpacity={1} fill="url(#colorEntry)" strokeWidth={4} activeDot={{ r: 6 }} />
-                                <Area type="monotone" dataKey="exits" stroke="#dc2626" fillOpacity={1} fill="url(#colorExit)" strokeWidth={4} activeDot={{ r: 6 }} />
-                            </AreaChart>
-                        </ResponsiveContainer>
+                        {mounted && (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorEntry" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="colorExit" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#dc2626" stopOpacity={0.2} />
+                                            <stop offset="95%" stopColor="#dc2626" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 'bold', fontSize: '11px' }}
+                                        labelFormatter={(label, payload) => payload[0]?.payload?.full || label}
+                                        formatter={(value: any) => [formatCurrency(value), ""]}
+                                    />
+                                    <Area type="monotone" dataKey="entries" stroke="#10b981" fillOpacity={1} fill="url(#colorEntry)" strokeWidth={4} activeDot={{ r: 6 }} />
+                                    <Area type="monotone" dataKey="exits" stroke="#dc2626" fillOpacity={1} fill="url(#colorExit)" strokeWidth={4} activeDot={{ r: 6 }} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </Card>
 

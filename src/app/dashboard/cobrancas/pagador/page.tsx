@@ -89,6 +89,7 @@ export default function PagadorDataPage() {
         pagadorBairro: removeAccents(formData.pagadorBairro),
         pagadorRua: removeAccents(`${formData.pagadorRua}, ${formData.pagadorNumero}`),
         pagadorEmail: formData.pagadorEmail.toLowerCase().trim(),
+        addressComplement: removeAccents(formData.pagadorComplemento),
         dataVencimento: vencimento,
       });
 
@@ -128,7 +129,7 @@ export default function PagadorDataPage() {
             endereco: removeAccents(formData.pagadorRua),
             uf: formData.pagadorUf,
             numero: formData.pagadorNumero,
-            complemento: removeAccents(formData.pagadorComplemento),
+            addressComplement: removeAccents(formData.pagadorComplemento),
             email: formData.pagadorEmail.toLowerCase().trim(),
             telefone: formData.pagadorTelefone.replace(/\D/g, "") || "11999999999"
           });

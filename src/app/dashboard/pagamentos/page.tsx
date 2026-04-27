@@ -35,11 +35,28 @@ import {
   Pencil,
   Trash2,
   Loader2,
+  Fuel,
+  Home,
+  BookOpen,
+  Heart,
+  MoreHorizontal,
+  Dumbbell,
+  Plane,
+  Zap,
+  Users,
+  TrendingUp,
+  Banknote,
+  Briefcase,
+  Wallet,
+  Landmark,
+  RotateCw,
+  UserSquare2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
@@ -67,25 +84,26 @@ const mockComprovantes = [
   { id: "REC-2026040502", beneficiario: "CLARO S.A.", valor: "R$ 99,90", data: "05/04/2026" },
 ];
 
-const CATEGORIES = [
-  "Alimentação",
-  "Aluguel",
-  "Compras",
-  "Contabilidade",
-  "Contas de consumo",
-  "Despesas pessoais",
-  "Empréstimo",
-  "Estornos",
-  "Faturas",
-  "Impostos e encargos",
-  "Marketing",
-  "Outros",
-  "Pagamento de fornecedor",
-  "Pagamento de funcionários",
-  "Retirada para própria conta PF",
-  "Saque",
-  "Transporte e mobilidade"
-];
+const CATEGORY_MAP: Record<string, { label: string, icon: any }> = {
+  "ALIMENTACAO": { label: "Alimentação", icon: Fuel },
+  "ALUGUEL": { label: "Aluguel", icon: Home },
+  "COMPRAS": { label: "Compras", icon: CreditCard },
+  "CONTABILIDADE": { label: "Contabilidade", icon: Briefcase },
+  "CONSUMO": { label: "Contas de consumo", icon: Zap },
+  "PESSOAIS": { label: "Despesas pessoais", icon: Heart },
+  "EMPRESTIMO": { label: "Empréstimo", icon: Landmark },
+  "ESTORNOS": { label: "Estornos", icon: RotateCw },
+  "FATURAS": { label: "Faturas", icon: ReceiptText },
+  "IMPOSTOS": { label: "Impostos e encargos", icon: Landmark },
+  "MARKETING": { label: "Marketing", icon: TrendingUp },
+  "OUTROS": { label: "Outros", icon: MoreHorizontal },
+  "FORNECEDOR": { label: "Pagamento de fornecedor", icon: Building2 },
+  "FUNCIONARIOS": { label: "Pagamento de funcionários", icon: Users },
+  "SAQUE": { label: "Saque", icon: Banknote },
+  "TRANSPORTE": { label: "Transporte e mobilidade", icon: Plane },
+};
+
+const CATEGORIES = Object.keys(CATEGORY_MAP);
 
 export default function PagamentosPage() {
   const router = useRouter();
@@ -117,7 +135,7 @@ export default function PagamentosPage() {
   const [scheduleDate, setScheduleDate] = useState("");
   const [agendamentos, setAgendamentos] = useState(mockAgendamentos);
   const [editingAgendamento, setEditingAgendamento] = useState<any>(null);
-  const [selectedCategory, setSelectedCategory] = useState("Outros");
+  const [selectedCategory, setSelectedCategory] = useState("OUTROS");
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -772,16 +790,29 @@ export default function PagamentosPage() {
 
                     <div className="space-y-2 pt-2">
                       <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Motivo do Pagamento (Opcional)</label>
-                      <select
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="w-full h-14 bg-white border border-neutral-200 rounded-sm font-black text-sm px-4 focus:ring-2 focus:ring-[#f97316]/20 focus:border-[#f97316]/30 transition-all outline-none appearance-none cursor-pointer"
-                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1rem' }}
+                      <Select 
+                        value={selectedCategory} 
+                        onValueChange={(val) => setSelectedCategory(val || "OUTROS")}
                       >
-                        {CATEGORIES.map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
+                        <SelectTrigger size="xl" className="w-full bg-white border-neutral-200 shadow-sm focus:border-[#f97316] group transition-all">
+                          <SelectValue placeholder="Selecione o motivo..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CATEGORIES.map((cat) => {
+                            const Icon = CATEGORY_MAP[cat].icon;
+                            return (
+                              <SelectItem key={cat} value={cat}>
+                                <div className="flex items-center gap-3 py-1">
+                                  <div className="w-8 h-8 rounded-sm bg-neutral-50 flex items-center justify-center text-neutral-400 group-focus:bg-[#f97316]/10 group-focus:text-[#f97316] transition-colors">
+                                    <Icon className="h-4 w-4" />
+                                  </div>
+                                  <span className="font-black text-[11px] uppercase tracking-widest">{CATEGORY_MAP[cat].label}</span>
+                                </div>
+                              </SelectItem>
+                            );
+                          })}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 

@@ -69,7 +69,12 @@ export default function GestaoCobrancasPage() {
     // --- Create View States ---
     const [inputValue, setInputValue] = useState("");
     const [formError, setFormError] = useState<string | null>(null);
+    const [mounted, setMounted] = useState(false);
     const VALOR_MINIMO = 30;
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     // Fetch Boletos / Cobranças
     useEffect(() => {
@@ -372,9 +377,11 @@ export default function GestaoCobrancasPage() {
                     <Tabs value={chartPeriod} onValueChange={(val: any) => setChartPeriod(val)} className="w-fit"><TabsList className="bg-neutral-50 rounded-sm p-0.5 h-10 gap-1 border border-neutral-100"><TabsTrigger value="day" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316]">Dia</TabsTrigger><TabsTrigger value="week" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316]">Semana</TabsTrigger><TabsTrigger value="month" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316]">Mês</TabsTrigger></TabsList></Tabs>
                 </div>
                 <div className="flex-1 w-full min-h-0">
-                    <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}><defs><linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f97316" stopOpacity={0.3} /><stop offset="95%" stopColor="#f97316" stopOpacity={0} /></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 'bold', fill: '#94a3b8' }} dy={10} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 'bold', fill: '#94a3b8' }} /><Tooltip contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 'black', fontSize: '12px' }} formatter={(value: any) => [formatCurrency(value), "Faturado"]} /><Area type="monotone" dataKey="valor" stroke="#f97316" fillOpacity={1} fill="url(#colorVal)" strokeWidth={4} activeDot={{ r: 8, strokeWidth: 0 }} /></AreaChart>
-                    </ResponsiveContainer>
+                    {mounted && (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}><defs><linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f97316" stopOpacity={0.3} /><stop offset="95%" stopColor="#f97316" stopOpacity={0} /></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 'bold', fill: '#94a3b8' }} dy={10} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 'bold', fill: '#94a3b8' }} /><Tooltip contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 'black', fontSize: '12px' }} formatter={(value: any) => [formatCurrency(value), "Faturado"]} /><Area type="monotone" dataKey="valor" stroke="#f97316" fillOpacity={1} fill="url(#colorVal)" strokeWidth={4} activeDot={{ r: 8, strokeWidth: 0 }} /></AreaChart>
+                        </ResponsiveContainer>
+                    )}
                 </div>
             </Card>
 
