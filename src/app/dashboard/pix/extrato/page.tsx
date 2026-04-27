@@ -32,6 +32,7 @@ import {
     Users,
     QrCode
 } from "lucide-react";
+import { Suspense } from "react";
 import {
     AreaChart,
     Area,
@@ -58,7 +59,7 @@ const PixIcon = (props: any) => (
   </svg>
 );
 
-export default function PixExtratoPage() {
+function PixExtratoContent() {
     const [items, setItems] = React.useState<any[]>([]);
     const [isLoading, setIsLoading] = React.useState(true);
     const [exportingType, setExportingType] = React.useState<'pdf' | 'xls' | 'csv' | null>(null);
@@ -860,5 +861,13 @@ export default function PixExtratoPage() {
                 </div>
             </div>
         </div>
+    );
+}
+
+export default function PixExtratoPage() {
+    return (
+        <Suspense fallback={<div className="p-10 text-center font-bold">Carregando...</div>}>
+            <PixExtratoContent />
+        </Suspense>
     );
 }
