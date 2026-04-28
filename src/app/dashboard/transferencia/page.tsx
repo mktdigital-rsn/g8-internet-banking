@@ -48,7 +48,22 @@ interface ReceiverInfo {
     conta: string;
     digito: string;
     bankName?: string;
+    bankCode?: string;
+    accountType?: "corrente" | "poupanca";
 }
+
+const COMMON_BANKS = [
+    { code: "001", name: "Banco do Brasil" },
+    { code: "033", name: "Santander" },
+    { code: "104", name: "Caixa Econômica Federal" },
+    { code: "237", name: "Bradesco" },
+    { code: "341", name: "Itaú" },
+    { code: "077", name: "Inter" },
+    { code: "260", name: "Nubank" },
+    { code: "422", name: "Banco Safra" },
+    { code: "748", name: "Sicredi" },
+    { code: "756", name: "Sicoob" },
+];
 
 export default function TransferenciaPage() {
     const router = useRouter();
@@ -71,6 +86,14 @@ export default function TransferenciaPage() {
     const [receiver, setReceiver] = useState<ReceiverInfo | null>(null);
     const [errorMessage, setErrorMessage] = useState("");
     const [transactionId, setTransactionId] = useState("");
+    const [transferType, setTransferType] = useState<"G8" | "TED">("G8");
+    const [saveAsFavorite, setSaveAsFavorite] = useState(false);
+
+    // TED Specific States
+    const [targetBankCode, setTargetBankCode] = useState("");
+    const [targetAccountType, setTargetAccountType] = useState<"corrente" | "poupanca">("corrente");
+    const [targetReceiverName, setTargetReceiverName] = useState("");
+    const [targetDocument, setTargetDocument] = useState("");
 
     useEffect(() => {
         const fetchBalance = async () => {
@@ -110,42 +133,60 @@ export default function TransferenciaPage() {
         setIsLoading(true);
         setErrorMessage("");
         try {
-            let res;
-            if (searchMode === 'cpf') {
-                const tax = targetCpf.replace(/\D/g, "");
-                res = await api.post('/api/banco/pagamentos/consultar-conta-cpf', { taxNumber: tax });
-                // Assuming res.data contains receiver info
-                // Mocking for now if data is nested but mapping based on typical response
-                const data = res.data?.data || res.data;
-                if (!data || (!data.name && !data.nome)) {
-                    throw new Error("Conta não encontrada.");
+            if (transferType === 'G8') {
+                if (searchMode === 'cpf') {
+                    const tax = targetCpf.replace(/\D/g, "");
+                    res = await api.post('/api/banco/pagamentos/consultar-conta-cpf', { taxNumber: tax });
+                    const data = res.data?.data || res.data;
+                    if (!data || (!data.name && !data.nome)) {
+                        throw new Error("Conta não encontrada.");
+                    }
+                    setReceiver({
+                        name: data.name || data.nome,
+                        taxNumber: data.taxNumber || data.documento || tax,
+                        agencia: data.agencia || "0001",
+                        conta: data.conta || "",
+                        digito: data.digito || ""
+                    });
+                } else {
+                    res = await api.post('/api/banco/pagamentos/cadastrar-chave', {
+                        agencia: targetAgencia,
+                        conta: targetConta,
+                        digito: targetDigito
+                    });
+                    const data = res.data?.data || res.data;
+                    if (!data || (!data.name && !data.nome)) {
+                        throw new Error("Dados da conta inválidos.");
+                    }
+                    setReceiver({
+                        name: data.name || data.nome,
+                        taxNumber: data.taxNumber || data.documento || "",
+                        agencia: targetAgencia,
+                        conta: targetConta,
+                        digito: targetDigito
+                    });
                 }
-                setReceiver({
-                    name: data.name || data.nome,
-                    taxNumber: data.taxNumber || data.documento || tax,
-                    agencia: data.agencia || "0001",
-                    conta: data.conta || "",
-                    digito: data.digito || ""
-                });
+                setStep('form');
             } else {
-                res = await api.post('/api/banco/pagamentos/cadastrar-chave', {
-                    agencia: targetAgencia,
-                    conta: targetConta,
-                    digito: targetDigito
-                });
-                const data = res.data?.data || res.data;
-                if (!data || (!data.name && !data.nome)) {
-                    throw new Error("Dados da conta inválidos.");
+                // TED Mode: Local validation only since we don't have a lookup for external banks yet
+                if (!targetBankCode || !targetAgencia || !targetConta || !targetReceiverName || !targetDocument) {
+                    throw new Error("Preencha todos os campos obrigatórios.");
                 }
+                
+                const selectedBank = COMMON_BANKS.find(b => b.code === targetBankCode);
+
                 setReceiver({
-                    name: data.name || data.nome,
-                    taxNumber: data.taxNumber || data.documento || "",
+                    name: targetReceiverName,
+                    taxNumber: targetDocument.replace(/\D/g, ""),
                     agencia: targetAgencia,
                     conta: targetConta,
-                    digito: targetDigito
+                    digito: targetDigito,
+                    bankCode: targetBankCode,
+                    bankName: selectedBank?.name || "Banco " + targetBankCode,
+                    accountType: targetAccountType
                 });
+                setStep('form');
             }
-            setStep('form');
         } catch (err: any) {
             console.error("Lookup error:", err);
             setErrorMessage(err.response?.data?.message || err.message || "Erro ao consultar beneficiário.");
@@ -235,39 +276,62 @@ export default function TransferenciaPage() {
                 deviceId: temporaryDeviceId
             });
 
-            const payload = {
-                taxNumber: receiver?.taxNumber,
-                recebedorAgencia: receiver?.agencia,
-                recebedorConta: receiver?.conta,
-                recebedorDigito: receiver?.digito,
-                valor: parseInt(amount) / 100,
-                pin: pin,
-                deviceId: temporaryDeviceId
-            };
+            if (transferType === 'G8') {
+                const payload = {
+                    taxNumber: receiver?.taxNumber,
+                    recebedorAgencia: receiver?.agencia,
+                    recebedorConta: receiver?.conta,
+                    recebedorDigito: receiver?.digito,
+                    valor: parseInt(amount) / 100,
+                    pin: pin,
+                    deviceId: temporaryDeviceId
+                };
 
-            const res = await api.post('/api/banco/pagamentos/transferencia-interna', payload);
-            const raw = res.data?.data || res.data;
-            const directId = raw?.id || raw?.transactionId || raw?.id_transaction || raw?.idDoBancoLiquidante;
-            
-            if (directId) {
-                finalizeSuccess(directId);
+                const res = await api.post('/api/banco/pagamentos/transferencia-interna', payload);
+                const raw = res.data?.data || res.data;
+                const directId = raw?.id || raw?.transactionId || raw?.id_transaction || raw?.idDoBancoLiquidante;
+                
+                if (directId) {
+                    finalizeSuccess(directId);
+                } else {
+                    // Only polling if the request was 200 OK but the ID didn't come back (async backend)
+                    searchWithRetry();
+                }
             } else {
-                searchWithRetry();
+                // TED Flow
+                const tedPayload = {
+                    amount: parseInt(amount) / 100,
+                    saveAsFavorite: saveAsFavorite,
+                    deviceId: temporaryDeviceId,
+                    receiver: {
+                        type: receiver?.accountType || "corrente",
+                        document: receiver?.taxNumber,
+                        bank_code: receiver?.bankCode,
+                        agency: receiver?.agencia,
+                        account_number: receiver?.conta,
+                        account_digit: receiver?.digito,
+                        name: receiver?.name
+                    }
+                };
+
+                const res = await api.post('/api/banco/pagamentos/ted', tedPayload);
+                const raw = res.data?.data || res.data;
+                
+                // The API spec says success is in raw.success and ID in raw.idTransaction
+                if (raw?.success || raw?.idTransaction) {
+                    finalizeSuccess(raw?.idTransaction || "TED_PENDING");
+                } else {
+                    setErrorMessage(raw?.message || "Erro inesperado ao processar TED.");
+                    setStep('error');
+                    setIsLoading(false);
+                }
             }
         } catch (err: any) {
             console.error("❌ [TRANSFERÊNCIA ERROR]:", err.response?.status, err.response?.data || err.message);
             
-            // Se for timeout ou erro de servidor (500+), pode ter funcionado no fundo
-            const isTimeout = !err.response || err.response.status >= 500 || err.code === 'ECONNABORTED';
-            
-            if (isTimeout) {
-                toast.info("Processamento lento no banco. Verificando extrato...");
-                searchWithRetry();
-            } else {
-                setErrorMessage(err.response?.data?.message || "Transação recusada. Verifique seu saldo ou PIN.");
-                setStep('error');
-                setIsLoading(false);
-            }
+            setErrorMessage(err.response?.data?.message || "Transação recusada. Verifique os dados ou seu saldo.");
+            setStep('error');
+            setIsLoading(false);
         }
     };
 
@@ -281,6 +345,10 @@ export default function TransferenciaPage() {
         setTargetAgencia("");
         setTargetConta("");
         setTargetDigito("");
+        setTargetBankCode("");
+        setTargetReceiverName("");
+        setTargetDocument("");
+        setSaveAsFavorite(false);
     };
 
     const handlePrintReceipt = async () => {
@@ -352,8 +420,10 @@ export default function TransferenciaPage() {
                                         icon={ArrowRightLeft}
                                         title="TED"
                                         description="Para outros bancos. Disponível em dias úteis até as 17h."
-                                        onClick={() => { }}
-                                        disabled
+                                        onClick={() => {
+                                            setTransferType('TED');
+                                            setStep('select_target');
+                                        }}
                                     />
                                     <div className="md:col-span-2">
                                         <h2 className="text-[12px] font-black text-[#0c0a09] uppercase tracking-[0.2em] mb-6">Serviços Adicionais</h2>
@@ -375,49 +445,125 @@ export default function TransferenciaPage() {
                                 >
                                     <Card className="bg-white border-0 p-10 rounded-md shadow-2xl shadow-black/5">
                                         <div className="flex items-center justify-between mb-8">
-                                            <h2 className="text-xl font-black uppercase tracking-widest text-[#f97316]">Destinatário</h2>
+                                            <h2 className="text-xl font-black uppercase tracking-widest text-[#f97316]">
+                                                {transferType === 'G8' ? 'Transferência G8' : 'Transferência via TED'}
+                                            </h2>
                                             <button onClick={resetFlow} className="text-[#0c0a09]/30 hover:text-[#0c0a09] transition-colors"><X size={20} /></button>
                                         </div>
 
-                                        <div className="flex gap-4 mb-8">
-                                            <button
-                                                onClick={() => setSearchMode('cpf')}
-                                                className={`flex-1 py-4 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all ${searchMode === 'cpf' ? 'bg-[#f97316] text-white shadow-xl shadow-orange-500/20 scale-105' : 'bg-[#f97316]/10 text-[#f97316] hover:bg-orange-50'}`}
-                                            >
-                                                CPF / CNPJ
-                                            </button>
-                                            <button
-                                                disabled
-                                                className="flex-1 py-4 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all bg-[#f97316]/10 text-[#f97316]/40 cursor-not-allowed opacity-60"
-                                            >
-                                                Agência e Conta (Em breve)
-                                            </button>
-                                        </div>
-
-                                        {searchMode === 'cpf' ? (
-                                            <div className="space-y-4">
-                                                <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/40">Insira o Documento</label>
-                                                <Input
-                                                    placeholder="000.000.000-00"
-                                                    value={targetCpf}
-                                                    onChange={(e) => setTargetCpf(e.target.value)}
-                                                    className="h-16 bg-[#f97316]/10 border-neutral-100 rounded-sm text-xl font-mono focus:border-[#f97316] transition-all text-[#f97316] font-bold"
-                                                />
+                                        {transferType === 'G8' ? (
+                                            <div className="flex gap-4 mb-8">
+                                                <button
+                                                    onClick={() => setSearchMode('cpf')}
+                                                    className={`flex-1 py-4 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all ${searchMode === 'cpf' ? 'bg-[#f97316] text-white shadow-xl shadow-orange-500/20 scale-105' : 'bg-[#f97316]/10 text-[#f97316] hover:bg-orange-50'}`}
+                                                >
+                                                    CPF / CNPJ
+                                                </button>
+                                                <button
+                                                    disabled
+                                                    className="flex-1 py-4 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all bg-[#f97316]/10 text-[#f97316]/40 cursor-not-allowed opacity-60"
+                                                >
+                                                    Agência e Conta (Em breve)
+                                                </button>
                                             </div>
                                         ) : (
-                                            <div className="grid grid-cols-12 gap-4">
-                                                <div className="col-span-4 space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/40">Agência</label>
-                                                    <Input value={targetAgencia} onChange={(e) => setTargetAgencia(e.target.value)} placeholder="0001" className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-mono font-bold text-[#f97316]" />
+                                            <div className="space-y-6 mb-8">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Banco Destino</label>
+                                                        <select 
+                                                            value={targetBankCode}
+                                                            onChange={(e) => setTargetBankCode(e.target.value)}
+                                                            className="w-full h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-bold text-[#f97316] px-4 appearance-none focus:outline-none"
+                                                        >
+                                                            <option value="" className="text-neutral-400">Selecione o banco</option>
+                                                            {COMMON_BANKS.map(b => (
+                                                                <option key={b.code} value={b.code}>{b.code} - {b.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Tipo de Conta</label>
+                                                        <div className="flex gap-2">
+                                                            <button 
+                                                                onClick={() => setTargetAccountType('corrente')}
+                                                                className={`flex-1 h-14 font-black text-[9px] uppercase tracking-widest rounded-sm border-2 transition-all ${targetAccountType === 'corrente' ? 'bg-[#f97316] text-white border-[#f97316]' : 'bg-white text-neutral-400 border-neutral-100 hover:border-orange-200'}`}
+                                                            >
+                                                                Corrente
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => setTargetAccountType('poupanca')}
+                                                                className={`flex-1 h-14 font-black text-[9px] uppercase tracking-widest rounded-sm border-2 transition-all ${targetAccountType === 'poupanca' ? 'bg-[#f97316] text-white border-[#f97316]' : 'bg-white text-neutral-400 border-neutral-100 hover:border-orange-200'}`}
+                                                            >
+                                                                Poupança
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="col-span-6 space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/40">Conta</label>
-                                                    <Input value={targetConta} onChange={(e) => setTargetConta(e.target.value)} placeholder="12345" className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-mono font-bold text-[#f97316]" />
+
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Nome Completo do Favorecido</label>
+                                                    <Input 
+                                                        value={targetReceiverName} 
+                                                        onChange={(e) => setTargetReceiverName(e.target.value)} 
+                                                        placeholder="Ex: Pedro Henrique Marques" 
+                                                        className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-bold text-[#f97316]" 
+                                                    />
                                                 </div>
-                                                <div className="col-span-2 space-y-2">
-                                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/40">Díg.</label>
-                                                    <Input value={targetDigito} onChange={(e) => setTargetDigito(e.target.value)} placeholder="0" className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-mono text-center font-bold text-[#f97316]" />
+
+                                                <div className="space-y-2">
+                                                    <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">CPF ou CNPJ</label>
+                                                    <Input 
+                                                        value={targetDocument} 
+                                                        onChange={(e) => setTargetDocument(e.target.value)} 
+                                                        placeholder="000.000.000-00" 
+                                                        className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-bold text-[#f97316]" 
+                                                    />
                                                 </div>
+                                            </div>
+                                        )}
+
+                                        {(transferType === 'G8' || transferType === 'TED') && (
+                                            <div className="space-y-6">
+                                                {transferType === 'G8' ? (
+                                                    searchMode === 'cpf' ? (
+                                                        <div className="space-y-2">
+                                                            <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Insira o Documento</label>
+                                                            <Input
+                                                                placeholder="000.000.000-00"
+                                                                value={targetCpf}
+                                                                onChange={(e) => setTargetCpf(e.target.value)}
+                                                                className="h-16 bg-[#f97316]/10 border-neutral-100 rounded-sm text-xl font-mono focus:border-[#f97316] transition-all text-[#f97316] font-bold"
+                                                            />
+                                                        </div>
+                                                    ) : null
+                                                ) : null}
+
+                                                {(transferType === 'TED' || (transferType === 'G8' && searchMode === 'account')) && (
+                                                    <div className="grid grid-cols-12 gap-4">
+                                                        <div className="col-span-4 space-y-2">
+                                                            <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Agência</label>
+                                                            <Input value={targetAgencia} onChange={(e) => setTargetAgencia(e.target.value)} placeholder="0001" className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-mono font-bold text-[#f97316]" />
+                                                        </div>
+                                                        <div className="col-span-6 space-y-2">
+                                                            <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Conta</label>
+                                                            <Input value={targetConta} onChange={(e) => setTargetConta(e.target.value)} placeholder="12345" className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-mono font-bold text-[#f97316]" />
+                                                        </div>
+                                                        <div className="col-span-2 space-y-2">
+                                                            <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Díg.</label>
+                                                            <Input value={targetDigito} onChange={(e) => setTargetDigito(e.target.value)} placeholder="0" className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-mono text-center font-bold text-[#f97316]" />
+                                                        </div>
+                                                    </div>
+                                                )}
+                                                
+                                                {transferType === 'TED' && (
+                                                    <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-sm border border-orange-100 group cursor-pointer" onClick={() => setSaveAsFavorite(!saveAsFavorite)}>
+                                                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${saveAsFavorite ? 'bg-[#f97316] border-[#f97316]' : 'border-neutral-200'}`}>
+                                                            {saveAsFavorite && <CheckCircle2 size={12} className="text-white" />}
+                                                        </div>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-orange-700">Salvar como contato favorito</span>
+                                                    </div>
+                                                )}
                                             </div>
                                         )}
 
@@ -455,7 +601,9 @@ export default function TransferenciaPage() {
                                                 <div className="relative z-10 flex-1">
                                                     <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#f97316] mb-1">DADOS DO RECEBEDOR</p>
                                                     <p className="text-2xl font-black tracking-tighter text-[#0c0a09] leading-tight">{receiver.name}</p>
-                                                    <p className="text-[12px] font-mono text-[#0c0a09]/50 uppercase mt-1 font-bold">G8 BANK • AG {receiver.agencia} • CC {receiver.conta}-{receiver.digito}</p>
+                                                    <p className="text-[12px] font-mono text-[#0c0a09]/50 uppercase mt-1 font-bold">
+                                                        {transferType === 'G8' ? 'G8 BANK' : receiver.bankName} • AG {receiver.agencia} • CC {receiver.conta}-{receiver.digito}
+                                                    </p>
                                                 </div>
                                             </div>
 
