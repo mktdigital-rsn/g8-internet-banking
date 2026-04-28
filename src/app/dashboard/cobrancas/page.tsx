@@ -98,8 +98,24 @@ export default function GestaoCobrancasPage() {
     const VALOR_MINIMO = 30;
 
     useEffect(() => {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        
+        setStartDate(firstDay.toISOString().split('T')[0]);
+        setEndDate(lastDay.toISOString().split('T')[0]);
         setMounted(true);
     }, []);
+
+    const maskBRL = (value: string) => {
+        const cleanValue = value.replace(/\D/g, "");
+        if (!cleanValue) return "";
+        const floatValue = parseFloat(cleanValue) / 100;
+        return new Intl.NumberFormat("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(floatValue);
+    };
 
     const resolveBoletoStatus = (item: BoletoItem) => {
         if (item.status === 'paid' || item.paidAt) return 'PAGO';
@@ -148,30 +164,7 @@ export default function GestaoCobrancasPage() {
         return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val || 0);
     };
 
-    const totals = useMemo(() => {
-        let aReceber = 0;
-        let pagos = 0;
-        let cancelados = 0;
-        let vencidos = 0;
-        let total = 0;
-
-        items.forEach(item => {
-            const valor = item.amount / 100; // API is in cents
-            const status = resolveBoletoStatus(item);
-            
-            total += valor;
-            if (status === 'PAGO') pagos += valor;
-            else if (status === 'CANCELADO') cancelados += valor;
-            else if (status === 'VENCIDO') vencidos += valor;
-            else if (status === 'PENDENTE') aReceber += valor;
-        });
-
-        return { aReceber, pagos, cancelados, vencidos, total };
-    }, [items]);
-
-    const taxaLiquidez = totals.total > 0 ? (totals.pagos / totals.total) * 100 : 0;
-
-    const filteredItems = useMemo(() => {
+    const dateFilteredItems = useMemo(() => {
         return items.filter(item => {
             const nomeStr = item.payer?.name?.toLowerCase() || '';
             const docStr = item.payer?.document?.toLowerCase() || '';
@@ -181,9 +174,6 @@ export default function GestaoCobrancasPage() {
                 nomeStr.includes(searchTerm.toLowerCase()) || 
                 docStr.includes(searchTerm.toLowerCase()) ||
                 codeStr.includes(searchTerm.toLowerCase());
-            
-            const itemStatus = resolveBoletoStatus(item);
-            const matchesStatus = statusFilter === "TODOS" || itemStatus === statusFilter;
             
             let matchesDate = true;
             if (startDate || endDate) {
@@ -195,16 +185,44 @@ export default function GestaoCobrancasPage() {
                 if (endDate && isoDate > endDate) matchesDate = false;
             }
 
-            return matchesSearch && matchesStatus && matchesDate;
+            return matchesSearch && matchesDate;
+        });
+    }, [items, searchTerm, startDate, endDate]);
+
+    const totals = useMemo(() => {
+        let aReceber = 0;
+        let pagos = 0;
+        let cancelados = 0;
+        let vencidos = 0;
+        let total = 0;
+
+        dateFilteredItems.forEach(item => {
+            const valor = item.amount / 100; // API is in cents
+            const status = resolveBoletoStatus(item);
+            
+            total += valor;
+            if (status === 'PAGO') pagos += valor;
+            else if (status === 'CANCELADO') cancelados += valor;
+            else if (status === 'VENCIDO') vencidos += valor;
+            else if (status === 'PENDENTE') aReceber += valor;
+        });
+
+        return { aReceber, pagos, cancelados, vencidos, total };
+    }, [dateFilteredItems]);
+
+    const filteredItems = useMemo(() => {
+        return dateFilteredItems.filter(item => {
+            const itemStatus = resolveBoletoStatus(item);
+            return statusFilter === "TODOS" || itemStatus === statusFilter;
         }).sort((a, b) => {
              const d1 = a.expirationDate ? new Date(a.expirationDate).getTime() : 0;
              const d2 = b.expirationDate ? new Date(b.expirationDate).getTime() : 0;
              return d2 - d1;
         });
-    }, [items, searchTerm, statusFilter, startDate, endDate]);
+    }, [dateFilteredItems, statusFilter]);
 
     const areaChartData = useMemo(() => {
-        const today = new Date();
+        const refDate = endDate ? new Date(endDate + 'T12:00:00') : new Date();
         const groups: any[] = [];
         
         const calcDay = (d: Date, dayName: string) => {
@@ -212,7 +230,7 @@ export default function GestaoCobrancasPage() {
             let pago = 0;
             const targetDateStr = d.toISOString().split('T')[0];
 
-            filteredItems.forEach(item => {
+            dateFilteredItems.forEach(item => {
                 let dtStr = item.createdAt ? item.createdAt.split('T')[0] : item.expirationDate;
                 if (!dtStr) return;
                 
@@ -229,23 +247,25 @@ export default function GestaoCobrancasPage() {
         if (chartPeriod === "week") {
             const daysArr = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
             for (let i = 6; i >= 0; i--) {
-                const d = new Date(today);
-                d.setDate(today.getDate() - i);
+                const d = new Date(refDate);
+                d.setDate(refDate.getDate() - i);
                 groups.push(calcDay(d, daysArr[d.getDay()]));
             }
         } else if (chartPeriod === "month") {
-            for (let i = 14; i >= 0; i--) { // Last 15 days for compactness
-                const d = new Date(today);
-                d.setDate(today.getDate() - i);
-                const dayStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+            const startOfMonth = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+            const daysInMonth = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0).getDate();
+            
+            for (let i = 1; i <= daysInMonth; i++) {
+                const d = new Date(refDate.getFullYear(), refDate.getMonth(), i);
+                const dayStr = `${String(d.getDate()).padStart(2, '0')}`;
                 groups.push(calcDay(d, dayStr));
             }
         } else if (chartPeriod === "day") {
-            groups.push(calcDay(today, "Hoje"));
+            groups.push(calcDay(refDate, "Hoje"));
         }
 
         return groups;
-    }, [filteredItems, chartPeriod]);
+    }, [dateFilteredItems, chartPeriod, endDate]);
 
     const pieChartData = useMemo(() => {
         return [
@@ -334,7 +354,8 @@ export default function GestaoCobrancasPage() {
     };
 
     const handleNext = () => {
-        const valor = parseFloat(inputValue.replace(",", "."));
+        const rawValue = inputValue.replace(/\./g, "").replace(",", ".");
+        const valor = parseFloat(rawValue);
         if (isNaN(valor) || valor < VALOR_MINIMO) {
             setFormError(`O valor mínimo para cobrança é ${formatCurrency(VALOR_MINIMO)}`);
             return;
@@ -368,16 +389,28 @@ export default function GestaoCobrancasPage() {
                     <CardContent className="p-8 md:p-16 space-y-12">
                         <div className="space-y-6">
                             <label className="text-[12px] font-black uppercase tracking-[0.3em] text-[#f97316] block text-center">Informe o valor total da cobrança</label>
-                            <div className="relative group max-w-2xl mx-auto">
+                            <div className="relative group max-w-lg mx-auto">
                                 <div className="absolute inset-0 bg-orange-500/5 rounded-sm scale-105 group-focus-within:scale-110 transition-transform blur-xl" />
-                                <div className="relative bg-white border-2 border-neutral-100 group-focus-within:border-[#f97316] rounded-sm overflow-hidden flex items-center px-10 py-8 transition-all">
-                                    <span className="text-4xl font-black text-[#f97316] mr-6">R$</span>
-                                    <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value.replace(/[^\d,.]/g, ""))} placeholder="0,00" className="w-full bg-transparent text-6xl md:text-8xl font-black text-[#0c0a09] placeholder:text-neutral-100 focus:outline-none font-mono tracking-tighter" />
+                                <div className="relative bg-white border-2 border-neutral-100 group-focus-within:border-[#f97316] rounded-sm overflow-hidden flex items-center px-8 py-6 transition-all">
+                                    <span className="text-2xl font-black text-[#f97316] mr-4">R$</span>
+                                    <input 
+                                        type="text" 
+                                        value={inputValue} 
+                                        onChange={(e) => setInputValue(maskBRL(e.target.value))} 
+                                        placeholder="0,00" 
+                                        className="w-full bg-transparent text-5xl md:text-6xl font-black text-[#0c0a09] placeholder:text-neutral-100 focus:outline-none font-mono tracking-tighter" 
+                                    />
                                 </div>
                             </div>
                             {formError && <div className="flex items-center justify-center gap-3 text-red-500 font-black text-xs uppercase tracking-widest animate-bounce"><AlertCircle className="h-4 w-4" />{formError}</div>}
                         </div>
-                        <Button onClick={handleNext} className="w-full h-24 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm text-2xl font-black uppercase tracking-[0.3em] transition-all group shadow-2xl relative overflow-hidden"><span className="relative z-10">Continuar para Pagador</span><Send className="ml-4 h-6 w-6 relative z-10 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" /><div className="absolute inset-0 bg-[#f97316] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" /></Button>
+                        <div className="max-w-lg mx-auto w-full">
+                            <Button onClick={handleNext} className="w-full h-16 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm text-lg font-black uppercase tracking-[0.2em] transition-all group shadow-2xl relative overflow-hidden">
+                                <span className="relative z-10">Continuar</span>
+                                <Send className="ml-4 h-5 w-5 relative z-10 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" />
+                                <div className="absolute inset-0 bg-[#f97316] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -407,7 +440,7 @@ export default function GestaoCobrancasPage() {
                     { label: "Vencidos", val: totals.vencidos, status: "VENCIDO", color: "bg-red-500", icon: AlertCircle },
                     { label: "Total Geral", val: totals.total, status: "TODOS", color: "bg-indigo-700", icon: ArrowUpRight },
                 ].map((card, i) => (
-                    <Card key={i} onClick={() => setStatusFilter(card.status)} className={cn("border-0 rounded-sm p-4 flex flex-col justify-between shadow-lg relative overflow-hidden transition-all hover:scale-[1.02] cursor-pointer min-h-[140px]", statusFilter === card.status ? "ring-4 ring-[#f97316] ring-offset-2 scale-[1.05]" : "opacity-90 grayscale-[0.3] hover:grayscale-0", card.color)}>
+                    <Card key={i} className={cn("border-0 rounded-sm p-4 flex flex-col justify-between shadow-lg relative overflow-hidden transition-all min-h-[140px]", card.color)}>
                         <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl" />
                         <div className="flex justify-between items-start relative z-10">
                             <card.icon className="h-6 w-6 text-white/50" />
@@ -443,9 +476,11 @@ export default function GestaoCobrancasPage() {
                         </div>
                         <div className="space-y-1">
                             <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.2em]">Risco Vencidos (Inadimplência)</p>
-                            <p className="text-3xl font-black text-red-600 tracking-tighter">{isLoading ? "..." : formatCurrency(totals.vencidos)}</p>
+                            <p className="text-4xl font-black text-red-600 tracking-tighter">
+                                {isLoading ? "..." : `${totals.total > 0 ? ((totals.vencidos / totals.total) * 100).toFixed(1) : "0.0"}%`}
+                            </p>
                             <p className="text-[10px] font-bold text-red-500/80 bg-red-100 px-2 py-0.5 rounded-sm inline-block uppercase mt-1">
-                                {totals.total > 0 ? ((totals.vencidos / totals.total) * 100).toFixed(1) : "0.0"}% do volume total
+                                Volume: {isLoading ? "..." : formatCurrency(totals.vencidos)}
                             </p>
                         </div>
                     </Card>
@@ -456,7 +491,7 @@ export default function GestaoCobrancasPage() {
                         </div>
                         <div className="space-y-1">
                             <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.2em]">Taxa de Liquidez</p>
-                            <p className="text-3xl font-black text-emerald-600 tracking-tighter">{isLoading ? "..." : `${taxaLiquidez.toFixed(1)}%`}</p>
+                            <p className="text-3xl font-black text-emerald-600 tracking-tighter">{isLoading ? "..." : `${totals.total > 0 ? ((totals.pagos / totals.total) * 100).toFixed(1) : "0"}%`}</p>
                             <p className="text-[9px] font-bold text-neutral-400 mt-1 uppercase">Conversão Efetiva</p>
                         </div>
                     </Card>
@@ -500,7 +535,22 @@ export default function GestaoCobrancasPage() {
                     {/* Area Chart / Volume */}
                     <div className="h-[300px] border border-neutral-100 rounded-sm p-4 flex flex-col justify-center relative bg-neutral-50/30">
                         <div className="absolute top-4 right-4 z-10 flex gap-2">
-                            <Tabs value={chartPeriod} onValueChange={(val: any) => setChartPeriod(val)} className="w-fit">
+                            <Tabs value={chartPeriod} onValueChange={(val: any) => {
+                                setChartPeriod(val);
+                                const refDate = endDate ? new Date(endDate + 'T12:00:00') : new Date();
+                                if (val === "day") {
+                                    setStartDate(refDate.toISOString().split('T')[0]);
+                                } else if (val === "week") {
+                                    const start = new Date(refDate);
+                                    start.setDate(refDate.getDate() - 7);
+                                    setStartDate(start.toISOString().split('T')[0]);
+                                } else if (val === "month") {
+                                    const start = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+                                    const end = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0);
+                                    setStartDate(start.toISOString().split('T')[0]);
+                                    setEndDate(end.toISOString().split('T')[0]);
+                                }
+                            }} className="w-fit">
                                 <TabsList className="bg-white rounded-sm p-0.5 h-8 gap-1 border border-neutral-200">
                                     <TabsTrigger value="day" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-neutral-100 data-[state=active]:text-[#f97316]">Dia</TabsTrigger>
                                     <TabsTrigger value="week" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-neutral-100 data-[state=active]:text-[#f97316]">Semana</TabsTrigger>
