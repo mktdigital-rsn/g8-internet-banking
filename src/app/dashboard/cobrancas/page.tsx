@@ -297,13 +297,13 @@ export default function GestaoCobrancasPage() {
             if (firstBoletoId) {
                 const consultRes = await api.get(`/api/banco/pagamentos/consultar-boleto/${firstBoletoId}`);
                 console.log(`DEBUG [TEST BUTTON]: GET /api/banco/pagamentos/consultar-boleto/${firstBoletoId} ->`, consultRes.data);
-                toast.success("API Consultar retornou com sucesso (Ver Console)");
             }
         } catch (e: any) {
             console.error("DEBUG [TEST BUTTON ERROR]:", e);
             toast.error(`Erro na API: ${e.response?.status || e.message}`);
         }
     };
+
 
     if (view === "create") {
          return (
@@ -389,16 +389,16 @@ export default function GestaoCobrancasPage() {
                 <div className="flex flex-col gap-8">
                     <div className="flex flex-col min-[1350px]:flex-row items-center justify-between gap-6 pb-6 border-b border-neutral-50 text-neutral-400 font-bold" 
                          style={{ 
-                            flexDirection: typeof window !== 'undefined' && window.innerWidth >= 1350 ? 'column' : undefined,
-                            justifyContent: typeof window !== 'undefined' && window.innerWidth >= 1350 ? 'center' : undefined 
+                            flexDirection: mounted && window.innerWidth >= 1350 ? 'column' : undefined,
+                            justifyContent: mounted && window.innerWidth >= 1350 ? 'center' : undefined 
                          } as any}>
                         <Tabs value={statusFilter} onValueChange={(val: any) => setStatusFilter(val)} className="w-full lg:w-auto"><TabsList className="bg-neutral-50 rounded-sm p-0.5 h-12 gap-1 border border-neutral-100 w-full lg:w-auto overflow-x-auto no-scrollbar"><TabsTrigger value="TODOS" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316]">Todos</TabsTrigger><TabsTrigger value="PENDENTE" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600">A Receber</TabsTrigger><TabsTrigger value="PAGO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-emerald-600">Pagos</TabsTrigger><TabsTrigger value="VENCIDO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-red-600">Vencidos</TabsTrigger><TabsTrigger value="CANCELADO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-neutral-500">Cancelados</TabsTrigger></TabsList></Tabs>
                         <div className="flex items-center gap-1 bg-neutral-50 rounded-sm p-1 border border-neutral-100 h-12 shadow-inner"><div className="relative group"><CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-hover:text-[#f97316]" /><Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-full w-[140px] bg-transparent border-0 pl-10 text-[10px] font-black focus-visible:ring-0 cursor-pointer" /></div><span className="text-neutral-300 font-bold px-1">/</span><div className="relative group"><CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-hover:text-[#f97316]" /><Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-full w-[140px] bg-transparent border-0 pl-10 text-[10px] font-black focus-visible:ring-0 cursor-pointer" /></div></div>
                     </div>
                     <div className="flex flex-col min-[1220px]:flex-row items-center justify-between gap-6"
                          style={{ 
-                            flexDirection: typeof window !== 'undefined' && window.innerWidth >= 1350 ? 'column' : undefined,
-                            justifyContent: typeof window !== 'undefined' && window.innerWidth >= 1350 ? 'center' : undefined 
+                            flexDirection: mounted && window.innerWidth >= 1350 ? 'column' : undefined,
+                            justifyContent: mounted && window.innerWidth >= 1350 ? 'center' : undefined 
                          } as any}>
                         <div className="relative max-w-2xl w-full">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
