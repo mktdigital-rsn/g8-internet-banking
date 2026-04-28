@@ -52,8 +52,9 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { cobrancaDataAtom } from "@/store/pagamentos";
+import { userAtom } from "@/store/auth";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -96,6 +97,12 @@ export default function GestaoCobrancasPage() {
     const [formError, setFormError] = useState<string | null>(null);
     const [mounted, setMounted] = useState(false);
     const VALOR_MINIMO = 30;
+
+    const user = useAtomValue(userAtom);
+    const isPJ = useMemo(() => {
+        const raw = user?.taxNumber?.replace(/\D/g, "") || "";
+        return raw.length === 14;
+    }, [user]);
 
     useEffect(() => {
         const now = new Date();
@@ -426,8 +433,19 @@ export default function GestaoCobrancasPage() {
                     <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">Gestão de Boletos</h1>
                     <p className="text-sm text-neutral-400 font-bold italic">Acompanhe seu fluxo de caixa e emissão de cobranças em tempo real.</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Button onClick={() => setView("create")} className="h-12 md:h-14 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm px-8 font-black text-xs md:text-sm uppercase tracking-widest flex items-center gap-3 shadow-xl transition-all active:scale-95 group"><PlusCircle className="h-5 w-5 group-hover:rotate-90 transition-transform" />Gerar Novo Boleto</Button>
+                <div className="flex flex-col items-end gap-2">
+                    <Button 
+                        onClick={() => setView("create")} 
+                        disabled={!isPJ}
+                        className={cn(
+                            "h-12 md:h-14 rounded-sm px-8 font-black text-xs md:text-sm uppercase tracking-widest flex items-center gap-3 shadow-xl transition-all group",
+                            !isPJ ? "bg-neutral-200 text-neutral-400 cursor-not-allowed shadow-none" : "bg-[#0c0a09] hover:bg-[#f97316] text-white active:scale-95"
+                        )}
+                    >
+                        <PlusCircle className={cn("h-5 w-5 transition-transform", isPJ && "group-hover:rotate-90")} />
+                        Gerar Novo Boleto
+                    </Button>
+                    {!isPJ && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">Somente para usuários PJ</p>}
                 </div>
             </div>
 
