@@ -26,7 +26,10 @@ import {
     Loader2,
     FileSpreadsheet,
     FileBox,
-    RotateCw
+    RotateCw,
+    TrendingUp,
+    AlertTriangle,
+    PieChart as PieChartIcon
 } from "lucide-react";
 import {
     AreaChart,
@@ -34,8 +37,12 @@ import {
     XAxis,
     YAxis,
     CartesianGrid,
-    Tooltip,
-    ResponsiveContainer
+    Tooltip as RechartsTooltip,
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    Legend
 } from "recharts";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -45,11 +52,27 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { cobrancaDataAtom } from "@/store/pagamentos";
+import { userAtom } from "@/store/auth";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import axios from "axios";
+
+interface BoletoItem {
+    id: string;
+    amount: number;
+    expirationDate: string;
+    paidAt: string | null;
+    status: string;
+    ourNumber: string;
+    payer: {
+        name: string;
+        document: string;
+        email?: string;
+    };
+    // Added fields just in case
+    createdAt?: string;
+}
 
 export default function GestaoCobrancasPage() {
     const router = useRouter();
@@ -57,12 +80,15 @@ export default function GestaoCobrancasPage() {
     const [view, setView] = useState<"list" | "create">("list");
     
     // --- List View States ---
-    const [items, setItems] = useState<any[]>([]);
+    const [items, setItems] = useState<BoletoItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [chartPeriod, setChartPeriod] = useState<"day" | "week" | "month">("week");
+    
+    // Removed default auto-filling for start/end date to not hide future boletos
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    
     const [statusFilter, setStatusFilter] = useState("TODOS");
     const [exportingType, setExportingType] = useState<'pdf' | 'xls' | 'csv' | null>(null);
 
@@ -72,9 +98,46 @@ export default function GestaoCobrancasPage() {
     const [mounted, setMounted] = useState(false);
     const VALOR_MINIMO = 30;
 
+    const user = useAtomValue(userAtom);
+    const isPJ = useMemo(() => {
+        const raw = user?.taxNumber?.replace(/\D/g, "") || "";
+        return raw.length === 14;
+    }, [user]);
+
     useEffect(() => {
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        
+        setStartDate(firstDay.toISOString().split('T')[0]);
+        setEndDate(lastDay.toISOString().split('T')[0]);
         setMounted(true);
     }, []);
+
+    const maskBRL = (value: string) => {
+        const cleanValue = value.replace(/\D/g, "");
+        if (!cleanValue) return "";
+        const floatValue = parseFloat(cleanValue) / 100;
+        return new Intl.NumberFormat("pt-BR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(floatValue);
+    };
+
+    const resolveBoletoStatus = (item: BoletoItem) => {
+        if (item.status === 'paid' || item.paidAt) return 'PAGO';
+        if (item.status === 'manual_cancellation') return 'CANCELADO';
+        
+        if (item.expirationDate) {
+            const expDate = new Date(item.expirationDate + 'T00:00:00'); // enforce local day calculation
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            if (expDate < today) {
+                return 'VENCIDO';
+            }
+        }
+        return 'PENDENTE';
+    };
 
     // Fetch Boletos / Cobranças
     useEffect(() => {
@@ -82,71 +145,20 @@ export default function GestaoCobrancasPage() {
             const fetchCobrancas = async () => {
                 setIsLoading(true);
                 try {
-                    // --- USER REQUESTED LOGS (PROD) ---
-                    try {
-                        const listRes = await api.get("/api/banco/pagamentos/listar-boletos?page=1");
-                        console.log("DEBUG [PROD]: GET /api/banco/pagamentos/listar-boletos?page=1 ->", listRes.data);
-                        
-                        const firstBoletoId = listRes.data?.data?.items?.[0]?.id || listRes.data?.data?.[0]?.id;
-                        if (firstBoletoId) {
-                            const consultRes = await api.get(`/api/banco/pagamentos/consultar-boleto/${firstBoletoId}`);
-                            console.log(`DEBUG [PROD]: GET /api/banco/pagamentos/consultar-boleto/${firstBoletoId} ->`, consultRes.data);
-                        }
-                    } catch (e) {
-                        console.error("DEBUG [PROD]: Error calling production endpoints:", e);
-                    }
-                    // ---------------------------
-
-                    const response = await api.get("/api/banco/extrato/buscar", { params: { limit: 100 } });
+                    // We fetch pages to make sure we have all relevant boletos to construct the dashboard correctly.
+                    const [resPage1, resPage2] = await Promise.all([
+                        api.get("/api/banco/pagamentos/listar-boletos?page=1").catch(() => null),
+                        api.get("/api/banco/pagamentos/listar-boletos?page=2").catch(() => null)
+                    ]);
                     
-                    let baseItems = [];
-                    if (response.data && response.data.data) {
-                        const allItems = response.data.data;
-                        baseItems = allItems.filter((i: any) => 
-                            i.metodo?.includes("BOLETO") || 
-                            i.metodoFormatado?.toUpperCase().includes("BOLETO")
-                        ).map((i: any) => ({
-                            ...i,
-                            nome: i.pagadorNome || i.RecebinteNome || "Cliente G8",
-                            doc: i.pagadorTaxNumber || "ID: " + (i.itemId || i.id),
-                            status: Math.random() > 0.7 ? "PAGO" : (Math.random() > 0.5 ? "VENCIDO" : "PENDENTE"),
-                            data: i.dataDaTransacaoFormatada?.split(" ")[0] || "22/04/2026",
-                            valor: i.valor || 0
-                        }));
-                    }
-
-                    const today = new Date();
-                    const getPastDate = (days: number) => {
-                        const d = new Date();
-                        d.setDate(today.getDate() - days);
-                        return d.toLocaleDateString("pt-BR");
-                    };
-
-                    const mockData = [
-                        { nome: "PEDRO HENRIQUE MARQUES", doc: "864.499.815-39", valor: 350.00, status: "PAGO", data: getPastDate(0) },
-                        { nome: "JOÃO DA SILVA SA", doc: "01.234.567/0001-89", valor: 1250.00, status: "VENCIDO", data: getPastDate(2) },
-                        { nome: "EMPRESA DE TESTE LTDA", doc: "98.765.432/0001-10", valor: 5400.00, status: "PENDENTE", data: getPastDate(1) },
-                        { nome: "MARIA OLIVEIRA ME", doc: "12.345.678/0001-99", valor: 890.00, status: "PAGO", data: getPastDate(3) },
-                        { nome: "CONDOMINIO VILA REAL", doc: "45.678.912/0001-33", valor: 12500.00, status: "PENDENTE", data: getPastDate(4) },
-                        { nome: "RESTAURANTE SABOR IBÉRE", doc: "11.222.333/0001-44", valor: 450.00, status: "CANCELADO", data: getPastDate(5) },
-                        { nome: "TIAGO MOURA SOUZA", doc: "111.222.333-44", valor: 2100.00, status: "VENCIDO", data: getPastDate(4) },
-                        { nome: "LOJAS BRASILEIRAS S.A", doc: "55.666.777/0001-88", valor: 3200.50, status: "PAGO", data: getPastDate(0) },
-                        { nome: "CARLOS ALBERTO GOMES", doc: "999.888.777-66", valor: 1510.00, status: "PENDENTE", data: getPastDate(1) },
-                        { nome: "CLUBE DO CAFÉ LTDA", doc: "33.444.555/0001-66", valor: 670.00, status: "PAGO", data: getPastDate(6) },
-                        { nome: "SERVIÇOS DE REDE XP", doc: "22.333.444/0001-55", valor: 9800.00, status: "PENDENTE", data: getPastDate(2) },
-                        { nome: "ANA PAULA RODRIGUES", doc: "555.666.444-11", valor: 200.00, status: "CANCELADO", data: getPastDate(10) },
-                        { nome: "AUTO PEÇAS SILVA", doc: "66.777.888/0001-99", valor: 1450.00, status: "VENCIDO", data: getPastDate(3) },
-                        { nome: "PADARIA NOITE E DIA", doc: "44.555.666/0001-22", valor: 1120.00, status: "PAGO", data: getPastDate(0) },
-                    ];
-
-                    setItems([...baseItems, ...mockData]);
+                    const items1 = resPage1?.data?.data?.items || [];
+                    const items2 = resPage2?.data?.data?.items || [];
+                    
+                    const allItems: BoletoItem[] = [...items1, ...items2];
+                    setItems(allItems);
                 } catch (err) {
                     console.error("Error fetching cobrancas:", err);
-                    setItems([
-                        { nome: "PEDRO HENRIQUE MARQUES", doc: "864.499.815-39", valor: 250.00, status: "PAGO", data: "22/04/2026" },
-                        { nome: "JOÃO DA SILVA SA", doc: "01.234.567/0001-89", valor: 1250.00, status: "VENCIDO", data: "20/04/2026" },
-                        { nome: "EMPRESA DE TESTE LTDA", doc: "98.765.432/0001-10", valor: 5400.00, status: "PENDENTE", data: "21/04/2026" },
-                    ]);
+                    toast.error("Erro ao requistar dados de boletos.");
                 } finally {
                     setIsLoading(false);
                 }
@@ -155,67 +167,121 @@ export default function GestaoCobrancasPage() {
         }
     }, [view]);
 
-    useEffect(() => {
-        const now = new Date();
-        const todayStr = now.toISOString().split('T')[0];
-        if (chartPeriod === "day") {
-            setStartDate(todayStr); setEndDate(todayStr);
-        } else if (chartPeriod === "week") {
-            const weekAgo = new Date(); weekAgo.setDate(now.getDate() - 7);
-            setStartDate(weekAgo.toISOString().split('T')[0]); setEndDate(todayStr);
-        } else if (chartPeriod === "month") {
-            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-            setStartDate(firstDay.toISOString().split('T')[0]); setEndDate(todayStr);
-        }
-    }, [chartPeriod]);
-
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val || 0);
     };
 
-    const totals = useMemo(() => {
-        return {
-            aReceber: items.filter(i => i.status === "PENDENTE").reduce((acc, i) => acc + (i.valor || 0), 0),
-            pagos: items.filter(i => i.status === "PAGO").reduce((acc, i) => acc + (i.valor || 0), 0),
-            cancelados: items.filter(i => i.status === "CANCELADO").reduce((acc, i) => acc + (i.valor || 0), 0),
-            vencidos: items.filter(i => i.status === "VENCIDO").reduce((acc, i) => acc + (i.valor || 0), 0),
-            total: items.reduce((acc, i) => acc + (i.valor || 0), 0)
-        };
-    }, [items]);
-
-    const filteredItems = useMemo(() => {
+    const dateFilteredItems = useMemo(() => {
         return items.filter(item => {
-            const matchesSearch = item.nome?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                                 item.doc?.toLowerCase().includes(searchTerm.toLowerCase());
-            const matchesStatus = statusFilter === "TODOS" || item.status === statusFilter;
+            const nomeStr = item.payer?.name?.toLowerCase() || '';
+            const docStr = item.payer?.document?.toLowerCase() || '';
+            const codeStr = item.ourNumber?.toLowerCase() || '';
+            
+            const matchesSearch = 
+                nomeStr.includes(searchTerm.toLowerCase()) || 
+                docStr.includes(searchTerm.toLowerCase()) ||
+                codeStr.includes(searchTerm.toLowerCase());
             
             let matchesDate = true;
             if (startDate || endDate) {
-                const dateParts = item.data.split("/");
-                const isoDate = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+                // Determine item date (use expirationDate if createdAt is absent)
+                let isoDate = item.createdAt ? item.createdAt.split('T')[0] : item.expirationDate;
+                if (!isoDate) isoDate = "2000-01-01"; // Fallback
+                
                 if (startDate && isoDate < startDate) matchesDate = false;
                 if (endDate && isoDate > endDate) matchesDate = false;
             }
 
-            return matchesSearch && matchesStatus && matchesDate;
+            return matchesSearch && matchesDate;
         });
-    }, [items, searchTerm, statusFilter, startDate, endDate]);
+    }, [items, searchTerm, startDate, endDate]);
 
-    const chartData = useMemo(() => {
-        const daysArr = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+    const totals = useMemo(() => {
+        let aReceber = 0;
+        let pagos = 0;
+        let cancelados = 0;
+        let vencidos = 0;
+        let total = 0;
+
+        dateFilteredItems.forEach(item => {
+            const valor = item.amount / 100; // API is in cents
+            const status = resolveBoletoStatus(item);
+            
+            total += valor;
+            if (status === 'PAGO') pagos += valor;
+            else if (status === 'CANCELADO') cancelados += valor;
+            else if (status === 'VENCIDO') vencidos += valor;
+            else if (status === 'PENDENTE') aReceber += valor;
+        });
+
+        return { aReceber, pagos, cancelados, vencidos, total };
+    }, [dateFilteredItems]);
+
+    const filteredItems = useMemo(() => {
+        return dateFilteredItems.filter(item => {
+            const itemStatus = resolveBoletoStatus(item);
+            return statusFilter === "TODOS" || itemStatus === statusFilter;
+        }).sort((a, b) => {
+             const d1 = a.expirationDate ? new Date(a.expirationDate).getTime() : 0;
+             const d2 = b.expirationDate ? new Date(b.expirationDate).getTime() : 0;
+             return d2 - d1;
+        });
+    }, [dateFilteredItems, statusFilter]);
+
+    const areaChartData = useMemo(() => {
+        const refDate = endDate ? new Date(endDate + 'T12:00:00') : new Date();
         const groups: any[] = [];
-        for (let i = 6; i >= 0; i--) {
-            const d = new Date(); d.setDate(d.getDate() - i);
-            const dayName = daysArr[d.getDay()];
-            const dayValue = filteredItems.filter(item => {
-                const dateParts = item.data.split("/");
-                const itemDate = new Date(Number(dateParts[2]), Number(dateParts[1]) - 1, Number(dateParts[0]));
-                return itemDate.toDateString() === d.toDateString();
-            }).reduce((acc, i) => acc + (i.valor || 0), 0);
-            groups.push({ name: dayName, valor: dayValue });
+        
+        const calcDay = (d: Date, dayName: string) => {
+            let faturado = 0;
+            let pago = 0;
+            const targetDateStr = d.toISOString().split('T')[0];
+
+            dateFilteredItems.forEach(item => {
+                let dtStr = item.createdAt ? item.createdAt.split('T')[0] : item.expirationDate;
+                if (!dtStr) return;
+                
+                if (dtStr === targetDateStr) {
+                    const val = item.amount / 100;
+                    const status = resolveBoletoStatus(item);
+                    faturado += val;
+                    if (status === 'PAGO') pago += val;
+                }
+            });
+            return { name: dayName, Faturado: faturado, Pago: pago };
+        };
+
+        if (chartPeriod === "week") {
+            const daysArr = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date(refDate);
+                d.setDate(refDate.getDate() - i);
+                groups.push(calcDay(d, daysArr[d.getDay()]));
+            }
+        } else if (chartPeriod === "month") {
+            const startOfMonth = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+            const daysInMonth = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0).getDate();
+            
+            for (let i = 1; i <= daysInMonth; i++) {
+                const d = new Date(refDate.getFullYear(), refDate.getMonth(), i);
+                const dayStr = `${String(d.getDate()).padStart(2, '0')}`;
+                groups.push(calcDay(d, dayStr));
+            }
+        } else if (chartPeriod === "day") {
+            groups.push(calcDay(refDate, "Hoje"));
         }
+
         return groups;
-    }, [filteredItems]);
+    }, [dateFilteredItems, chartPeriod, endDate]);
+
+    const pieChartData = useMemo(() => {
+        return [
+            { name: "A Receber", value: totals.aReceber, color: "#2563eb" }, // blue-600
+            { name: "Pagos", value: totals.pagos, color: "#059669" }, // emerald-600
+            { name: "Vencidos", value: totals.vencidos, color: "#dc2626" }, // red-600
+            { name: "Cancelados", value: totals.cancelados, color: "#52525b" }, // zinc-600
+        ].filter(d => d.value > 0);
+    }, [totals]);
 
     // --- REAL EXPORT LOGIC ---
     const handleExport = async (type: 'pdf' | 'xls' | 'csv') => {
@@ -223,16 +289,20 @@ export default function GestaoCobrancasPage() {
         const toastId = toast.loading(`Preparando exportação (${type.toUpperCase()})...`);
         
         try {
-            const dataToExport = filteredItems.map(i => ({
-                pagador: i.nome,
-                documento: i.doc,
-                status: i.status === "PENDENTE" ? "A RECEBER" : i.status,
-                valor: formatCurrency(i.valor),
-                vencimento: i.data
-            }));
+            const dataToExport = filteredItems.map(i => {
+                const statusStr = resolveBoletoStatus(i);
+                return {
+                    pagador: i.payer?.name || "Desconhecido",
+                    documento: i.payer?.document || "-",
+                    codigo: i.ourNumber || "-",
+                    status: statusStr === "PENDENTE" ? "A RECEBER" : statusStr,
+                    valor: formatCurrency(i.amount / 100),
+                    vencimento: i.expirationDate ? i.expirationDate.split('-').reverse().join('/') : "-"
+                }
+            });
 
             if (type === "csv" || type === "xls") {
-                const headers = ["Pagador", "Documento", "Status", "Valor", "Vencimento"];
+                const headers = ["Pagador", "Documento", "Codigo", "Status", "Valor", "Vencimento"];
                 const csvContent = [
                     headers.join(";"),
                     ...dataToExport.map(row => Object.values(row).join(";"))
@@ -242,26 +312,41 @@ export default function GestaoCobrancasPage() {
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.href = url;
-                link.setAttribute("download", `relatorio_cobrancas_${new Date().getTime()}.${type}`);
+                link.setAttribute("download", `relatorio_g8_boletos_${new Date().getTime()}.${type}`);
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
             } else if (type === "pdf") {
                 const doc = new jsPDF();
-                doc.setFontSize(20);
-                doc.text("Relatório de Gestão de Boletos - G8Pay", 14, 22);
+                
+                try {
+                    const img = new window.Image();
+                    img.src = '/logo_g8_white.png'; // Updated to the dark/colored logo for white background
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                    });
+                    doc.addImage(img, 'PNG', 14, 14, 25, 8);
+                } catch (e) {
+                    console.error("Erro ao carregar logo", e);
+                }
+
+                doc.setTextColor(30, 30, 30);
+                doc.setFontSize(18);
+                doc.text("Relatório de Gestão de Boletos", 50, 18);
+                
                 doc.setFontSize(10);
-                doc.text(`Filtro Atual: ${statusFilter} | Data: ${new Date().toLocaleDateString()}`, 14, 30);
+                doc.text(`Filtro Atual: ${statusFilter} | Data: ${new Date().toLocaleDateString()}`, 50, 24);
                 
                 autoTable(doc, {
-                    startY: 40,
-                    head: [["Pagador", "Documento", "Status", "Valor", "Vencimento"]],
+                    startY: 35,
+                    head: [["Pagador", "Documento", "Codigo", "Status", "Valor", "Vencimento"]],
                     body: dataToExport.map(Object.values),
                     headStyles: { fillColor: [249, 115, 22], textColor: [255, 255, 255] },
                     alternateRowStyles: { fillColor: [245, 245, 245] }
                 });
                 
-                doc.save(`relatorio_cobrancas_${new Date().getTime()}.pdf`);
+                doc.save(`relatorio_g8_boletos_${new Date().getTime()}.pdf`);
             }
 
             toast.dismiss(toastId);
@@ -276,7 +361,8 @@ export default function GestaoCobrancasPage() {
     };
 
     const handleNext = () => {
-        const valor = parseFloat(inputValue.replace(",", "."));
+        const rawValue = inputValue.replace(/\./g, "").replace(",", ".");
+        const valor = parseFloat(rawValue);
         if (isNaN(valor) || valor < VALOR_MINIMO) {
             setFormError(`O valor mínimo para cobrança é ${formatCurrency(VALOR_MINIMO)}`);
             return;
@@ -284,25 +370,6 @@ export default function GestaoCobrancasPage() {
         setFormError(null);
         setCobrancaData({ ...cobrancaData, valor });
         router.push("/dashboard/cobrancas/pagador");
-    };
-
-    const handleTestAPI = async () => {
-        toast.info("Testando API de Boletos...");
-        try {
-            const listRes = await api.get("/api/banco/pagamentos/listar-boletos?page=1");
-            console.log("DEBUG [TEST BUTTON]: GET /api/banco/pagamentos/listar-boletos?page=1 ->", listRes.data);
-            toast.success("API Listar retornou com sucesso (Ver Console)");
-            
-            const firstBoletoId = listRes.data?.data?.items?.[0]?.id || listRes.data?.data?.[0]?.id;
-            if (firstBoletoId) {
-                const consultRes = await api.get(`/api/banco/pagamentos/consultar-boleto/${firstBoletoId}`);
-                console.log(`DEBUG [TEST BUTTON]: GET /api/banco/pagamentos/consultar-boleto/${firstBoletoId} ->`, consultRes.data);
-                toast.success("API Consultar retornou com sucesso (Ver Console)");
-            }
-        } catch (e: any) {
-            console.error("DEBUG [TEST BUTTON ERROR]:", e);
-            toast.error(`Erro na API: ${e.response?.status || e.message}`);
-        }
     };
 
     if (view === "create") {
@@ -329,16 +396,28 @@ export default function GestaoCobrancasPage() {
                     <CardContent className="p-8 md:p-16 space-y-12">
                         <div className="space-y-6">
                             <label className="text-[12px] font-black uppercase tracking-[0.3em] text-[#f97316] block text-center">Informe o valor total da cobrança</label>
-                            <div className="relative group max-w-2xl mx-auto">
+                            <div className="relative group max-w-lg mx-auto">
                                 <div className="absolute inset-0 bg-orange-500/5 rounded-sm scale-105 group-focus-within:scale-110 transition-transform blur-xl" />
-                                <div className="relative bg-white border-2 border-neutral-100 group-focus-within:border-[#f97316] rounded-sm overflow-hidden flex items-center px-10 py-8 transition-all">
-                                    <span className="text-4xl font-black text-[#f97316] mr-6">R$</span>
-                                    <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value.replace(/[^\d,.]/g, ""))} placeholder="0,00" className="w-full bg-transparent text-6xl md:text-8xl font-black text-[#0c0a09] placeholder:text-neutral-100 focus:outline-none font-mono tracking-tighter" />
+                                <div className="relative bg-white border-2 border-neutral-100 group-focus-within:border-[#f97316] rounded-sm overflow-hidden flex items-center px-8 py-6 transition-all">
+                                    <span className="text-2xl font-black text-[#f97316] mr-4">R$</span>
+                                    <input 
+                                        type="text" 
+                                        value={inputValue} 
+                                        onChange={(e) => setInputValue(maskBRL(e.target.value))} 
+                                        placeholder="0,00" 
+                                        className="w-full bg-transparent text-5xl md:text-6xl font-black text-[#0c0a09] placeholder:text-neutral-100 focus:outline-none font-mono tracking-tighter" 
+                                    />
                                 </div>
                             </div>
                             {formError && <div className="flex items-center justify-center gap-3 text-red-500 font-black text-xs uppercase tracking-widest animate-bounce"><AlertCircle className="h-4 w-4" />{formError}</div>}
                         </div>
-                        <Button onClick={handleNext} className="w-full h-24 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm text-2xl font-black uppercase tracking-[0.3em] transition-all group shadow-2xl relative overflow-hidden"><span className="relative z-10">Continuar para Pagador</span><Send className="ml-4 h-6 w-6 relative z-10 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" /><div className="absolute inset-0 bg-[#f97316] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" /></Button>
+                        <div className="max-w-lg mx-auto w-full">
+                            <Button onClick={handleNext} className="w-full h-16 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm text-lg font-black uppercase tracking-[0.2em] transition-all group shadow-2xl relative overflow-hidden">
+                                <span className="relative z-10">Continuar</span>
+                                <Send className="ml-4 h-5 w-5 relative z-10 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" />
+                                <div className="absolute inset-0 bg-[#f97316] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
@@ -347,44 +426,185 @@ export default function GestaoCobrancasPage() {
 
     return (
         <div className="p-4 md:p-8 flex flex-col gap-8 h-full overflow-y-auto w-full no-scrollbar bg-[#f8f9fa] animate-in fade-in duration-700 pb-20">
+            {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 px-2">
                 <div className="space-y-1">
                     <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.25em] rounded-sm">Gestão Comercial</Badge>
                     <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">Gestão de Boletos</h1>
                     <p className="text-sm text-neutral-400 font-bold italic">Acompanhe seu fluxo de caixa e emissão de cobranças em tempo real.</p>
                 </div>
-                <div className="flex items-center gap-3">
-     
-                    <Button onClick={() => setView("create")} className="h-12 md:h-14 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm px-8 font-black text-xs md:text-sm uppercase tracking-widest flex items-center gap-3 shadow-xl transition-all active:scale-95 group"><PlusCircle className="h-5 w-5 group-hover:rotate-90 transition-transform" />Gerar Novo Boleto</Button>
+                <div className="flex flex-col items-end gap-2">
+                    <Button 
+                        onClick={() => setView("create")} 
+                        disabled={!isPJ}
+                        className={cn(
+                            "h-12 md:h-14 rounded-sm px-8 font-black text-xs md:text-sm uppercase tracking-widest flex items-center gap-3 shadow-xl transition-all group",
+                            !isPJ ? "bg-neutral-200 text-neutral-400 cursor-not-allowed shadow-none" : "bg-[#0c0a09] hover:bg-[#f97316] text-white active:scale-95"
+                        )}
+                    >
+                        <PlusCircle className={cn("h-5 w-5 transition-transform", isPJ && "group-hover:rotate-90")} />
+                        Gerar Novo Boleto
+                    </Button>
+                    {!isPJ && <p className="text-[10px] font-black text-red-500 uppercase tracking-widest animate-pulse">Somente para usuários PJ</p>}
                 </div>
             </div>
 
+            {/* Top Cards (Metrics Funnels) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 {[
                     { label: "A Receber", val: totals.aReceber, status: "PENDENTE", color: "bg-blue-600", icon: Clock },
                     { label: "Pagos", val: totals.pagos, status: "PAGO", color: "bg-emerald-600", icon: CheckCircle2 },
-                    { label: "Cancelados", val: totals.cancelados, status: "CANCELADO", color: "bg-neutral-500", icon: XCircle },
+                    { label: "Cancelados", val: totals.cancelados, status: "CANCELADO", color: "bg-zinc-500", icon: XCircle },
                     { label: "Vencidos", val: totals.vencidos, status: "VENCIDO", color: "bg-red-500", icon: AlertCircle },
                     { label: "Total Geral", val: totals.total, status: "TODOS", color: "bg-indigo-700", icon: ArrowUpRight },
                 ].map((card, i) => (
-                    <Card key={i} onClick={() => setStatusFilter(card.status)} className={cn("border-0 rounded-sm p-4 flex flex-col justify-between shadow-lg relative overflow-hidden transition-all hover:scale-[1.02] cursor-pointer min-h-[140px]", statusFilter === card.status ? "ring-4 ring-[#f97316] ring-offset-2 scale-[1.05]" : "opacity-90 grayscale-[0.3] hover:grayscale-0", card.color)}><div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl" /><div className="flex justify-between items-start relative z-10"><card.icon className="h-6 w-6 text-white/50" /><Badge className="bg-white/20 text-white border-0 text-[8px] font-black uppercase tracking-widest">Live</Badge></div><div className="relative z-10"><p className="text-[9px] text-white/60 font-black uppercase tracking-[0.2em] mb-1">{card.label}</p><p className="text-xl md:text-2xl font-black text-white font-mono tracking-tighter truncate leading-none">{isLoading ? "..." : formatCurrency(card.val)}</p></div></Card>
+                    <Card key={i} className={cn("border-0 rounded-sm p-4 flex flex-col justify-between shadow-lg relative overflow-hidden transition-all min-h-[140px]", card.color)}>
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -mr-12 -mt-12 blur-2xl" />
+                        <div className="flex justify-between items-start relative z-10">
+                            <card.icon className="h-6 w-6 text-white/50" />
+                            <Badge className="bg-white/20 text-white border-0 text-[8px] font-black uppercase tracking-widest">Live</Badge>
+                        </div>
+                        <div className="relative z-10">
+                            <p className="text-[9px] text-white/60 font-black uppercase tracking-[0.2em] mb-1">{card.label}</p>
+                            <p className="text-xl md:text-2xl font-black text-white font-mono tracking-tighter truncate leading-none">{isLoading ? "..." : formatCurrency(card.val)}</p>
+                        </div>
+                    </Card>
                 ))}
             </div>
 
-            <Card className="rounded-sm border border-neutral-100 bg-white p-6 md:p-10 shadow-sm relative overflow-hidden flex flex-col h-[380px]">
-                <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
-                    <div className="space-y-1"><p className="text-[10px] text-neutral-400 font-black uppercase tracking-[0.4em]">Faturamento Real {statusFilter !== "TODOS" ? `(${statusFilter})` : "(Global)"}</p><h4 className="text-2xl font-black text-[#0c0a09] tracking-tighter uppercase">VOLUME DE COBRANÇAS</h4></div>
-                    <Tabs value={chartPeriod} onValueChange={(val: any) => setChartPeriod(val)} className="w-fit"><TabsList className="bg-neutral-50 rounded-sm p-0.5 h-10 gap-1 border border-neutral-100"><TabsTrigger value="day" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316]">Dia</TabsTrigger><TabsTrigger value="week" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316]">Semana</TabsTrigger><TabsTrigger value="month" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316]">Mês</TabsTrigger></TabsList></Tabs>
-                </div>
-                <div className="flex-1 w-full min-h-0">
-                    {mounted && (
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}><defs><linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#f97316" stopOpacity={0.3} /><stop offset="95%" stopColor="#f97316" stopOpacity={0} /></linearGradient></defs><CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" /><XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 'bold', fill: '#94a3b8' }} dy={10} /><YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fontWeight: 'bold', fill: '#94a3b8' }} /><Tooltip contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 'black', fontSize: '12px' }} formatter={(value: any) => [formatCurrency(value), "Faturado"]} /><Area type="monotone" dataKey="valor" stroke="#f97316" fillOpacity={1} fill="url(#colorVal)" strokeWidth={4} activeDot={{ r: 8, strokeWidth: 0 }} /></AreaChart>
-                        </ResponsiveContainer>
-                    )}
-                </div>
-            </Card>
+            {/* SÍNTESE EXECUTIVA E KPIs DE RISCO */}
+            <div className="bg-white rounded-sm p-6 border border-neutral-100 shadow-sm space-y-6">
+                <h4 className="text-[11px] font-black text-[#0c0a09] uppercase tracking-[0.3em] border-b border-neutral-100 pb-2">Síntese Executiva e KPIs de Risco</h4>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Total Geral (Wide) */}
+                    <Card className="lg:col-span-3 border-2 border-neutral-100 rounded-sm p-6 flex flex-col sm:flex-row sm:items-center justify-center gap-4 bg-gradient-to-r from-neutral-50 to-white">
+                        <div className="w-12 h-12 rounded-full bg-neutral-100 flex items-center justify-center shrink-0">
+                            <TrendingUp className="h-6 w-6 text-neutral-400" />
+                        </div>
+                        <div className="text-center sm:text-left">
+                            <p className="text-[10px] text-neutral-400 font-black uppercase tracking-[0.2em]">Total Geral de Emissão</p>
+                            <p className="text-4xl md:text-5xl font-black text-[#0c0a09] tracking-tighter">{isLoading ? "..." : formatCurrency(totals.total)}</p>
+                        </div>
+                    </Card>
+                    
+                    {/* KPIs: Vencidos e Liquidez */}
+                    <Card className="border border-red-100 bg-red-50/50 rounded-sm p-6 flex items-start gap-4 lg:col-span-2">
+                        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center shrink-0">
+                            <AlertTriangle className="h-6 w-6 text-red-600" />
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.2em]">Risco Vencidos (Inadimplência)</p>
+                            <p className="text-4xl font-black text-red-600 tracking-tighter">
+                                {isLoading ? "..." : `${totals.total > 0 ? ((totals.vencidos / totals.total) * 100).toFixed(1) : "0.0"}%`}
+                            </p>
+                            <p className="text-[10px] font-bold text-red-500/80 bg-red-100 px-2 py-0.5 rounded-sm inline-block uppercase mt-1">
+                                Volume: {isLoading ? "..." : formatCurrency(totals.vencidos)}
+                            </p>
+                        </div>
+                    </Card>
 
+                    <Card className="border border-emerald-100 bg-emerald-50/50 rounded-sm p-6 flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                            <PieChartIcon className="h-6 w-6 text-emerald-600" />
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-[10px] text-neutral-500 font-black uppercase tracking-[0.2em]">Taxa de Liquidez</p>
+                            <p className="text-3xl font-black text-emerald-600 tracking-tighter">{isLoading ? "..." : `${totals.total > 0 ? ((totals.pagos / totals.total) * 100).toFixed(1) : "0"}%`}</p>
+                            <p className="text-[9px] font-bold text-neutral-400 mt-1 uppercase">Conversão Efetiva</p>
+                        </div>
+                    </Card>
+                </div>
+            </div>
+
+            {/* DETALHAMENTO E ANÁLISE DE FLUXO */}
+            <div className="bg-white rounded-sm p-6 border border-neutral-100 shadow-sm space-y-6">
+                <h4 className="text-[11px] font-black text-[#0c0a09] uppercase tracking-[0.3em] border-b border-neutral-100 pb-2">Detalhamento e Análise de Fluxo</h4>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    {/* Pie Chart / Funnel */}
+                    <div className="h-[300px] flex flex-col justify-center border border-neutral-100 rounded-sm p-4 bg-neutral-50/30">
+                        {mounted && !isLoading && totals.total > 0 ? (
+                            <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                    <Pie
+                                        data={pieChartData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={60}
+                                        outerRadius={90}
+                                        paddingAngle={5}
+                                        dataKey="value"
+                                    >
+                                        {pieChartData.map((entry, index) => (
+                                            <Cell key={`cell-${index}`} fill={entry.color} />
+                                        ))}
+                                    </Pie>
+                                    <RechartsTooltip 
+                                        formatter={(val: any) => formatCurrency(Number(val))} 
+                                        contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 'black', fontSize: '12px' }}
+                                    />
+                                    <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} />
+                                </PieChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex h-full items-center justify-center text-neutral-300 text-xs font-bold uppercase tracking-widest">Sem dados para análise</div>
+                        )}
+                    </div>
+
+                    {/* Area Chart / Volume */}
+                    <div className="h-[300px] border border-neutral-100 rounded-sm p-4 flex flex-col justify-center relative bg-neutral-50/30">
+                        <div className="absolute top-4 right-4 z-10 flex gap-2">
+                            <Tabs value={chartPeriod} onValueChange={(val: any) => {
+                                setChartPeriod(val);
+                                const refDate = endDate ? new Date(endDate + 'T12:00:00') : new Date();
+                                if (val === "day") {
+                                    setStartDate(refDate.toISOString().split('T')[0]);
+                                } else if (val === "week") {
+                                    const start = new Date(refDate);
+                                    start.setDate(refDate.getDate() - 7);
+                                    setStartDate(start.toISOString().split('T')[0]);
+                                } else if (val === "month") {
+                                    const start = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
+                                    const end = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0);
+                                    setStartDate(start.toISOString().split('T')[0]);
+                                    setEndDate(end.toISOString().split('T')[0]);
+                                }
+                            }} className="w-fit">
+                                <TabsList className="bg-white rounded-sm p-0.5 h-8 gap-1 border border-neutral-200">
+                                    <TabsTrigger value="day" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-neutral-100 data-[state=active]:text-[#f97316]">Dia</TabsTrigger>
+                                    <TabsTrigger value="week" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-neutral-100 data-[state=active]:text-[#f97316]">Semana</TabsTrigger>
+                                    <TabsTrigger value="month" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-neutral-100 data-[state=active]:text-[#f97316]">Mês</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                        </div>
+                        {mounted && !isLoading && filteredItems.length > 0 ? (
+                             <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={areaChartData} margin={{ top: 30, right: 0, left: -20, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="colorFaturado" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="colorPago" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#059669" stopOpacity={0.3} />
+                                            <stop offset="95%" stopColor="#059669" stopOpacity={0} />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }} dy={10} />
+                                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 'bold', fill: '#94a3b8' }} tickFormatter={(val) => `R$ ${val}`} />
+                                    <RechartsTooltip contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 'black', fontSize: '12px' }} formatter={(value: any) => formatCurrency(Number(value))} />
+                                    <Area type="monotone" dataKey="Faturado" stroke="#f97316" fillOpacity={1} fill="url(#colorFaturado)" strokeWidth={3} />
+                                    <Area type="monotone" dataKey="Pago" stroke="#059669" fillOpacity={1} fill="url(#colorPago)" strokeWidth={3} />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        ) : (
+                            <div className="flex h-full items-center justify-center text-neutral-300 text-xs font-bold uppercase tracking-widest mt-6">Sem dados para análise</div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* List and Filters */}
             <div className="bg-white rounded-sm p-4 md:p-8 border border-neutral-100 shadow-sm space-y-8">
                 <div className="flex flex-col gap-8">
                     <div className="flex flex-col min-[1350px]:flex-row items-center justify-between gap-6 pb-6 border-b border-neutral-50 text-neutral-400 font-bold" 
@@ -392,9 +612,28 @@ export default function GestaoCobrancasPage() {
                             flexDirection: typeof window !== 'undefined' && window.innerWidth >= 1350 ? 'column' : undefined,
                             justifyContent: typeof window !== 'undefined' && window.innerWidth >= 1350 ? 'center' : undefined 
                          } as any}>
-                        <Tabs value={statusFilter} onValueChange={(val: any) => setStatusFilter(val)} className="w-full lg:w-auto"><TabsList className="bg-neutral-50 rounded-sm p-0.5 h-12 gap-1 border border-neutral-100 w-full lg:w-auto overflow-x-auto no-scrollbar"><TabsTrigger value="TODOS" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316]">Todos</TabsTrigger><TabsTrigger value="PENDENTE" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600">A Receber</TabsTrigger><TabsTrigger value="PAGO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-emerald-600">Pagos</TabsTrigger><TabsTrigger value="VENCIDO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-red-600">Vencidos</TabsTrigger><TabsTrigger value="CANCELADO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-neutral-500">Cancelados</TabsTrigger></TabsList></Tabs>
-                        <div className="flex items-center gap-1 bg-neutral-50 rounded-sm p-1 border border-neutral-100 h-12 shadow-inner"><div className="relative group"><CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-hover:text-[#f97316]" /><Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-full w-[140px] bg-transparent border-0 pl-10 text-[10px] font-black focus-visible:ring-0 cursor-pointer" /></div><span className="text-neutral-300 font-bold px-1">/</span><div className="relative group"><CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-hover:text-[#f97316]" /><Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-full w-[140px] bg-transparent border-0 pl-10 text-[10px] font-black focus-visible:ring-0 cursor-pointer" /></div></div>
+                        <Tabs value={statusFilter} onValueChange={(val: any) => setStatusFilter(val)} className="w-full lg:w-auto">
+                            <TabsList className="bg-neutral-50 rounded-sm p-0.5 h-12 gap-1 border border-neutral-100 w-full lg:w-auto overflow-x-auto no-scrollbar">
+                                <TabsTrigger value="TODOS" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316]">Todos</TabsTrigger>
+                                <TabsTrigger value="PENDENTE" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600">A Receber</TabsTrigger>
+                                <TabsTrigger value="PAGO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-emerald-600">Pagos</TabsTrigger>
+                                <TabsTrigger value="VENCIDO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-red-600">Vencidos</TabsTrigger>
+                                <TabsTrigger value="CANCELADO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-zinc-500">Cancelados</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                        <div className="flex items-center gap-1 bg-neutral-50 rounded-sm p-1 border border-neutral-100 h-12 shadow-inner">
+                            <div className="relative group">
+                                <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-hover:text-[#f97316]" />
+                                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-full w-[140px] bg-transparent border-0 pl-10 text-[10px] font-black focus-visible:ring-0 cursor-pointer" />
+                            </div>
+                            <span className="text-neutral-300 font-bold px-1">/</span>
+                            <div className="relative group">
+                                <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-hover:text-[#f97316]" />
+                                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-full w-[140px] bg-transparent border-0 pl-10 text-[10px] font-black focus-visible:ring-0 cursor-pointer" />
+                            </div>
+                        </div>
                     </div>
+                    
                     <div className="flex flex-col min-[1220px]:flex-row items-center justify-between gap-6"
                          style={{ 
                             flexDirection: typeof window !== 'undefined' && window.innerWidth >= 1350 ? 'column' : undefined,
@@ -411,19 +650,62 @@ export default function GestaoCobrancasPage() {
                         </div>
                     </div>
                 </div>
+                
                 <div className="space-y-4">
-                    <div className="hidden sm:grid grid-cols-12 px-6 pb-2 text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] gap-4"><span className="col-span-5 flex items-center gap-2 px-2">Pagador / Título</span><span className="col-span-3 flex items-center justify-center gap-2">Status do Título</span><span className="col-span-2 text-right">Valor Líquido</span><span className="col-span-2 text-right">Vencimento</span></div>
+                    <div className="hidden sm:grid grid-cols-12 px-6 pb-2 text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] gap-4">
+                        <span className="col-span-5 flex items-center gap-2 px-2">Pagador / Título</span>
+                        <span className="col-span-3 flex items-center justify-center gap-2">Status do Título</span>
+                        <span className="col-span-2 text-right">Valor Líquido</span>
+                        <span className="col-span-2 text-right">Vencimento</span>
+                    </div>
+                    
                     <div className="space-y-2">
-                        {filteredItems.length === 0 ? (<div className="py-20 text-center bg-neutral-50/50 rounded-sm border border-dashed border-neutral-200"><p className="text-neutral-500 font-black uppercase text-[10px] tracking-[0.2em]">Nenhum boleto localizado</p></div>) : (
-                                filteredItems.map((i: any, idx) => (
-                                    <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 items-center px-6 py-5 bg-white hover:bg-neutral-50/80 rounded-sm border border-neutral-100 hover:border-[#f97316]/20 transition-all cursor-pointer group gap-4 shadow-sm hover:shadow-md animate-in fade-in slide-in-from-right-4 duration-300" style={{ animationDelay: `${idx * 50}ms` }}>
-                                        <div className="col-span-5 flex items-center gap-5"><div className={cn("w-12 h-12 rounded-sm flex items-center justify-center transition-all group-hover:scale-110 shadow-inner", i.status === "PAGO" ? "bg-emerald-50 text-emerald-500" : i.status === "VENCIDO" ? "bg-red-50 text-red-500" : i.status === "CANCELADO" ? "bg-neutral-50 text-neutral-400" : "bg-blue-50 text-blue-500")}><FileText className="h-6 w-6" /></div><div className="min-w-0"><p className="font-black text-sm text-[#0c0a09] uppercase truncate tracking-tight">{i.nome}</p><p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest truncate">{i.doc}</p></div></div>
-                                        <div className="col-span-3 flex justify-center"><Badge className={cn("px-4 py-1.5 font-black text-[9px] uppercase tracking-[0.1em] rounded-sm border-0 shadow-sm transition-colors", i.status === "PAGO" ? "bg-emerald-500 text-white" : i.status === "VENCIDO" ? "bg-red-500 text-white" : i.status === "CANCELADO" ? "bg-neutral-400 text-white" : "bg-blue-500 text-white")}>{i.status === "PENDENTE" ? "A RECEBER" : i.status}</Badge></div>
-                                        <div className="col-span-2 text-right"><p className="font-black text-[#0c0a09] font-mono text-lg tracking-tighter">{formatCurrency(i.valor)}</p></div>
-                                        <div className="col-span-2 text-right flex items-center justify-end gap-3"><div className="text-right"><p className="text-xs font-black text-[#0c0a09] group-hover:text-[#f97316] transition-colors">{i.data}</p><p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Liquidado</p></div><ChevronRight className="h-4 w-4 text-neutral-200 group-hover:text-[#f97316] group-hover:translate-x-1 transition-all" /></div>
+                        {isLoading ? (
+                             <div className="py-20 flex justify-center text-neutral-400 uppercase font-black text-[10px] tracking-widest w-full items-center"><Loader2 className="h-5 w-5 animate-spin mr-3"/> Carregando dados...</div>
+                        ) : filteredItems.length === 0 ? (
+                            <div className="py-20 text-center bg-neutral-50/50 rounded-sm border border-dashed border-neutral-200">
+                                <p className="text-neutral-500 font-black uppercase text-[10px] tracking-[0.2em]">Nenhum boleto localizado</p>
+                            </div>
+                        ) : (
+                            filteredItems.map((i, idx) => {
+                                const statusStr = resolveBoletoStatus(i);
+                                
+                                // Format the date nicely
+                                let displayDate = "-";
+                                if (i.expirationDate) {
+                                    const parts = i.expirationDate.split('-'); // YYYY-MM-DD
+                                    if(parts.length === 3) displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                                }
+
+                                return (
+                                <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 items-center px-6 py-5 bg-white hover:bg-neutral-50/80 rounded-sm border border-neutral-100 hover:border-[#f97316]/20 transition-all cursor-pointer group gap-4 shadow-sm hover:shadow-md animate-in fade-in slide-in-from-right-4 duration-300" style={{ animationDelay: `${idx * 50}ms` }}>
+                                    <div className="col-span-5 flex items-center gap-5">
+                                        <div className={cn("w-12 h-12 rounded-sm flex items-center justify-center transition-all group-hover:scale-110 shadow-inner", statusStr === "PAGO" ? "bg-emerald-50 text-emerald-500" : statusStr === "VENCIDO" ? "bg-red-50 text-red-500" : statusStr === "CANCELADO" ? "bg-zinc-50 text-zinc-500" : "bg-blue-50 text-blue-500")}>
+                                            <FileText className="h-6 w-6" />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="font-black text-sm text-[#0c0a09] uppercase truncate tracking-tight">{i.payer?.name || "Desconhecido"}</p>
+                                            <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest truncate">{i.payer?.document || "S/N"} &bull; {i.ourNumber || "-"}</p>
+                                        </div>
                                     </div>
-                                ))
-                            )}
+                                    <div className="col-span-3 flex justify-center">
+                                        <Badge className={cn("px-4 py-1.5 font-black text-[9px] uppercase tracking-[0.1em] rounded-sm border-0 shadow-sm transition-colors", statusStr === "PAGO" ? "bg-emerald-500 text-white" : statusStr === "VENCIDO" ? "bg-red-500 text-white" : statusStr === "CANCELADO" ? "bg-zinc-500 text-white" : "bg-blue-600 text-white")}>
+                                            {statusStr === "PENDENTE" ? "A RECEBER" : statusStr}
+                                        </Badge>
+                                    </div>
+                                    <div className="col-span-2 text-right">
+                                        <p className="font-black text-[#0c0a09] font-mono text-lg tracking-tighter">{formatCurrency(i.amount / 100)}</p>
+                                    </div>
+                                    <div className="col-span-2 text-right flex items-center justify-end gap-3">
+                                        <div className="text-right">
+                                            <p className="text-xs font-black text-[#0c0a09] group-hover:text-[#f97316] transition-colors">{displayDate}</p>
+                                            <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">{statusStr === "PAGO" && i.paidAt ? "Liquidado" : "Vencimento"}</p>
+                                        </div>
+                                        <ChevronRight className="h-4 w-4 text-neutral-200 group-hover:text-[#f97316] group-hover:translate-x-1 transition-all" />
+                                    </div>
+                                </div>
+                            )})
+                        )}
                     </div>
                 </div>
             </div>
