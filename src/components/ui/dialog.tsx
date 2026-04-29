@@ -11,14 +11,15 @@ const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
 
 const DialogTitle = DialogPrimitive.Title;
+const DialogDescription = DialogPrimitive.Description;
 
 const DialogContent = React.forwardRef<
-  React.ElementRef<typeof DialogPrimitive.Description>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+  React.ElementRef<typeof DialogPrimitive.Popup>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Popup>
 >(({ className, children, ...props }, ref) => (
   <DialogPortal>
     <DialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" />
-    <DialogPrimitive.Description
+    <DialogPrimitive.Popup
       ref={ref}
       className={cn(
         "fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-white p-6 shadow-2xl duration-200 focus:outline-none sm:rounded-md",
@@ -27,10 +28,10 @@ const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-    </DialogPrimitive.Description>
+    </DialogPrimitive.Popup>
   </DialogPortal>
 ));
-DialogContent.displayName = DialogPrimitive.Description.displayName;
+DialogContent.displayName = "DialogContent";
 
 const DialogHeader = ({
   className,
@@ -68,4 +69,5 @@ export {
   DialogHeader,
   DialogFooter,
   DialogTitle,
+  DialogDescription,
 };

@@ -53,7 +53,7 @@ const menuGroups: { label?: string; items: MenuItem[] }[] = [
       { icon: Wallet, label: "Pagamentos", href: "/dashboard/pagamentos" },
       { icon: Smartphone, label: "PIX", href: "/dashboard/pix" },
       { icon: Cpu, label: "POS/MAQUI.", href: "/dashboard/maquininhas" },
-      { icon: Smartphone, label: "Recargas", href: "/dashboard/recargas", disabled: true, badge: "EM BREVE" },
+      { icon: Smartphone, label: "Recargas", href: "/dashboard/recargas" },
       { icon: ArrowUpRight, label: "Transferência", href: "/dashboard/transferencia" },
     ]
   },

@@ -264,7 +264,7 @@ export default function ContaPage() {
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-2xl font-black uppercase tracking-tighter">Precisa de Ajuda?</h3>
-                  <p className="text-sm text-white/50 font-medium leading-relaxed font-sans">Nossa equipe de suporte especializado está disponível das 09h as 17h para te auxiliar em qualquer dúvida ou problema.</p>
+                  <p className="text-sm text-white/50 font-medium leading-relaxed font-sans">Nossa equipe de suporte especializado está disponível das 09:00 as 17:00 para te auxiliar em qualquer dúvida ou problema.</p>
                 </div>
                 <Button className="bg-[#f97316] hover:bg-[#ea580c] text-white rounded-sm font-black uppercase tracking-widest h-14 px-10">
                   Falar com Atendimento
