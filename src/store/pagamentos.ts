@@ -3,6 +3,7 @@ import { atom } from "jotai";
 export interface CobrancaResult {
   html: string;
   dataVencimento: string;
+  isPlaceholder?: boolean;
 }
 
 interface CobrancaData {
