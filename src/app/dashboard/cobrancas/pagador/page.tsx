@@ -20,7 +20,7 @@ export default function PagadorDataPage() {
   const router = useRouter();
   const [cobrancaData, setCobrancaData] = useAtom(cobrancaDataAtom);
   const [, setCobrancaHtml] = useAtom(cobrancaHtmlAtom);
-  
+
   const [isLoading, setIsLoading] = React.useState(false);
   const [isCepLoading, setIsCepLoading] = React.useState(false);
 
@@ -67,7 +67,7 @@ export default function PagadorDataPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.pagadorNome || !formData.pagadorTaxNumber || !formData.pagadorEmail || !formData.pagadorCep || !formData.pagadorNumero) {
       toast.error("Por favor, preencha todos os campos obrigatórios.");
       return;
@@ -89,7 +89,7 @@ export default function PagadorDataPage() {
         pagadorBairro: removeAccents(formData.pagadorBairro),
         pagadorRua: removeAccents(`${formData.pagadorRua}, ${formData.pagadorNumero}`),
         pagadorEmail: formData.pagadorEmail.toLowerCase().trim(),
-        addressComplement: removeAccents(formData.pagadorComplemento),
+        complemento: removeAccents(formData.pagadorComplemento),
         dataVencimento: vencimento,
       });
 
@@ -100,12 +100,12 @@ export default function PagadorDataPage() {
           const now = new Date();
           const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, diaVencimento);
           if (nextMonth.getDate() !== diaVencimento) nextMonth.setDate(0); // Ajuste para meses curtos
-          
+
           const firstDate = nextMonth.toISOString().split('T')[0];
-          
+
           // 1. Definindo o Modelo de Cobrança (Grupo)
           const groupName = `REC-${formData.pagadorNome.split(' ')[0].toUpperCase()}-${Date.now()}`;
-          
+
           await api.post("/api/banco/cobranca-grupo", {
             nome: groupName,
             valor: cobrancaData.valor,
@@ -129,14 +129,14 @@ export default function PagadorDataPage() {
             endereco: removeAccents(formData.pagadorRua),
             uf: formData.pagadorUf,
             numero: formData.pagadorNumero,
-            addressComplement: removeAccents(formData.pagadorComplemento),
+            complemento: removeAccents(formData.pagadorComplemento),
             email: formData.pagadorEmail.toLowerCase().trim(),
             telefone: formData.pagadorTelefone.replace(/\D/g, "") || "11999999999"
           });
 
           // 3. Geração dos Boletos (Trigger Bulk)
           await api.post(`/api/banco/cobranca-grupo/${groupName}/gerar-boletos`);
-          
+
           toast.dismiss(toastId);
           toast.success("Processamento em lote iniciado com sucesso!");
 
@@ -146,13 +146,13 @@ export default function PagadorDataPage() {
           try {
             const itemsRes = await api.get(`/api/banco/cobranca-grupo/${groupName}/itens`);
             const items = itemsRes.data?.data || itemsRes.data?.items || itemsRes.data || [];
-            
+
             if (Array.isArray(items) && items.length > 0) {
               cobrancaResults = items.map((item: any) => ({
                 html: item.html || item.boletoHtml || item.boleto_html || "",
                 dataVencimento: item.vencimento || item.dueDate || item.dataVencimento
               }));
-              
+
               if (cobrancaResults[0]?.html) {
                 setCobrancaHtml(cobrancaResults[0].html);
               } else {
@@ -166,14 +166,14 @@ export default function PagadorDataPage() {
             setCobrancaHtml("<h1>GRUPO REGISTRADO</h1><p>Sua solicitação de cobrança em lote foi recebida com sucesso.</p>");
           }
 
-          setCobrancaData({ 
-            ...cobrancaData, 
-            ...formData, 
+          setCobrancaData({
+            ...cobrancaData,
+            ...formData,
             isRecorrente: true,
             quantidadeMeses,
             results: cobrancaResults
           });
-          
+
           router.push("/dashboard/cobrancas/sucesso");
         } catch (err) {
           toast.dismiss(toastId);
@@ -185,7 +185,7 @@ export default function PagadorDataPage() {
           responseType: 'text',
           transformResponse: [(data) => data]
         });
-        
+
         if (response.data) {
           setCobrancaHtml(response.data);
           setCobrancaData({ ...cobrancaData, ...formData, isRecorrente: false });
@@ -203,7 +203,7 @@ export default function PagadorDataPage() {
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-7xl mx-auto p-4 md:p-10">
       <div className="mb-10 flex items-center gap-6">
-        <button 
+        <button
           onClick={() => router.back()}
           className="p-3 hover:bg-neutral-100 rounded-sm transition-colors text-[#0c0a09] border border-transparent hover:border-[#f97316]"
         >
@@ -232,9 +232,9 @@ export default function PagadorDataPage() {
                 <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Nome Completo / Razão Social</label>
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
-                  <Input 
+                  <Input
                     value={formData.pagadorNome}
-                    onChange={(e) => setFormData({...formData, pagadorNome: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, pagadorNome: e.target.value })}
                     placeholder="Ex: João da Silva"
                     className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                   />
@@ -245,9 +245,9 @@ export default function PagadorDataPage() {
                 <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">CPF ou CNPJ</label>
                 <div className="relative">
                   <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
-                  <Input 
+                  <Input
                     value={formData.pagadorTaxNumber}
-                    onChange={(e) => setFormData({...formData, pagadorTaxNumber: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, pagadorTaxNumber: e.target.value })}
                     placeholder="Somente números"
                     className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                   />
@@ -258,10 +258,10 @@ export default function PagadorDataPage() {
                 <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">E-mail</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
-                  <Input 
+                  <Input
                     type="email"
                     value={formData.pagadorEmail}
-                    onChange={(e) => setFormData({...formData, pagadorEmail: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, pagadorEmail: e.target.value })}
                     placeholder="cliente@email.com"
                     className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                   />
@@ -272,9 +272,9 @@ export default function PagadorDataPage() {
                 <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Telefone de Contato</label>
                 <div className="relative">
                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
-                  <Input 
+                  <Input
                     value={formData.pagadorTelefone}
-                    onChange={(e) => setFormData({...formData, pagadorTelefone: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, pagadorTelefone: e.target.value })}
                     placeholder="(11) 99999-9999"
                     className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                   />
@@ -285,12 +285,12 @@ export default function PagadorDataPage() {
                 <div className="flex items-center justify-between p-4 bg-orange-50/50 rounded-sm border border-orange-100/50 group hover:border-orange-500/30 transition-all">
                   <div className="space-y-1">
                     <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316] flex items-center gap-2">
-                       <Repeat className={cn("h-4 w-4 transition-all", isRecorrente ? "rotate-180 text-orange-600" : "text-neutral-400")} />
-                       Cobrança Recorrente
+                      <Repeat className={cn("h-4 w-4 transition-all", isRecorrente ? "rotate-180 text-orange-600" : "text-neutral-400")} />
+                      Cobrança Recorrente
                     </label>
                     <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">Gerar vários boletos mensais automaticamente</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={isRecorrente}
                     onCheckedChange={setIsRecorrente}
                     className="data-[state=checked]:bg-[#f97316]"
@@ -303,7 +303,7 @@ export default function PagadorDataPage() {
                       <label className="text-[11px] font-black uppercase tracking-widest text-[#f97316] flex items-center gap-2">
                         <CalendarCheck className="h-3.5 w-3.5" /> Dia do Venc.
                       </label>
-                      <Input 
+                      <Input
                         type="text"
                         inputMode="numeric"
                         value={diaVencimento}
@@ -320,7 +320,7 @@ export default function PagadorDataPage() {
                       <label className="text-[11px] font-black uppercase tracking-widest text-[#f97316] flex items-center gap-2">
                         <Layers className="h-3.5 w-3.5" /> Qtd. Meses
                       </label>
-                      <Input 
+                      <Input
                         type="text"
                         inputMode="numeric"
                         value={quantidadeMeses}
@@ -337,10 +337,10 @@ export default function PagadorDataPage() {
                 ) : (
                   <div className="space-y-2 animate-in fade-in duration-300">
                     <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Data de Vencimento</label>
-                    <Input 
+                    <Input
                       type="date"
                       value={formData.dataVencimento}
-                      onChange={(e) => setFormData({...formData, dataVencimento: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, dataVencimento: e.target.value })}
                       className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                     />
                   </div>
@@ -363,9 +363,9 @@ export default function PagadorDataPage() {
                 <div className="space-y-2">
                   <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">CEP</label>
                   <div className="relative">
-                    <Input 
+                    <Input
                       value={formData.pagadorCep}
-                      onChange={(e) => setFormData({...formData, pagadorCep: e.target.value})}
+                      onChange={(e) => setFormData({ ...formData, pagadorCep: e.target.value })}
                       onBlur={handleCepBlur}
                       placeholder="00000-000"
                       className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
@@ -377,9 +377,9 @@ export default function PagadorDataPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Número</label>
-                  <Input 
+                  <Input
                     value={formData.pagadorNumero}
-                    onChange={(e) => setFormData({...formData, pagadorNumero: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, pagadorNumero: e.target.value })}
                     placeholder="123"
                     className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                   />
@@ -388,9 +388,9 @@ export default function PagadorDataPage() {
 
               <div className="space-y-2">
                 <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Rua / Logradouro</label>
-                <Input 
+                <Input
                   value={formData.pagadorRua}
-                  onChange={(e) => setFormData({...formData, pagadorRua: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, pagadorRua: e.target.value })}
                   placeholder="Nome da rua"
                   className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                 />
@@ -398,9 +398,9 @@ export default function PagadorDataPage() {
 
               <div className="space-y-2">
                 <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Bairro</label>
-                <Input 
+                <Input
                   value={formData.pagadorBairro}
-                  onChange={(e) => setFormData({...formData, pagadorBairro: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, pagadorBairro: e.target.value })}
                   placeholder="Seu bairro"
                   className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                 />
@@ -408,9 +408,9 @@ export default function PagadorDataPage() {
 
               <div className="space-y-2">
                 <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Complemento (Opcional)</label>
-                <Input 
+                <Input
                   value={formData.pagadorComplemento}
-                  onChange={(e) => setFormData({...formData, pagadorComplemento: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, pagadorComplemento: e.target.value })}
                   placeholder="Ex: Apto 101, Sala 2"
                   className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                 />
@@ -419,18 +419,18 @@ export default function PagadorDataPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Cidade</label>
-                  <Input 
+                  <Input
                     value={formData.pagadorCidade}
-                    onChange={(e) => setFormData({...formData, pagadorCidade: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, pagadorCidade: e.target.value })}
                     placeholder="Cidade"
                     className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">UF</label>
-                  <Input 
+                  <Input
                     value={formData.pagadorUf}
-                    onChange={(e) => setFormData({...formData, pagadorUf: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, pagadorUf: e.target.value })}
                     placeholder="UF"
                     className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
                   />
@@ -442,10 +442,10 @@ export default function PagadorDataPage() {
 
         <div className="mt-10 flex flex-col items-center gap-6">
           <div className="flex items-center gap-3 text-neutral-400 font-bold text-sm">
-             <div className="p-2 bg-[#f97316]/10 rounded-sm border border-[#f97316]/20">
-                <Hash className="h-4 w-4 text-[#f97316]" />
-             </div>
-             Valor selecionado: <span className="text-[#0c0a09] font-black text-xl tracking-tighter">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cobrancaData.valor)}</span>
+            <div className="p-2 bg-[#f97316]/10 rounded-sm border border-[#f97316]/20">
+              <Hash className="h-4 w-4 text-[#f97316]" />
+            </div>
+            Valor selecionado: <span className="text-[#0c0a09] font-black text-xl tracking-tighter">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cobrancaData.valor)}</span>
           </div>
 
           <Button
@@ -463,7 +463,7 @@ export default function PagadorDataPage() {
               </>
             )}
           </Button>
-          
+
           <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest text-center">
             Ao clicar em gerar, o boleto será registrado no Banco Central e o PDF estará disponível.
           </p>

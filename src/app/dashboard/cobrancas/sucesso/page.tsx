@@ -19,14 +19,24 @@ import html2canvas from "html2canvas";
 export default function CobrancaSucessoPage() {
   const router = useRouter();
   const [cobrancaData] = useAtom(cobrancaDataAtom);
-  const [cobrancaHtml, setCobrancaHtml] = useAtom(cobrancaHtmlAtom);
+  const [cobrancaHtml] = useAtom(cobrancaHtmlAtom);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const currentResult = cobrancaData.results && cobrancaData.results.length > 0
-    ? cobrancaData.results[selectedIndex]
-    : { html: cobrancaHtml || "", dataVencimento: cobrancaData.dataVencimento };
+  // Fallback para gerar parcelas visuais caso o registro no banco ainda esteja em processamento
+  const displayResults = (cobrancaData.results && cobrancaData.results.length > 0)
+    ? cobrancaData.results
+    : Array.from({ length: cobrancaData.quantidadeMeses || 1 }).map((_, i) => {
+        const d = new Date(cobrancaData.dataVencimento || Date.now());
+        d.setMonth(d.getMonth() + i);
+        return {
+          html: "<h1>REGISTRANDO</h1><p>Este boleto está sendo processado pelo banco e estará disponível em breve no seu extrato.</p>",
+          dataVencimento: d.toISOString().split('T')[0],
+          isPlaceholder: true
+        };
+      });
 
+  const currentResult = displayResults[selectedIndex] || { html: cobrancaHtml || "", dataVencimento: cobrancaData.dataVencimento };
   const activeHtml = currentResult.html;
   const activeDate = currentResult.dataVencimento;
 
@@ -34,18 +44,105 @@ export default function CobrancaSucessoPage() {
     if (!dateStr) return "";
     const parts = dateStr.split("-");
     if (parts.length !== 3) return dateStr;
-    // Retornar no formato DD/MM/YYYY sem passar pelo objeto Date para evitar timezone shift
     return `${parts[2]}/${parts[1]}/${parts[0]}`;
   };
 
   useEffect(() => {
-    if (!cobrancaHtml) {
+    if (!cobrancaHtml && (!cobrancaData.results || cobrancaData.results.length === 0)) {
       router.push("/dashboard/cobrancas");
     }
-  }, [cobrancaHtml, router]);
+  }, [cobrancaHtml, cobrancaData.results, router]);
+
+  const handleDownloadPdf = async () => {
+    if (!activeHtml) return;
+    if (currentResult.isPlaceholder) {
+      toast.info("Aguarde o registro final do boleto para baixar o PDF oficial.");
+      return;
+    }
+
+    setIsGeneratingPdf(true);
+    const toastId = toast.loading("Gerando PDF oficial...");
+
+    try {
+      // Cria um iframe oculto para isolar o HTML do boleto e evitar erros de CSS global (ex: lab())
+      const iframe = document.createElement("iframe");
+      iframe.style.position = "fixed";
+      iframe.style.left = "-9999px";
+      iframe.style.visibility = "hidden";
+      document.body.appendChild(iframe);
+
+      const iframeDoc = iframe.contentWindow?.document;
+      if (!iframeDoc) throw new Error("Não foi possível acessar o iframe");
+
+      iframeDoc.open();
+      iframeDoc.write(`
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { margin: 0; padding: 0; background: white; }
+              * { box-sizing: border-box; }
+            </style>
+          </head>
+          <body>
+            ${activeHtml}
+          </body>
+        </html>
+      `);
+      iframeDoc.close();
+
+      // Aguarda o carregamento do conteúdo e fontes no iframe
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      const canvas = await html2canvas(iframeDoc.body, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        width: 850 // Largura padrão de boleto
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF("p", "mm", "a4");
+      
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const ratio = canvasWidth / canvasHeight;
+      
+      let imgWidth = pageWidth;
+      let imgHeight = pageWidth / ratio;
+      
+      if (imgHeight > pageHeight) {
+        imgHeight = pageHeight;
+        imgWidth = pageHeight * ratio;
+      }
+
+      pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
+      
+      const fileName = `boleto_${formatDateSync(activeDate).replace(/\//g, "-")}_${cobrancaData.pagadorNome.replace(/\s+/g, '_')}.pdf`;
+      pdf.save(fileName);
+
+      document.body.removeChild(iframe);
+      toast.dismiss(toastId);
+      toast.success("Download concluído!");
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+      toast.dismiss(toastId);
+      toast.error("Erro no download direto. Use 'Visualizar e Imprimir'.");
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   const handlePrint = () => {
     if (!activeHtml) return;
+    if (currentResult.isPlaceholder) {
+      toast.info("Este título ainda está sendo registrado. Tente imprimir em alguns instantes no menu de Cobranças.");
+      return;
+    }
     const printWindow = window.open("", "_blank");
     if (printWindow) {
       printWindow.document.write(activeHtml);
@@ -57,62 +154,7 @@ export default function CobrancaSucessoPage() {
     }
   };
 
-  const handleDownloadPdf = async () => {
-    if (!activeHtml) return;
-    setIsGeneratingPdf(true);
-    const toastId = toast.loading("Trabalhando no seu PDF oficial...");
-
-    try {
-      const div = document.createElement("div");
-      div.id = "pdf-temp-container";
-      div.style.position = "fixed";
-      div.style.left = "-9999px";
-      div.style.top = "0";
-      div.style.width = "850px";
-      div.style.background = "white";
-      div.style.color = "black";
-      div.innerHTML = activeHtml;
-      document.body.appendChild(div);
-
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      const canvas = await html2canvas(div, {
-        scale: 2,
-        useCORS: true,
-        logging: true,
-        backgroundColor: "#ffffff",
-        windowWidth: 850
-      });
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdf = new jsPDF("p", "mm", "a4");
-      
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      
-      const ratio = Math.min(pageWidth / (imgWidth / 2), pageHeight / (imgHeight / 2));
-      
-      pdf.addImage(imgData, "JPEG", 0, 0, imgWidth * ratio / 2, imgHeight * ratio / 2);
-      
-      const fileName = `boleto_${formatDateSync(activeDate).replace(/\//g, "-")}_${cobrancaData.pagadorNome.replace(/\s+/g, '_')}.pdf`;
-      pdf.save(fileName);
-
-      document.body.removeChild(div);
-      toast.dismiss(toastId);
-      toast.success("PDF baixado com sucesso!");
-    } catch (err) {
-      console.error("Erro ao gerar PDF:", err);
-      toast.dismiss(toastId);
-      toast.error("O download direto falhou. Por favor, use 'Imprimir' e escolha 'Salvar como PDF'.");
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  };
-
-  if (!cobrancaHtml) return null;
+  if (!cobrancaHtml && (!cobrancaData.results || cobrancaData.results.length === 0)) return null;
 
   return (
     <div className="animate-in fade-in zoom-in-95 duration-700 flex flex-col items-center justify-center py-10 max-w-7xl mx-auto px-4">
@@ -163,32 +205,39 @@ export default function CobrancaSucessoPage() {
             </div>
           </div>
           <CardContent className="p-10 space-y-10">
-            {cobrancaData.isRecorrente && cobrancaData.results && (
+            {cobrancaData.isRecorrente && (
               <div className="space-y-6 animate-in fade-in duration-500">
                 <div className="flex items-center justify-between">
                    <div className="space-y-1">
                       <h4 className="text-xs font-black text-[#0c0a09] uppercase tracking-widest flex items-center gap-2">
                         <Layers className="h-4 w-4 text-[#f97316]" /> Seleção do Boleto
                       </h4>
-                      <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Gerencie cada parcela individualmente</p>
+                      <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Escolha qual parcela deseja visualizar ou imprimir</p>
                    </div>
-                   <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 text-[10px] uppercase font-black tracking-widest">{selectedIndex + 1} de {cobrancaData.results.length}</Badge>
+                   <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 text-[10px] uppercase font-black tracking-widest">{selectedIndex + 1} de {displayResults.length}</Badge>
                 </div>
                 
-                <div className="flex items-center gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent">
-                  {cobrancaData.results.map((res, idx) => (
+                <div className="flex items-center gap-4 overflow-x-auto py-10 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent -mx-6 px-6">
+                  {displayResults.map((res: any, idx: number) => (
                     <button
                       key={idx}
                       onClick={() => setSelectedIndex(idx)}
                       className={cn(
-                        "shrink-0 min-w-[140px] p-5 rounded-sm border-2 transition-all flex flex-col items-center gap-2 snap-center",
+                        "shrink-0 min-w-[170px] p-8 rounded-sm border-2 transition-all flex flex-col items-center gap-4 snap-center group relative overflow-hidden",
                         selectedIndex === idx 
-                          ? "border-[#f97316] bg-orange-50/50 shadow-lg scale-105" 
-                          : "border-neutral-100 opacity-60 hover:opacity-100 bg-white"
+                          ? "border-[#f97316] bg-orange-50/50 shadow-2xl scale-110 z-10" 
+                          : "border-neutral-100 opacity-60 hover:opacity-100 bg-white hover:border-neutral-200"
                       )}
                     >
-                      <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">{idx + 1}ª Parcela</span>
-                      <span className="text-xs font-black text-[#0c0a09] font-mono">{formatDateSync(res.dataVencimento)}</span>
+                      {selectedIndex === idx && <div className="absolute top-0 right-0 p-1.5 bg-[#f97316] text-white rounded-bl-sm"><CheckCircle2 className="h-3 w-3" /></div>}
+                      <div className={cn("w-10 h-10 rounded-full flex items-center justify-center transition-colors", selectedIndex === idx ? "bg-[#f97316] text-white" : "bg-neutral-100 text-neutral-400")}>
+                        <Banknote className="h-5 w-5" />
+                      </div>
+                      <div className="text-center">
+                        <p className={cn("text-[10px] font-black uppercase tracking-widest mb-1", selectedIndex === idx ? "text-[#f97316]" : "text-neutral-400")}>{idx + 1}ª Parcela</p>
+                        <p className="text-sm font-black text-[#0c0a09] font-mono">{formatDateSync(res.dataVencimento)}</p>
+                      </div>
+                      {res.isPlaceholder && <Badge className="mt-1 bg-blue-500/10 text-blue-500 border-0 text-[7px] uppercase font-black tracking-widest">Processando</Badge>}
                     </button>
                   ))}
                 </div>

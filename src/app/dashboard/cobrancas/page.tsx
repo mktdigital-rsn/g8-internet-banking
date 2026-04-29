@@ -609,8 +609,8 @@ export default function GestaoCobrancasPage() {
                 <div className="flex flex-col gap-8">
                     <div className="flex flex-col min-[1350px]:flex-row items-center justify-between gap-6 pb-6 border-b border-neutral-50 text-neutral-400 font-bold" 
                          style={{ 
-                            flexDirection: typeof window !== 'undefined' && window.innerWidth >= 1350 ? 'column' : undefined,
-                            justifyContent: typeof window !== 'undefined' && window.innerWidth >= 1350 ? 'center' : undefined 
+                            flexDirection: mounted && window.innerWidth >= 1350 ? 'column' : undefined,
+                            justifyContent: mounted && window.innerWidth >= 1350 ? 'center' : undefined 
                          } as any}>
                         <Tabs value={statusFilter} onValueChange={(val: any) => setStatusFilter(val)} className="w-full lg:w-auto">
                             <TabsList className="bg-neutral-50 rounded-sm p-0.5 h-12 gap-1 border border-neutral-100 w-full lg:w-auto overflow-x-auto no-scrollbar">
@@ -636,8 +636,8 @@ export default function GestaoCobrancasPage() {
                     
                     <div className="flex flex-col min-[1220px]:flex-row items-center justify-between gap-6"
                          style={{ 
-                            flexDirection: typeof window !== 'undefined' && window.innerWidth >= 1350 ? 'column' : undefined,
-                            justifyContent: typeof window !== 'undefined' && window.innerWidth >= 1350 ? 'center' : undefined 
+                            flexDirection: mounted && window.innerWidth >= 1350 ? 'column' : undefined,
+                            justifyContent: mounted && window.innerWidth >= 1350 ? 'center' : undefined 
                          } as any}>
                         <div className="relative max-w-2xl w-full">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
