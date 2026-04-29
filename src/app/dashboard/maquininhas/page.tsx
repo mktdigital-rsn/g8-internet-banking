@@ -458,7 +458,7 @@ export default function MaquininhasPage() {
             Adquirência G8
           </Badge>
           <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">
-            <span className="text-[#f97316]">Maquininhas</span> G8 Pay
+            Maquininhas <span className="text-orange-600">G8 Pay</span>
           </h1>
           <p className="text-sm md:text-base text-neutral-700 font-bold max-w-2xl">
             Solicite sua maquininha e comece a receber pagamentos com as melhores taxas do mercado.

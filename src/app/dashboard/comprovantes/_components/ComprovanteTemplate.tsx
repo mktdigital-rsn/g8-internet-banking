@@ -638,8 +638,8 @@ export default function ComprovanteTemplate({
                             <Phone className="h-6 w-6" />
                         </div>
                         <div className="flex flex-col justify-center relative z-10 min-w-0">
-                            <h3 className="text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09:00 as 18:00</h3>
-                            <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central G8</p>
+                            <h3 className="text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09h as 17h</h3>
+                            <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central de Assistência G8</p>
                         </div>
                     </Card>
                 </div>

@@ -185,7 +185,8 @@ export default function CartoesPage() {
                      )}
                   </DialogContent>
                </Dialog>
-               <Button className="h-14 px-8 bg-white border border-neutral-200 text-[#0c0a09] hover:bg-neutral-50 rounded-sm font-black uppercase tracking-widest text-xs transition-all shadow-sm">
+               <Button className="h-14 px-8 bg-[#0c0a09] hover:bg-neutral-800 text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all shadow-xl group flex items-center">
+                  <CreditCard className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform text-orange-600" />
                   Solicitar Cartão Físico
                </Button>
             </div>
@@ -194,7 +195,7 @@ export default function CartoesPage() {
          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 relative z-10">
             {/* Main Content Area */}
             <div className="lg:col-span-8 space-y-12">
-               
+
                {/* Cards Section */}
                <div className="space-y-6">
                   <div className="flex justify-between items-center">
@@ -227,8 +228,8 @@ export default function CartoesPage() {
                         {cards.map((card) => (
                            <div key={card.id} className="space-y-6">
                               <div className={`aspect-[1.586/1] w-full rounded-md p-8 relative overflow-hidden transition-all hover:scale-[1.02] cursor-pointer shadow-2xl ${card.type === "virtual"
-                                    ? "bg-gradient-to-br from-neutral-900 to-black text-white"
-                                    : "bg-gradient-to-br from-orange-600 to-orange-700 text-white shadow-orange-600/30 shadow-xl"
+                                 ? "bg-gradient-to-br from-neutral-900 to-black text-white"
+                                 : "bg-gradient-to-br from-orange-600 to-orange-700 text-white shadow-orange-600/30 shadow-xl"
                                  }`}>
                                  <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl opacity-20" />
                                  <div className="relative z-10 h-full flex flex-col justify-between">
@@ -408,7 +409,7 @@ export default function CartoesPage() {
                   </div>
                   <div>
                      <p className="text-xs font-black text-[#0c0a09] uppercase tracking-tight">Precisa de Ajuda?</p>
-                     <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Suporte G8: 09:00 as 17:00</p>
+                     <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Suporte G8: 09h as 17h</p>
                   </div>
                   <ChevronRight className="h-4 w-4 ml-auto text-neutral-300 group-hover:text-orange-600 transition-all" />
                </div>

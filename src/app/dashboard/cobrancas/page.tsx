@@ -430,7 +430,7 @@ export default function GestaoCobrancasPage() {
             <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 px-2">
                 <div className="space-y-1">
                     <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.25em] rounded-sm">Gestão Comercial</Badge>
-                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">Gestão de Boletos</h1>
+                    <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">Gestão de <span className="text-[#f97316]">Boletos</span></h1>
                     <p className="text-sm text-neutral-400 font-bold italic">Acompanhe seu fluxo de caixa e emissão de cobranças em tempo real.</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">

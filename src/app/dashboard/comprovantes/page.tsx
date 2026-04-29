@@ -361,7 +361,7 @@ export default function ComprovantesPage() {
                         <Card className="bg-orange-500 border-0 rounded-md p-8 text-white flex items-center justify-between group cursor-pointer hover:bg-orange-600 transition-all active:scale-95 shadow-xl shadow-orange-500/20">
                             <div className="space-y-1">
                                 <h4 className="text-xl font-black uppercase tracking-tighter leading-none">Precisa de Ajuda?</h4>
-                                <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Suporte G8: 09:00 as 17:00</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Suporte G8: 09h as 17h</p>
                             </div>
                             <ChevronRight size={24} className="group-hover:translate-x-2 transition-transform" />
                         </Card>

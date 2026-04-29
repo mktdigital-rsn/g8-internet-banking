@@ -625,7 +625,7 @@ export default function ExtratoGeralPage() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 px-2">
                     <div className="space-y-1">
                         <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-2 md:px-3 py-0.5 md:py-1 font-black text-[8px] md:text-[10px] uppercase tracking-[0.25em] rounded-sm">Fluxo de Caixa</Badge>
-                        <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-[#0c0a09] leading-none">Minha Movimentação</h1>
+                        <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">MINHA <span className="text-[#f97316]">MOVIMENTAÇÃO</span></h1>
                         <p className="text-xs md:text-sm text-neutral-400 font-bold">Consulte e exporte seu histórico bancário detalhado.</p>
                     </div>
                     <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto">
@@ -691,7 +691,7 @@ export default function ExtratoGeralPage() {
                             <Phone className="h-6 w-6" />
                         </div>
                         <div className="flex flex-col justify-center relative z-10 min-w-0">
-                            <h3 className="text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09:00 as 18:00</h3>
+                            <h3 className="text-lg font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09h as 17h</h3>
                             <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central de Assistência G8</p>
                         </div>
                     </Card>

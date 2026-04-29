@@ -303,7 +303,8 @@ export default function DashboardHome() {
    }, [allTransactions, filter]);
 
    return (
-      <div className="p-4 md:p-6 2xl:p-10 flex flex-col xl:flex-row gap-8 2xl:gap-12 h-full overflow-y-auto w-full no-scrollbar">
+      <div className="bg-[#f8f9fa] min-h-screen w-full overflow-y-auto no-scrollbar">
+         <div className="p-4 md:p-10 2xl:p-16 flex flex-col xl:flex-row gap-8 2xl:gap-12 max-w-[1600px] mx-auto animate-in fade-in duration-700">
          {/* Left Column: Main Dashboard */}
          <div className="flex-1 space-y-12 2xl:space-y-16 min-w-0 w-full">
             {/* Upper Section: Welcome & Actions */}
@@ -316,16 +317,16 @@ export default function DashboardHome() {
                          <div className="h-8 2xl:h-12 w-1/2 bg-black/5 animate-pulse rounded-md" />
                       </div>
                    ) : (
-                      <>
-                         <h1 className="text-4xl md:text-5xl 2xl:text-6xl font-black tracking-tighter text-[#0c0a09]">Olá, {userName.replace(/^\d+(\.\d+)*\s*/, '').split(' ')[0]}!</h1>
+                       <>
+                         <h1 className="text-4xl md:text-5xl 2xl:text-6xl font-black tracking-tighter text-[#0c0a09]">Olá, <span className="text-orange-600">{userName.replace(/^\d+(\.\d+)*\s*/, '').split(' ')[0]}</span>!</h1>
                          <p className="text-sm md:text-base 2xl:text-2xl text-neutral-400 font-bold opacity-70">Aqui está o resumo das suas finanças hoje.</p>
                       </>
                    )}
                 </div>
                 <div className="flex gap-4 w-full sm:w-auto">
-                   <Link href="/dashboard/pix" className="flex-1 sm:flex-none">
-                      <Button className="w-full rounded-md h-12 2xl:h-20 px-10 2xl:px-16 font-black text-xs 2xl:text-lg uppercase tracking-widest bg-[#f97316] text-white hover:bg-[#c2410c] shadow-2xl shadow-orange-500/30 transition-all active:scale-95">Nova Transação</Button>
-                   </Link>
+                    <Link href="/dashboard/pix" className="flex-1 sm:flex-none">
+                       <Button className="w-full rounded-md h-12 2xl:h-20 px-10 2xl:px-16 font-black text-xs 2xl:text-lg uppercase tracking-widest bg-black text-white hover:bg-[#f97316] shadow-2xl shadow-orange-500/30 transition-all active:scale-95">Nova Transação</Button>
+                    </Link>
                 </div>
             </div>
 
@@ -778,6 +779,7 @@ export default function DashboardHome() {
                  </Card>
              </div>
           )}
+         </div>
       </div>
    );
 }

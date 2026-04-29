@@ -249,7 +249,7 @@ export default function AgendamentosPage() {
             });
             setIsAdding(true);
           }}
-          className="h-14 px-8 bg-orange-600 hover:bg-orange-700 text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all shadow-xl shadow-orange-600/20 group"
+          className="h-14 px-8 bg-black hover:bg-orange-600 text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all shadow-xl shadow-orange-600/20 group"
         >
           <CalendarClock className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform" />
           Novo Agendamento
