@@ -436,18 +436,18 @@ export default function AgendamentosPage() {
 
       {/* Modal Novo Agendamento */}
       {isAdding && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-300">
-          <Card className="w-full max-w-xl bg-white rounded-sm shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden">
-            <div className="flex items-center justify-between p-8 border-b border-neutral-100">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 md:p-12 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-300">
+          <Card className="w-full max-w-lg bg-white rounded-sm shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+            <div className="flex items-center justify-between p-6 border-b border-neutral-100 shrink-0">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-orange-50 rounded-sm flex items-center justify-center text-orange-600">
                   <CalendarClock className="h-6 w-6" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">
+                  <h2 className="text-lg md:text-xl font-black text-[#0c0a09] uppercase tracking-tight">
                     {editingId ? "Editar Agendamento" : "Novo Agendamento"}
                   </h2>
-                  <p className="text-[10px] font-black text-orange-600 uppercase tracking-[0.2em]">Programação transacional</p>
+                  <p className="text-[9px] font-black text-orange-600 uppercase tracking-[0.2em]">Programação transacional</p>
                 </div>
               </div>
               <button 
@@ -461,7 +461,7 @@ export default function AgendamentosPage() {
               </button>
             </div>
 
-            <div className="p-8 space-y-6">
+            <div className="p-6  space-y-4 overflow-y-auto custom-scrollbar flex-1">
               {/* Radio Select Tipo */}
               <div className="space-y-3">
                 <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Tipo de Pagamento</label>

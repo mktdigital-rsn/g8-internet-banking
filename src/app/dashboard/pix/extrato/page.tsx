@@ -51,12 +51,12 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
 const PixIcon = (props: any) => (
-  <svg {...props} viewBox="0 0 100 100" fill="currentColor">
-    <rect x="35" y="5" width="30" height="30" rx="6" transform="rotate(45 50 20)" />
-    <rect x="35" y="65" width="30" height="30" rx="6" transform="rotate(45 50 80)" />
-    <rect x="5" y="35" width="30" height="30" rx="6" transform="rotate(45 20 50)" />
-    <rect x="65" y="35" width="30" height="30" rx="6" transform="rotate(45 80 50)" />
-  </svg>
+    <svg {...props} viewBox="0 0 100 100" fill="currentColor">
+        <rect x="35" y="5" width="30" height="30" rx="6" transform="rotate(45 50 20)" />
+        <rect x="35" y="65" width="30" height="30" rx="6" transform="rotate(45 50 80)" />
+        <rect x="5" y="35" width="30" height="30" rx="6" transform="rotate(45 20 50)" />
+        <rect x="65" y="35" width="30" height="30" rx="6" transform="rotate(45 80 50)" />
+    </svg>
 );
 
 function PixExtratoContent() {
@@ -80,7 +80,7 @@ function PixExtratoContent() {
         const updateDates = () => {
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
-            
+
             if (chartPeriod === "day") {
                 setStartDate(todayStr);
                 setEndDate(todayStr);
@@ -148,7 +148,7 @@ function PixExtratoContent() {
 
             if (format === 'pdf') {
                 const doc = new jsPDF();
-                
+
                 // --- HEADER SECTION ---
                 try {
                     doc.addImage("/logo_g8_boleto.png", "PNG", 14, 10, 32, 10);
@@ -158,7 +158,7 @@ function PixExtratoContent() {
                     doc.setTextColor(12, 10, 9);
                     doc.text("G8PAY", 14, 20);
                 }
-                
+
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(16);
                 doc.setTextColor(12, 10, 9);
@@ -166,7 +166,7 @@ function PixExtratoContent() {
                 const titleWidth = doc.getTextWidth(reportTitle);
                 const pageWidth = doc.internal.pageSize.getWidth();
                 doc.text(reportTitle, (pageWidth - titleWidth) / 2, 20);
-                
+
                 doc.setFontSize(8);
                 doc.setFont("helvetica", "normal");
                 doc.setTextColor(100, 100, 100);
@@ -193,22 +193,22 @@ function PixExtratoContent() {
                     head: tableHeaders,
                     body: tableBody,
                     theme: 'grid',
-                    headStyles: { 
-                        fillColor: [255, 255, 255], 
+                    headStyles: {
+                        fillColor: [255, 255, 255],
                         textColor: [12, 10, 9],
                         fontSize: 8,
                         fontStyle: 'bold',
                         lineWidth: 0.1,
                         lineColor: [200, 200, 200]
                     },
-                    bodyStyles: { 
+                    bodyStyles: {
                         fontSize: 7,
                         textColor: [50, 50, 50],
                         lineWidth: 0.1,
                         lineColor: [230, 230, 230]
                     },
-                    alternateRowStyles: { 
-                        fillColor: [252, 252, 252] 
+                    alternateRowStyles: {
+                        fillColor: [252, 252, 252]
                     },
                     columnStyles: {
                         6: { halign: 'right', fontStyle: 'bold' }
@@ -354,11 +354,11 @@ function PixExtratoContent() {
             const parts = endDate.split("-").map(Number);
             referenceDate = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
         }
-        
+
         const now = new Date();
         const isToday = referenceDate.toDateString() === now.toDateString();
         const startOfRef = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
-        
+
         const groups: { [key: string]: { name: string, full: string, entries: number, exits: number, timestamp: number } } = {};
         const daysArr = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -366,10 +366,10 @@ function PixExtratoContent() {
             const hLimit = isToday ? now.getHours() : 23;
             for (let h = 0; h <= hLimit; h++) {
                 const key = `H-${h}`;
-                groups[key] = { 
-                    name: `${h}h`, 
-                    full: `${isToday ? 'Hoje' : referenceDate.toLocaleDateString('pt-BR')} às ${String(h).padStart(2, '0')}:00`, 
-                    entries: 0, 
+                groups[key] = {
+                    name: `${h}h`,
+                    full: `${isToday ? 'Hoje' : referenceDate.toLocaleDateString('pt-BR')} às ${String(h).padStart(2, '0')}:00`,
+                    entries: 0,
                     exits: 0,
                     timestamp: h
                 };
@@ -380,10 +380,10 @@ function PixExtratoContent() {
                 d.setDate(startOfRef.getDate() - i);
                 const dayLabel = daysArr[d.getDay()];
                 const key = `D-${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-                groups[key] = { 
-                    name: `${dayLabel} ${String(d.getDate()).padStart(2, '0')}`, 
-                    full: d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }), 
-                    entries: 0, 
+                groups[key] = {
+                    name: `${dayLabel} ${String(d.getDate()).padStart(2, '0')}`,
+                    full: d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }),
+                    entries: 0,
                     exits: 0,
                     timestamp: d.getTime()
                 };
@@ -397,10 +397,10 @@ function PixExtratoContent() {
                 const d = new Date(firstDay);
                 d.setDate(firstDay.getDate() + i);
                 const key = `D-${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-                groups[key] = { 
-                    name: String(d.getDate()).padStart(2, '0'), 
-                    full: d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }), 
-                    entries: 0, 
+                groups[key] = {
+                    name: String(d.getDate()).padStart(2, '0'),
+                    full: d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
+                    entries: 0,
                     exits: 0,
                     timestamp: d.getTime()
                 };
@@ -409,14 +409,14 @@ function PixExtratoContent() {
 
         filteredItems.forEach(item => {
             if (!item.dataDaTransacaoFormatada) return;
-            
+
             const [datePart, timePart] = item.dataDaTransacaoFormatada.split(" ");
             const parts = datePart.replace(/\//g, "-").split("-").map(Number);
-            
+
             let day, month, year;
-            if (parts[0] > 1000) { [year, month, day] = parts; } 
+            if (parts[0] > 1000) { [year, month, day] = parts; }
             else { [day, month, year] = parts; }
-            
+
             const [hour, min, sec] = (timePart || "00:00:00").split(":").map(Number);
             const itemDate = new Date(year, month - 1, day, hour, min, sec);
             if (isNaN(itemDate.getTime())) return;
@@ -615,7 +615,7 @@ function PixExtratoContent() {
                             variant="outline"
                             className="flex-1 sm:flex-none h-10 md:h-11 border-neutral-100 bg-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all text-neutral-400 hover:text-black"
                         >
-                            {exportingType === 'pdf' ? <div className="h-4 w-4 border-2 border-[#f97316] border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-[#f97316]" />} 
+                            {exportingType === 'pdf' ? <div className="h-4 w-4 border-2 border-[#f97316] border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-[#f97316]" />}
                             PDF
                         </Button>
                         <Button
@@ -624,7 +624,7 @@ function PixExtratoContent() {
                             variant="outline"
                             className="flex-1 sm:flex-none h-10 md:h-11 border-neutral-100 bg-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all text-neutral-400 hover:text-black"
                         >
-                            {exportingType === 'csv' ? <div className="h-4 w-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-green-600" />} 
+                            {exportingType === 'csv' ? <div className="h-4 w-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-green-600" />}
                             CSV
                         </Button>
                         <Button
@@ -632,7 +632,7 @@ function PixExtratoContent() {
                             disabled={!!exportingType}
                             className="flex-1 sm:flex-none h-10 md:h-11 bg-[#f97316] hover:bg-[#c2410c] text-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all font-sans"
                         >
-                            {exportingType === 'xls' ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4" />} 
+                            {exportingType === 'xls' ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4" />}
                             XLS
                         </Button>
                     </div>
@@ -663,7 +663,7 @@ function PixExtratoContent() {
                             </p>
                         </div>
                     </Card>
-                    <Card 
+                    <Card
                         onClick={() => window.open("https://wa.me/5551996297077", "_blank")}
                         className="rounded-[2px] border-0 shadow-xl bg-[#f97316] p-6 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex flex-row items-center gap-5 active:scale-95 transition-all min-h-[110px]"
                     >
@@ -672,7 +672,7 @@ function PixExtratoContent() {
                             <Phone className="h-6 w-6" />
                         </div>
                         <div className="flex flex-col justify-center relative z-10 min-w-0">
-                            <h3 className="text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09h às 18h</h3>
+                            <h3 className="text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09h as 17h</h3>
                             <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central de Assistência G8</p>
                         </div>
                     </Card>
