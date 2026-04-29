@@ -133,6 +133,7 @@ export default function TransferenciaPage() {
         setIsLoading(true);
         setErrorMessage("");
         try {
+            let res;
             if (transferType === 'G8') {
                 if (searchMode === 'cpf') {
                     const tax = targetCpf.replace(/\D/g, "");
