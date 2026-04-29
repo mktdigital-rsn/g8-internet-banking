@@ -157,13 +157,13 @@ export default function MaquininhasPage() {
               name: b.name
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
-          
+
           // Ensure G8 and Fiducia are at the top
           const important = [
             { code: "065", name: "G8 Bank" },
             { code: "382", name: "FIDUCIA I S.C.M. S/A" }
           ];
-          
+
           const filtered = formatted.filter(b => b.code !== "065" && b.code !== "382");
           setBancosList([...important, ...filtered]);
         }
@@ -247,9 +247,9 @@ export default function MaquininhasPage() {
       try {
         // Try internal bankwhitelabel API first
         const res = await api.get(`/api/banco/util/buscar-cep/${cleanCep}`).catch(() => null);
-        
+
         let data = res?.data?.data || res?.data;
-        
+
         // Fallback to ViaCEP if internal fails or returns no data
         if (!data || !data.logradouro) {
           const viaRes = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
@@ -281,16 +281,16 @@ export default function MaquininhasPage() {
   const handleFileUpload = (docType: string, file: File) => {
     const normalizedName = normalizeFileName(docType, file.name);
     const fakeUrl = URL.createObjectURL(file);
-    
+
     setFormData(prev => {
       const currentDocs = prev.documents[docType] || [];
       const maxFiles = docType === "Foto da Fachada" ? 3 : 1;
-      
+
       if (currentDocs.length >= maxFiles) {
         toast.error(`Limite de arquivos para ${docType} atingido.`);
         return prev;
       }
-      
+
       return {
         ...prev,
         documents: {
@@ -299,7 +299,7 @@ export default function MaquininhasPage() {
         }
       };
     });
-    
+
     if (!attachedDocs.includes(docType)) {
       setAttachedDocs(prev => [...prev, docType]);
     }
@@ -310,13 +310,13 @@ export default function MaquininhasPage() {
     setFormData(prev => {
       const newDocs = [...(prev.documents[docType] || [])];
       newDocs.splice(index, 1);
-      
+
       const newDocuments = { ...prev.documents, [docType]: newDocs };
-      
+
       if (newDocs.length === 0) {
         setAttachedDocs(prevAttached => prevAttached.filter(d => d !== docType));
       }
-      
+
       return { ...prev, documents: newDocuments };
     });
   };
@@ -369,11 +369,11 @@ export default function MaquininhasPage() {
   const handleSubmitForm = () => {
     // Validate required fields (Strict)
     const required = [
-      "tipoEstabelecimento", "cnpjCpf", "tipoEmpresa", "nomeFantasia", 
-      "contatoPrincipal", "mcc", "cnae", "cep", "rua", "numero", 
+      "tipoEstabelecimento", "cnpjCpf", "tipoEmpresa", "nomeFantasia",
+      "contatoPrincipal", "mcc", "cnae", "cep", "rua", "numero",
       "bairro", "cidade", "estado"
     ];
-    
+
     const missing = required.filter((f) => !formData[f as keyof typeof formData]);
 
     if (missing.length > 0) {
@@ -612,51 +612,51 @@ export default function MaquininhasPage() {
                   </div>
                   <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Informações Básicas</h3>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  <FormSelect 
-                    label="Tipo de Estabelecimento" 
-                    required 
-                    value={formData.tipoEstabelecimento} 
+                  <FormSelect
+                    label="Tipo de Estabelecimento"
+                    required
+                    value={formData.tipoEstabelecimento}
                     onChange={(v) => updateField("tipoEstabelecimento", v)}
                     options={["Pessoa Física", "Pessoa Jurídica"]}
                   />
-                  <FormField 
-                    label="CPF/CNPJ" 
-                    required 
-                    value={formData.cnpjCpf} 
+                  <FormField
+                    label="CPF/CNPJ"
+                    required
+                    value={formData.cnpjCpf}
                     onChange={(v) => {
                       const masked = maskCpfCnpj(v);
                       updateField("cnpjCpf", masked);
                       if (masked.length > 14) handleCnpjLookup(masked);
-                    }} 
-                    placeholder="XXX.XXX.XXX-XX" 
+                    }}
+                    placeholder="XXX.XXX.XXX-XX"
                   />
                   <FormField label="Razão Social" value={formData.razaoSocial} onChange={(v) => updateField("razaoSocial", v)} placeholder="Razão Social da Empresa" />
-                  
-                  <FormSelect 
-                    label="Tipo de Empresa" 
-                    required 
-                    value={formData.tipoEmpresa} 
+
+                  <FormSelect
+                    label="Tipo de Empresa"
+                    required
+                    value={formData.tipoEmpresa}
                     onChange={(v) => updateField("tipoEmpresa", v)}
                     options={["MEI", "ME", "EPP", "LTDA", "S.A."]}
                   />
                   <FormField label="Nome Fantasia" required value={formData.nomeFantasia} onChange={(v) => updateField("nomeFantasia", v)} placeholder="Nome Fantasia" />
                   <FormField label="Contato Principal" required value={formData.contatoPrincipal} onChange={(v) => updateField("contatoPrincipal", maskPhone(v))} placeholder="(XX) X XXXX-XXXX" />
-                  
+
                   <FormField label="Data de Fundação" type="date" required value={formData.dataFundacao} onChange={(v) => updateField("dataFundacao", v)} />
-                  <FormSelect 
-                    label="Horário de Funcionamento" 
-                    required 
-                    value={formData.horarioFuncionamento} 
+                  <FormSelect
+                    label="Horário de Funcionamento"
+                    required
+                    value={formData.horarioFuncionamento}
                     onChange={(v) => updateField("horarioFuncionamento", v)}
-                    options={["08h às 18h", "09h às 19h", "24 horas", "Comercial"]}
+                    options={["08h as 18h", "09h às 19h", "24 horas", "Comercial"]}
                   />
                   <FormField label="Site" value={formData.site} onChange={(v) => updateField("site", v)} placeholder="https://www.xxxxx.com.br" />
-                  
-                  <FormSelect 
-                    label="Shopping" 
-                    value={formData.shopping} 
+
+                  <FormSelect
+                    label="Shopping"
+                    value={formData.shopping}
                     onChange={(v) => updateField("shopping", v)}
                     options={["Não", "Sim"]}
                   />
@@ -673,7 +673,7 @@ export default function MaquininhasPage() {
               </Card>
 
               {/* Informações Financeiras */}
-            {/* Informações Financeiras */}
+              {/* Informações Financeiras */}
               <Card className="p-8 border-l-[6px] border-l-blue-500 shadow-xl space-y-8">
                 <div className="flex items-center gap-3 border-b border-neutral-100 pb-5">
                   <div className="w-10 h-10 bg-blue-500 rounded-sm flex items-center justify-center">
@@ -681,14 +681,14 @@ export default function MaquininhasPage() {
                   </div>
                   <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Informações Financeiras</h3>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <FormField label="Faturamento Mensal" required value={formData.faturamentoMensal} onChange={(v) => updateField("faturamentoMensal", maskCurrency(v))} placeholder="R$ 0,00" />
                   <FormField label="Ticket Médio" required value={formData.ticketMedio} onChange={(v) => updateField("ticketMedio", maskCurrency(v))} placeholder="R$ 0,00" />
-                  <FormSelect 
-                    label="Antecipação de Recebíveis" 
-                    required 
-                    value={formData.antecipacaoRecebeiveis} 
+                  <FormSelect
+                    label="Antecipação de Recebíveis"
+                    required
+                    value={formData.antecipacaoRecebeiveis}
                     onChange={(v) => updateField("antecipacaoRecebeiveis", v)}
                     options={["Sim", "Não"]}
                   />
@@ -708,7 +708,7 @@ export default function MaquininhasPage() {
                     + Adicionar Contato
                   </Button>
                 </div>
-                
+
                 <div className="space-y-8">
                   {formData.contatos.map((contato, idx) => (
                     <div key={idx} className="p-8 bg-neutral-50/50 rounded-[2px] border-2 border-dashed border-neutral-200 relative group animate-in fade-in duration-300">
@@ -722,17 +722,17 @@ export default function MaquininhasPage() {
                         <FormField label="Nome" required value={contato.nome} onChange={(v) => updateContato(idx, "nome", v)} placeholder="Nome completo" />
                         <FormField label="CPF" required value={contato.cpf} onChange={(v) => updateContato(idx, "cpf", maskCpfCnpj(v))} placeholder="XXX.XXX.XXX-XX" />
                         <FormField label="Email" required value={contato.email} onChange={(v) => updateContato(idx, "email", v)} placeholder="nome@email.com" />
-                        
-                        <FormSelect 
-                          label="Tipo de Responsável" 
-                          required 
-                          value={contato.tipoResponsavel} 
+
+                        <FormSelect
+                          label="Tipo de Responsável"
+                          required
+                          value={contato.tipoResponsavel}
                           onChange={(v) => updateContato(idx, "tipoResponsavel", v)}
                           options={["Sócio", "Diretor", "Procurador", "Outros"]}
                         />
                         <FormField label="Data de Nascimento" type="date" required value={contato.dataNascimento} onChange={(v) => updateContato(idx, "dataNascimento", v)} />
                         <FormField label="Nacionalidade" required value={contato.nacionalidade} onChange={(v) => updateContato(idx, "nacionalidade", v)} placeholder="Brasileira" />
-                        
+
                         <FormField label="Função" required value={contato.funcao} onChange={(v) => updateContato(idx, "funcao", v)} placeholder="Ex: Administrador" />
                         <FormField label="Telefone" required value={contato.telefone} onChange={(v) => updateContato(idx, "telefone", maskPhone(v))} placeholder="(XX) X XXXX-XXXX" />
                       </div>
@@ -754,20 +754,20 @@ export default function MaquininhasPage() {
                     + Adicionar Conta
                   </Button>
                 </div>
-                
+
                 <div className="space-y-8">
                   {formData.contasBancarias.map((conta, idx) => (
                     <div key={idx} className="p-8 bg-neutral-50/50 rounded-[2px] border-2 border-dashed border-neutral-200 relative group animate-in fade-in duration-300">
-                       <div className="absolute top-4 right-4 flex items-center gap-4">
+                      <div className="absolute top-4 right-4 flex items-center gap-4">
                         <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest bg-white px-3 py-1 rounded-[2px] border border-neutral-100 shadow-sm">Conta {idx + 1}</span>
                         {formData.contasBancarias.length > 1 && (
                           <Button variant="destructive" size="sm" onClick={() => removeConta(idx)} className="h-8 text-[9px] font-black uppercase tracking-widest px-4 rounded-[2px]">Remover</Button>
                         )}
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
-                        <FormSelect 
-                          label="Tipo de Conta" 
-                          value={conta.tipoConta} 
+                        <FormSelect
+                          label="Tipo de Conta"
+                          value={conta.tipoConta}
                           onChange={(v) => updateConta(idx, "tipoConta", v)}
                           options={["Conta Corrente", "Conta Poupança (EM BREVE)", "Conta Pagamento (EM BREVE)"]}
                         />
@@ -802,12 +802,12 @@ export default function MaquininhasPage() {
                   </div>
                   <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Endereço</h3>
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  <FormSelect 
-                    label="Tipo de Endereço" 
-                    required 
-                    value={formData.tipoEndereco} 
+                  <FormSelect
+                    label="Tipo de Endereço"
+                    required
+                    value={formData.tipoEndereco}
                     onChange={(v) => updateField("tipoEndereco", v)}
                     options={["Comercial", "Residencial", "Cobranca"]}
                   />
@@ -818,16 +818,16 @@ export default function MaquininhasPage() {
                     </p>
                   </div>
                   <FormField label="Rua" required value={formData.rua} onChange={(v) => updateField("rua", v)} placeholder="Nome da Rua / Av" />
-                  
+
                   <FormField label="Número" required value={formData.numero} onChange={(v) => updateField("numero", v)} placeholder="000" />
                   <FormField label="Complemento" value={formData.complemento} onChange={(v) => updateField("complemento", v)} placeholder="Sala, Loja, etc" />
                   <FormField label="Bairro" required value={formData.bairro} onChange={(v) => updateField("bairro", v)} placeholder="Bairro" />
-                  
+
                   <FormField label="Cidade" required value={formData.cidade} onChange={(v) => updateField("cidade", v)} placeholder="Cidade" />
-                  <FormSelect 
-                    label="Estado" 
-                    required 
-                    value={formData.estado} 
+                  <FormSelect
+                    label="Estado"
+                    required
+                    value={formData.estado}
                     onChange={(v) => updateField("estado", v)}
                     options={["AC", "AL", "AP", "AM", "BA", "CE", "DF", "ES", "GO", "MA", "MT", "MS", "MG", "PA", "PB", "PR", "PE", "PI", "RJ", "RN", "RS", "RO", "RR", "SC", "SP", "SE", "TO"]}
                   />
@@ -863,17 +863,17 @@ export default function MaquininhasPage() {
                       <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Deseja anexar documentos agora?</h3>
                       {attachedDocs.length > 0 ? (
                         <div className="space-y-1">
-                           <p className="text-[9px] font-black text-green-600 uppercase tracking-widest flex items-center gap-1">
-                             <CheckCircle2 className="h-3 w-3" /> {attachedDocs.length} documentos anexados:
-                           </p>
-                           <p className="text-[8px] font-bold text-neutral-500 uppercase">{attachedDocs.join(", ")}</p>
+                          <p className="text-[9px] font-black text-green-600 uppercase tracking-widest flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" /> {attachedDocs.length} documentos anexados:
+                          </p>
+                          <p className="text-[8px] font-bold text-neutral-500 uppercase">{attachedDocs.join(", ")}</p>
                         </div>
                       ) : (
                         <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-tight">Anexe o contrato, CNPJ e fotos para agilizar seu credenciamento</p>
                       )}
                     </div>
                   </div>
-                  <Button 
+                  <Button
                     onClick={() => setStep("documents")}
                     className="bg-white border-2 border-[#f97316] text-[#f97316] hover:bg-[#f97316] hover:text-white transition-all font-black text-[11px] uppercase tracking-[0.2em] px-8 h-14 rounded-[2px]"
                   >
@@ -919,56 +919,56 @@ export default function MaquininhasPage() {
             </div>
 
             <div className="grid grid-cols-1 gap-6">
-              <DocumentUploadCard 
-                title="Contrato Assinado" 
+              <DocumentUploadCard
+                title="Contrato Assinado"
                 desc="Documento que formaliza a parceria com a G8 Pay"
                 attached={(formData.documents["Contrato Assinado"]?.length || 0) > 0}
                 files={formData.documents["Contrato Assinado"] || []}
                 onUpload={(f) => handleFileUpload("Contrato Assinado", f)}
                 onRemove={(idx) => removeDoc("Contrato Assinado", idx)}
               />
-              <DocumentUploadCard 
-                title="Contrat / Estatuto Social" 
+              <DocumentUploadCard
+                title="Contrat / Estatuto Social"
                 desc="Cópia do instrumento de constituição ou Ficha Cadastral Jacesp"
                 attached={(formData.documents["Contrat / Estatuto Social"]?.length || 0) > 0}
                 files={formData.documents["Contrat / Estatuto Social"] || []}
                 onUpload={(f) => handleFileUpload("Contrat / Estatuto Social", f)}
                 onRemove={(idx) => removeDoc("Contrat / Estatuto Social", idx)}
               />
-              <DocumentUploadCard 
-                title="Cartão CNPJ (RCFB)" 
+              <DocumentUploadCard
+                title="Cartão CNPJ (RCFB)"
                 desc="Comprovante de inscrição e de situação cadastral atualizado"
                 attached={(formData.documents["Cartão CNPJ (RCFB)"]?.length || 0) > 0}
                 files={formData.documents["Cartão CNPJ (RCFB)"] || []}
                 onUpload={(f) => handleFileUpload("Cartão CNPJ (RCFB)", f)}
                 onRemove={(idx) => removeDoc("Cartão CNPJ (RCFB)", idx)}
               />
-              <DocumentUploadCard 
-                title="RG/CNH (Frente)" 
+              <DocumentUploadCard
+                title="RG/CNH (Frente)"
                 desc="Foto da parte frontal do documento"
                 attached={(formData.documents["RG/CNH (Frente)"]?.length || 0) > 0}
                 files={formData.documents["RG/CNH (Frente)"] || []}
                 onUpload={(f) => handleFileUpload("RG/CNH (Frente)", f)}
                 onRemove={(idx) => removeDoc("RG/CNH (Frente)", idx)}
               />
-              <DocumentUploadCard 
-                title="RG/CNH (Verso)" 
+              <DocumentUploadCard
+                title="RG/CNH (Verso)"
                 desc="Foto da parte traseira do documento"
                 attached={(formData.documents["RG/CNH (Verso)"]?.length || 0) > 0}
                 files={formData.documents["RG/CNH (Verso)"] || []}
                 onUpload={(f) => handleFileUpload("RG/CNH (Verso)", f)}
                 onRemove={(idx) => removeDoc("RG/CNH (Verso)", idx)}
               />
-              <DocumentUploadCard 
-                title="Comprovante de endereço da empresa" 
+              <DocumentUploadCard
+                title="Comprovante de endereço da empresa"
                 desc="Contas de consumo (luz, água, telefone) dos últimos 90 dias"
                 attached={(formData.documents["Comprovante de endereço da empresa"]?.length || 0) > 0}
                 files={formData.documents["Comprovante de endereço da empresa"] || []}
                 onUpload={(f) => handleFileUpload("Comprovante de endereço da empresa", f)}
                 onRemove={(idx) => removeDoc("Comprovante de endereço da empresa", idx)}
               />
-              <DocumentUploadCard 
-                title="Foto da Fachada" 
+              <DocumentUploadCard
+                title="Foto da Fachada"
                 desc="Envie até 3 fotos do estabelecimento"
                 attached={(formData.documents["Foto da Fachada"]?.length || 0) > 0}
                 files={formData.documents["Foto da Fachada"] || []}
@@ -1073,11 +1073,11 @@ export default function MaquininhasPage() {
                 <ConfirmSection title="Documentação Anexada">
                   {attachedDocs.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
-                       {attachedDocs.map(doc => (
-                         <Badge key={doc} className="bg-green-100 text-green-700 border-green-200 px-3 py-1 font-black text-[9px] uppercase tracking-widest rounded-[2px]">
-                           <CheckCircle2 className="h-3 w-3 mr-1" /> {doc}
-                         </Badge>
-                       ))}
+                      {attachedDocs.map(doc => (
+                        <Badge key={doc} className="bg-green-100 text-green-700 border-green-200 px-3 py-1 font-black text-[9px] uppercase tracking-widest rounded-[2px]">
+                          <CheckCircle2 className="h-3 w-3 mr-1" /> {doc}
+                        </Badge>
+                      ))}
                     </div>
                   ) : (
                     <p className="text-[10px] font-bold text-neutral-400 uppercase italic">Nenhum documento anexado (serão solicitados posteriormente)</p>
@@ -1253,17 +1253,17 @@ function FormSelect({
   );
 }
 
-function DocumentUploadCard({ 
-  title, 
-  desc, 
-  attached, 
-  files = [], 
-  onUpload, 
-  onRemove 
-}: { 
-  title: string; 
-  desc: string; 
-  attached?: boolean; 
+function DocumentUploadCard({
+  title,
+  desc,
+  attached,
+  files = [],
+  onUpload,
+  onRemove
+}: {
+  title: string;
+  desc: string;
+  attached?: boolean;
   files?: { name: string, url: string }[];
   onUpload: (file: File) => void;
   onRemove: (index: number) => void;
@@ -1274,7 +1274,7 @@ function DocumentUploadCard({
         <div className="flex-1 space-y-4 text-center md:text-left">
           <div className="flex items-center gap-3 justify-center md:justify-start">
             <div className={`w-10 h-10 rounded-[2px] flex items-center justify-center shrink-0 ${attached ? 'bg-green-500 text-white' : 'bg-orange-50 text-[#f97316]'}`}>
-               <FileText className="h-5 w-5" />
+              <FileText className="h-5 w-5" />
             </div>
             <div>
               <h4 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">{title}</h4>
@@ -1292,7 +1292,7 @@ function DocumentUploadCard({
                     </div>
                     <div className="min-w-0">
                       <p className="text-[10px] font-black text-[#0c0a09] truncate uppercase">{file.name}</p>
-                      <button 
+                      <button
                         onClick={() => window.open(file.url, '_blank')}
                         className="text-[9px] font-black text-[#f97316] uppercase hover:underline"
                       >
@@ -1300,9 +1300,9 @@ function DocumentUploadCard({
                       </button>
                     </div>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => onRemove(idx)}
                     className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                   >
@@ -1313,7 +1313,7 @@ function DocumentUploadCard({
             </div>
           )}
         </div>
-        
+
         <div className="w-full md:w-64 shrink-0">
           <label className={`flex flex-col items-center justify-center h-40 w-full border-2 border-dashed rounded-[2px] cursor-pointer transition-all ${attached ? 'border-green-300 bg-green-50/30' : 'border-neutral-200 hover:bg-neutral-50 group-hover:border-[#f97316]/30 bg-white'}`}>
             <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">

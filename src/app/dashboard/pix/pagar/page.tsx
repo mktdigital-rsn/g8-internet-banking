@@ -338,7 +338,7 @@ function PixPagarContent() {
         console.log(`🔍 [SYNC COMPROVANTE] Tentativa ${attempts + 1}/${maxAttempts} para valor R$ ${targetValue}...`);
         const extratoRes = await api.get("/api/banco/extrato/buscar");
         const items = extratoRes.data.transacoes || extratoRes.data.data?.transacoes || [];
-        
+
         // Procura um item que bata com o valor (margem de erro de 1 centavo)
         const match = items.find((item: any) => {
           const itemVal = Math.abs(parseFloat(String(item.valor).replace(/[R$\s]/g, "").replace(",", ".")));
@@ -435,7 +435,7 @@ function PixPagarContent() {
         setTransactionId(realId || "");
         setStep("success");
         toast.success("Transferência realizada com sucesso!");
-        
+
         // Inicia a busca pelo ID real no extrato em background
         searchWithRetry(txAmount);
       }
@@ -552,7 +552,7 @@ function PixPagarContent() {
                 </div>
                 <div>
                   <p className="text-xs font-black text-rose-600 uppercase tracking-widest mb-1">Atenção: Sem Saldo</p>
-                  <p className="text-[11px] font-bold text-rose-500/80 leading-tight">Você não possui saldo disponível para realizar transações hoje. <br/>Saldo atual: <span className="font-black text-rose-600">{balanceFormatted}</span></p>
+                  <p className="text-[11px] font-bold text-rose-500/80 leading-tight">Você não possui saldo disponível para realizar transações hoje. <br />Saldo atual: <span className="font-black text-rose-600">{balanceFormatted}</span></p>
                 </div>
               </div>
             )}
@@ -756,11 +756,10 @@ function PixPagarContent() {
                 setStep("confirm");
               }}
               disabled={isSearching || hasInsufficientBalance || amountExceedsBalance}
-              className={`w-full h-14 text-white rounded-[5px] font-black text-sm uppercase tracking-widest shadow-xl transition-all active:scale-95 group ${
-                hasInsufficientBalance || amountExceedsBalance
+              className={`w-full h-14 text-white rounded-[5px] font-black text-sm uppercase tracking-widest shadow-xl transition-all active:scale-95 group ${hasInsufficientBalance || amountExceedsBalance
                   ? 'bg-neutral-300 cursor-not-allowed shadow-none'
                   : 'bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] shadow-orange-200/30'
-              }`}
+                }`}
             >
               {isSearching ? "VALIDANDO DADOS..." : hasInsufficientBalance && !isBalanceLoading ? "SEM SALDO EM CONTA" : amountExceedsBalance ? "VALOR ACIMA DO SALDO" : "PRÓXIMO PASSO"}
               {!hasInsufficientBalance && !amountExceedsBalance && <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-1 transition-transform" />}
@@ -960,7 +959,7 @@ function PixPagarContent() {
               <div className="w-10 h-10 bg-[#ff7711] rounded-md flex items-center justify-center mb-4 text-white group-hover:scale-110 transition-all">
                 <MessageCircle className="h-5 w-5" />
               </div>
-              <span className="font-black text-[9px] text-[#0c0a09] uppercase tracking-widest">Chat 09h as 18h</span>
+              <span className="font-black text-[9px] text-[#0c0a09] uppercase tracking-widest">Chat 09h as 17h</span>
             </button>
           </div>
         </div>

@@ -153,26 +153,26 @@ export default function ContaPage() {
 
             {/* Account Details Card */}
             <div className="bg-white p-8 rounded-sm border border-neutral-100 shadow-xl space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-sm flex items-center justify-center text-primary">
-                      <Building className="h-5 w-5" />
-                    </div>
-                    <h3 className="text-sm  font-black text-[#0c0a09] uppercase tracking-tight">Dados da Conta</h3>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary/10 rounded-sm flex items-center justify-center text-primary">
+                    <Building className="h-5 w-5" />
                   </div>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-8 border-primary/80 text-[#f97316]  font-bold text-[10px] uppercase tracking-widest rounded-sm hover:bg-primary/5 active:scale-95 transition-all"
-                    onClick={() => {
-                      const msg = `Esta é minha conta no banco G8PAY:\n\nNome: ${userData?.name}\nCPF/CNPJ: ${userData?.taxNumber}\nBanco: ${userData?.bankNumber || '384'} - G8 PAY \nAgência: ${userData?.accountBranch || '0001'}\nConta: ${userData?.accountNumber}`;
-                      navigator.clipboard.writeText(msg);
-                      toast.success("Dados da conta formatados para compartilhamento!");
-                    }}
-                  >
-                    Compartilhar
-                  </Button>
+                  <h3 className="text-sm  font-black text-[#0c0a09] uppercase tracking-tight">Dados da Conta</h3>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 border-primary/80 text-[#f97316]  font-bold text-[10px] uppercase tracking-widest rounded-sm hover:bg-primary/5 active:scale-95 transition-all"
+                  onClick={() => {
+                    const msg = `Esta é minha conta no banco G8PAY:\n\nNome: ${userData?.name}\nCPF/CNPJ: ${userData?.taxNumber}\nBanco: ${userData?.bankNumber || '384'} - G8 PAY \nAgência: ${userData?.accountBranch || '0001'}\nConta: ${userData?.accountNumber}`;
+                    navigator.clipboard.writeText(msg);
+                    toast.success("Dados da conta formatados para compartilhamento!");
+                  }}
+                >
+                  Compartilhar
+                </Button>
+              </div>
 
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-4 bg-neutral-50 rounded-sm border border-neutral-100 group cursor-pointer" onClick={() => handleCopy(userData?.bankNumber || '384', 'bank')}>
@@ -264,7 +264,7 @@ export default function ContaPage() {
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-2xl font-black uppercase tracking-tighter">Precisa de Ajuda?</h3>
-                  <p className="text-sm text-white/50 font-medium leading-relaxed font-sans">Nossa equipe de suporte especializado está disponível das 09h às 18h para te auxiliar em qualquer dúvida ou problema.</p>
+                  <p className="text-sm text-white/50 font-medium leading-relaxed font-sans">Nossa equipe de suporte especializado está disponível das 09:00 as 17:00 para te auxiliar em qualquer dúvida ou problema.</p>
                 </div>
                 <Button className="bg-[#f97316] hover:bg-[#ea580c] text-white rounded-sm font-black uppercase tracking-widest h-14 px-10">
                   Falar com Atendimento

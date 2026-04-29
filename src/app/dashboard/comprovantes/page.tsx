@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
-import { 
-    FileText, 
-    ArrowRightLeft, 
-    CreditCard, 
-    Smartphone, 
-    ChevronRight, 
-    PieChart as PieIcon, 
+import {
+    FileText,
+    ArrowRightLeft,
+    CreditCard,
+    Smartphone,
+    ChevronRight,
+    PieChart as PieIcon,
     ArrowLeft,
     Clock,
     Search,
@@ -74,8 +74,8 @@ export default function ComprovantesPage() {
             if (m.includes("PIX")) distribution["PIX"] += val;
             else if (m.includes("BOLETO") || m.includes("PAGAMENTO")) distribution["BOLETO"] += val;
             else if (m.includes("TED") || m.includes("TRANSFERENCIA")) {
-                 if (item.metodo === "TRANSFERENCIA_INTERNA") distribution["INTERNA"] += val;
-                 else distribution["TED/DOC"] += val;
+                if (item.metodo === "TRANSFERENCIA_INTERNA") distribution["INTERNA"] += val;
+                else distribution["TED/DOC"] += val;
             }
             else if (m.includes("TARIFA")) distribution["TARIFA"] += val;
         });
@@ -93,47 +93,47 @@ export default function ComprovantesPage() {
         badge?: string;
         submenus: { id: string; label: string; href?: string; badge?: string; disabled?: boolean }[];
     }[] = [
-        {
-            id: "transferencias",
-            title: "Transferências",
-            icon: ArrowRightLeft,
-            color: "bg-orange-500",
-            submenus: [
-                { id: "interna", label: "Contas G8", href: "/dashboard/comprovantes/interna" },
-                { id: "ted", label: "Outros bancos", badge: "Em breve", disabled: true }
-            ]
-        },
-        {
-            id: "pagamentos",
-            title: "Pagamentos",
-            icon: CreditCard,
-            color: "bg-blue-500",
-            submenus: [
-                { id: "boleto", label: "Boleto de cobrança", href: "/dashboard/comprovantes/boleto" },
-                { id: "consumo", label: "Água, Luz, Telefone e Gás", badge: "Em breve", disabled: true },
-                { id: "veiculos", label: "Débito de Veículos", badge: "Em breve", disabled: true }
-            ]
-        },
-        {
-            id: "recargas",
-            title: "Recarga de Celular",
-            icon: Smartphone,
-            color: "bg-emerald-500",
-            badge: "Em breve",
-            submenus: [
-                { id: "celular", label: "Recarga de Celular", badge: "Em breve", disabled: true }
-            ]
-        },
-        {
-            id: "pix",
-            title: "Pix",
-            icon: Smartphone,
-            color: "bg-purple-500",
-            submenus: [
-                { id: "pix_all", label: "Extrato Pix completo", href: "/dashboard/pix/extrato?title=Comprovantes PIX" }
-            ]
-        }
-    ];
+            {
+                id: "transferencias",
+                title: "Transferências",
+                icon: ArrowRightLeft,
+                color: "bg-orange-500",
+                submenus: [
+                    { id: "interna", label: "Contas G8", href: "/dashboard/comprovantes/interna" },
+                    { id: "ted", label: "Outros bancos", badge: "Em breve", disabled: true }
+                ]
+            },
+            {
+                id: "pagamentos",
+                title: "Pagamentos",
+                icon: CreditCard,
+                color: "bg-blue-500",
+                submenus: [
+                    { id: "boleto", label: "Boleto de cobrança", href: "/dashboard/comprovantes/boleto" },
+                    { id: "consumo", label: "Água, Luz, Telefone e Gás", badge: "Em breve", disabled: true },
+                    { id: "veiculos", label: "Débito de Veículos", badge: "Em breve", disabled: true }
+                ]
+            },
+            {
+                id: "recargas",
+                title: "Recargas",
+                icon: Smartphone,
+                color: "bg-emerald-500",
+                badge: "Em breve",
+                submenus: [
+                    { id: "celular", label: "Recarga de Celular", badge: "Em breve", disabled: true }
+                ]
+            },
+            {
+                id: "pix",
+                title: "Pix",
+                icon: Smartphone,
+                color: "bg-purple-500",
+                submenus: [
+                    { id: "pix_all", label: "Extrato Pix completo", href: "/dashboard/pix/extrato?title=Comprovantes PIX" }
+                ]
+            }
+        ];
 
     const formatCurrency = (val: number) => {
         return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val);
@@ -142,7 +142,7 @@ export default function ComprovantesPage() {
     return (
         <div className="min-h-screen bg-[#f8f9fa] p-4 md:p-8 xl:p-12 overflow-y-auto no-scrollbar">
             <div className="max-w-[1440px] mx-auto space-y-12 pb-20">
-                
+
                 {/* Header */}
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="space-y-1">
@@ -154,88 +154,128 @@ export default function ComprovantesPage() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                         <div className="flex flex-col items-end">
+                        <div className="flex flex-col items-end">
                             <span className="text-[10px] font-black text-neutral-300 uppercase tracking-widest mb-1">Total Movimentado</span>
                             <span className="text-2xl font-black text-[#0c0a09] font-mono leading-none">
                                 {formatCurrency(items.reduce((acc, i) => acc + Math.abs(i.valor || 0), 0))}
                             </span>
-                         </div>
+                        </div>
                     </div>
                 </header>
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    
+
                     {/* Left: Category Cards */}
-                    <div className="lg:col-span-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="lg:col-span-12 flex flex-wrap justify-center gap-8 w-full">
                         {categories.map((cat) => (
-                            <button
-                                key={cat.id}
-                                onClick={() => setExpandedCategory(expandedCategory === cat.id ? null : cat.id)}
-                                className={`group p-8 rounded-md text-left transition-all relative overflow-hidden flex flex-col justify-between h-[220px] bg-white border-2 border-neutral-100/50 hover:border-orange-500/20 hover:shadow-2xl hover:shadow-orange-500/5 active:scale-[0.98] ${expandedCategory === cat.id ? 'ring-2 ring-orange-500 border-transparent shadow-xl' : ''}`}
-                            >
-                                <div className={`absolute top-0 right-0 w-32 h-32 ${cat.color} opacity-[0.03] rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-1000`} />
-                                
-                                <div className={`w-14 h-14 rounded-md flex items-center justify-center mb-6 transition-transform group-hover:rotate-6 bg-neutral-50 text-[#0c0a09]/30 group-hover:bg-orange-500 group-hover:text-white`}>
-                                    <cat.icon size={28} strokeWidth={2.5} />
-                                </div>
+                            <React.Fragment key={cat.id}>
+                                <button
+                                    key={cat.id}
+                                    onClick={() => setExpandedCategory(expandedCategory === cat.id ? null : cat.id)}
+                                    className={`group w-full max-w-md p-8 rounded-md text-center transition-all relative overflow-hidden flex flex-col items-center justify-between h-[220px] bg-white border-2 border-neutral-100/50 hover:border-orange-500/20 hover:shadow-2xl hover:shadow-orange-500/5 active:scale-[0.98] ${expandedCategory === cat.id ? 'ring-2 ring-orange-500 border-transparent shadow-xl' : ''}`}
+                                >
+                                    <div className={`absolute top-0 right-0 w-32 h-32 ${cat.color} opacity-[0.03] rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-1000`} />
 
-                                <div className="space-y-2 relative z-10">
-                                    <div className="flex items-center gap-2">
-                                        <h3 className="text-xl font-black tracking-tight text-[#0c0a09] uppercase">{cat.title}</h3>
-                                        {cat.badge && (
-                                            <Badge className="bg-amber-200/20 text-amber-600 border-0 text-[8px] font-black uppercase tracking-tight px-1.5 py-0">{cat.badge}</Badge>
-                                        )}
+                                    {cat.badge && (
+                                        <div className="absolute top-6 right-6 z-20">
+                                            <Badge className="bg-amber-100 text-amber-600 border-amber-200 text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded-sm shadow-sm">{cat.badge}</Badge>
+                                        </div>
+                                    )}
+
+                                    <div className={`w-14 h-14 rounded-md flex items-center justify-center mb-4 transition-transform group-hover:rotate-6 bg-neutral-50 text-[#0c0a09]/30 group-hover:bg-orange-500 group-hover:text-white`}>
+                                        <cat.icon size={28} strokeWidth={2.5} />
                                     </div>
-                                    <p className="text-[10px] font-black text-neutral-300 uppercase tracking-widest">
-                                        {cat.submenus.length} canais disponíveis
-                                    </p>
-                                </div>
 
-                                <div className="flex items-center gap-2 mt-4 font-black uppercase text-[9px] tracking-[0.2em] text-neutral-300 group-hover:text-orange-500 transition-colors">
-                                    Explorar submenus <ChevronRight size={14} className={`transition-transform ${expandedCategory === cat.id ? 'rotate-90' : ''}`} />
+                                    <div className="space-y-1 relative z-10">
+                                        <h3 className="text-xl font-black tracking-tighter text-[#0c0a09] uppercase leading-tight">{cat.title}</h3>
+                                        <p className="text-[9px] font-black text-neutral-600 uppercase tracking-widest">
+                                            {cat.submenus.length > 1 ? ` ${cat.submenus.length} canais disponíveis` : `${cat.submenus.length} Canal disponível`}
+                                        </p>
+                                    </div>
+
+                                    <div className="flex items-center justify-center gap-2 mt-4 font-black uppercase text-[9px] tracking-[0.2em] text-neutral-300 group-hover:text-orange-500 transition-colors w-full">
+                                        Explorar <ChevronRight size={14} className={`transition-transform ${expandedCategory === cat.id ? 'rotate-90' : ''}`} />
+                                    </div>
+                                </button>
+
+                                {/* Mobile Accordion View */}
+                                <div className="xl:hidden col-span-full">
+                                    <AnimatePresence>
+                                        {expandedCategory === cat.id && (
+                                            <motion.div
+                                                initial={{ opacity: 0, height: 0 }}
+                                                animate={{ opacity: 1, height: 'auto' }}
+                                                exit={{ opacity: 0, height: 0 }}
+                                                className="overflow-hidden mb-4"
+                                            >
+                                                <div className="p-4 bg-white border-2 border-orange-100 rounded-md shadow-inner grid grid-cols-1 gap-3">
+                                                    {cat.submenus.map(sub => (
+                                                        <button
+                                                            key={sub.id}
+                                                            disabled={sub.disabled}
+                                                            onClick={() => sub.href && router.push(sub.href)}
+                                                            className={`p-4 flex items-center justify-between rounded-sm border border-neutral-50 hover:bg-neutral-50 transition-all group ${sub.disabled ? 'opacity-40 grayscale cursor-not-allowed' : 'cursor-pointer hover:border-orange-200 shadow-sm'}`}
+                                                        >
+                                                            <div className="flex items-center gap-4">
+                                                                <div className="w-10 h-10 rounded-sm bg-neutral-50 flex items-center justify-center text-neutral-300 group-hover:bg-orange-500 group-hover:text-white transition-all">
+                                                                    <FileText size={18} />
+                                                                </div>
+                                                                <div className="text-left">
+                                                                    <p className="text-xs font-black text-[#0c0a09] uppercase tracking-widest">{sub.label}</p>
+                                                                </div>
+                                                            </div>
+                                                            {!sub.disabled && <ChevronRight size={16} className="text-neutral-200 group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </div>
-                            </button>
+                            </React.Fragment>
                         ))}
                     </div>
 
-                    {/* Submenu Expansion */}
-                    <AnimatePresence>
-                        {expandedCategory && (
-                            <motion.div 
-                                initial={{ opacity: 0, y: -20, height: 0 }}
-                                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                                exit={{ opacity: 0, y: -20, height: 0 }}
-                                className="lg:col-span-12 overflow-hidden"
-                            >
-                                <div className="p-8 bg-white border-2 border-neutral-100 rounded-md shadow-inner grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {categories.find(c => c.id === expandedCategory)?.submenus.map(sub => (
-                                        <button
-                                            key={sub.id}
-                                            disabled={sub.disabled}
-                                            onClick={() => sub.href && router.push(sub.href)}
-                                            className={`p-5 flex items-center justify-between rounded-sm border border-neutral-50 hover:bg-neutral-50 transition-all group ${sub.disabled ? 'opacity-40 grayscale cursor-not-allowed' : 'cursor-pointer hover:border-orange-200 shadow-sm'}`}
-                                        >
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-10 h-10 rounded-sm bg-neutral-50 flex items-center justify-center text-neutral-300 group-hover:bg-orange-500 group-hover:text-white transition-all">
-                                                    <FileText size={18} />
+                    {/* Desktop Submenu View */}
+                    <div className="hidden xl:block xl:col-span-12">
+                        <AnimatePresence>
+                            {expandedCategory && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -20, height: 0 }}
+                                    animate={{ opacity: 1, y: 0, height: 'auto' }}
+                                    exit={{ opacity: 0, y: -20, height: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="p-8 bg-white border-2 border-neutral-100 rounded-md shadow-inner grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {categories.find(c => c.id === expandedCategory)?.submenus.map(sub => (
+                                            <button
+                                                key={sub.id}
+                                                disabled={sub.disabled}
+                                                onClick={() => sub.href && router.push(sub.href)}
+                                                className={`p-5 flex items-center justify-between rounded-sm border border-neutral-50 hover:bg-neutral-50 transition-all group ${sub.disabled ? 'opacity-40 grayscale cursor-not-allowed' : 'cursor-pointer hover:border-orange-200 shadow-sm'}`}
+                                            >
+                                                <div className="flex items-center gap-4">
+                                                    <div className="w-10 h-10 rounded-sm bg-neutral-50 flex items-center justify-center text-neutral-300 group-hover:bg-orange-500 group-hover:text-white transition-all">
+                                                        <FileText size={18} />
+                                                    </div>
+                                                    <div className="text-left">
+                                                        <p className="text-xs font-black text-[#0c0a09] uppercase tracking-widest">{sub.label}</p>
+                                                        {sub.badge && <span className="text-[10px] font-black text-neutral-600 bg-amber-200/20 uppercase tracking-tighter">{sub.badge}</span>}
+                                                    </div>
                                                 </div>
-                                                <div className="text-left">
-                                                    <p className="text-xs font-black text-[#0c0a09] uppercase tracking-widest">{sub.label}</p>
-                                                    {sub.badge && <span className="text-[10px] font-black text-neutral-600 bg-amber-200/20 uppercase tracking-tighter">{sub.badge}</span>}
-                                                </div>
-                                            </div>
-                                            {!sub.disabled && <ChevronRight size={16} className="text-neutral-200 group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />}
-                                        </button>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                                                {!sub.disabled && <ChevronRight size={16} className="text-neutral-200 group-hover:text-orange-500 group-hover:translate-x-1 transition-all" />}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
 
                     {/* Distribution Chart */}
-                    <div className="lg:col-span-7">
-                        <Card className="bg-white border-2 border-neutral-100 rounded-md p-8 md:p-12 space-y-8 shadow-sm">
-                            <div className="flex items-center justify-between">
+                    <div className="lg:col-span-7 flex">
+                        <Card className="bg-white border-2 border-neutral-100 rounded-md p-8  space-y-8 shadow-sm flex-1 flex flex-col">
+                            <div className="flex items-center justify-between shrink-0">
                                 <div className="space-y-1">
                                     <p className="text-[9px] text-neutral-300 font-black uppercase tracking-[0.4em]">Visão Geral</p>
                                     <h4 className="text-2xl font-black text-[#0c0a09] tracking-tighter uppercase">DISTRIBUIÇÃO DE <span className="text-orange-600">MÉTODO</span></h4>
@@ -245,7 +285,7 @@ export default function ComprovantesPage() {
                                 </div>
                             </div>
 
-                            <div className="h-[300px] w-full">
+                            <div className="flex-1 min-h-[400px] w-full flex flex-col justify-center">
                                 {isLoading ? (
                                     <div className="h-full w-full flex items-center justify-center bg-neutral-50 rounded-md animate-pulse">
                                         <div className="h-20 w-20 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
@@ -257,8 +297,8 @@ export default function ComprovantesPage() {
                                                 data={chartData}
                                                 cx="50%"
                                                 cy="50%"
-                                                innerRadius={60}
-                                                outerRadius={80}
+                                                innerRadius={80}
+                                                outerRadius={110}
                                                 paddingAngle={5}
                                                 dataKey="value"
                                                 stroke="none"
@@ -267,11 +307,11 @@ export default function ComprovantesPage() {
                                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                                 ))}
                                             </Pie>
-                                            <RechartsTooltip 
+                                            <RechartsTooltip
                                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontWeight: 'black', fontSize: '12px' }}
                                                 formatter={(value: any) => formatCurrency(value)}
                                             />
-                                            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ paddingTop: '20px', fontSize: '10px', fontWeight: 'bold' }} />
+                                            <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ paddingTop: '40px', fontSize: '10px', fontWeight: 'bold' }} />
                                         </PieChart>
                                     </ResponsiveContainer>
                                 ) : (
@@ -285,7 +325,7 @@ export default function ComprovantesPage() {
                     </div>
 
                     {/* Quick Stats / Info */}
-                    <div className="lg:col-span-5 space-y-6">
+                    <div className="lg:col-span-5 space-y-6 flex flex-col">
                         <Card className="bg-[#0c0a09] border-0 rounded-md p-8 text-white relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full -mr-16 -mt-16 blur-3xl" />
                             <div className="space-y-6 relative z-10">
@@ -314,14 +354,14 @@ export default function ComprovantesPage() {
                             </div>
                             <div className="bg-white border-2 border-neutral-100 rounded-md p-6 space-y-2 text-right">
                                 <p className="text-[9px] font-black text-neutral-300 uppercase tracking-widest">Disponibilidade</p>
-                                <p className="text-sm font-black text-emerald-500 tracking-tighter uppercase leading-none italic">Online 09h às 18h</p>
+                                <p className="text-sm font-black text-emerald-500 tracking-tighter uppercase leading-none italic">Online 09h as 17h</p>
                             </div>
                         </div>
 
                         <Card className="bg-orange-500 border-0 rounded-md p-8 text-white flex items-center justify-between group cursor-pointer hover:bg-orange-600 transition-all active:scale-95 shadow-xl shadow-orange-500/20">
                             <div className="space-y-1">
                                 <h4 className="text-xl font-black uppercase tracking-tighter leading-none">Precisa de Ajuda?</h4>
-                                <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Fale com nosso suporte especializado</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Suporte G8: 09:00 as 17:00</p>
                             </div>
                             <ChevronRight size={24} className="group-hover:translate-x-2 transition-transform" />
                         </Card>
