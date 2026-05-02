@@ -4,29 +4,41 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAtom } from "jotai";
 import { cobrancaDataAtom, cobrancaHtmlAtom } from "@/store/pagamentos";
+import api from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
-  CheckCircle2, Download, Printer, ArrowRight, Home, Banknote, 
-  Loader2, AlertTriangle, Repeat, CalendarCheck, Layers, ChevronLeft, ChevronRight as ChevronRightIcon 
+  CheckCircle2, Printer, ArrowRight, Home, Banknote, 
+  AlertTriangle, Repeat, CalendarCheck, Layers, ChevronLeft, ChevronRight as ChevronRightIcon 
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import jsPDF from "jspdf";
-import html2canvas from "html2canvas";
 
 export default function CobrancaSucessoPage() {
   const router = useRouter();
-  const [cobrancaData] = useAtom(cobrancaDataAtom);
+  const [cobrancaData, setCobrancaData] = useAtom(cobrancaDataAtom);
   const [cobrancaHtml] = useAtom(cobrancaHtmlAtom);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [selectAll, setSelectAll] = useState(false);
 
   // Fallback para gerar parcelas visuais caso o registro no banco ainda esteja em processamento
-  const displayResults = (cobrancaData.results && cobrancaData.results.length > 0)
-    ? cobrancaData.results
-    : Array.from({ length: cobrancaData.quantidadeMeses || 1 }).map((_, i) => {
+  const displayResults = React.useMemo(() => {
+    if (cobrancaData.results && cobrancaData.results.length > 0) {
+      return cobrancaData.results;
+    }
+    
+    // Se temos o HTML direto (boleto único), usamos ele como resultado real
+    if (cobrancaHtml) {
+      return [{
+        html: cobrancaHtml,
+        dataVencimento: cobrancaData.dataVencimento,
+        isPlaceholder: false
+      }];
+    }
+
+    // Apenas se não houver nada, criamos placeholders (recorrência em processamento)
+    return Array.from({ length: cobrancaData.quantidadeMeses || 1 }).map((_, i) => {
         const d = new Date(cobrancaData.dataVencimento || Date.now());
         d.setMonth(d.getMonth() + i);
         return {
@@ -35,8 +47,9 @@ export default function CobrancaSucessoPage() {
           isPlaceholder: true
         };
       });
+  }, [cobrancaData, cobrancaHtml]);
 
-  const currentResult = displayResults[selectedIndex] || { html: cobrancaHtml || "", dataVencimento: cobrancaData.dataVencimento };
+  const currentResult = displayResults[selectedIndex] || { html: cobrancaHtml || "", dataVencimento: cobrancaData.dataVencimento, isPlaceholder: !cobrancaHtml };
   const activeHtml = currentResult.html;
   const activeDate = currentResult.dataVencimento;
 
@@ -53,99 +66,105 @@ export default function CobrancaSucessoPage() {
     }
   }, [cobrancaHtml, cobrancaData.results, router]);
 
-  const handleDownloadPdf = async () => {
-    if (!activeHtml) return;
-    if (currentResult.isPlaceholder) {
-      toast.info("Aguarde o registro final do boleto para baixar o PDF oficial.");
-      return;
+  // Polling para atualizar placeholders se for recorrente e estiver processando
+  useEffect(() => {
+    const hasPlaceholders = displayResults.some(r => r.isPlaceholder);
+    if (!hasPlaceholders || !cobrancaData.groupName) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const itemsRes = await api.get(`/api/banco/cobranca-grupo/${cobrancaData.groupName}/itens`);
+        const items = itemsRes.data?.data || itemsRes.data?.items || itemsRes.data || [];
+
+        if (Array.isArray(items) && items.length > 0) {
+          const fetchedResults = items.map((item: any) => ({
+            html: item.html || item.boletoHtml || item.boleto_html || "",
+            dataVencimento: item.vencimento || item.dueDate || item.dataVencimento,
+            isPlaceholder: !(item.html || item.boletoHtml || item.boleto_html)
+          }));
+
+          // Se o número de itens retornados for menor que o esperado, mantemos os placeholders restantes
+          let finalResults = [...fetchedResults];
+          if (finalResults.length < (cobrancaData.quantidadeMeses || 0)) {
+            const diff = (cobrancaData.quantidadeMeses || 0) - finalResults.length;
+            const lastDate = new Date(finalResults[finalResults.length - 1]?.dataVencimento || Date.now());
+            
+            for (let i = 1; i <= diff; i++) {
+              const nextDate = new Date(lastDate);
+              nextDate.setMonth(nextDate.getMonth() + i);
+              finalResults.push({
+                html: "<h1>REGISTRANDO</h1><p>Este boleto está sendo processado pelo banco e estará disponível em breve.</p>",
+                dataVencimento: nextDate.toISOString().split('T')[0],
+                isPlaceholder: true
+              });
+            }
+          }
+
+          const allReady = finalResults.every(r => !r.isPlaceholder && r.html);
+          
+          setCobrancaData(prev => ({
+            ...prev,
+            results: finalResults
+          }));
+
+          if (allReady) {
+            clearInterval(pollInterval);
+            toast.success("Todos os boletos foram registrados!");
+          }
+        }
+      } catch (e) {
+        console.error("Erro no polling de boletos:", e);
+      }
+    }, 5000);
+
+    return () => clearInterval(pollInterval);
+  }, [displayResults, cobrancaData.groupName, cobrancaData.quantidadeMeses, setCobrancaData]);
+
+
+
+  const handlePrint = () => {
+    let htmlToPrint = "";
+    
+    if (selectAll) {
+      const readyResults = displayResults.filter(r => !r.isPlaceholder && r.html);
+      if (readyResults.length === 0) {
+        toast.error("Nenhum boleto pronto para impressão coletiva.");
+        return;
+      }
+      
+      if (readyResults.length < displayResults.length) {
+        toast.info(`Imprimindo ${readyResults.length} de ${displayResults.length} boletos já registrados.`);
+      }
+
+      // Concatenar HTMLs com quebra de página
+      htmlToPrint = readyResults.map(r => `
+        <div style="page-break-after: always;">
+          ${r.html}
+        </div>
+      `).join("");
+    } else {
+      if (!activeHtml) return;
+      htmlToPrint = activeHtml;
     }
 
-    setIsGeneratingPdf(true);
-    const toastId = toast.loading("Gerando PDF oficial...");
-
-    try {
-      // Cria um iframe oculto para isolar o HTML do boleto e evitar erros de CSS global (ex: lab())
-      const iframe = document.createElement("iframe");
-      iframe.style.position = "fixed";
-      iframe.style.left = "-9999px";
-      iframe.style.visibility = "hidden";
-      document.body.appendChild(iframe);
-
-      const iframeDoc = iframe.contentWindow?.document;
-      if (!iframeDoc) throw new Error("Não foi possível acessar o iframe");
-
-      iframeDoc.open();
-      iframeDoc.write(`
-        <!DOCTYPE html>
+    const printWindow = window.open("", "_blank");
+    if (printWindow) {
+      printWindow.document.write(`
         <html>
           <head>
-            <meta charset="utf-8">
+            <title>Impressão G8 Pay</title>
             <style>
-              body { margin: 0; padding: 0; background: white; }
-              * { box-sizing: border-box; }
+              @media print {
+                @page { margin: 0; }
+                body { margin: 1cm; }
+              }
             </style>
           </head>
           <body>
-            ${activeHtml}
+            ${htmlToPrint}
           </body>
         </html>
       `);
-      iframeDoc.close();
-
-      // Aguarda o carregamento do conteúdo e fontes no iframe
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      const canvas = await html2canvas(iframeDoc.body, {
-        scale: 2,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        width: 850 // Largura padrão de boleto
-      });
-
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
-      const pdf = new jsPDF("p", "mm", "a4");
-      
-      const pageWidth = pdf.internal.pageSize.getWidth();
-      const pageHeight = pdf.internal.pageSize.getHeight();
-      const canvasWidth = canvas.width;
-      const canvasHeight = canvas.height;
-      const ratio = canvasWidth / canvasHeight;
-      
-      let imgWidth = pageWidth;
-      let imgHeight = pageWidth / ratio;
-      
-      if (imgHeight > pageHeight) {
-        imgHeight = pageHeight;
-        imgWidth = pageHeight * ratio;
-      }
-
-      pdf.addImage(imgData, "JPEG", 0, 0, imgWidth, imgHeight);
-      
-      const fileName = `boleto_${formatDateSync(activeDate).replace(/\//g, "-")}_${cobrancaData.pagadorNome.replace(/\s+/g, '_')}.pdf`;
-      pdf.save(fileName);
-
-      document.body.removeChild(iframe);
-      toast.dismiss(toastId);
-      toast.success("Download concluído!");
-    } catch (err) {
-      console.error("Erro ao gerar PDF:", err);
-      toast.dismiss(toastId);
-      toast.error("Erro no download direto. Use 'Visualizar e Imprimir'.");
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  };
-
-  const handlePrint = () => {
-    if (!activeHtml) return;
-    if (currentResult.isPlaceholder) {
-      toast.info("Este título ainda está sendo registrado. Tente imprimir em alguns instantes no menu de Cobranças.");
-      return;
-    }
-    const printWindow = window.open("", "_blank");
-    if (printWindow) {
-      printWindow.document.write(activeHtml);
       printWindow.document.close();
       printWindow.focus();
       setTimeout(() => {
@@ -214,7 +233,23 @@ export default function CobrancaSucessoPage() {
                       </h4>
                       <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Escolha qual parcela deseja visualizar ou imprimir</p>
                    </div>
-                   <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 text-[10px] uppercase font-black tracking-widest">{selectedIndex + 1} de {displayResults.length}</Badge>
+                    <div className="flex items-center gap-4">
+                       <Button 
+                         variant="ghost" 
+                         onClick={() => setSelectAll(!selectAll)}
+                         className={cn(
+                           "h-10 px-4 rounded-sm font-black text-[10px] uppercase tracking-widest border-2 transition-all",
+                           selectAll 
+                             ? "bg-[#f97316] text-white border-[#f97316] hover:bg-orange-600" 
+                             : "bg-white text-[#0c0a09] border-neutral-100 hover:border-[#f97316]/30"
+                         )}
+                       >
+                         {selectAll ? "Desselecionar Tudo" : "Selecionar Tudo"}
+                       </Button>
+                       <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 text-[10px] uppercase font-black tracking-widest">
+                         {selectAll ? displayResults.length : (selectedIndex + 1)} de {displayResults.length}
+                       </Badge>
+                    </div>
                 </div>
                 
                 <div className="flex items-center gap-4 overflow-x-auto py-10 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent -mx-6 px-6">
@@ -243,25 +278,13 @@ export default function CobrancaSucessoPage() {
                 </div>
               </div>
             )}
-            <div className="grid sm:grid-cols-2 gap-6">
+            <div className="w-full">
               <Button 
                 onClick={handlePrint}
-                className="h-28 bg-[#0c0a09] hover:bg-black text-white rounded-sm font-black uppercase text-sm tracking-widest transition-all gap-4 shadow-xl active:scale-95 flex flex-col items-center justify-center py-4 group"
+                className="w-full h-28 bg-[#0c0a09] hover:bg-black text-white rounded-sm font-black uppercase text-sm tracking-widest transition-all gap-4 shadow-xl active:scale-95 flex flex-col items-center justify-center py-4 group"
               >
                 <Printer className="h-8 w-8 text-[#f97316] group-hover:scale-110 transition-transform" />
-                Visualizar e Imprimir
-              </Button>
-              <Button 
-                onClick={handleDownloadPdf}
-                disabled={isGeneratingPdf}
-                className="h-28 bg-[#f97316] hover:bg-orange-600 text-white rounded-sm font-black uppercase text-sm tracking-widest transition-all gap-4 shadow-xl active:scale-95 flex flex-col items-center justify-center py-4 group"
-              >
-                {isGeneratingPdf ? (
-                    <Loader2 className="h-8 w-8 animate-spin" />
-                ) : (
-                    <Download className="h-8 w-8 group-hover:translate-y-1 transition-transform" />
-                )}
-                Baixar PDF Agora
+                {selectAll ? `Imprimir Todos (${displayResults.filter(r => !r.isPlaceholder).length})` : "Salvar PDF ou Imprimir"}
               </Button>
             </div>
           </CardContent>

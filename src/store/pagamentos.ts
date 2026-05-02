@@ -22,6 +22,7 @@ interface CobrancaData {
   dataVencimento: string;
   isRecorrente?: boolean;
   quantidadeMeses?: number;
+  groupName?: string;
   results?: CobrancaResult[];
 }
 
@@ -39,6 +40,7 @@ export const cobrancaDataAtom = atom<CobrancaData>({
   pagadorNumero: "",
   pagadorComplemento: "",
   dataVencimento: "",
+  groupName: "",
 });
 
 export const cobrancaHtmlAtom = atom<string | null>(null);

@@ -96,18 +96,23 @@ export default function PagadorDataPage() {
       if (isRecorrente) {
         const toastId = toast.loading(`Criando grupo de cobrança recorrente...`);
         try {
-          // Calcular a primeira data de vencimento (início no próximo mês conforme padrão anterior)
+          // Calcular a primeira data de vencimento
           const now = new Date();
           const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, diaVencimento);
-          if (nextMonth.getDate() !== diaVencimento) nextMonth.setDate(0); // Ajuste para meses curtos
+          if (nextMonth.getDate() !== diaVencimento) nextMonth.setDate(0); 
 
           const firstDate = nextMonth.toISOString().split('T')[0];
+          
+          // Ajuste conforme feedback: vencimento da recorrência deve ser a data final da série
+          const endDate = new Date(nextMonth);
+          endDate.setMonth(endDate.getMonth() - 1 + (quantidadeMeses - 1) + 1); // Ex: Se 3 meses começando em Maio (05), expira em Agosto (08)
+          const recurrenceEndDate = endDate.toISOString().split('T')[0];
 
           // 1. Definindo o Modelo de Cobrança (Grupo)
-          const groupName = `REC-${formData.pagadorNome.split(' ')[0].toUpperCase()}-${Date.now()}`;
+          const groupNameInput = `REC-${formData.pagadorNome.split(' ')[0].toUpperCase()}-${Date.now()}`;
 
-          await api.post("/api/banco/cobranca-grupo", {
-            nome: groupName,
+          const groupRes = await api.post("/api/banco/cobranca-grupo", {
+            nome: groupNameInput,
             valor: cobrancaData.valor,
             vencimento: firstDate,
             tipo: "common",
@@ -115,12 +120,22 @@ export default function PagadorDataPage() {
             recorrencia: {
               quantidade: quantidadeMeses,
               frequencia: 30, // dias
-              vencimento: firstDate
+              vencimento: recurrenceEndDate // DATA FINAL DA SÉRIE
             }
           });
 
-          // 2. Cadastro dos Pagadores (Item)
-          await api.post(`/api/banco/cobranca-grupo/${groupName}/item`, {
+          // O ID REAL (Hash) vem no campo data conforme feedback do back
+          let groupId = groupNameInput;
+          if (typeof groupRes.data === 'string') {
+            groupId = groupRes.data;
+          } else if (groupRes.data && typeof groupRes.data.data === 'string') {
+            groupId = groupRes.data.data;
+          } else if (groupRes.data && typeof groupRes.data.id === 'string') {
+            groupId = groupRes.data.id;
+          }
+
+          // 2. Cadastro dos Pagadores (Item) - Usando o ID (Hash)
+          await api.post(`/api/banco/cobranca-grupo/${groupId}/item`, {
             nome: removeAccents(formData.pagadorNome),
             documento: cleanTaxNumber(formData.pagadorTaxNumber),
             cep: cleanCep(formData.pagadorCep),
@@ -134,23 +149,23 @@ export default function PagadorDataPage() {
             telefone: formData.pagadorTelefone.replace(/\D/g, "") || "11999999999"
           });
 
-          // 3. Geração dos Boletos (Trigger Bulk)
-          await api.post(`/api/banco/cobranca-grupo/${groupName}/gerar-boletos`);
+          // 3. Geração dos Boletos (Trigger Bulk) - Usando o ID (Hash)
+          await api.post(`/api/banco/cobranca-grupo/${groupId}/gerar-boletos`);
 
           toast.dismiss(toastId);
           toast.success("Processamento em lote iniciado com sucesso!");
 
-          // Buscar itens do grupo para obter os boletos gerados (se o backend já os criou)
-          // Se não estiverem prontos, a tela de sucesso mostrará um estado de processamento.
           let cobrancaResults: any[] = [];
           try {
-            const itemsRes = await api.get(`/api/banco/cobranca-grupo/${groupName}/itens`);
+            // 4. Listar Itens - Usando o ID (Hash)
+            const itemsRes = await api.get(`/api/banco/cobranca-grupo/${groupId}/itens`);
             const items = itemsRes.data?.data || itemsRes.data?.items || itemsRes.data || [];
 
             if (Array.isArray(items) && items.length > 0) {
               cobrancaResults = items.map((item: any) => ({
                 html: item.html || item.boletoHtml || item.boleto_html || "",
-                dataVencimento: item.vencimento || item.dueDate || item.dataVencimento
+                dataVencimento: item.vencimento || item.dueDate || item.dataVencimento,
+                isPlaceholder: !(item.html || item.boletoHtml || item.boleto_html)
               }));
 
               if (cobrancaResults[0]?.html) {
@@ -162,7 +177,7 @@ export default function PagadorDataPage() {
               setCobrancaHtml("<h1>SOLICITAÇÃO RECEBIDA</h1><p>O grupo de cobrança foi criado e os boletos estão na fila de registro.</p>");
             }
           } catch (e) {
-            console.warn("Could not fetch items immediately, proceeding to success page", e);
+            console.warn("Could not fetch items immediately", e);
             setCobrancaHtml("<h1>GRUPO REGISTRADO</h1><p>Sua solicitação de cobrança em lote foi recebida com sucesso.</p>");
           }
 
@@ -171,6 +186,7 @@ export default function PagadorDataPage() {
             ...formData,
             isRecorrente: true,
             quantidadeMeses,
+            groupName: groupId, // SALVANDO O ID (HASH) PARA O POLLING NA TELA DE SUCESSO
             results: cobrancaResults
           });
 
