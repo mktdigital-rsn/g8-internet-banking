@@ -62,7 +62,29 @@ export default function LoginScreen() {
   const [challengeExpiresAt, setChallengeExpiresAt] = useState("");
   const [isPolling, setIsPolling] = useState(false);
   const [hasFinalized, setHasFinalized] = useState(false);
+  const [progress, setProgress] = useState(0);
   const pollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (challengeStatus === "APPROVED") {
+      setProgress(0);
+      const duration = 15000; // 15 seconds
+      const intervalTime = 100; // every 100ms
+      const stepVal = 100 / (duration / intervalTime);
+
+      const timer = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 100) {
+            clearInterval(timer);
+            return 100;
+          }
+          return Math.min(prev + stepVal, 100);
+        });
+      }, intervalTime);
+
+      return () => clearInterval(timer);
+    }
+  }, [challengeStatus]);
 
   const numberPairs = [
     ["0", "1"],
@@ -132,8 +154,8 @@ export default function LoginScreen() {
         if (userToken) localStorage.setItem("userToken", userToken);
 
         toast.success("Autenticação confirmada! Redirecionando...");
-        // Delay redirect to let user see success animation
-        await new Promise((resolve) => setTimeout(resolve, 2500));
+        // Delay redirect to let user see success progress (15 seconds)
+        await new Promise((resolve) => setTimeout(resolve, 15000));
         window.location.href = "/dashboard";
       }
     } catch (err: any) {
@@ -477,14 +499,37 @@ export default function LoginScreen() {
                         </motion.p>
                       </div>
 
+                      <div className="w-full max-w-sm space-y-4 pt-4 relative z-10">
+                        <div className="flex justify-between items-center text-xs">
+                          <span className="text-[#f97316] font-black uppercase tracking-widest animate-pulse text-left">
+                            {progress < 30 ? "Estabelecendo conexão segura..." :
+                             progress < 60 ? "Autenticando criptografia..." :
+                             progress < 90 ? "Sincronizando dados..." :
+                             "Acesso liberado! Redirecionando..."}
+                          </span>
+                          <span className="font-mono font-black text-white text-base">
+                            {Math.round(progress)}%
+                          </span>
+                        </div>
+
+                        {/* Outer track */}
+                        <div className="w-full h-3 bg-neutral-900 rounded-full overflow-hidden border border-white/5 p-[2px]">
+                          {/* Inner glowing bar */}
+                          <div 
+                            className="h-full bg-gradient-to-r from-[#ff7711] to-[#ffaa00] rounded-full transition-all duration-100 ease-out shadow-[0_0_12px_rgba(255,119,17,0.5)]"
+                            style={{ width: `${progress}%` }}
+                          />
+                        </div>
+                      </div>
+
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.8 }}
-                        className="flex items-center gap-3 bg-amber-200/20 p-4 rounded-sm shadow-xl shadow-amber-400/20 animate-bounce"
+                        className="flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-4 rounded-xl shadow-2xl"
                       >
-                        <Loader2 className="h-4 w-4 animate-spin text-white" />
-                        <span className="text-[10px] 2xl:text-xs font-bold uppercase tracking-[0.3em] text-white">Redirecionando para o painel...</span>
+                        <Loader2 className="h-4 w-4 animate-spin text-[#ff7711]" />
+                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Carregando painel de controle...</span>
                       </motion.div>
                     </motion.div>
                   ) : (

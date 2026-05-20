@@ -17,7 +17,11 @@ import {
   Clock,
   Banknote,
   Cpu,
-  User
+  User,
+  Palmtree,
+  Plane,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,6 +42,7 @@ interface MenuItem {
   disabled?: boolean;
   badge?: string;
   type?: 'link' | 'separator';
+  submenu?: { icon: any; label: string; href: string }[];
 }
 
 const menuGroups: { label?: string; items: MenuItem[] }[] = [
@@ -50,6 +55,12 @@ const menuGroups: { label?: string; items: MenuItem[] }[] = [
       { icon: Banknote, label: "Cobranças", href: "/dashboard/cobrancas" },
       { icon: CreditCard, label: "Cartões", href: "/dashboard/cartoes" },
       { icon: FileText, label: "Extrato", href: "/dashboard/extrato" },
+      { 
+        icon: Palmtree, 
+        label: "Lazer", 
+        href: "#", 
+        submenu: [{ icon: Plane, label: "Aéreo", href: "/dashboard/lazer/aereo" }] 
+      },
       { icon: Wallet, label: "Pagamentos", href: "/dashboard/pagamentos" },
       { icon: Smartphone, label: "PIX", href: "/dashboard/pix" },
       { icon: Cpu, label: "POS/MAQUI.", href: "/dashboard/maquininhas" },
@@ -73,6 +84,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
    const [balance, setBalance] = React.useState("");
    const [accountInfo, setAccountInfo] = React.useState({ agency: "", account: "" });
    const [isLoadingData, setIsLoadingData] = React.useState(true);
+   const [isLazerExpanded, setIsLazerExpanded] = React.useState(false);
+
+   React.useEffect(() => {
+     if (pathname.startsWith("/dashboard/lazer")) {
+       setIsLazerExpanded(true);
+     }
+   }, [pathname]);
    const setGlobalBalance = useSetAtom(balanceAtom);
    const setGlobalBalanceLoading = useSetAtom(isBalanceLoadingAtom);
    const [user, setUser] = useAtom(userAtom);
@@ -239,6 +257,54 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               <div key={gIdx} className="space-y-1">
                 {group.items.map((item) => {
                   const isActive = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
+                  
+                  if (item.submenu) {
+                    const isAnySubActive = item.submenu.some(sub => pathname.startsWith(sub.href));
+                    return (
+                      <div key={item.label} className="space-y-1">
+                        <button
+                          onClick={() => setIsLazerExpanded(!isLazerExpanded)}
+                          className={`flex items-center gap-5 px-6 py-3 w-full rounded-md transition-all group relative overflow-hidden border border-transparent ${
+                            isAnySubActive
+                              ? "text-[#ff7711] bg-white shadow-lg"
+                              : "text-white/80 hover:bg-white hover:text-[#ff7711]"
+                          }`}
+                        >
+                          <item.icon className={`h-5 w-5 relative z-10 ${isAnySubActive ? "text-[#ff7711]" : "text-white/60 group-hover:text-[#ff7711]"}`} />
+                          <div className="flex items-center justify-between flex-1 relative z-10">
+                            <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isAnySubActive ? "text-[#ff7711]" : "text-white/80 group-hover:text-[#ff7711] transition-colors duration-300"}`}>{item.label}</span>
+                            {isLazerExpanded ? (
+                              <ChevronUp className="h-4 w-4 text-[#ff7711] relative z-10 shrink-0" />
+                            ) : (
+                              <ChevronDown className={`h-4 w-4 relative z-10 shrink-0 ${isAnySubActive ? "text-[#ff7711]" : "text-white/60 group-hover:text-[#ff7711]"}`} />
+                            )}
+                          </div>
+                        </button>
+                        {isLazerExpanded && (
+                          <div className="pl-6 space-y-1 animate-in slide-in-from-top-1 duration-200">
+                            {item.submenu.map((sub) => {
+                              const isSubActive = pathname.startsWith(sub.href);
+                              return (
+                                <Link
+                                  key={sub.label}
+                                  href={sub.href}
+                                  className={`flex items-center gap-4 px-6 py-2.5 rounded-md transition-all group border border-transparent ${
+                                    isSubActive
+                                      ? "text-white bg-[#ff7711] shadow-md shadow-orange-600/10"
+                                      : "text-white/70 hover:bg-white hover:text-[#ff7711]"
+                                  }`}
+                                >
+                                  <sub.icon className={`h-4 w-4 shrink-0 ${isSubActive ? "text-white" : "text-white/40 group-hover:text-[#ff7711]"}`} />
+                                  <span className={`text-[10px] uppercase tracking-[0.15em] font-black ${isSubActive ? "text-white" : "text-white/70 group-hover:text-[#ff7711]"}`}>{sub.label}</span>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
                   return (
                     <Link
                       key={item.label}
