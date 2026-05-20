@@ -63,6 +63,7 @@ function PixPagarContent() {
   const [searchResult, setSearchResult] = useState<any>(null);
   const [uuid, setUuid] = useState("");
   const [endToEndId, setEndToEndId] = useState("");
+  const [saveContact, setSaveContact] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -435,6 +436,18 @@ function PixPagarContent() {
         setTransactionId(realId || "");
         setStep("success");
         toast.success("Transferência realizada com sucesso!");
+
+        if (saveContact) {
+          try {
+            await api.post("/api/banco/pix/cadastrar-contato", {
+              nome: recipientName,
+              chave: finalChave
+            });
+            console.log("✅ Contact saved successfully");
+          } catch (e) {
+            console.error("❌ Error saving contact:", e);
+          }
+        }
 
         // Inicia a busca pelo ID real no extrato em background
         searchWithRetry(txAmount);
@@ -817,6 +830,16 @@ function PixPagarContent() {
                 <p className="text-xs font-black text-[#855e00] uppercase tracking-tight leading-relaxed">
                   Confirme atentamente os dados do recebedor e o valor antes de confirmar o pagamento via SMS.
                 </p>
+              </div>
+
+              <div 
+                onClick={() => setSaveContact(!saveContact)}
+                className="flex items-center gap-3 p-4 bg-orange-50 rounded-[5px] border border-orange-100 group cursor-pointer"
+              >
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${saveContact ? 'bg-[#ff7711] border-[#ff7711]' : 'border-neutral-200 bg-white'}`}>
+                  {saveContact && <CheckCircle2 size={12} className="text-white" />}
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#ff7711]">Salvar este contato para futuras transações</span>
               </div>
 
               <div className="pt-4">

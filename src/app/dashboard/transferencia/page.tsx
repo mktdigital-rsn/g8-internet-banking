@@ -94,6 +94,7 @@ export default function TransferenciaPage() {
     const [targetAccountType, setTargetAccountType] = useState<"corrente" | "poupanca">("corrente");
     const [targetReceiverName, setTargetReceiverName] = useState("");
     const [targetDocument, setTargetDocument] = useState("");
+    const [favorites, setFavorites] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchBalance = async () => {
@@ -109,7 +110,18 @@ export default function TransferenciaPage() {
                 console.error("Error fetching balance:", err);
             }
         };
+        const fetchFavorites = async () => {
+            try {
+                const res = await api.get("/api/banco/pix/contatos");
+                if (res.data) {
+                    setFavorites(res.data);
+                }
+            } catch (err) {
+                console.error("Error fetching favorites:", err);
+            }
+        };
         fetchBalance();
+        fetchFavorites();
     }, []);
 
     const formatCurrency = (val: string | number) => {
@@ -421,6 +433,7 @@ export default function TransferenciaPage() {
                                         icon={ArrowRightLeft}
                                         title="TED"
                                         description="Para outros bancos. Disponível em dias úteis até as 17h."
+                                        badge="SÓ RECEBIMENTOS"
                                         onClick={() => {
                                             setTransferType('TED');
                                             setStep('select_target');
@@ -778,20 +791,41 @@ export default function TransferenciaPage() {
                         <div className="space-y-6">
                             <h3 className="text-[12px] font-black uppercase tracking-[0.2em] text-[#0c0a09]">Favoritos Rápidos</h3>
                             <div className="space-y-4">
-                                {[1, 2, 3].map((i) => (
-                                    <div key={i} className="flex items-center justify-between p-5 bg-white rounded-md border border-neutral-100 hover:border-[#f97316]/30 hover:shadow-2xl transition-all cursor-pointer group">
+                                {favorites.slice(0, 3).map((c) => (
+                                    <div 
+                                        key={c.id} 
+                                        onClick={() => {
+                                            if (c.chave) {
+                                                const cleanChave = c.chave.replace(/\D/g, "");
+                                                if (cleanChave.length === 11 || cleanChave.length === 14) {
+                                                    setTransferType('G8');
+                                                    setTargetCpf(c.chave);
+                                                    setStep('select_target');
+                                                    toast.info(`Preenchido dados para: ${c.nome}`);
+                                                } else {
+                                                    router.push(`/dashboard/pix/pagar?type=key&key=${encodeURIComponent(c.chave)}&name=${encodeURIComponent(c.nome)}&bank=${encodeURIComponent(c.instituicao || "")}`);
+                                                }
+                                            }
+                                        }}
+                                        className="flex items-center justify-between p-5 bg-white rounded-md border border-neutral-100 hover:border-[#f97316]/30 hover:shadow-2xl transition-all cursor-pointer group"
+                                    >
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-lg bg-[#f97316]/10 overflow-hidden group-hover:ring-4 ring-orange-500/10 transition-all border border-orange-100 p-1">
-                                                <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=Fav${i}`} alt="Fav" className="rounded-md" />
+                                            <div className="w-12 h-12 rounded-lg bg-[#f97316]/10 overflow-hidden group-hover:ring-4 ring-orange-500/10 transition-all border border-orange-100 p-1 flex items-center justify-center font-black text-orange-600">
+                                                {c.nome ? c.nome.charAt(0).toUpperCase() : "?"}
                                             </div>
                                             <div className="text-left">
-                                                <p className="text-[12px] font-black text-[#0c0a09]">Contato Favorito {i}</p>
-                                                <p className="text-[10px] text-[#0c0a09]/30 font-bold uppercase tracking-wider">G8 BANK • AG 0001</p>
+                                                <p className="text-[12px] font-black text-[#0c0a09] truncate max-w-[150px]">{c.nome}</p>
+                                                <p className="text-[10px] text-[#0c0a09]/30 font-bold uppercase tracking-wider truncate max-w-[150px]">{c.instituicao || "PIX"}</p>
                                             </div>
                                         </div>
                                         <ChevronRight size={16} className="text-[#0c0a09]/20 group-hover:text-[#f97316] group-hover:translate-x-1 transition-all" />
                                     </div>
                                 ))}
+                                {favorites.length === 0 && (
+                                    <div className="text-center py-6 bg-white border border-neutral-100 rounded-md">
+                                        <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">Nenhum favorito salvo</p>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -816,14 +850,16 @@ function TransferOption({
     description,
     onClick,
     premium = false,
-    disabled = false
+    disabled = false,
+    badge
 }: {
     icon: any,
     title: string,
     description: string,
     onClick: () => void,
     premium?: boolean,
-    disabled?: boolean
+    disabled?: boolean,
+    badge?: string
 }) {
     return (
         <button
@@ -847,6 +883,7 @@ function TransferOption({
                 <div className="flex items-center gap-2">
                     <h3 className={`text-xl font-black tracking-tight ${premium ? 'text-orange-700' : 'text-orange-600'}`}>{title}</h3>
                     {disabled && <Badge className="bg-[#0c0a09]/10 text-[#0c0a09] text-[8px] font-black uppercase border-0">Breve</Badge>}
+                    {badge && <Badge className="bg-orange-600/10 text-orange-600 border-0 text-[8px] font-black uppercase tracking-widest">{badge}</Badge>}
                 </div>
                 <p className={`text-[11px] font-black leading-relaxed ${premium ? 'text-orange-600/70' : 'text-orange-600'}`}>
                     {description}
