@@ -98,15 +98,31 @@ export default function PagadorDataPage() {
         try {
           // Calcular a primeira data de vencimento
           const now = new Date();
-          const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, diaVencimento);
-          if (nextMonth.getDate() !== diaVencimento) nextMonth.setDate(0); 
-
-          const firstDate = nextMonth.toISOString().split('T')[0];
+          let firstDateObj = new Date(now.getFullYear(), now.getMonth(), diaVencimento);
           
-          // Ajuste conforme feedback: vencimento da recorrência deve ser a data final da série
-          const endDate = new Date(nextMonth);
-          endDate.setMonth(endDate.getMonth() - 1 + (quantidadeMeses - 1) + 1); // Ex: Se 3 meses começando em Maio (05), expira em Agosto (08)
-          const recurrenceEndDate = endDate.toISOString().split('T')[0];
+          // Se o dia de vencimento já passou no mês atual, começa no próximo mês
+          if (firstDateObj < now) {
+            firstDateObj.setMonth(firstDateObj.getMonth() + 1);
+          }
+          
+          // Ajuste para meses curtos (ex: dia 31 em fevereiro)
+          if (firstDateObj.getDate() !== diaVencimento) {
+            firstDateObj.setDate(0);
+          }
+
+          const firstDate = firstDateObj.toISOString().split('T')[0];
+          
+          // Ajuste conforme feedback e comportamento observado: 
+          // O 'vencimento' do settings (root) deve ser a data final da série (expiração do grupo)
+          // O 'vencimento' da recorrencia (inner) deve ser a data inicial (primeira parcela)
+          const endDateObj = new Date(firstDateObj);
+          endDateObj.setMonth(endDateObj.getMonth() + (quantidadeMeses - 1));
+          
+          // Ajuste para meses curtos no final da série
+          if (endDateObj.getDate() !== diaVencimento && diaVencimento > 28) {
+            endDateObj.setDate(0);
+          }
+          const recurrenceEndDate = endDateObj.toISOString().split('T')[0];
 
           // 1. Definindo o Modelo de Cobrança (Grupo)
           const groupNameInput = `REC-${formData.pagadorNome.split(' ')[0].toUpperCase()}-${Date.now()}`;
@@ -114,13 +130,13 @@ export default function PagadorDataPage() {
           const groupRes = await api.post("/api/banco/cobranca-grupo", {
             nome: groupNameInput,
             valor: cobrancaData.valor,
-            vencimento: firstDate,
+            vencimento: recurrenceEndDate, // DATA FINAL DA SÉRIE NO TOPO (EXPIRAÇÃO DO GRUPO)
             tipo: "common",
             descricao: `Recorrência de ${quantidadeMeses} meses para ${formData.pagadorNome}`,
             recorrencia: {
               quantidade: quantidadeMeses,
               frequencia: 30, // dias
-              vencimento: recurrenceEndDate // DATA FINAL DA SÉRIE
+              vencimento: firstDate // DATA INICIAL DA SÉRIE (PRIMEIRO BOLETO)
             }
           });
 
@@ -184,6 +200,7 @@ export default function PagadorDataPage() {
           setCobrancaData({
             ...cobrancaData,
             ...formData,
+            dataVencimento: firstDate, // GARANTIR QUE A PRIMEIRA DATA ESTÁ NO STORE
             isRecorrente: true,
             quantidadeMeses,
             groupName: groupId, // SALVANDO O ID (HASH) PARA O POLLING NA TELA DE SUCESSO

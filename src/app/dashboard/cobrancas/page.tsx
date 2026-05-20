@@ -29,7 +29,12 @@ import {
     RotateCw,
     TrendingUp,
     AlertTriangle,
-    PieChart as PieChartIcon
+    PieChart as PieChartIcon,
+    Diamond,
+    Building2,
+    Fingerprint,
+    Printer,
+    Layers
 } from "lucide-react";
 import {
     AreaChart,
@@ -60,6 +65,9 @@ import autoTable from "jspdf-autotable";
 
 interface BoletoItem {
     id: string;
+    itemId?: string;
+    uuid?: string;
+    idDoBancoLiquidante?: string;
     amount: number;
     expirationDate: string;
     paidAt: string | null;
@@ -70,27 +78,30 @@ interface BoletoItem {
         document: string;
         email?: string;
     };
-    // Added fields just in case
     createdAt?: string;
+    urlBoleto?: string;
+    html?: string;
+    boletoHtml?: string;
 }
 
 export default function GestaoCobrancasPage() {
     const router = useRouter();
     const [cobrancaData, setCobrancaData] = useAtom(cobrancaDataAtom);
     const [view, setView] = useState<"list" | "create">("list");
-    
+
     // --- List View States ---
     const [items, setItems] = useState<BoletoItem[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [chartPeriod, setChartPeriod] = useState<"day" | "week" | "month">("week");
-    
+
     // Removed default auto-filling for start/end date to not hide future boletos
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
-    
+
     const [statusFilter, setStatusFilter] = useState("TODOS");
     const [exportingType, setExportingType] = useState<'pdf' | 'xls' | 'csv' | null>(null);
+    const [selectedBoleto, setSelectedBoleto] = useState<BoletoItem | null>(null);
 
     // --- Create View States ---
     const [inputValue, setInputValue] = useState("");
@@ -108,7 +119,7 @@ export default function GestaoCobrancasPage() {
         const now = new Date();
         const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
         const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-        
+
         setStartDate(firstDay.toISOString().split('T')[0]);
         setEndDate(lastDay.toISOString().split('T')[0]);
         setMounted(true);
@@ -127,11 +138,11 @@ export default function GestaoCobrancasPage() {
     const resolveBoletoStatus = (item: BoletoItem) => {
         if (item.status === 'paid' || item.paidAt) return 'PAGO';
         if (item.status === 'manual_cancellation') return 'CANCELADO';
-        
+
         if (item.expirationDate) {
             const expDate = new Date(item.expirationDate + 'T00:00:00'); // enforce local day calculation
             const today = new Date();
-            today.setHours(0,0,0,0);
+            today.setHours(0, 0, 0, 0);
             if (expDate < today) {
                 return 'VENCIDO';
             }
@@ -150,10 +161,10 @@ export default function GestaoCobrancasPage() {
                         api.get("/api/banco/pagamentos/listar-boletos?page=1").catch(() => null),
                         api.get("/api/banco/pagamentos/listar-boletos?page=2").catch(() => null)
                     ]);
-                    
+
                     const items1 = resPage1?.data?.data?.items || [];
                     const items2 = resPage2?.data?.data?.items || [];
-                    
+
                     const allItems: BoletoItem[] = [...items1, ...items2];
                     setItems(allItems);
                 } catch (err) {
@@ -176,18 +187,18 @@ export default function GestaoCobrancasPage() {
             const nomeStr = item.payer?.name?.toLowerCase() || '';
             const docStr = item.payer?.document?.toLowerCase() || '';
             const codeStr = item.ourNumber?.toLowerCase() || '';
-            
-            const matchesSearch = 
-                nomeStr.includes(searchTerm.toLowerCase()) || 
+
+            const matchesSearch =
+                nomeStr.includes(searchTerm.toLowerCase()) ||
                 docStr.includes(searchTerm.toLowerCase()) ||
                 codeStr.includes(searchTerm.toLowerCase());
-            
+
             let matchesDate = true;
             if (startDate || endDate) {
                 // Determine item date (use expirationDate if createdAt is absent)
                 let isoDate = item.createdAt ? item.createdAt.split('T')[0] : item.expirationDate;
                 if (!isoDate) isoDate = "2000-01-01"; // Fallback
-                
+
                 if (startDate && isoDate < startDate) matchesDate = false;
                 if (endDate && isoDate > endDate) matchesDate = false;
             }
@@ -195,6 +206,25 @@ export default function GestaoCobrancasPage() {
             return matchesSearch && matchesDate;
         });
     }, [items, searchTerm, startDate, endDate]);
+
+    const searchedPayer = useMemo(() => {
+        if (!searchTerm || searchTerm.length < 11) return null;
+
+        const cleanSearch = searchTerm.replace(/\D/g, "");
+        if (cleanSearch.length !== 11 && cleanSearch.length !== 14) return null;
+
+        const match = items.find(item =>
+            item.payer?.document?.replace(/\D/g, "") === cleanSearch
+        );
+
+        if (match) {
+            return {
+                name: match.payer.name,
+                document: match.payer.document
+            };
+        }
+        return null;
+    }, [searchTerm, items]);
 
     const totals = useMemo(() => {
         let aReceber = 0;
@@ -206,7 +236,7 @@ export default function GestaoCobrancasPage() {
         dateFilteredItems.forEach(item => {
             const valor = item.amount / 100; // API is in cents
             const status = resolveBoletoStatus(item);
-            
+
             total += valor;
             if (status === 'PAGO') pagos += valor;
             else if (status === 'CANCELADO') cancelados += valor;
@@ -222,16 +252,16 @@ export default function GestaoCobrancasPage() {
             const itemStatus = resolveBoletoStatus(item);
             return statusFilter === "TODOS" || itemStatus === statusFilter;
         }).sort((a, b) => {
-             const d1 = a.expirationDate ? new Date(a.expirationDate).getTime() : 0;
-             const d2 = b.expirationDate ? new Date(b.expirationDate).getTime() : 0;
-             return d2 - d1;
+            const d1 = a.expirationDate ? new Date(a.expirationDate).getTime() : 0;
+            const d2 = b.expirationDate ? new Date(b.expirationDate).getTime() : 0;
+            return d2 - d1;
         });
     }, [dateFilteredItems, statusFilter]);
 
     const areaChartData = useMemo(() => {
         const refDate = endDate ? new Date(endDate + 'T12:00:00') : new Date();
         const groups: any[] = [];
-        
+
         const calcDay = (d: Date, dayName: string) => {
             let faturado = 0;
             let pago = 0;
@@ -240,7 +270,7 @@ export default function GestaoCobrancasPage() {
             dateFilteredItems.forEach(item => {
                 let dtStr = item.createdAt ? item.createdAt.split('T')[0] : item.expirationDate;
                 if (!dtStr) return;
-                
+
                 if (dtStr === targetDateStr) {
                     const val = item.amount / 100;
                     const status = resolveBoletoStatus(item);
@@ -261,7 +291,7 @@ export default function GestaoCobrancasPage() {
         } else if (chartPeriod === "month") {
             const startOfMonth = new Date(refDate.getFullYear(), refDate.getMonth(), 1);
             const daysInMonth = new Date(refDate.getFullYear(), refDate.getMonth() + 1, 0).getDate();
-            
+
             for (let i = 1; i <= daysInMonth; i++) {
                 const d = new Date(refDate.getFullYear(), refDate.getMonth(), i);
                 const dayStr = `${String(d.getDate()).padStart(2, '0')}`;
@@ -287,7 +317,7 @@ export default function GestaoCobrancasPage() {
     const handleExport = async (type: 'pdf' | 'xls' | 'csv') => {
         setExportingType(type);
         const toastId = toast.loading(`Preparando exportação (${type.toUpperCase()})...`);
-        
+
         try {
             const dataToExport = filteredItems.map(i => {
                 const statusStr = resolveBoletoStatus(i);
@@ -307,7 +337,7 @@ export default function GestaoCobrancasPage() {
                     headers.join(";"),
                     ...dataToExport.map(row => Object.values(row).join(";"))
                 ].join("\n");
-                
+
                 const blob = new Blob(["\uFEFF" + csvContent], { type: type === "csv" ? 'text/csv;charset=utf-8;' : 'application/vnd.ms-excel' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
@@ -318,7 +348,7 @@ export default function GestaoCobrancasPage() {
                 document.body.removeChild(link);
             } else if (type === "pdf") {
                 const doc = new jsPDF();
-                
+
                 try {
                     const img = new window.Image();
                     img.src = '/logo_g8_white.png'; // Updated to the dark/colored logo for white background
@@ -334,10 +364,10 @@ export default function GestaoCobrancasPage() {
                 doc.setTextColor(30, 30, 30);
                 doc.setFontSize(18);
                 doc.text("Relatório de Gestão de Boletos", 50, 18);
-                
+
                 doc.setFontSize(10);
                 doc.text(`Filtro Atual: ${statusFilter} | Data: ${new Date().toLocaleDateString()}`, 50, 24);
-                
+
                 autoTable(doc, {
                     startY: 35,
                     head: [["Pagador", "Documento", "Codigo", "Status", "Valor", "Vencimento"]],
@@ -345,7 +375,7 @@ export default function GestaoCobrancasPage() {
                     headStyles: { fillColor: [249, 115, 22], textColor: [255, 255, 255] },
                     alternateRowStyles: { fillColor: [245, 245, 245] }
                 });
-                
+
                 doc.save(`relatorio_g8_boletos_${new Date().getTime()}.pdf`);
             }
 
@@ -360,6 +390,26 @@ export default function GestaoCobrancasPage() {
         }
     };
 
+   const handlePrint = (boleto: BoletoItem) => {
+    // O desenvolvedor backend informou que o endpoint /api/banco/pagamentos/imprimir-boleto/{id} 
+    // ainda não foi implementado. Por isso, utilizaremos o link direto (urlBoleto) 
+    // que já vem no objeto do boleto.
+
+    if (boleto.urlBoleto) {
+        toast.info("Abrindo boleto para impressão...");
+        window.open(boleto.urlBoleto, "_blank");
+    } else {
+        // Fallback: Caso não tenha a URL, avisamos o usuário que o registro pode estar em processamento
+        toast.error("O boleto ainda está sendo processado pelo banco. Tente novamente em instantes.");
+        
+        // Tentativa de buscar via ID caso o backend venha a implementar a rota no futuro
+        const id = boleto.id || boleto.itemId || boleto.uuid;
+        if (id) {
+            console.warn("Rota de impressão HTML não encontrada no backend. ID do boleto:", id);
+        }
+    }
+};
+
     const handleNext = () => {
         const rawValue = inputValue.replace(/\./g, "").replace(",", ".");
         const valor = parseFloat(rawValue);
@@ -373,7 +423,7 @@ export default function GestaoCobrancasPage() {
     };
 
     if (view === "create") {
-         return (
+        return (
             <div className="p-4 md:p-10 space-y-10 animate-in fade-in slide-in-from-bottom-5 duration-700 max-w-7xl mx-auto">
                 <div className="flex items-center gap-6">
                     <Button variant="outline" size="icon" onClick={() => setView("list")} className="h-12 w-12 rounded-sm border-neutral-100"><ArrowLeft className="h-6 w-6 text-[#f97316]" /></Button>
@@ -400,12 +450,12 @@ export default function GestaoCobrancasPage() {
                                 <div className="absolute inset-0 bg-orange-500/5 rounded-sm scale-105 group-focus-within:scale-110 transition-transform blur-xl" />
                                 <div className="relative bg-white border-2 border-neutral-100 group-focus-within:border-[#f97316] rounded-sm overflow-hidden flex items-center px-8 py-6 transition-all">
                                     <span className="text-2xl font-black text-[#f97316] mr-4">R$</span>
-                                    <input 
-                                        type="text" 
-                                        value={inputValue} 
-                                        onChange={(e) => setInputValue(maskBRL(e.target.value))} 
-                                        placeholder="0,00" 
-                                        className="w-full bg-transparent text-5xl md:text-6xl font-black text-[#0c0a09] placeholder:text-neutral-100 focus:outline-none font-mono tracking-tighter" 
+                                    <input
+                                        type="text"
+                                        value={inputValue}
+                                        onChange={(e) => setInputValue(maskBRL(e.target.value))}
+                                        placeholder="0,00"
+                                        className="w-full bg-transparent text-5xl md:text-6xl font-black text-[#0c0a09] placeholder:text-neutral-100 focus:outline-none font-mono tracking-tighter"
                                     />
                                 </div>
                             </div>
@@ -434,8 +484,8 @@ export default function GestaoCobrancasPage() {
                     <p className="text-sm text-neutral-400 font-bold italic">Acompanhe seu fluxo de caixa e emissão de cobranças em tempo real.</p>
                 </div>
                 <div className="flex flex-col items-end gap-2">
-                    <Button 
-                        onClick={() => setView("create")} 
+                    <Button
+                        onClick={() => setView("create")}
                         disabled={!isPJ}
                         className={cn(
                             "h-12 md:h-14 rounded-sm px-8 font-black text-xs md:text-sm uppercase tracking-widest flex items-center gap-3 shadow-xl transition-all group",
@@ -474,7 +524,14 @@ export default function GestaoCobrancasPage() {
 
             {/* SÍNTESE EXECUTIVA E KPIs DE RISCO */}
             <div className="bg-white rounded-sm p-6 border border-neutral-100 shadow-sm space-y-6">
-                <h4 className="text-[11px] font-black text-[#0c0a09] uppercase tracking-[0.3em] border-b border-neutral-100 pb-2">Síntese Executiva e KPIs de Risco</h4>
+                <h4 className="text-[11px] font-black text-[#0c0a09] uppercase tracking-[0.3em] border-b border-neutral-100 pb-2 flex justify-between items-center">
+                    <span>Síntese Executiva e KPIs de Risco</span>
+                    {searchedPayer && (
+                        <span className="text-[#f97316] text-[16px] animate-in fade-in slide-in-from-right-4 duration-500">
+                            {searchedPayer.name} / {searchedPayer.document}
+                        </span>
+                    )}
+                </h4>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Total Geral (Wide) */}
                     <Card className="lg:col-span-3 border-2 border-neutral-100 rounded-sm p-6 flex flex-col sm:flex-row sm:items-center justify-center gap-4 bg-gradient-to-r from-neutral-50 to-white">
@@ -486,7 +543,7 @@ export default function GestaoCobrancasPage() {
                             <p className="text-4xl md:text-5xl font-black text-[#0c0a09] tracking-tighter">{isLoading ? "..." : formatCurrency(totals.total)}</p>
                         </div>
                     </Card>
-                    
+
                     {/* KPIs: Vencidos e Liquidez */}
                     <Card className="border border-red-100 bg-red-50/50 rounded-sm p-6 flex items-start gap-4 lg:col-span-2">
                         <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center shrink-0">
@@ -518,7 +575,14 @@ export default function GestaoCobrancasPage() {
 
             {/* DETALHAMENTO E ANÁLISE DE FLUXO */}
             <div className="bg-white rounded-sm p-6 border border-neutral-100 shadow-sm space-y-6">
-                <h4 className="text-[11px] font-black text-[#0c0a09] uppercase tracking-[0.3em] border-b border-neutral-100 pb-2">Detalhamento e Análise de Fluxo</h4>
+                <h4 className="text-[11px] font-black text-[#0c0a09] uppercase tracking-[0.3em] border-b border-neutral-100 pb-2 flex justify-between items-center">
+                    <span>Detalhamento e Análise de Fluxo</span>
+                    {searchedPayer && (
+                        <span className="text-[#f97316] text-[16px] animate-in fade-in slide-in-from-right-4 duration-500">
+                            {searchedPayer.name} / {searchedPayer.document}
+                        </span>
+                    )}
+                </h4>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                     {/* Pie Chart / Funnel */}
                     <div className="h-[300px] flex flex-col justify-center border border-neutral-100 rounded-sm p-4 bg-neutral-50/30">
@@ -538,8 +602,8 @@ export default function GestaoCobrancasPage() {
                                             <Cell key={`cell-${index}`} fill={entry.color} />
                                         ))}
                                     </Pie>
-                                    <RechartsTooltip 
-                                        formatter={(val: any) => formatCurrency(Number(val))} 
+                                    <RechartsTooltip
+                                        formatter={(val: any) => formatCurrency(Number(val))}
                                         contentStyle={{ borderRadius: '4px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', fontWeight: 'black', fontSize: '12px' }}
                                     />
                                     <Legend verticalAlign="bottom" height={36} wrapperStyle={{ fontSize: '10px', fontWeight: 'bold' }} />
@@ -577,7 +641,7 @@ export default function GestaoCobrancasPage() {
                             </Tabs>
                         </div>
                         {mounted && !isLoading && filteredItems.length > 0 ? (
-                             <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={areaChartData} margin={{ top: 30, right: 0, left: -20, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorFaturado" x1="0" y1="0" x2="0" y2="1">
@@ -607,11 +671,11 @@ export default function GestaoCobrancasPage() {
             {/* List and Filters */}
             <div className="bg-white rounded-sm p-4 md:p-8 border border-neutral-100 shadow-sm space-y-8">
                 <div className="flex flex-col gap-8">
-                    <div className="flex flex-col min-[1350px]:flex-row items-center justify-between gap-6 pb-6 border-b border-neutral-50 text-neutral-400 font-bold" 
-                         style={{ 
+                    <div className="flex flex-col min-[1350px]:flex-row items-center justify-between gap-6 pb-6 border-b border-neutral-50 text-neutral-400 font-bold"
+                        style={{
                             flexDirection: mounted && window.innerWidth >= 1350 ? 'column' : undefined,
-                            justifyContent: mounted && window.innerWidth >= 1350 ? 'center' : undefined 
-                         } as any}>
+                            justifyContent: mounted && window.innerWidth >= 1350 ? 'center' : undefined
+                        } as any}>
                         <Tabs value={statusFilter} onValueChange={(val: any) => setStatusFilter(val)} className="w-full lg:w-auto">
                             <TabsList className="bg-neutral-50 rounded-sm p-0.5 h-12 gap-1 border border-neutral-100 w-full lg:w-auto overflow-x-auto no-scrollbar">
                                 <TabsTrigger value="TODOS" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316]">Todos</TabsTrigger>
@@ -633,12 +697,12 @@ export default function GestaoCobrancasPage() {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div className="flex flex-col min-[1220px]:flex-row items-center justify-between gap-6"
-                         style={{ 
+                        style={{
                             flexDirection: mounted && window.innerWidth >= 1350 ? 'column' : undefined,
-                            justifyContent: mounted && window.innerWidth >= 1350 ? 'center' : undefined 
-                         } as any}>
+                            justifyContent: mounted && window.innerWidth >= 1350 ? 'center' : undefined
+                        } as any}>
                         <div className="relative max-w-2xl w-full">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
                             <Input placeholder="Buscar por nome, CPF/CNPJ ou código..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] rounded-sm shadow-inner" />
@@ -650,18 +714,19 @@ export default function GestaoCobrancasPage() {
                         </div>
                     </div>
                 </div>
-                
+
                 <div className="space-y-4">
                     <div className="hidden sm:grid grid-cols-12 px-6 pb-2 text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] gap-4">
-                        <span className="col-span-5 flex items-center gap-2 px-2">Pagador / Título</span>
-                        <span className="col-span-3 flex items-center justify-center gap-2">Status do Título</span>
+                        <span className="col-span-4 flex items-center gap-2 px-2">Pagador / Título</span>
+                        <span className="col-span-2 text-center">Nº do Boleto</span>
+                        <span className="col-span-2 flex items-center justify-center gap-2">Status</span>
                         <span className="col-span-2 text-right">Valor Líquido</span>
                         <span className="col-span-2 text-right">Vencimento</span>
                     </div>
-                    
+
                     <div className="space-y-2">
                         {isLoading ? (
-                             <div className="py-20 flex justify-center text-neutral-400 uppercase font-black text-[10px] tracking-widest w-full items-center"><Loader2 className="h-5 w-5 animate-spin mr-3"/> Carregando dados...</div>
+                            <div className="py-20 flex justify-center text-neutral-400 uppercase font-black text-[10px] tracking-widest w-full items-center"><Loader2 className="h-5 w-5 animate-spin mr-3" /> Carregando dados...</div>
                         ) : filteredItems.length === 0 ? (
                             <div className="py-20 text-center bg-neutral-50/50 rounded-sm border border-dashed border-neutral-200">
                                 <p className="text-neutral-500 font-black uppercase text-[10px] tracking-[0.2em]">Nenhum boleto localizado</p>
@@ -669,46 +734,187 @@ export default function GestaoCobrancasPage() {
                         ) : (
                             filteredItems.map((i, idx) => {
                                 const statusStr = resolveBoletoStatus(i);
-                                
+
                                 // Format the date nicely
                                 let displayDate = "-";
                                 if (i.expirationDate) {
                                     const parts = i.expirationDate.split('-'); // YYYY-MM-DD
-                                    if(parts.length === 3) displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                                    if (parts.length === 3) displayDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
                                 }
 
                                 return (
-                                <div key={idx} className="grid grid-cols-1 sm:grid-cols-12 items-center px-6 py-5 bg-white hover:bg-neutral-50/80 rounded-sm border border-neutral-100 hover:border-[#f97316]/20 transition-all cursor-pointer group gap-4 shadow-sm hover:shadow-md animate-in fade-in slide-in-from-right-4 duration-300" style={{ animationDelay: `${idx * 50}ms` }}>
-                                    <div className="col-span-5 flex items-center gap-5">
-                                        <div className={cn("w-12 h-12 rounded-sm flex items-center justify-center transition-all group-hover:scale-110 shadow-inner", statusStr === "PAGO" ? "bg-emerald-50 text-emerald-500" : statusStr === "VENCIDO" ? "bg-red-50 text-red-500" : statusStr === "CANCELADO" ? "bg-zinc-50 text-zinc-500" : "bg-blue-50 text-blue-500")}>
-                                            <FileText className="h-6 w-6" />
+                                    <div key={idx}
+                                        onClick={() => setSelectedBoleto(i)}
+                                        className="grid grid-cols-1 sm:grid-cols-12 items-center px-6 py-5 bg-white hover:bg-neutral-50/80 rounded-sm border border-neutral-100 hover:border-[#f97316]/20 transition-all cursor-pointer group gap-4 shadow-sm hover:shadow-md animate-in fade-in slide-in-from-right-4 duration-300"
+                                        style={{ animationDelay: `${idx * 50}ms` }}>
+                                        <div className="col-span-4 flex items-center gap-5">
+                                            <div className={cn("w-12 h-12 rounded-sm flex items-center justify-center transition-all group-hover:scale-110 shadow-inner", statusStr === "PAGO" ? "bg-emerald-50 text-emerald-500" : statusStr === "VENCIDO" ? "bg-red-50 text-red-500" : statusStr === "CANCELADO" ? "bg-zinc-50 text-zinc-500" : "bg-blue-50 text-blue-500")}>
+                                                <FileText className="h-6 w-6" />
+                                            </div>
+                                            <div className="min-w-0">
+                                                <p className="font-black text-sm text-[#0c0a09] uppercase truncate tracking-tight">{i.payer?.name || "Desconhecido"}</p>
+                                                <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest truncate">{i.payer?.document || "S/N"}</p>
+                                            </div>
                                         </div>
-                                        <div className="min-w-0">
-                                            <p className="font-black text-sm text-[#0c0a09] uppercase truncate tracking-tight">{i.payer?.name || "Desconhecido"}</p>
-                                            <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest truncate">{i.payer?.document || "S/N"} &bull; {i.ourNumber || "-"}</p>
+                                        <div className="col-span-2 text-center">
+                                            <p className="text-[11px] font-black text-neutral-500 font-mono tracking-tighter">{i.ourNumber || "-"}</p>
+                                        </div>
+                                        <div className="col-span-2 flex justify-center">
+                                            <Badge className={cn("px-4 py-1.5 font-black text-[9px] uppercase tracking-[0.1em] rounded-sm border-0 shadow-sm transition-colors", statusStr === "PAGO" ? "bg-emerald-500 text-white" : statusStr === "VENCIDO" ? "bg-red-500 text-white" : statusStr === "CANCELADO" ? "bg-zinc-500 text-white" : "bg-blue-600 text-white")}>
+                                                {statusStr === "PENDENTE" ? "A RECEBER" : statusStr}
+                                            </Badge>
+                                        </div>
+                                        <div className="col-span-2 text-right">
+                                            <p className="font-black text-[#0c0a09] font-mono text-lg tracking-tighter">{formatCurrency(i.amount / 100)}</p>
+                                        </div>
+                                        <div className="col-span-2 text-right flex items-center justify-end gap-3">
+                                            <div className="text-right">
+                                                <p className="text-xs font-black text-[#0c0a09] group-hover:text-[#f97316] transition-colors">{displayDate}</p>
+                                                <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">{statusStr === "PAGO" && i.paidAt ? "Liquidado" : "Vencimento"}</p>
+                                            </div>
+                                            <ChevronRight className="h-4 w-4 text-neutral-200 group-hover:text-[#f97316] group-hover:translate-x-1 transition-all" />
                                         </div>
                                     </div>
-                                    <div className="col-span-3 flex justify-center">
-                                        <Badge className={cn("px-4 py-1.5 font-black text-[9px] uppercase tracking-[0.1em] rounded-sm border-0 shadow-sm transition-colors", statusStr === "PAGO" ? "bg-emerald-500 text-white" : statusStr === "VENCIDO" ? "bg-red-500 text-white" : statusStr === "CANCELADO" ? "bg-zinc-500 text-white" : "bg-blue-600 text-white")}>
-                                            {statusStr === "PENDENTE" ? "A RECEBER" : statusStr}
-                                        </Badge>
-                                    </div>
-                                    <div className="col-span-2 text-right">
-                                        <p className="font-black text-[#0c0a09] font-mono text-lg tracking-tighter">{formatCurrency(i.amount / 100)}</p>
-                                    </div>
-                                    <div className="col-span-2 text-right flex items-center justify-end gap-3">
-                                        <div className="text-right">
-                                            <p className="text-xs font-black text-[#0c0a09] group-hover:text-[#f97316] transition-colors">{displayDate}</p>
-                                            <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">{statusStr === "PAGO" && i.paidAt ? "Liquidado" : "Vencimento"}</p>
-                                        </div>
-                                        <ChevronRight className="h-4 w-4 text-neutral-200 group-hover:text-[#f97316] group-hover:translate-x-1 transition-all" />
-                                    </div>
-                                </div>
-                            )})
+                                )
+                            })
                         )}
                     </div>
                 </div>
             </div>
+
+            {/* Premium Detail Modal Overlay */}
+            {selectedBoleto && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-500 overflow-y-auto">
+                    <Card className="w-full max-w-[480px] 2xl:max-w-2xl bg-white rounded-sm overflow-hidden shadow-2xl relative border-white/20 animate-in zoom-in-95 duration-300 my-auto">
+                        <button
+                            onClick={() => setSelectedBoleto(null)}
+                            className="absolute top-4 right-4 p-2 rounded-full bg-neutral-50 hover:bg-neutral-100 transition-all z-20 hover:rotate-90"
+                        >
+                            <ArrowLeft className="h-5 w-5 rotate-180 text-neutral-400" />
+                        </button>
+
+                        <div className="relative">
+                            <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-neutral-50 to-white" />
+
+                            <div className="p-5 md:p-6 2xl:p-10 space-y-4 2xl:space-y-8 relative z-10">
+                                <div className="text-center space-y-3 2xl:space-y-5">
+                                    <div className="relative inline-block">
+                                        <div className="absolute -inset-4 bg-[#f97316]/10 rounded-full blur-xl" />
+                                        <div className="w-14 h-14 2xl:w-20 2xl:h-20 bg-[#0c0a09] rounded-sm flex items-center justify-center text-[#f97316] mx-auto shadow-2xl relative border border-white/5">
+                                            <Diamond className="h-7 w-7 2xl:h-10 2xl:w-10 fill-[#f97316]/20" />
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <h2 className="text-xl 2xl:text-2xl font-black text-[#0c0a09] tracking-tighter uppercase font-sans">Detalhes do Boleto</h2>
+                                        <div className="flex items-center justify-center gap-2 mt-1">
+                                            <CheckCircle2 className="h-3 w-3 2xl:h-4 2xl:w-4 text-green-500" />
+                                            <p className="text-[10px] 2xl:text-xs text-neutral-400 font-black uppercase tracking-[0.2em]">Registro Validado G8 PAY</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                                    <div className="md:col-span-2 text-center py-4 2xl:py-8 bg-neutral-50 rounded-sm border border-neutral-100 flex flex-col justify-center">
+                                        <p className="text-[10px] 2xl:text-xs text-neutral-400 font-black uppercase tracking-[0.3em] mb-2">Valor Nominal</p>
+                                        <p className="text-2xl 2xl:text-3xl font-black text-[#f97316] font-mono tracking-tighter leading-none">
+                                            {formatCurrency(selectedBoleto.amount / 100)}
+                                        </p>
+                                    </div>
+
+                                    <div className="md:col-span-3 p-4 2xl:p-5 rounded-sm bg-neutral-50 border border-neutral-100 flex flex-col justify-center space-y-1">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Fingerprint className="h-3 w-3 text-[#f97316]" />
+                                            <p className="text-[10px] 2xl:text-xs font-black uppercase tracking-[0.2em] text-[#f97316]">Nosso Número / ID</p>
+                                        </div>
+                                        <p className="text-[10px] 2xl:text-xs font-mono font-bold break-all leading-relaxed text-[#0c0a09]/70">{selectedBoleto.ourNumber || selectedBoleto.id}</p>
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 2xl:gap-8">
+                                    {/* Receiver Card (User) */}
+                                    <div className="space-y-4 2xl:space-y-5 p-4 2xl:p-6 rounded-sm bg-neutral-50/80 border border-neutral-100">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Building2 className="h-3 w-3 2xl:h-4 2xl:w-4 text-neutral-400" />
+                                            <p className="text-[10px] 2xl:text-xs text-neutral-400 font-black uppercase tracking-widest">Beneficiário</p>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <p className="font-black text-[#0c0a09] truncate text-sm 2xl:text-base uppercase">{user?.name || user?.nome || "SUA EMPRESA"}</p>
+                                            <p className="text-[11px] 2xl:text-xs text-neutral-500 font-mono font-bold opacity-70">
+                                                {user?.taxNumber || "---"}
+                                            </p>
+                                        </div>
+                                        <div className="pt-2 border-t border-neutral-200/50 space-y-1.5 2xl:space-y-3">
+                                            <div className="flex justify-between items-center text-[11px] 2xl:text-xs">
+                                                <span className="text-neutral-400 font-bold">Instituição</span>
+                                                <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">G8 BANK (382)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Payer Card */}
+                                    <div className="space-y-4 2xl:space-y-5 p-4 2xl:p-6 rounded-sm bg-neutral-50/80 border border-neutral-100">
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <Building2 className="h-3 w-3 2xl:h-4 2xl:w-4 text-neutral-400" />
+                                            <p className="text-[10px] 2xl:text-xs text-neutral-400 font-black uppercase tracking-widest">Pagador</p>
+                                        </div>
+                                        <div className="space-y-0.5">
+                                            <p className="font-black text-[#0c0a09] truncate text-sm 2xl:text-base uppercase">{selectedBoleto.payer?.name || "PAGADOR"}</p>
+                                            <p className="text-[11px] 2xl:text-xs text-neutral-500 font-mono font-bold opacity-70">
+                                                {selectedBoleto.payer?.document || "---"}
+                                            </p>
+                                        </div>
+                                        <div className="pt-2 border-t border-neutral-200/50 space-y-1.5 2xl:space-y-3">
+                                            <div className="flex justify-between items-center text-[11px] 2xl:text-xs">
+                                                <span className="text-neutral-400 font-bold">Email</span>
+                                                <span className="font-black text-[#0c0a09] truncate ml-2 text-right lowercase">{selectedBoleto.payer?.email || "não informado"}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-5 pt-2">
+                                    <div className="grid grid-cols-2 gap-8">
+                                        <div>
+                                            <p className="text-[10px] 2xl:text-xs text-neutral-400 font-black uppercase tracking-widest mb-1">Status Atual</p>
+                                            <Badge className={cn(
+                                                "border-0 px-3 py-0.5 font-black text-xs 2xl:text-sm uppercase tracking-widest rounded-sm",
+                                                resolveBoletoStatus(selectedBoleto) === 'PAGO' ? 'bg-emerald-500 text-white' :
+                                                    resolveBoletoStatus(selectedBoleto) === 'VENCIDO' ? 'bg-red-500 text-white' :
+                                                        'bg-blue-600 text-white'
+                                            )}>
+                                                {resolveBoletoStatus(selectedBoleto) === 'PENDENTE' ? 'A RECEBER' : resolveBoletoStatus(selectedBoleto)}
+                                            </Badge>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[10px] 2xl:text-xs text-neutral-400 font-black uppercase tracking-widest mb-1">Data Vencimento</p>
+                                            <p className="text-sm 2xl:text-base font-black text-[#0c0a09]">
+                                                {selectedBoleto.expirationDate ? selectedBoleto.expirationDate.split('-').reverse().join('/') : "--/--/----"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 pt-2">
+                                    <Button
+                                        onClick={() => selectedBoleto && handlePrint(selectedBoleto)}
+                                        className="flex-1 h-12 2xl:h-16 bg-[#0c0a09] text-white hover:bg-black rounded-sm font-black uppercase tracking-widest text-[11px] 2xl:text-sm transition-all shadow-xl shadow-black/10 flex flex-col items-center justify-center py-2 group active:scale-95"
+                                    >
+                                        <Printer className="h-5 w-5 2xl:h-6 2xl:w-6 text-[#f97316] mb-1 group-hover:scale-110 transition-transform" />
+                                        Salvar PDF ou Imprimir
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setSelectedBoleto(null)}
+                                        className="h-12 2xl:h-16 border-neutral-100 rounded-sm font-black uppercase tracking-widest text-[11px] 2xl:text-sm px-8 active:scale-95 text-neutral-400 hover:text-black"
+                                    >
+                                        Fechar
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 }

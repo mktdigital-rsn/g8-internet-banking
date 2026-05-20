@@ -157,11 +157,36 @@ export default function CobrancaSucessoPage() {
               @media print {
                 @page { margin: 0; }
                 body { margin: 1cm; }
+                .no-print { display: none !important; }
+              }
+              body { font-family: sans-serif; margin: 0; padding: 0; background: #fff; }
+              .print-header {
+                background: #f8f9fa;
+                padding: 15px;
+                text-align: center;
+                border-bottom: 1px solid #eee;
+              }
+              .btn-print {
+                padding: 10px 25px;
+                background: #000;
+                color: #fff;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+                text-transform: uppercase;
+                font-size: 11px;
+                letter-spacing: 1px;
               }
             </style>
           </head>
           <body>
-            ${htmlToPrint}
+            <div class="print-header no-print">
+              <button class="btn-print" onclick="window.print()">Clique aqui para imprimir</button>
+            </div>
+            <div style="padding: 20px;">
+              ${htmlToPrint}
+            </div>
           </body>
         </html>
       `);
@@ -172,6 +197,27 @@ export default function CobrancaSucessoPage() {
       }, 500);
     }
   };
+
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (!cobrancaData.isRecorrente) return;
+    
+    const startTime = Date.now();
+    const duration = 45000; // 45 seconds
+
+    const timer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const percentage = Math.min((elapsed / duration) * 100, 100);
+      setProgress(percentage);
+      
+      if (percentage >= 100) {
+        clearInterval(timer);
+      }
+    }, 100);
+
+    return () => clearInterval(timer);
+  }, [cobrancaData.isRecorrente]);
 
   if (!cobrancaHtml && (!cobrancaData.results || cobrancaData.results.length === 0)) return null;
 
@@ -184,14 +230,14 @@ export default function CobrancaSucessoPage() {
             <CheckCircle2 className="h-12 w-12 text-white relative z-10" />
           </div>
           <Badge className="bg-emerald-500 text-white border-0 px-4 py-1 font-black text-[10px] uppercase tracking-widest rounded-sm mb-4">
-            {cobrancaData.isRecorrente ? "RECORRÊNCIA ATIVA" : "REGISTRO EFETUADO"}
+            {cobrancaData.isRecorrente ? "PROCESSAMENTO EM LOTE" : "REGISTRO EFETUADO"}
           </Badge>
           <h1 className="text-4xl md:text-6xl font-black text-[#0c0a09] tracking-tighter uppercase mb-2">
-            {cobrancaData.isRecorrente ? `${cobrancaData.quantidadeMeses} Cobranças!` : "Cobrança Gerada!"}
+            {cobrancaData.isRecorrente ? "Sincronizando..." : "Cobrança Gerada!"}
           </h1>
           <p className="text-neutral-500 font-medium max-w-md italic">
             {cobrancaData.isRecorrente 
-              ? `As ${cobrancaData.quantidadeMeses} mensalidades para ${cobrancaData.pagadorNome} foram registradas com sucesso.`
+              ? `As ${cobrancaData.quantidadeMeses} parcelas para ${cobrancaData.pagadorNome} estão sendo processadas.`
               : `O boleto para ${cobrancaData.pagadorNome} está pronto para ser pago.`}
           </p>
         </div>
@@ -217,87 +263,92 @@ export default function CobrancaSucessoPage() {
                 {formatDateSync(activeDate)}
               </p>
               {cobrancaData.isRecorrente && (
-                <div className="mt-2 flex items-center justify-end gap-2 text-[10px] font-black text-white/40 uppercase tracking-widest">
+                <div className="mt-2 flex items-center justify-end gap-2 text-[12px] font-black text-white/80 uppercase tracking-widest">
                   <Repeat className="h-3 w-3" /> Ciclo de {cobrancaData.quantidadeMeses} meses
                 </div>
               )}
             </div>
           </div>
           <CardContent className="p-10 space-y-10">
-            {cobrancaData.isRecorrente && (
-              <div className="space-y-6 animate-in fade-in duration-500">
-                <div className="flex items-center justify-between">
-                   <div className="space-y-1">
-                      <h4 className="text-xs font-black text-[#0c0a09] uppercase tracking-widest flex items-center gap-2">
-                        <Layers className="h-4 w-4 text-[#f97316]" /> Seleção do Boleto
-                      </h4>
-                      <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Escolha qual parcela deseja visualizar ou imprimir</p>
-                   </div>
-                    <div className="flex items-center gap-4">
-                       <Button 
-                         variant="ghost" 
-                         onClick={() => setSelectAll(!selectAll)}
-                         className={cn(
-                           "h-10 px-4 rounded-sm font-black text-[10px] uppercase tracking-widest border-2 transition-all",
-                           selectAll 
-                             ? "bg-[#f97316] text-white border-[#f97316] hover:bg-orange-600" 
-                             : "bg-white text-[#0c0a09] border-neutral-100 hover:border-[#f97316]/30"
-                         )}
-                       >
-                         {selectAll ? "Desselecionar Tudo" : "Selecionar Tudo"}
-                       </Button>
-                       <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 text-[10px] uppercase font-black tracking-widest">
-                         {selectAll ? displayResults.length : (selectedIndex + 1)} de {displayResults.length}
-                       </Badge>
+            {cobrancaData.isRecorrente ? (
+              <div className="flex flex-col items-center text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+                <div className="space-y-6 w-full">
+                  <div className="space-y-3">
+                    <h3 className="text-xl md:text-2xl font-black text-[#0c0a09] uppercase tracking-tighter">Registrando Parcelas</h3>
+                    <p className="text-neutral-500 font-medium leading-relaxed max-w-xl mx-auto text-sm md:text-base">
+                      Estamos processando o registro dos seus boletos. Isso garante que eles possam ser pagos em qualquer banco ou aplicativo. <span className="font-bold text-[#0c0a09]">Este processo pode levar alguns instantes.</span>
+                    </p>
+                  </div>
+
+                  <div className="w-full mx-auto">
+                    <div className="flex justify-between items-end mb-3">
+                        <span className="text-[11px] font-black text-[#f97316] uppercase tracking-widest">Progresso do Registro Bancário</span>
+                        <span className="text-[11px] font-black text-neutral-400 font-mono">{Math.round(progress)}%</span>
                     </div>
+                    <div className="h-5 w-full bg-neutral-100 rounded-full overflow-hidden border border-neutral-200 p-[3px] shadow-inner">
+                      <div 
+                        className="h-full bg-gradient-to-r from-[#f97316] to-[#ea580c] rounded-full transition-all duration-300 ease-out shadow-lg shadow-orange-500/20"
+                        style={{ width: `${progress}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="flex items-center gap-4 overflow-x-auto py-10 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent -mx-6 px-6">
-                  {displayResults.map((res: any, idx: number) => (
-                    <button
-                      key={idx}
-                      onClick={() => setSelectedIndex(idx)}
-                      className={cn(
-                        "shrink-0 min-w-[170px] p-8 rounded-sm border-2 transition-all flex flex-col items-center gap-4 snap-center group relative overflow-hidden",
-                        selectedIndex === idx 
-                          ? "border-[#f97316] bg-orange-50/50 shadow-2xl scale-110 z-10" 
-                          : "border-neutral-100 opacity-60 hover:opacity-100 bg-white hover:border-neutral-200"
-                      )}
-                    >
-                      {selectedIndex === idx && <div className="absolute top-0 right-0 p-1.5 bg-[#f97316] text-white rounded-bl-sm"><CheckCircle2 className="h-3 w-3" /></div>}
-                      <div className={cn("w-10 h-10 rounded-full flex items-center justify-center transition-colors", selectedIndex === idx ? "bg-[#f97316] text-white" : "bg-neutral-100 text-neutral-400")}>
-                        <Banknote className="h-5 w-5" />
-                      </div>
-                      <div className="text-center">
-                        <p className={cn("text-[10px] font-black uppercase tracking-widest mb-1", selectedIndex === idx ? "text-[#f97316]" : "text-neutral-400")}>{idx + 1}ª Parcela</p>
-                        <p className="text-sm font-black text-[#0c0a09] font-mono">{formatDateSync(res.dataVencimento)}</p>
-                      </div>
-                      {res.isPlaceholder && <Badge className="mt-1 bg-blue-500/10 text-blue-500 border-0 text-[7px] uppercase font-black tracking-widest">Processando</Badge>}
-                    </button>
-                  ))}
+                <div className="w-full p-8 bg-neutral-50 rounded-sm border border-neutral-100 relative overflow-hidden group">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0c0a09]" />
+                  <div className="flex items-start gap-4 text-left">
+                    <div className="p-2 bg-white rounded-sm shadow-sm border border-neutral-100">
+                      <Layers className="h-5 w-5 text-[#f97316]" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest mb-1">Onde encontrar?</h4>
+                      <p className="text-[11px] text-neutral-400 font-bold uppercase leading-normal">
+                        Você poderá gerenciar, imprimir ou cancelar cada parcela individualmente na aba 
+                        <span className="text-[#0c0a09] ml-1">"Gestão de Boletos"</span> dentro do seu painel.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 text-[10px] font-black text-neutral-300 uppercase tracking-[0.3em]">
+                   <div className="h-[1px] w-12 bg-neutral-100" />
+                   G8 PAY TECHNOLOGY
+                   <div className="h-[1px] w-12 bg-neutral-100" />
                 </div>
               </div>
+            ) : (
+              <>
+                <div className="w-full">
+                  <Button 
+                    onClick={handlePrint}
+                    className="w-full h-28 bg-[#0c0a09] hover:bg-black text-white rounded-sm font-black uppercase text-sm tracking-widest transition-all gap-4 shadow-xl active:scale-95 flex flex-col items-center justify-center py-4 group"
+                  >
+                    <Printer className="h-8 w-8 text-[#f97316] group-hover:scale-110 transition-transform" />
+                    Salvar PDF ou Imprimir
+                  </Button>
+                </div>
+              </>
             )}
-            <div className="w-full">
-              <Button 
-                onClick={handlePrint}
-                className="w-full h-28 bg-[#0c0a09] hover:bg-black text-white rounded-sm font-black uppercase text-sm tracking-widest transition-all gap-4 shadow-xl active:scale-95 flex flex-col items-center justify-center py-4 group"
-              >
-                <Printer className="h-8 w-8 text-[#f97316] group-hover:scale-110 transition-transform" />
-                {selectAll ? `Imprimir Todos (${displayResults.filter(r => !r.isPlaceholder).length})` : "Salvar PDF ou Imprimir"}
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
+        {cobrancaData.isRecorrente && (
+          <div className="mb-6 flex items-center justify-center gap-3 bg-white/50 backdrop-blur-sm p-4 rounded-sm border border-dashed border-neutral-200 animate-in fade-in duration-1000">
+            <AlertTriangle className="h-4 w-4 text-orange-400" />
+            <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">
+              Clique em <span className="text-[#0c0a09]">Gestão de Boletos</span> para visualizar sua listagem de cobranças.
+            </p>
+          </div>
+        )}
+
         <div className="flex flex-col md:flex-row gap-4">
            <Button
-             onClick={() => router.push("/dashboard")}
+             onClick={() => router.push("/dashboard/cobrancas")}
              variant="outline"
              className="flex-1 h-20 rounded-sm border-2 border-neutral-200 hover:border-[#0c0a09] text-[#0c0a09] font-black uppercase tracking-widest text-[11px] gap-3 transition-all"
            >
-             <Home className="h-5 w-5" />
-             Painel Inicial
+             <Layers className="h-5 w-5" />
+             Gestão de Boletos
            </Button>
            <Button
              onClick={() => router.push("/dashboard/cobrancas")}

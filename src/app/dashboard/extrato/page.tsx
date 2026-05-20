@@ -152,6 +152,8 @@ export default function ExtratoGeralPage() {
                 return "Estorno de Valores";
             case "MENSALIDADE_CLUBE_BENEFICIOS":
                 return "Mensalidade de Serviços";
+            case "SERVICOS_DIGITAIS":
+                return "Serviços Digitais/Recarga";
             default:
                 return "Outras Operações";
         }
@@ -575,7 +577,7 @@ export default function ExtratoGeralPage() {
                                         <div>
                                             <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Metodologia</p>
                                             <Badge className="bg-[#f97316]/5 text-[#f97316] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-sm">
-                                                {selectedTransaction.metodoFormatado}
+                                                {selectedTransaction.metodoFormatado === "SERVIÇOS DIGITAIS" ? "SERVIÇOS DIGITAIS/RECARGA" : selectedTransaction.metodoFormatado}
                                             </Badge>
                                         </div>
                                         <div className="text-right">
@@ -691,7 +693,7 @@ export default function ExtratoGeralPage() {
                             <Phone className="h-6 w-6" />
                         </div>
                         <div className="flex flex-col justify-center relative z-10 min-w-0">
-                            <h3 className="text-lg font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09h as 17h</h3>
+                            <h3 className="text-lg max-[1350px]:text-[15px] font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09h as 17h</h3>
                             <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central de Assistência G8</p>
                         </div>
                     </Card>
@@ -875,8 +877,8 @@ export default function ExtratoGeralPage() {
                                             </div>
 
                                             <div className="hidden sm:flex col-span-3 flex-col items-center font-sans">
-                                                <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-[0.15em] border-0 px-3 py-1.5 h-7 flex items-center justify-center w-full max-w-[140px] rounded-sm ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50/50' : 'text-neutral-400 bg-neutral-100/50'}`}>
-                                                    {t.metodoFormatado}
+                                                <Badge variant="outline" className={`text-[9px] font-black uppercase tracking-[0.05em] border-0 px-4 py-1.5 h-7 flex items-center justify-center w-fit min-w-[140px] rounded-sm whitespace-nowrap ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50/50' : 'text-neutral-400 bg-neutral-100/50'}`}>
+                                                    {t.metodoFormatado?.toUpperCase() === "SERVIÇOS DIGITAIS" ? "SERVIÇOS DIGITAIS / RECARGA" : t.metodoFormatado}
                                                 </Badge>
                                             </div>
 
@@ -888,8 +890,8 @@ export default function ExtratoGeralPage() {
 
                                             <div className="flex sm:col-span-2 items-center justify-between sm:justify-end gap-3 w-full sm:w-auto text-neutral-300 group-hover:text-[#f97316] transition-colors border-t sm:border-t-0 border-neutral-50 pt-3 sm:pt-0">
                                                 <div className="sm:hidden">
-                                                    <Badge variant="outline" className={`text-[8px] font-black uppercase tracking-[0.15em] border-0 px-2 py-1 rounded-sm ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50/50' : 'text-neutral-400 bg-neutral-100/50'}`}>
-                                                        {t.metodoFormatado}
+                                                    <Badge variant="outline" className={`text-[8px] font-black uppercase tracking-[0.05em] border-0 px-2 py-1 rounded-sm whitespace-nowrap ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50/50' : 'text-neutral-400 bg-neutral-100/50'}`}>
+                                                        {t.metodoFormatado?.toUpperCase() === "SERVIÇOS DIGITAIS" ? "SERVIÇOS DIGITAIS / RECARGA" : t.metodoFormatado}
                                                     </Badge>
                                                 </div>
                                                 <div className="text-right flex items-center gap-2 md:gap-3">

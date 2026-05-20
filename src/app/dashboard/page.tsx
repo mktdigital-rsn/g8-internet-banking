@@ -295,7 +295,7 @@ export default function DashboardHome() {
       } else if (filter === "P2P") {
          filtered = allTransactions.filter(t => t.metodo === "TRANSFERENCIA_INTERNA" || t.metodo === "TRANSFERENCIA" || t.metodoFormatado?.toUpperCase().includes("P2P"));
       } else if (filter === "Boleto") {
-         filtered = allTransactions.filter(t => t.metodo === "PAGAMENTO_BOLETO" || t.metodo === "PAGAMENTO" || t.metodoFormatado?.toUpperCase().includes("BOLETO"));
+         filtered = allTransactions.filter(t => t.metodo === "PAGAMENTO_BOLETO" || t.metodo === "PAGAMENTO" || t.metodo === "BOLETO" || t.metodoFormatado?.toUpperCase().includes("BOLETO"));
       } else if (filter === "Tarifa") {
          filtered = allTransactions.filter(t => t.metodo === "TARIFA" || t.metodo === "MENSALIDADE_CLUBE_BENEFICIOS" || t.metodoFormatado?.toUpperCase().includes("TARIFA"));
       }
@@ -303,8 +303,8 @@ export default function DashboardHome() {
    }, [allTransactions, filter]);
 
    return (
-      <div className="bg-[#f8f9fa] min-h-screen w-full overflow-y-auto no-scrollbar">
-         <div className="p-4 md:p-10 2xl:p-16 flex flex-col xl:flex-row gap-8 2xl:gap-12 max-w-[1600px] mx-auto animate-in fade-in duration-700">
+      <div className="bg-[#f8f9fa] min-h-screen w-full overflow-y-auto overflow-x-hidden no-scrollbar">
+         <div className="p-4 md:p-10 2xl:p-16 flex flex-col xl:flex-row gap-8 2xl:gap-24 max-w-[1800px] mx-auto animate-in fade-in duration-700">
          {/* Left Column: Main Dashboard */}
          <div className="flex-1 space-y-12 2xl:space-y-16 min-w-0 w-full">
             {/* Upper Section: Welcome & Actions */}
@@ -318,8 +318,8 @@ export default function DashboardHome() {
                       </div>
                    ) : (
                        <>
-                         <h1 className="text-4xl md:text-5xl 2xl:text-6xl font-black tracking-tighter text-[#0c0a09]">Olá, <span className="text-orange-600">{userName.replace(/^\d+(\.\d+)*\s*/, '').split(' ')[0]}</span>!</h1>
-                         <p className="text-sm md:text-base 2xl:text-2xl text-neutral-400 font-bold opacity-70">Aqui está o resumo das suas finanças hoje.</p>
+                         <h1 className="text-4xl md:text-5xl 2xl:text-5xl font-black tracking-tighter text-[#0c0a09]">Olá, <span className="text-orange-600">{userName.replace(/^\d+(\.\d+)*\s*/, '').split(' ')[0]}</span>!</h1>
+                         <p className="text-sm md:text-base 2xl:text-xl text-neutral-400 font-bold opacity-70">Aqui está o resumo das suas finanças hoje.</p>
                       </>
                    )}
                 </div>
@@ -453,14 +453,14 @@ export default function DashboardHome() {
                   </div>
                   <div className="flex gap-4">
                      <Select value={filter} onValueChange={(val) => val && setFilter(val)}>
-                        <SelectTrigger className="w-[180px] 2xl:w-[200px] bg-white border-white/10 rounded-md h-12 2xl:h-14 shadow-sm font-bold px-8 text-[#0c0a09] transition-all hover:bg-neutral-50">
+                        <SelectTrigger className="w-[200px] 2xl:w-[280px] bg-white border-white/10 rounded-md h-12 2xl:h-14 shadow-sm font-bold px-8 text-[#0c0a09] transition-all hover:bg-neutral-50">
                            <SelectValue placeholder="Filtrar" />
                         </SelectTrigger>
                         <SelectContent className="rounded-md border-0 shadow-2xl font-bold">
                            <SelectItem value="Todas">Todas Operações</SelectItem>
                            <SelectItem value="Pix">Apenas Pix</SelectItem>
                            <SelectItem value="P2P">Transferência P2P</SelectItem>
-                           <SelectItem value="Boleto">Pagamentos</SelectItem>
+                           <SelectItem value="Boleto">Apenas Boletos</SelectItem>
                            <SelectItem value="Tarifa">Taxas e Tarifas</SelectItem>
                         </SelectContent>
                      </Select>
@@ -492,29 +492,29 @@ export default function DashboardHome() {
                               <div
                                  key={idx}
                                  onClick={() => setSelectedTransaction(t)}
-                                 className="flex items-center justify-between p-6 2xl:p-10 bg-white rounded-md border border-neutral-100 shadow-sm hover:shadow-2xl hover:shadow-orange-100/30 hover:-translate-y-1.5 transition-all duration-500 cursor-pointer group"
+                                 className="flex flex-col sm:flex-row sm:items-center justify-between p-6 2xl:p-8 bg-white rounded-md border border-neutral-100 shadow-sm hover:shadow-2xl hover:shadow-orange-100/30 hover:-translate-y-1.5 transition-all duration-500 cursor-pointer group gap-4 sm:gap-0"
                               >
-                                 <div className="flex items-center gap-8 2xl:gap-10">
-                                    <div className={`w-16 h-16 2xl:w-20 2xl:h-20 rounded-md flex items-center justify-center p-4 transition-all shadow-sm ${
+                                 <div className="flex items-center gap-8 2xl:gap-10 flex-1 min-w-0">
+                                    <div className={`shrink-0 w-16 h-16 2xl:w-18 2xl:h-18 rounded-md flex items-center justify-center p-4 transition-all shadow-sm ${
                                        t.metodo === "TRANSFERENCIA_PIX" ? 'bg-[#32BCAD]/10 text-[#32BCAD]' : 
                                        t.tipo === 'CREDITO' ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'
                                     }`}>
                                        <TransactionIcon className={`h-full w-full ${t.metodo === "TRANSFERENCIA_PIX" ? "" : "stroke-[2]"}`} />
                                     </div>
-                                    <div className="space-y-2 min-w-0">
-                                       <p className="font-black text-xl 2xl:text-2xl text-[#0c0a09] leading-none group-hover:text-[#f97316] transition-colors truncate max-w-[300px] 2xl:max-w-[450px]">{displayName}</p>
+                                    <div className="space-y-2 min-w-0 flex-1">
+                                       <p className="font-black text-xl 2xl:text-xl text-[#0c0a09] leading-none group-hover:text-[#f97316] transition-colors truncate max-w-[200px] sm:max-w-[300px] 2xl:max-w-[450px]">{displayName}</p>
                                        <div className="flex items-center gap-3">
-                                          <Badge variant="secondary" className={`text-[10px] 2xl:text-xs font-black uppercase border-0 px-3 h-6 flex items-center ${t.tipo === 'CREDITO' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                                          <Badge variant="secondary" className={`text-[10px] 2xl:text-[10px] font-black uppercase border-0 px-3 h-6 flex items-center ${t.tipo === 'CREDITO' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                                              {t.metodoFormatado}
                                           </Badge>
                                           <span className="text-neutral-300 font-black">&bull;</span>
-                                          <span className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-widest">{dateOnly}</span>
+                                          <span className="text-xs 2xl:text-xs text-neutral-400 font-black uppercase tracking-widest">{dateOnly}</span>
                                        </div>
                                     </div>
                                  </div>
-                                 <div className="flex items-center gap-6 md:gap-12 shrink-0">
-                                    <div className="text-right w-40 md:w-56 2xl:w-80">
-                                       <p className={`font-mono text-xl md:text-2xl 2xl:text-5xl font-black tracking-tighter ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-red-500'}`}>
+                                 <div className="flex items-center justify-between sm:justify-end gap-6 md:gap-12 shrink-0 w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-neutral-50">
+                                    <div className="text-left sm:text-right w-full sm:w-40 md:w-56 2xl:w-64">
+                                       <p className={`font-mono text-xl md:text-2xl 2xl:text-3xl font-black tracking-tighter ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-red-500'}`}>
                                           {t.tipo === 'CREDITO' ? '+' : '-'} {t.valorFormatado}
                                        </p>
                                     </div>
@@ -545,7 +545,7 @@ export default function DashboardHome() {
                          {isLoadingData ? (
                             <div className="h-12 2xl:h-20 w-64 bg-black/5 animate-pulse rounded-md" />
                          ) : (
-                            <p className="text-3xl 2xl:text-6xl font-black text-[#0c0a09] font-mono tracking-tighter drop-shadow-xl">{balance}</p>
+                            <p className="text-3xl 2xl:text-5xl font-black text-[#0c0a09] font-mono tracking-tighter drop-shadow-xl">{balance}</p>
                          )}
                          {!isLoadingData && <div className="w-5 h-5 rounded-sm bg-green-500 animate-pulse" />}
                       </div>
