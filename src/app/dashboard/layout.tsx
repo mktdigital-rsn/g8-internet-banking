@@ -20,6 +20,7 @@ import {
   User,
   Palmtree,
   Plane,
+  Shield,
   ChevronDown,
   ChevronUp
 } from "lucide-react";
@@ -59,7 +60,10 @@ const menuGroups: { label?: string; items: MenuItem[] }[] = [
         icon: Palmtree, 
         label: "Lazer", 
         href: "#", 
-        submenu: [{ icon: Plane, label: "Aéreo", href: "/dashboard/lazer/aereo" }] 
+        submenu: [
+          { icon: Plane, label: "Aéreo", href: "/dashboard/lazer/aereo" },
+          { icon: Shield, label: "Proteção Veicular", href: "/dashboard/lazer/protecao-veicular" }
+        ] 
       },
       { icon: Wallet, label: "Pagamentos", href: "/dashboard/pagamentos" },
       { icon: Smartphone, label: "PIX", href: "/dashboard/pix" },

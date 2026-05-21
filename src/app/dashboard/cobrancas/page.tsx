@@ -390,25 +390,76 @@ export default function GestaoCobrancasPage() {
         }
     };
 
-   const handlePrint = (boleto: BoletoItem) => {
-    // O desenvolvedor backend informou que o endpoint /api/banco/pagamentos/imprimir-boleto/{id} 
-    // ainda não foi implementado. Por isso, utilizaremos o link direto (urlBoleto) 
-    // que já vem no objeto do boleto.
-
-    if (boleto.urlBoleto) {
-        toast.info("Abrindo boleto para impressão...");
-        window.open(boleto.urlBoleto, "_blank");
-    } else {
-        // Fallback: Caso não tenha a URL, avisamos o usuário que o registro pode estar em processamento
-        toast.error("O boleto ainda está sendo processado pelo banco. Tente novamente em instantes.");
-        
-        // Tentativa de buscar via ID caso o backend venha a implementar a rota no futuro
+    const handlePrint = async (boleto: BoletoItem) => {
         const id = boleto.id || boleto.itemId || boleto.uuid;
-        if (id) {
-            console.warn("Rota de impressão HTML não encontrada no backend. ID do boleto:", id);
+        if (!id) {
+            toast.error("Identificador de boleto não encontrado.");
+            return;
         }
-    }
-};
+
+        const toastId = toast.loading("Gerando boleto para impressão...");
+        try {
+            const response = await api.get(`/api/banco/pagamentos/imprimir-boleto/${id}`, {
+                responseType: 'text',
+                transformResponse: [(data) => data]
+            });
+
+            toast.dismiss(toastId);
+            const printWindow = window.open("", "_blank");
+            if (printWindow) {
+                printWindow.document.write(`
+                    <html>
+                      <head>
+                        <title>Impressão G8 Pay</title>
+                        <style>
+                          @media print {
+                            @page { margin: 0; }
+                            body { margin: 1cm; }
+                            .no-print { display: none !important; }
+                          }
+                          body { font-family: sans-serif; margin: 0; padding: 0; background: #fff; }
+                          .print-header {
+                            background: #f8f9fa;
+                            padding: 15px;
+                            text-align: center;
+                            border-bottom: 1px solid #eee;
+                          }
+                          .btn-print {
+                            padding: 10px 25px;
+                            background: #000;
+                            color: #fff;
+                            border: none;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-weight: bold;
+                            text-transform: uppercase;
+                            font-size: 11px;
+                            letter-spacing: 1px;
+                          }
+                        </style>
+                      </head>
+                      <body>
+                        <div class="print-header no-print">
+                          <button class="btn-print" onclick="window.print()">Clique aqui para imprimir</button>
+                        </div>
+                        <div style="padding: 20px;">
+                          ${response.data}
+                        </div>
+                      </body>
+                    </html>
+                `);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => {
+                    printWindow.print();
+                }, 500);
+            }
+        } catch (err) {
+            console.error("Print fetch failed:", err);
+            toast.dismiss(toastId);
+            toast.error("Erro ao carregar o boleto para impressão.");
+        }
+    };
 
     const handleNext = () => {
         const rawValue = inputValue.replace(/\./g, "").replace(",", ".");

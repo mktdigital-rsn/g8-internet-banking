@@ -441,7 +441,8 @@ function PixPagarContent() {
           try {
             await api.post("/api/banco/pix/cadastrar-contato", {
               nome: recipientName,
-              chave: finalChave
+              chave: finalChave,
+              instituicao: recipientBank || ""
             });
             console.log("✅ Contact saved successfully");
           } catch (e) {
