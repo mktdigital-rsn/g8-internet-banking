@@ -21,6 +21,7 @@ import {
   Palmtree,
   Plane,
   Shield,
+  Car,
   ChevronDown,
   ChevronUp
 } from "lucide-react";
@@ -62,7 +63,8 @@ const menuGroups: { label?: string; items: MenuItem[] }[] = [
         href: "#", 
         submenu: [
           { icon: Plane, label: "Aéreo", href: "/dashboard/lazer/aereo" },
-          { icon: Shield, label: "Proteção Veicular", href: "/dashboard/lazer/protecao-veicular" }
+          { icon: Shield, label: "Proteção Veicular", href: "/dashboard/lazer/protecao-veicular" },
+          { icon: Car, label: "Débitos Veiculares", href: "/dashboard/lazer/debitos-veiculares" }
         ] 
       },
       { icon: Wallet, label: "Pagamentos", href: "/dashboard/pagamentos" },
