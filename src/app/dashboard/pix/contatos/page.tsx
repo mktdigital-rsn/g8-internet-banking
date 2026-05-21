@@ -8,7 +8,8 @@ import {
   Star,
   Send,
   Trash2,
-  ChevronRight
+  ChevronRight,
+  MoreVertical
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +18,22 @@ import Link from "next/link";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function PixContatosPage() {
   const router = useRouter();
   const [contacts, setContacts] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [contactToDelete, setContactToDelete] = useState<any | null>(null);
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [selectedLetter, setSelectedLetter] = useState<string | null>(null);
 
   const fetchContacts = async () => {
     setIsLoading(true);
@@ -43,15 +54,15 @@ export default function PixContatosPage() {
     fetchContacts();
   }, []);
 
-  const handleDeleteContact = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Evita redirecionar para transferência
-    if (!confirm("Tem certeza que deseja remover este contato?")) return;
+  const confirmDelete = async () => {
+    if (!contactToDelete) return;
 
     try {
       await api.delete("/api/banco/pix/remover-contato", {
-        data: { chaveId: id }
+        data: { chaveId: contactToDelete.id }
       });
       toast.success("Contato removido com sucesso!");
+      setContactToDelete(null);
       fetchContacts();
     } catch (err: any) {
       console.error("Error deleting contact:", err);
@@ -64,13 +75,33 @@ export default function PixContatosPage() {
     router.push(`/dashboard/pix/pagar?type=key&key=${encodeURIComponent(c.chave)}&name=${encodeURIComponent(c.nome)}&bank=${encodeURIComponent(c.instituicao || "")}`);
   };
 
-  const filteredContacts = contacts.filter(c => 
-    (c.nome?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-    (c.chave?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-    (c.instituicao?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+  const sortedContacts = [...contacts].sort((a, b) => 
+    (a.nome || "").localeCompare(b.nome || "", "pt-BR")
   );
 
-  const favorites = contacts.slice(0, 4);
+  const availableLetters = Array.from(
+    new Set(
+      contacts
+        .map(c => (c.nome ? c.nome.charAt(0).toUpperCase() : ""))
+        .filter(Boolean)
+    )
+  ).sort();
+
+  const filteredContacts = sortedContacts.filter(c => {
+    const matchesSearch = (c.nome?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (c.chave?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (c.instituicao?.toLowerCase() || "").includes(searchTerm.toLowerCase());
+
+    const matchesLetter = selectedLetter 
+      ? (c.nome?.charAt(0).toUpperCase() === selectedLetter) 
+      : true;
+
+    return matchesSearch && matchesLetter;
+  });
+
+  const favorites = [...contacts].slice(0, 4).sort((a, b) => 
+    (a.nome || "").localeCompare(b.nome || "", "pt-BR")
+  );
 
   return (
     <div className="bg-[#f8f9fa] rounded-[32px] p-6 md:p-10 border border-neutral-200/60 space-y-10 relative">
@@ -79,21 +110,21 @@ export default function PixContatosPage() {
 
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 relative z-10">
-        <div className="flex items-center gap-4">
-          <Link href="/dashboard/pix">
+        <div className="flex items-start gap-4 w-full">
+          <Link href="/dashboard/pix" className="mt-1">
             <Button variant="ghost" size="icon" className="rounded-xl hover:bg-neutral-200/50 h-12 w-12 shrink-0 border border-neutral-200/80 bg-white shadow-sm transition-all">
                <ArrowLeft className="h-6 w-6 text-[#f97316]" />
             </Button>
           </Link>
-          <div>
-             <div className="flex items-center gap-2 mb-1">
-               <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-transparent font-black px-3 py-0.5 rounded-md text-[10px] uppercase tracking-widest">G8Pay &bull; Pix</Badge>
-               <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none">Meus Contatos</span>
-             </div>
-             <h1 className="text-3xl md:text-4xl font-black tracking-tighter text-[#f97316] flex items-center gap-3">
-               Favoritos & Contatos
-               <Contact2 className="h-8 w-8 text-[#f97316] stroke-[2.5]" />
+          <div className="space-y-4 flex-1">
+             <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">G8Pay • Pix</Badge>
+             <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase flex items-center gap-3 flex-wrap">
+               Favoritos & <span className="text-[#f97316]">Contatos</span>
+               <Contact2 className="h-10 w-10 text-[#f97316] stroke-[2.5]" />
              </h1>
+             <p className="text-sm md:text-base text-neutral-400 font-bold max-w-2xl">
+               Gerencie seus contatos frequentes e realize transferências com apenas um clique.
+             </p>
           </div>
         </div>
       </header>
@@ -137,19 +168,48 @@ export default function PixContatosPage() {
                            </div>
                         </div>
                         <div className="text-center w-24">
-                           <p className="text-xs font-black text-[#0c0a09] truncate group-hover:text-[#f97316] transition-colors">{c.nome}</p>
+                           <p className="text-xs font-black text-[#0c0a09] truncate group-hover:text-[#f97316] transition-colors uppercase">{c.nome}</p>
                            <p className="text-[9px] text-neutral-400 font-bold uppercase truncate">{c.instituicao || "PIX"}</p>
                         </div>
                      </div>
                   ))}
-               </div>
-            </div>
-          )}
+                </div>
+             </div>
+           )}
 
-          {/* Lista Geral de Contatos */}
-          <div className="space-y-6">
+           {/* Lista Geral de Contatos */}
+           <div className="space-y-6">
              <h3 className="text-xs font-black text-[#0c0a09]/50 uppercase tracking-[0.2em] px-2">Todos os Contatos</h3>
-             
+
+             {/* Filtro Alfabético Rápido (A-Z) */}
+             {availableLetters.length > 0 && (
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 px-2">
+                   <button
+                     onClick={() => setSelectedLetter(null)}
+                     className={`px-4 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border shrink-0 ${
+                       !selectedLetter 
+                         ? "bg-[#f97316] text-white border-[#f97316] shadow-md shadow-orange-500/10" 
+                         : "bg-white text-neutral-400 border-neutral-200/60 hover:text-[#f97316] hover:border-orange-200"
+                     }`}
+                   >
+                      Todos
+                   </button>
+                   {availableLetters.map(letter => (
+                      <button
+                        key={letter}
+                        onClick={() => setSelectedLetter(selectedLetter === letter ? null : letter)}
+                        className={`w-10 h-10 shrink-0 rounded-xl text-[10px] font-black uppercase transition-all border flex items-center justify-center ${
+                          selectedLetter === letter 
+                            ? "bg-[#f97316] text-white border-[#f97316] shadow-md shadow-orange-500/10" 
+                            : "bg-white text-neutral-400 border-neutral-200/60 hover:text-[#f97316] hover:border-orange-200"
+                        }`}
+                      >
+                         {letter}
+                      </button>
+                   ))}
+                </div>
+             )}
+
              {isLoading ? (
                <div className="text-center py-12 bg-white rounded-2xl border border-neutral-200/50 shadow-sm">
                  <p className="text-neutral-400 font-black uppercase tracking-widest text-xs animate-pulse">Carregando contatos...</p>
@@ -160,48 +220,91 @@ export default function PixContatosPage() {
                  <p className="text-xs text-neutral-400 font-medium leading-relaxed">Você pode salvar contatos ativando a caixinha "Salvar contato" ao realizar um Pix.</p>
                </div>
              ) : (
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {filteredContacts.map(c => (
-                     <div 
-                       key={c.id} 
-                       onClick={() => handleSendPix(c)}
-                       className="p-5 bg-white rounded-2xl border border-neutral-200/60 shadow-sm hover:shadow-md hover:border-orange-200 hover:scale-[1.01] transition-all cursor-pointer group flex items-center justify-between gap-4"
-                     >
-                        <div className="flex items-center gap-4 min-w-0">
-                           <div className="w-12 h-12 rounded-xl bg-orange-500/5 flex items-center justify-center font-black text-xl text-[#f97316] shrink-0 border border-orange-100/50 group-hover:scale-105 transition-transform">
-                              {c.nome ? c.nome.charAt(0).toUpperCase() : "?"}
-                           </div>
-                           <div className="text-left min-w-0">
-                              <p className="font-black text-base text-[#0c0a09] leading-tight mb-1 truncate group-hover:text-[#f97316] transition-colors">{c.nome}</p>
-                              <div className="flex items-center gap-2">
-                                 <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-tight truncate max-w-[140px]">{c.instituicao || "Instituição não informada"}</p>
-                                 <div className="w-1 h-1 bg-neutral-200 rounded-full shrink-0" />
-                                 <Badge variant="secondary" className="bg-[#f97316]/5 text-[#f97316] text-[8px] font-black tracking-widest uppercase py-0 px-2 border-0 shrink-0">PIX</Badge>
-                              </div>
-                           </div>
-                        </div>
-                        <div className="flex items-center gap-1 shrink-0">
-                           <Button 
-                             variant="ghost" 
-                             size="icon" 
-                             onClick={(e) => handleDeleteContact(c.id, e)}
-                             className="text-neutral-300 hover:text-rose-500 rounded-xl h-10 w-10 hover:bg-rose-50 transition-all shrink-0"
-                           >
-                              <Trash2 className="h-5 w-5" />
-                           </Button>
-                           <Button 
-                             variant="ghost" 
-                             size="icon" 
-                             className="text-neutral-400 hover:text-[#f97316] opacity-0 group-hover:opacity-100 transition-all rounded-xl h-10 w-10 shrink-0"
-                           >
-                              <Send className="h-5 w-5" />
-                           </Button>
-                        </div>
-                     </div>
-                  ))}
-               </div>
-             )}
-          </div>
+                <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 xl:gap-6">
+                    {filteredContacts.map(c => (
+                       <div 
+                         key={c.id} 
+                         onClick={() => handleSendPix(c)}
+                         className="relative p-5 xl:p-6 bg-white rounded-3xl border border-neutral-200/60 shadow-sm hover:shadow-md hover:border-orange-200/80 transition-all cursor-pointer group flex flex-row xl:flex-col items-center gap-4 xl:gap-3 justify-start xl:justify-between min-h-0 xl:min-h-[220px]"
+                       >
+                          {/* Avatar da Letra */}
+                          <div className="w-12 h-12 xl:w-14 xl:h-14 rounded-2xl bg-orange-500/5 border border-orange-100/50 flex items-center justify-center font-black text-xl text-[#f97316] group-hover:scale-105 transition-transform shrink-0 xl:mb-1">
+                             {c.nome ? c.nome.charAt(0).toUpperCase() : "?"}
+                          </div>
+
+                          {/* Informações do Contato */}
+                          <div className="flex-1 flex flex-col xl:items-center text-left xl:text-center min-w-0">
+                             <p className="font-black text-base text-[#0c0a09] leading-tight mb-1 xl:mb-2 group-hover:text-[#f97316] transition-colors break-words max-w-full xl:max-w-[150px] uppercase line-clamp-1 xl:line-clamp-2">
+                                {c.nome}
+                             </p>
+                             <div className="flex items-center xl:flex-col gap-2 xl:gap-1.5 flex-wrap">
+                                <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wide truncate max-w-[140px]">
+                                   {c.instituicao || "Instituição PIX"}
+                                </p>
+                                <div className="w-1 h-1 bg-neutral-200 rounded-full shrink-0 xl:hidden" />
+                                <Badge variant="secondary" className="bg-[#f97316]/5 text-[#f97316] text-[8px] font-black tracking-widest uppercase py-0.5 px-2 border-0 shrink-0">
+                                   PIX
+                                </Badge>
+                             </div>
+                          </div>
+
+                          {/* Botão de Opções (3 Pontinhos) */}
+                          <div className="relative xl:absolute xl:top-3 xl:right-3 shrink-0">
+                             <Button
+                               variant="ghost"
+                               size="icon"
+                               onClick={(e) => {
+                                 e.stopPropagation();
+                                 setActiveMenuId(activeMenuId === c.id ? null : c.id);
+                               }}
+                               className="h-8 w-8 rounded-xl text-neutral-400 hover:text-[#f97316] hover:bg-neutral-100 transition-all flex items-center justify-center"
+                               title="Opções"
+                             >
+                                <MoreVertical className="h-4 w-4" />
+                             </Button>
+
+                             {activeMenuId === c.id && (
+                                <>
+                                  {/* Backdrop invisível para fechar menu ao clicar fora */}
+                                  <div 
+                                    className="fixed inset-0 z-20 cursor-default" 
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveMenuId(null);
+                                    }}
+                                  />
+                                  <div className="absolute right-0 top-9 w-40 bg-white border border-neutral-200/80 rounded-2xl shadow-xl py-2 z-30 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
+                                     <button
+                                       onClick={(e) => {
+                                         e.stopPropagation();
+                                         setActiveMenuId(null);
+                                         handleSendPix(c);
+                                       }}
+                                       className="w-full text-left px-4 py-2.5 text-xs font-black uppercase tracking-wider text-neutral-700 hover:text-[#f97316] hover:bg-neutral-50 transition-all flex items-center gap-2"
+                                     >
+                                        <Send className="h-3.5 w-3.5" />
+                                        Enviar Pix
+                                     </button>
+                                     <button
+                                       onClick={(e) => {
+                                         e.stopPropagation();
+                                         setActiveMenuId(null);
+                                         setContactToDelete(c);
+                                       }}
+                                       className="w-full text-left px-4 py-2.5 text-xs font-black uppercase tracking-wider text-rose-600 hover:bg-rose-50 transition-all flex items-center gap-2"
+                                     >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                        Excluir
+                                     </button>
+                                  </div>
+                                </>
+                             )}
+                          </div>
+                       </div>
+                    ))}
+                 </div>
+              )}
+           </div>
         </main>
 
         {/* Coluna Lateral */}
@@ -228,6 +331,61 @@ export default function PixContatosPage() {
            </div>
         </aside>
       </div>
+
+      <Dialog open={!!contactToDelete} onOpenChange={(open) => !open && setContactToDelete(null)}>
+        <DialogContent className="sm:max-w-[440px] p-8 md:p-10 overflow-hidden border-0 bg-white shadow-2xl rounded-[32px] gap-0">
+          <div className="flex flex-col space-y-8 w-full">
+            {/* Ícone de Alerta Centralizado */}
+            <div className="mx-auto w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 ring-8 ring-rose-500/5 mb-1 select-none">
+              <Trash2 className="h-7 w-7 animate-bounce [animation-duration:2s]" />
+            </div>
+
+            {/* Título e Descrição */}
+            <div className="text-center space-y-2.5">
+              <DialogTitle className="text-2xl font-black uppercase tracking-tight text-[#0c0a09]">
+                Excluir Contato
+              </DialogTitle>
+              <DialogDescription className="text-neutral-400 font-bold uppercase text-[10px] tracking-widest leading-relaxed">
+                Essa ação é permanente e não poderá ser desfeita.
+              </DialogDescription>
+            </div>
+
+            {/* Card com Detalhes do Contato */}
+            {contactToDelete && (
+              <div className="p-6 bg-gradient-to-r from-rose-500/5 to-rose-500/[0.02] border border-rose-100 rounded-2xl flex items-center gap-4">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500 to-[#f97316] text-white flex items-center justify-center font-black text-2xl shadow-md shadow-rose-500/20 shrink-0">
+                  {contactToDelete.nome ? contactToDelete.nome.charAt(0).toUpperCase() : "?"}
+                </div>
+                <div className="text-left min-w-0 flex-1">
+                  <p className="font-black text-base text-[#0c0a09] truncate uppercase leading-tight">
+                    {contactToDelete.nome}
+                  </p>
+                  <p className="text-[10px] text-rose-600/70 font-bold uppercase tracking-widest mt-1">
+                    {contactToDelete.instituicao || "Instituição PIX"}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Rodapé com Botões de Ação */}
+            <div className="flex flex-row gap-3 w-full">
+              <Button
+                variant="ghost"
+                className="h-14 flex-1 bg-neutral-100 hover:bg-neutral-200/80 text-neutral-500 hover:text-neutral-700 rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all border-0"
+                onClick={() => setContactToDelete(null)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                className="h-14 flex-1 bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] transition-all shadow-lg shadow-rose-500/25 hover:shadow-rose-500/40 hover:scale-[1.02]"
+                onClick={confirmDelete}
+              >
+                Excluir
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
