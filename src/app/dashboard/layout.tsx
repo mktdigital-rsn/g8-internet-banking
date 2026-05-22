@@ -62,9 +62,7 @@ const menuGroups: { label?: string; items: MenuItem[] }[] = [
         label: "Lazer", 
         href: "#", 
         submenu: [
-          { icon: Plane, label: "Aéreo", href: "/dashboard/lazer/aereo" },
-          { icon: Shield, label: "Proteção Veicular", href: "/dashboard/lazer/protecao-veicular" },
-          { icon: Car, label: "Débitos Veiculares", href: "/dashboard/lazer/debitos-veiculares" }
+          { icon: Plane, label: "Aéreo", href: "/dashboard/lazer/aereo" }
         ] 
       },
       { icon: Wallet, label: "Pagamentos", href: "/dashboard/pagamentos" },
@@ -72,6 +70,15 @@ const menuGroups: { label?: string; items: MenuItem[] }[] = [
       { icon: Cpu, label: "POS/MAQUI.", href: "/dashboard/maquininhas" },
       { icon: Smartphone, label: "Recargas", href: "/dashboard/recargas" },
       { icon: ArrowUpRight, label: "Transferência", href: "/dashboard/transferencia" },
+      { 
+        icon: Car, 
+        label: "Veículos", 
+        href: "#", 
+        submenu: [
+          { icon: Car, label: "Débitos Veiculares", href: "/dashboard/veiculos/debitos-veiculares" },
+          { icon: Shield, label: "Proteção Veicular", href: "/dashboard/veiculos/protecao-veicular" }
+        ] 
+      },
     ]
   },
   {
@@ -90,12 +97,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
    const [balance, setBalance] = React.useState("");
    const [accountInfo, setAccountInfo] = React.useState({ agency: "", account: "" });
    const [isLoadingData, setIsLoadingData] = React.useState(true);
-   const [isLazerExpanded, setIsLazerExpanded] = React.useState(false);
+   const [expandedMenus, setExpandedMenus] = React.useState<Record<string, boolean>>({});
 
    React.useEffect(() => {
-     if (pathname.startsWith("/dashboard/lazer")) {
-       setIsLazerExpanded(true);
-     }
+     menuGroups.forEach(group => {
+       group.items.forEach(item => {
+         if (item.submenu) {
+           const isAnySubActive = item.submenu.some(sub => pathname.startsWith(sub.href));
+           if (isAnySubActive) {
+             setExpandedMenus(prev => ({ ...prev, [item.label]: true }));
+           }
+         }
+       });
+     });
    }, [pathname]);
    const setGlobalBalance = useSetAtom(balanceAtom);
    const setGlobalBalanceLoading = useSetAtom(isBalanceLoadingAtom);
@@ -269,7 +283,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     return (
                       <div key={item.label} className="space-y-1">
                         <button
-                          onClick={() => setIsLazerExpanded(!isLazerExpanded)}
+                          onClick={() => setExpandedMenus(prev => ({ ...prev, [item.label]: !prev[item.label] }))}
                           className={`flex items-center gap-5 px-6 py-3 w-full rounded-md transition-all group relative overflow-hidden border border-transparent ${
                             isAnySubActive
                               ? "text-[#ff7711] bg-white shadow-lg"
@@ -279,14 +293,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           <item.icon className={`h-5 w-5 relative z-10 ${isAnySubActive ? "text-[#ff7711]" : "text-white/60 group-hover:text-[#ff7711]"}`} />
                           <div className="flex items-center justify-between flex-1 relative z-10">
                             <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isAnySubActive ? "text-[#ff7711]" : "text-white/80 group-hover:text-[#ff7711] transition-colors duration-300"}`}>{item.label}</span>
-                            {isLazerExpanded ? (
+                            {expandedMenus[item.label] ? (
                               <ChevronUp className="h-4 w-4 text-[#ff7711] relative z-10 shrink-0" />
                             ) : (
                               <ChevronDown className={`h-4 w-4 relative z-10 shrink-0 ${isAnySubActive ? "text-[#ff7711]" : "text-white/60 group-hover:text-[#ff7711]"}`} />
                             )}
                           </div>
                         </button>
-                        {isLazerExpanded && (
+                        {expandedMenus[item.label] && (
                           <div className="pl-6 space-y-1 animate-in slide-in-from-top-1 duration-200">
                             {item.submenu.map((sub) => {
                               const isSubActive = pathname.startsWith(sub.href);

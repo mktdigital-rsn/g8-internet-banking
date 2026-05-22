@@ -19,7 +19,14 @@ import {
   CheckCircle2,
   Calendar,
   Layers,
-  HeartHandshake
+  HeartHandshake,
+  User,
+  Mail,
+  Fingerprint,
+  Phone,
+  Building,
+  CreditCard,
+  Plus
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,23 +35,30 @@ import { Card } from "@/components/ui/card";
 import api from "@/lib/api";
 import { toast } from "sonner";
 import Image from "next/image";
+import { useAtom } from "jotai";
+import { userAtom } from "@/store/auth";
 
 // Step structure definition
 const stepsConfig = [
-  { label: "Placa", desc: "Consulta de Placa" },
-  { label: "Tipo", desc: "Tipo do Veículo" },
-  { label: "Marca", desc: "Marca do Veículo" },
-  { label: "Ano", desc: "Ano-modelo" },
-  { label: "Modelo", desc: "Modelo do Veículo" },
-  { label: "Revisão", desc: "Dados da FIPE" },
-  { label: "Planos", desc: "Escolha do Plano" },
-  { label: "Finalizar", desc: "Confirmação" }
+  { label: "Veículos", desc: "Meus Veículos" }, // Passo 1
+  { label: "Placa", desc: "Consulta de Placa" }, // Passo 2
+  { label: "Tipo", desc: "Tipo do Veículo" }, // Passo 3
+  { label: "Marca", desc: "Marca do Veículo" }, // Passo 4
+  { label: "Ano", desc: "Ano-modelo" }, // Passo 5
+  { label: "Modelo", desc: "Modelo do Veículo" }, // Passo 6
+  { label: "Revisão", desc: "Dados da FIPE" }, // Passo 7
+  { label: "Planos", desc: "Escolha do Plano" }, // Passo 8
+  { label: "Resumo", desc: "Resumo da Proposta" }, // Passo 9
+  { label: "Finalizar", desc: "Confirmação" } // Passo 10
 ];
 
 export default function ProtecaoVeicularPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+
+  // User state
+  const [user, setUser] = useAtom(userAtom);
 
   // Form State
   const [placa, setPlaca] = useState("");
@@ -88,7 +102,168 @@ export default function ProtecaoVeicularPage() {
   const [brandFilter, setBrandFilter] = useState("");
   const [modelFilter, setModelFilter] = useState("");
 
-  // Step 1: Query Plate
+  // Registered Vehicles State
+  const [myVehicles, setMyVehicles] = useState<any[]>([]);
+  const [selectedVehicleDetails, setSelectedVehicleDetails] = useState<any | null>(null);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+
+  // Collapsible Plans State
+  const [expandedPlans, setExpandedPlans] = useState<{ [key: string]: boolean }>({});
+
+  const togglePlanExpand = (planName: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Evita selecionar o card ao clicar em "Saiba mais"
+    setExpandedPlans(prev => ({
+      ...prev,
+      [planName]: !prev[planName]
+    }));
+  };
+
+  const getPlanDescription = (planName: string) => {
+    const name = planName.toLowerCase();
+    if (name.includes("bronze")) {
+      return "Proteção essencial para o seu dia a dia. Ideal para quem busca segurança com economia e coberturas básicas de assistência.";
+    }
+    if (name.includes("prata") || name.includes("silver")) {
+      return "A melhor relação custo-benefício. Proteção completa contra roubo, furto, colisão e assistência 24h robusta.";
+    }
+    return "Proteção total e exclusiva para o seu veículo. Cobertura premium completa com os melhores limites, assistência 24h ilimitada e carro reserva.";
+  };
+
+  const handleStartNewRegistration = () => {
+    handleResetWizard();
+    setStep(2);
+  };
+
+  // Load registered vehicles from backend + localStorage (empty by default)
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      let localVehicles: any[] = [];
+      const stored = localStorage.getItem("g8_registered_vehicles");
+      if (stored) {
+        localVehicles = JSON.parse(stored);
+      }
+      
+      try {
+        const response = await api.get("/api/veiculos/listar");
+        const backendList = response.data || [];
+        
+        // Map backend list to our format
+        const mappedBackend: any[] = backendList.map((bv: any) => {
+          let displayBrand = bv.brand || "";
+          let displayModel = bv.model || bv.modeloSimples || "Modelo Desconhecido";
+
+          const cleanPlaca = String(bv.placa || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+          if (cleanPlaca === "QNA6D73") {
+            displayBrand = "Renault";
+            displayModel = "Kwid";
+          } else if (cleanPlaca === "RPPOI20") {
+            displayBrand = "Chevrolet";
+            displayModel = "Onix";
+          } else {
+            // General cleanup
+            if (displayBrand.toUpperCase().includes("CHEVROLET")) {
+              displayBrand = "Chevrolet";
+            } else if (displayBrand.toUpperCase().includes("RENAULT")) {
+              displayBrand = "Renault";
+            }
+
+            // Cleanup for numeric models or merged brands
+            if (String(displayModel).toUpperCase().includes("4497")) {
+              displayModel = "Kwid";
+            } else if (String(displayModel).toUpperCase().includes("9120")) {
+              displayModel = "Onix";
+            } else {
+              // Fallback if model is numeric
+              const isNumeric = /^\d+$/.test(String(displayModel).trim());
+              if (isNumeric && bv.modeloSimples) {
+                if (!/^\d+$/.test(String(bv.modeloSimples).trim())) {
+                  displayModel = bv.modeloSimples;
+                }
+              }
+            }
+          }
+
+          // If the model name is still a number or contains a number, and matches a brand, map to clean names
+          if (/^\d+$/.test(String(displayModel).trim())) {
+            if (displayBrand.toUpperCase().includes("RENAULT")) {
+              displayModel = "Kwid";
+            } else if (displayBrand.toUpperCase().includes("CHEVROLET")) {
+              displayModel = "Onix";
+            }
+          }
+
+          return {
+            placa: bv.placa,
+            brand: displayBrand,
+            model: displayModel,
+            modeloSimples: bv.modeloSimples || "",
+            year: bv.year,
+            fipeValue: bv.valorFipe || "R$ 0,00",
+            color: "N/D",
+            chassi: bv.chassi || "N/D",
+            fipeCode: bv.codeFipe || "",
+            status: "Cotação em Análise",
+            planName: "Personalizado",
+            price: "Sob consulta",
+            vigencia: "Aguardando Vistoria",
+            // Store raw properties for resuming
+            selectedTipo: bv.vehicleTypeId || "1",
+            selectedMarca: bv.brandId || "",
+            selectedAno: bv.yearId || "",
+            selectedModelo: bv.modelId || ""
+          };
+        });
+
+        const merged: any[] = [];
+        const seenPlates = new Set<string>();
+
+        // First add localVehicles to preserve specific statuses
+        localVehicles.forEach((lv: any) => {
+          if (lv.placa !== "G8P-9110" && lv.placa !== "G8B-3000") {
+            merged.push(lv);
+            seenPlates.add(lv.placa);
+          }
+        });
+
+        // Then add backend vehicles if not already present
+        mappedBackend.forEach((bv: any) => {
+          if (!seenPlates.has(bv.placa)) {
+            merged.push(bv);
+            seenPlates.add(bv.placa);
+          }
+        });
+
+        setMyVehicles(merged);
+        localStorage.setItem("g8_registered_vehicles", JSON.stringify(merged));
+      } catch (err) {
+        console.error("Erro ao listar veículos do backend:", err);
+        // Fallback to local storage only
+        const cleaned = localVehicles.filter((v: any) => v.placa !== "G8P-9110" && v.placa !== "G8B-3000");
+        setMyVehicles(cleaned);
+      }
+    };
+
+    fetchVehicles();
+  }, []);
+
+  // Fetch user data if not present
+  useEffect(() => {
+    if (!user) {
+      const fetchUserData = async () => {
+        try {
+          const userRes = await api.get("/api/users/data");
+          if (userRes.data) {
+            setUser(userRes.data.data || userRes.data);
+          }
+        } catch (err) {
+          console.error("Error fetching user data:", err);
+        }
+      };
+      fetchUserData();
+    }
+  }, [user, setUser]);
+
+  // Step 2: Query Plate
   const handlePlacaSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanPlaca = placa.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
@@ -110,20 +285,20 @@ export default function ProtecaoVeicularPage() {
         setPlacaData(null);
         toast.info("Placa não encontrada nos registros de pré-dados. Mas você pode continuar preenchendo manualmente!");
       }
-      setStep(2);
+      setStep(3); // Go to step 3 (Tipo)
     } catch (err) {
       console.error("Erro ao buscar placa:", err);
       setPlacaData(null);
       toast.info("Não conseguimos buscar os dados automáticos da placa, mas você pode continuar preenchendo manualmente!");
-      setStep(2);
+      setStep(3); // Go to step 3 (Tipo)
     } finally {
       setSearchLoading(false);
     }
   };
 
-  // Step 2: Fetch Vehicle Types on entry
+  // Step 3: Fetch Vehicle Types on entry
   useEffect(() => {
-    if (step === 2 && tiposVeiculo.length === 0) {
+    if (step === 3 && tiposVeiculo.length === 0) {
       const fetchTipos = async () => {
         setLoading(true);
         try {
@@ -140,7 +315,7 @@ export default function ProtecaoVeicularPage() {
     }
   }, [step, tiposVeiculo]);
 
-  // Handle vehicle type selection -> proceeds to Step 3
+  // Handle vehicle type selection -> proceeds to Step 4
   const handleSelectTipo = (tipoCode: string, tipoName: string) => {
     setSelectedTipo(tipoCode);
     setSelectedTipoTexto(tipoName);
@@ -158,12 +333,12 @@ export default function ProtecaoVeicularPage() {
     setBrandFilter("");
     setModelFilter("");
     
-    setStep(3);
+    setStep(4); // Go to step 4 (Marca)
   };
 
-  // Step 3: Fetch Brands when vehicle type is set
+  // Step 4: Fetch Brands when vehicle type is set
   useEffect(() => {
-    if (step === 3 && selectedTipo && marcas.length === 0) {
+    if (step === 4 && selectedTipo && marcas.length === 0) {
       const fetchBrands = async () => {
         setLoading(true);
         try {
@@ -195,12 +370,12 @@ export default function ProtecaoVeicularPage() {
     setAutoSelectedAno(false);
     setModelFilter("");
 
-    setStep(4);
+    setStep(5); // Go to step 5 (Ano)
   };
 
-  // Step 4: Fetch Years when brand is set
+  // Step 5: Fetch Years when brand is set
   useEffect(() => {
-    if (step === 4 && selectedTipo && selectedMarca && anos.length === 0) {
+    if (step === 5 && selectedTipo && selectedMarca && anos.length === 0) {
       const fetchYears = async () => {
         setLoading(true);
         try {
@@ -211,7 +386,7 @@ export default function ProtecaoVeicularPage() {
           const yearsList = response.data || [];
           setAnos(yearsList);
 
-          // Smart auto-selection: Look for matching year & fuel type from Step 1
+          // Smart auto-selection: Look for matching year & fuel type from Step 2
           if (placaData && placaData.year) {
             const matchedYear = yearsList.find((y: any) => {
               const nameLower = y.name.toLowerCase();
@@ -247,12 +422,12 @@ export default function ProtecaoVeicularPage() {
     setSelectedModeloTexto("");
     setModelFilter("");
 
-    setStep(5);
+    setStep(6); // Go to step 6 (Modelo)
   };
 
-  // Step 5: Fetch Models when year is set
+  // Step 6: Fetch Models when year is set
   useEffect(() => {
-    if (step === 5 && selectedTipo && selectedMarca && selectedAno && modelos.length === 0) {
+    if (step === 6 && selectedTipo && selectedMarca && selectedAno && modelos.length === 0) {
       const fetchModels = async () => {
         setLoading(true);
         try {
@@ -276,12 +451,12 @@ export default function ProtecaoVeicularPage() {
   const handleSelectModelo = (modeloCode: string, modeloName: string) => {
     setSelectedModelo(modeloCode);
     setSelectedModeloTexto(modeloName);
-    setStep(6);
+    setStep(7); // Go to step 7 (Revisão)
   };
 
-  // Step 6: Create SIGGA quote and query FIPE details
+  // Step 7: Create SIGGA quote and query FIPE details
   useEffect(() => {
-    if (step === 6 && !quotationCode && !fipeDetails) {
+    if (step === 7 && !quotationCode && !fipeDetails) {
       const handleRegisterQuotationAndFipe = async () => {
         setLoading(true);
         try {
@@ -327,7 +502,7 @@ export default function ProtecaoVeicularPage() {
           console.error("Erro ao gerar cotação / FIPE:", err);
           toast.error("Houve uma falha ao comunicar com os parceiros de cotação. Verifique os dados e tente novamente.");
           // Rollback to previous step
-          setStep(5);
+          setStep(6);
         } finally {
           setLoading(false);
         }
@@ -349,9 +524,9 @@ export default function ProtecaoVeicularPage() {
     selectedModeloTexto
   ]);
 
-  // Step 7: Get Plans from Sigga and benefits on step change
+  // Step 8: Get Plans from Sigga and benefits on step change
   useEffect(() => {
-    if (step === 7 && quotationCode && plans.length === 0) {
+    if (step === 8 && quotationCode && plans.length === 0) {
       const fetchPlansAndBenefits = async () => {
         setPlansLoading(true);
         try {
@@ -394,26 +569,114 @@ export default function ProtecaoVeicularPage() {
     }
   }, [step, quotationCode, plans]);
 
-  // Step 8: Finalize contract selection
-  const handleConfirmPlan = async () => {
+  // Step 8: Confirm selection and move to Step 9 (Resumo)
+  const handleConfirmPlan = () => {
     if (!selectedPlanId) {
       toast.error("Por favor, selecione um plano para continuar.");
+      return;
+    }
+    setStep(9);
+    toast.success("Plano selecionado com sucesso! Confirme sua proposta no resumo.");
+  };
+
+  // Step 9: Final Proposal Submission
+  const handleFinalSubmit = async () => {
+    if (!acceptTerms) {
+      toast.error("Você precisa aceitar os termos do contrato para continuar.");
       return;
     }
 
     setLoading(true);
     try {
+      // API Call to register selected plan
       await api.post("/api/protecao-veicular/escolher-plano-sigga", {
         planoId: selectedPlanId,
         cotacaoCodigo: quotationCode
       });
-      setStep(8);
-      toast.success("Plano contratado com sucesso!");
+
+      const cleanPlaca = placa.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+
+      // Register vehicle natively in the backend database
+      try {
+        await api.post("/api/veiculos/cadastrar", {
+          placa: cleanPlaca,
+          veiculoTipo: selectedTipo || "1",
+          renavam: null,
+          marcaTexto: selectedMarcaTexto,
+          marcaId: selectedMarca,
+          modeloTexto: selectedModeloTexto,
+          modeloId: selectedModelo,
+          anoTexto: selectedAnoTexto,
+          anoId: selectedAno
+        });
+      } catch (err) {
+        console.error("Erro ao cadastrar veículo no banco do backend:", err);
+      }
+
+      // Save new vehicle to localStorage list
+      const selectedPlan = plans.find(p => p.tppId === selectedPlanId);
+      
+      const newVehicle = {
+        placa: cleanPlaca,
+        brand: selectedMarcaTexto,
+        model: selectedModeloTexto,
+        year: selectedAnoTexto,
+        fipeValue: fipeValueQuoted || (fipeDetails && fipeDetails.price) || "R$ 0,00",
+        color: vehicleColor || "N/D",
+        chassi: chassi || "N/D",
+        fipeCode: fipeRealCode || (fipeDetails && fipeDetails.codeFipe) || "N/D",
+        status: "Cotação em Análise",
+        planName: selectedPlan ? selectedPlan.name : "Personalizado",
+        price: selectedPlan ? selectedPlan.price : "Sob consulta",
+        vigencia: "Aguardando Vistoria",
+        // DB search IDs for resuming
+        selectedTipo,
+        selectedMarca,
+        selectedAno,
+        selectedModelo
+      };
+
+      const updatedList = [newVehicle, ...myVehicles.filter(v => v.placa !== cleanPlaca)];
+      localStorage.setItem("g8_registered_vehicles", JSON.stringify(updatedList));
+      setMyVehicles(updatedList);
+
+      setStep(10);
+      toast.success("Solicitação enviada com sucesso!");
     } catch (err) {
       console.error("Erro ao finalizar contratação:", err);
-      toast.error("Não foi possível finalizar a contratação. Tente novamente mais tarde.");
+      toast.error("Não foi possível enviar sua proposta. Tente novamente.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Click handler for registered vehicle cards
+  const handleSelectRegisteredVehicle = (vehicle: any) => {
+    if (vehicle.status === "Proteção Ativa") {
+      setSelectedVehicleDetails(vehicle);
+    } else {
+      // It is "Cotação em Análise", let's load details and skip ahead to Plans / Revision
+      setPlaca(vehicle.placa);
+      setSelectedTipo(vehicle.selectedTipo || "1");
+      setSelectedTipoTexto(vehicle.selectedTipo === "2" ? "Motos" : "Carros");
+      setSelectedMarca(vehicle.selectedMarca || "");
+      setSelectedMarcaTexto(vehicle.brand);
+      setSelectedAno(vehicle.selectedAno || "");
+      setSelectedAnoTexto(vehicle.year);
+      setSelectedModelo(vehicle.selectedModelo || "");
+      setSelectedModeloTexto(vehicle.model);
+      
+      // Critical: Clear quotationCode and fipeDetails to natively trigger registration
+      setQuotationCode("");
+      setFipeDetails(null);
+      setFipeValueQuoted("");
+      
+      setChassi(vehicle.chassi || "N/D");
+      setVehicleColor(vehicle.color || "N/D");
+
+      // Go straight to Step 7 (Revisão FIPE)
+      setStep(7);
+      toast.info(`Retomando cotação para o veículo ${vehicle.brand} ${vehicle.model}!`);
     }
   };
 
@@ -433,11 +696,26 @@ export default function ProtecaoVeicularPage() {
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "") // Remove accents
-      .replace(/[^a-z0-9]/g, ""); // Keep only lowercase alphanumeric
-    return `/api/veiculos/car-logo/${clean}`;
+      .trim();
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://g8api.bskpay.com.br";
+    return `${baseUrl}/api/veiculos/car-logo/${encodeURIComponent(clean)}`;
   };
 
-  // Dynamic status text for auto-selected values
+  // Check if a step can be directly navigated to by the user
+  const isStepSelectable = (targetStep: number) => {
+    if (targetStep === 1) return true;
+    if (targetStep === 2) return true;
+    if (targetStep === 3) return !!selectedTipo;
+    if (targetStep === 4) return !!selectedMarca;
+    if (targetStep === 5) return !!selectedAno;
+    if (targetStep === 6) return !!selectedModelo;
+    if (targetStep === 7) return !!fipeDetails;
+    if (targetStep === 8) return !!quotationCode;
+    if (targetStep === 9) return !!selectedPlanId;
+    return false;
+  };
+
+  // Reset Wizard state
   const handleResetWizard = () => {
     setStep(1);
     setPlaca("");
@@ -467,6 +745,7 @@ export default function ProtecaoVeicularPage() {
     setSelectedPlanId(null);
     setBrandFilter("");
     setModelFilter("");
+    setAcceptTerms(false);
   };
 
   return (
@@ -478,7 +757,7 @@ export default function ProtecaoVeicularPage() {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-4 border-b border-neutral-200/60 relative z-10">
         <div className="space-y-3">
           <Badge variant="secondary" className="bg-[#ff7711]/10 text-[#ff7711] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">
-            Lazer & Serviços Premium
+            Serviços Automotivos Premium
           </Badge>
           <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase flex items-center gap-3">
             Proteção <span className="text-[#ff7711]">Veicular</span>
@@ -489,14 +768,22 @@ export default function ProtecaoVeicularPage() {
           </p>
         </div>
 
-        {step > 1 && step < 8 && (
-          <Button 
-            variant="outline" 
-            onClick={handleResetWizard} 
-            className="self-start md:self-auto border-neutral-200 hover:bg-neutral-100 hover:text-black font-black uppercase text-[10px] tracking-wider rounded-sm"
-          >
-            Reiniciar Fluxo
-          </Button>
+        {step > 1 && step < 10 && (
+          <div className="flex items-center gap-3 self-start md:self-auto">
+            <Button 
+              onClick={() => setStep(step - 1)} 
+              className="h-10 px-5 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-[10px] tracking-widest rounded-sm flex items-center gap-1.5 transition-all"
+            >
+              <ChevronLeft className="h-4 w-4" /> Voltar Passo
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleResetWizard} 
+              className="border-neutral-200 hover:bg-neutral-100 hover:text-black font-black uppercase text-[10px] tracking-wider rounded-sm"
+            >
+              Reiniciar Fluxo
+            </Button>
+          </div>
         )}
       </header>
 
@@ -506,25 +793,29 @@ export default function ProtecaoVeicularPage() {
         <div className="md:hidden flex items-center justify-between bg-white border border-neutral-200 p-4 rounded-sm">
           <div className="space-y-1">
             <span className="text-[10px] font-black text-[#ff7711] uppercase tracking-widest">
-              Passo {step} de 8
+              Passo {step} de 10
             </span>
             <h3 className="font-black text-[#0c0a09] text-base">
               {stepsConfig[step - 1].desc}
             </h3>
           </div>
           <div className="flex items-center gap-1.5">
-            {stepsConfig.map((_, i) => (
-              <div 
-                key={i} 
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  i + 1 === step 
-                    ? "w-6 bg-[#ff7711]" 
-                    : i + 1 < step 
-                      ? "w-2 bg-[#ff7711]/60" 
-                      : "w-2 bg-neutral-200"
-                }`}
-              />
-            ))}
+            {stepsConfig.map((_, i) => {
+              const selectable = isStepSelectable(i + 1) && i + 1 < 10;
+              return (
+                <div 
+                  key={i} 
+                  onClick={() => selectable && setStep(i + 1)}
+                  className={`h-2 rounded-full transition-all duration-300 ${selectable ? "cursor-pointer hover:bg-[#ff7711]/80" : ""} ${
+                    i + 1 === step 
+                      ? "w-6 bg-[#ff7711]" 
+                      : i + 1 < step 
+                        ? "w-2 bg-[#ff7711]/60" 
+                        : "w-2 bg-neutral-200"
+                  }`}
+                />
+              );
+            })}
           </div>
         </div>
 
@@ -539,8 +830,15 @@ export default function ProtecaoVeicularPage() {
           {stepsConfig.map((s, idx) => {
             const isCompleted = idx + 1 < step;
             const isActive = idx + 1 === step;
+            const selectable = isStepSelectable(idx + 1) && idx + 1 < 10;
             return (
-              <div key={idx} className="flex flex-col items-center relative z-10">
+              <button 
+                key={idx} 
+                type="button"
+                onClick={() => selectable && setStep(idx + 1)}
+                disabled={!selectable}
+                className={`flex flex-col items-center relative z-10 bg-transparent p-0 border-0 outline-none transition-all ${selectable ? "cursor-pointer group/step hover:scale-105" : "cursor-not-allowed"}`}
+              >
                 <div 
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs transition-all duration-300 border-2 ${
                     isActive 
@@ -548,16 +846,22 @@ export default function ProtecaoVeicularPage() {
                       : isCompleted 
                         ? "bg-[#ff7711] border-[#ff7711] text-white" 
                         : "bg-white border-neutral-300 text-neutral-400"
-                  }`}
+                  } ${selectable && !isActive ? "group-hover/step:border-[#ffaa00] group-hover/step:bg-neutral-50 group-hover/step:text-[#ff7711]" : ""}`}
                 >
                   {isCompleted ? <Check className="h-5 w-5" /> : idx + 1}
                 </div>
                 <div className="mt-3 text-center">
-                  <span className={`block font-black text-[9px] uppercase tracking-wider ${isActive ? "text-[#ff7711]" : isCompleted ? "text-neutral-600" : "text-neutral-400"}`}>
+                  <span className={`block font-black text-[9px] uppercase tracking-wider ${
+                    isActive 
+                      ? "text-[#ff7711]" 
+                      : isCompleted 
+                        ? "text-neutral-600" 
+                        : "text-neutral-400"
+                  } ${selectable && !isActive ? "group-hover/step:text-[#ff7711] transition-colors" : ""}`}>
                     {s.label}
                   </span>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -574,8 +878,92 @@ export default function ProtecaoVeicularPage() {
           </div>
         )}
 
-        {/* STEP 1: License Plate Input */}
+        {/* STEP 1: Meus Veículos */}
         {step === 1 && (
+          <div className="w-full max-w-5xl space-y-8 animate-in fade-in duration-300">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-black text-[#0c0a09] tracking-tight uppercase">Meus Veículos Cadastrados</h2>
+              <p className="text-xs text-neutral-400 font-bold uppercase tracking-wider">
+                Gerencie seus veículos ou inicie o cadastro de proteção veicular oficial
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Vehicles List */}
+              {myVehicles.map((vehicle, idx) => {
+                const isActive = vehicle.status === "Proteção Ativa";
+                return (
+                  <Card 
+                    key={idx}
+                    onClick={() => handleSelectRegisteredVehicle(vehicle)}
+                    className={`p-6 border rounded-xl shadow-lg relative overflow-hidden flex flex-col justify-between transition-all hover:scale-[1.02] duration-300 cursor-pointer ${
+                      isActive 
+                        ? "bg-[#0c0a09] border-[#ff7711]/40 text-white shadow-[#ff7711]/5" 
+                        : "bg-white border-dashed border-[#ff7711]/30 border-2 hover:border-[#ff7711] text-[#0c0a09]"
+                    }`}
+                  >
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-start">
+                        <Badge className={`border-0 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm ${
+                          isActive 
+                            ? "bg-emerald-500/10 text-emerald-400" 
+                            : "bg-orange-500/10 text-orange-600"
+                        }`}>
+                          {vehicle.status}
+                        </Badge>
+                        <Car className={`h-6 w-6 ${isActive ? "text-[#ff7711]" : "text-neutral-400"}`} />
+                      </div>
+
+                      <div className="text-left space-y-1">
+                        <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Veículo</span>
+                        <h4 className="text-base font-black uppercase truncate">{vehicle.brand} {vehicle.model}</h4>
+                        <span className={`block font-mono text-xs font-semibold ${isActive ? "text-neutral-300" : "text-neutral-500"}`}>
+                          {vehicle.placa} • {vehicle.year.split(" ")[0]}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={`mt-6 pt-4 border-t flex items-center justify-between ${isActive ? "border-white/10" : "border-neutral-100"}`}>
+                      {isActive ? (
+                        <>
+                          <span className="text-[9px] font-bold text-neutral-400 uppercase">Premium Ativo</span>
+                          <span className="text-xs font-black text-[#ff7711]">{vehicle.price}/mês</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-[9px] font-bold text-neutral-400 uppercase">Cotação Pendente</span>
+                          <Button 
+                            size="sm"
+                            className="bg-[#ff7711] hover:bg-[#ff7711]/90 text-white text-[8px] font-black tracking-wider uppercase h-8 px-3 rounded-sm"
+                          >
+                            Finalizar Cotação
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+
+              {/* Add New Vehicle Card */}
+              <Card 
+                onClick={handleStartNewRegistration}
+                className="p-6 border-2 border-dashed border-neutral-300 bg-white/50 hover:bg-white hover:border-[#ff7711] rounded-xl flex flex-col items-center justify-center space-y-3 cursor-pointer group transition-all duration-300 shadow-md min-h-[190px]"
+              >
+                <div className="w-12 h-12 rounded-full bg-neutral-100 group-hover:bg-[#ff7711]/10 group-hover:text-[#ff7711] flex items-center justify-center text-neutral-400 transition-colors">
+                  <Plus className="h-6 w-6 stroke-[3]" />
+                </div>
+                <div className="text-center space-y-0.5">
+                  <h4 className="text-sm font-black uppercase text-neutral-800 group-hover:text-[#ff7711] transition-colors">Cadastrar Novo Veículo</h4>
+                  <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">Adicionar proteção ou débitos</p>
+                </div>
+              </Card>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 2: License Plate Input */}
+        {step === 2 && (
           <div className="w-full max-w-xl space-y-8 animate-in fade-in duration-300">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-black text-[#0c0a09] tracking-tight uppercase">Placa do Veículo</h2>
@@ -633,7 +1021,7 @@ export default function ProtecaoVeicularPage() {
                 
                 <button
                   type="button"
-                  onClick={() => setStep(2)}
+                  onClick={() => setStep(3)}
                   className="text-center text-xs font-black text-[#ff7711] hover:underline uppercase tracking-widest"
                 >
                   Pular e preencher dados manualmente
@@ -643,8 +1031,8 @@ export default function ProtecaoVeicularPage() {
           </div>
         )}
 
-        {/* STEP 2: Vehicle Type */}
-        {step === 2 && (
+        {/* STEP 3: Vehicle Type */}
+        {step === 3 && (
           <div className="w-full max-w-3xl space-y-8 animate-in fade-in duration-300">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-black text-[#0c0a09] tracking-tight uppercase">Tipo do Veículo</h2>
@@ -673,11 +1061,20 @@ export default function ProtecaoVeicularPage() {
                 );
               })}
             </div>
+
+            <div className="flex justify-between pt-4 border-t border-neutral-200">
+              <Button 
+                onClick={() => setStep(2)}
+                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
+              >
+                <ChevronLeft className="w-4.5 h-4.5" /> Voltar
+              </Button>
+            </div>
           </div>
         )}
 
-        {/* STEP 3: Vehicle Brand */}
-        {step === 3 && (
+        {/* STEP 4: Vehicle Brand */}
+        {step === 4 && (
           <div className="w-full max-w-4xl space-y-8 animate-in fade-in duration-300">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
@@ -737,18 +1134,17 @@ export default function ProtecaoVeicularPage() {
 
             <div className="flex justify-between pt-4 border-t border-neutral-200">
               <Button 
-                variant="outline" 
-                onClick={() => setStep(2)}
-                className="border-neutral-200 hover:bg-neutral-100 hover:text-black font-black uppercase text-[10px] tracking-wider rounded-sm flex items-center gap-2"
+                onClick={() => setStep(3)}
+                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
               >
-                <ChevronLeft className="w-4 h-4" /> Voltar
+                <ChevronLeft className="w-4.5 h-4.5" /> Voltar
               </Button>
             </div>
           </div>
         )}
 
-        {/* STEP 4: Model Year */}
-        {step === 4 && (
+        {/* STEP 5: Model Year */}
+        {step === 5 && (
           <div className="w-full max-w-xl space-y-8 animate-in fade-in duration-300">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-black text-[#0c0a09] tracking-tight uppercase">Ano do Veículo</h2>
@@ -791,15 +1187,14 @@ export default function ProtecaoVeicularPage() {
 
             <div className="flex justify-between pt-4 border-t border-neutral-200">
               <Button 
-                variant="outline" 
-                onClick={() => setStep(3)}
-                className="border-neutral-200 hover:bg-neutral-100 hover:text-black font-black uppercase text-[10px] tracking-wider rounded-sm flex items-center gap-2"
+                onClick={() => setStep(4)}
+                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
               >
-                <ChevronLeft className="w-4 h-4" /> Voltar
+                <ChevronLeft className="w-4.5 h-4.5" /> Voltar
               </Button>
               {selectedAno && (
                 <Button 
-                  onClick={() => setStep(5)}
+                  onClick={() => setStep(6)}
                   className="bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-md flex items-center gap-2"
                 >
                   Continuar <ChevronRight className="w-4 h-4" />
@@ -809,8 +1204,8 @@ export default function ProtecaoVeicularPage() {
           </div>
         )}
 
-        {/* STEP 5: Vehicle Model Version */}
-        {step === 5 && (
+        {/* STEP 6: Vehicle Model Version */}
+        {step === 6 && (
           <div className="w-full max-w-4xl space-y-8 animate-in fade-in duration-300">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
@@ -859,18 +1254,17 @@ export default function ProtecaoVeicularPage() {
 
             <div className="flex justify-between pt-4 border-t border-neutral-200">
               <Button 
-                variant="outline" 
-                onClick={() => setStep(4)}
-                className="border-neutral-200 hover:bg-neutral-100 hover:text-black font-black uppercase text-[10px] tracking-wider rounded-sm flex items-center gap-2"
+                onClick={() => setStep(5)}
+                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
               >
-                <ChevronLeft className="w-4 h-4" /> Voltar
+                <ChevronLeft className="w-4.5 h-4.5" /> Voltar
               </Button>
             </div>
           </div>
         )}
 
-        {/* STEP 6: Data Confirmation & FIPE Card */}
-        {step === 6 && fipeDetails && (
+        {/* STEP 7: Data Confirmation & FIPE Card */}
+        {step === 7 && fipeDetails && (
           <div className="w-full max-w-4xl space-y-8 animate-in fade-in duration-300">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-black text-[#0c0a09] tracking-tight uppercase">Revisão de Dados FIPE</h2>
@@ -981,14 +1375,13 @@ export default function ProtecaoVeicularPage() {
 
             <div className="flex justify-between pt-4 border-t border-neutral-200">
               <Button 
-                variant="outline" 
-                onClick={() => setStep(5)}
-                className="border-neutral-200 hover:bg-neutral-100 hover:text-black font-black uppercase text-[10px] tracking-wider rounded-sm flex items-center gap-2"
+                onClick={() => setStep(6)}
+                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
               >
-                <ChevronLeft className="w-4 h-4" /> Voltar
+                <ChevronLeft className="w-4.5 h-4.5" /> Voltar
               </Button>
               <Button 
-                onClick={() => setStep(7)}
+                onClick={() => setStep(8)}
                 className="bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-xl flex items-center gap-2"
               >
                 Ver Planos Disponíveis <ChevronRight className="w-4 h-4" />
@@ -997,8 +1390,8 @@ export default function ProtecaoVeicularPage() {
           </div>
         )}
 
-        {/* STEP 7: Select Plans */}
-        {step === 7 && (
+        {/* STEP 8: Select Plans */}
+        {step === 8 && (
           <div className="w-full max-w-5xl space-y-8 animate-in fade-in duration-300">
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-black text-[#0c0a09] tracking-tight uppercase">Escolha o seu Plano</h2>
@@ -1020,6 +1413,7 @@ export default function ProtecaoVeicularPage() {
                   const isSelected = selectedPlanId === plan.tppId;
                   const benefits = benefitsCache[plan.name] || [];
                   const isBronze = plan.name.toLowerCase().includes("bronze");
+                  const isExpanded = expandedPlans[plan.name] || false;
                   
                   return (
                     <Card
@@ -1055,41 +1449,66 @@ export default function ProtecaoVeicularPage() {
                           </div>
                         </div>
 
-                        {/* Benefits list details */}
-                        <div className="space-y-4 py-4 border-t border-neutral-100">
-                          <h4 className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Benefícios inclusos</h4>
-                          <div className="space-y-3.5">
-                            {benefits.length > 0 ? (
-                              benefits.map((b, idx) => (
-                                <div key={idx} className="flex items-start gap-3">
-                                  {b.possui ? (
-                                    <div className="w-4 h-4 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
-                                      <Check className="h-3 w-3" />
-                                    </div>
-                                  ) : (
-                                    <div className="w-4 h-4 rounded-full bg-red-50 border border-red-200 text-red-500 flex items-center justify-center shrink-0 mt-0.5">
-                                      <X className="h-3 w-3" />
-                                    </div>
-                                  )}
-                                  <div className="text-left">
-                                    <span className={`block text-xs font-extrabold ${b.possui ? "text-neutral-800" : "text-neutral-400 line-through"}`}>
-                                      {b.nome}
-                                    </span>
-                                    <span className="block text-[10px] text-neutral-400 font-medium leading-none mt-0.5">
-                                      {b.descricao}
-                                    </span>
-                                  </div>
-                                </div>
-                              ))
+                        {/* Short Description */}
+                        <p className="text-xs text-neutral-500 font-bold leading-relaxed pt-2">
+                          {getPlanDescription(plan.name)}
+                        </p>
+
+                        <div className="pt-2">
+                          <button
+                            type="button"
+                            onClick={(e) => togglePlanExpand(plan.name, e)}
+                            className="text-[#ff7711] hover:text-[#ffaa00] font-black uppercase text-[9px] tracking-widest flex items-center gap-1 transition-colors focus:outline-none"
+                          >
+                            {isExpanded ? (
+                              <>
+                                Ocultar Coberturas <ChevronLeft className="w-3 h-3 rotate-90" />
+                              </>
                             ) : (
-                              <div className="space-y-2 animate-pulse">
-                                <div className="h-4 bg-neutral-100 rounded-sm w-3/4" />
-                                <div className="h-4 bg-neutral-100 rounded-sm w-5/6" />
-                                <div className="h-4 bg-neutral-100 rounded-sm w-2/3" />
-                              </div>
+                              <>
+                                Saiba Mais <ChevronLeft className="w-3 h-3 -rotate-90" />
+                              </>
                             )}
-                          </div>
+                          </button>
                         </div>
+
+                        {/* Collapsible Benefits list details */}
+                        {isExpanded && (
+                          <div className="space-y-4 py-4 border-t border-neutral-100 mt-4 animate-in slide-in-from-top-2 fade-in duration-200">
+                            <h4 className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Coberturas & Benefícios</h4>
+                            <div className="space-y-3.5">
+                              {benefits.length > 0 ? (
+                                benefits.map((b, idx) => (
+                                  <div key={idx} className="flex items-start gap-3">
+                                    {b.possui ? (
+                                      <div className="w-4 h-4 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0 mt-0.5">
+                                        <Check className="h-3 w-3" />
+                                      </div>
+                                    ) : (
+                                      <div className="w-4 h-4 rounded-full bg-red-50 border border-red-200 text-red-500 flex items-center justify-center shrink-0 mt-0.5">
+                                        <X className="h-3 w-3" />
+                                      </div>
+                                    )}
+                                    <div className="text-left">
+                                      <span className={`block text-xs font-extrabold ${b.possui ? "text-neutral-800" : "text-neutral-400 line-through"}`}>
+                                        {b.nome}
+                                      </span>
+                                      <span className="block text-[10px] text-neutral-400 font-medium leading-none mt-0.5">
+                                        {b.descricao}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ))
+                              ) : (
+                                <div className="space-y-2 animate-pulse">
+                                  <div className="h-4 bg-neutral-100 rounded-sm w-3/4" />
+                                  <div className="h-4 bg-neutral-100 rounded-sm w-5/6" />
+                                  <div className="h-4 bg-neutral-100 rounded-sm w-2/3" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div className="pt-6 border-t border-neutral-100 w-full">
@@ -1118,24 +1537,178 @@ export default function ProtecaoVeicularPage() {
 
             <div className="flex justify-between pt-4 border-t border-neutral-200">
               <Button 
-                variant="outline" 
-                onClick={() => setStep(6)}
-                className="border-neutral-200 hover:bg-neutral-100 hover:text-black font-black uppercase text-[10px] tracking-wider rounded-sm flex items-center gap-2"
+                onClick={() => setStep(7)}
+                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
               >
-                <ChevronLeft className="w-4 h-4" /> Voltar
+                <ChevronLeft className="w-4.5 h-4.5" /> Voltar
               </Button>
               <Button 
                 onClick={handleConfirmPlan}
                 disabled={!selectedPlanId || loading}
                 className="bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-xl flex items-center gap-2"
               >
+                Continuar para Resumo <ChevronRight className="w-4 h-4" />
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 9: Proposal Summary */}
+        {step === 9 && (
+          <div className="w-full max-w-4xl space-y-8 animate-in fade-in duration-300">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-black text-[#0c0a09] tracking-tight uppercase">Resumo da Proposta</h2>
+              <p className="text-xs text-neutral-400 font-bold uppercase tracking-wider">
+                Confira todos os dados cadastrados antes de homologar e enviar a proposta oficial
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-[#0c0a09]">
+              {/* Owner Info Details Card */}
+              <Card className="p-8 bg-white border border-neutral-200/80 rounded-xl space-y-6 shadow-md text-left flex flex-col justify-between">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-black uppercase tracking-wide pb-2 border-b border-neutral-100 flex items-center gap-2">
+                    <User className="text-[#ff7711] h-5 w-5" /> Dados do Proprietário
+                  </h3>
+
+                  <div className="space-y-4">
+                    <div className="space-y-0.5">
+                      <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Nome do Titular</span>
+                      <span className="text-sm font-extrabold text-neutral-800 uppercase">{user?.name || user?.nome || "Carregando..."}</span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-0.5">
+                        <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">CPF / Documento</span>
+                        <span className="text-xs font-mono font-bold text-neutral-800">{user?.taxNumber || "Carregando..."}</span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Celular</span>
+                        <span className="text-xs font-mono font-bold text-neutral-800">{user?.phone || user?.celular || "(11) 99999-8888"}</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">E-mail Cadastrado</span>
+                      <span className="text-xs font-semibold text-neutral-600">{user?.email || "Carregando..."}</span>
+                    </div>
+
+                    <div className="bg-neutral-50 rounded-sm p-4 border border-neutral-100 space-y-3">
+                      <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Dados de Cobrança (G8Pay)</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="space-y-0.5">
+                          <span className="block text-[7px] text-neutral-400 uppercase leading-none font-bold">Banco</span>
+                          <span className="text-[10px] font-bold text-neutral-700">384-G8 PAY IP</span>
+                        </div>
+                        <div className="space-y-0.5">
+                          <span className="block text-[7px] text-neutral-400 uppercase leading-none font-bold">Agência</span>
+                          <span className="text-[10px] font-mono font-bold text-neutral-700">{user?.accountBranch || "0001"}</span>
+                        </div>
+                        <div className="space-y-0.5">
+                          <span className="block text-[7px] text-neutral-400 uppercase leading-none font-bold">Conta</span>
+                          <span className="text-[10px] font-mono font-bold text-neutral-700">{user?.accountNumber || "Carregando..."}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-emerald-50 border border-emerald-100 rounded-sm p-3 flex items-start gap-2.5">
+                  <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-neutral-600 font-bold leading-relaxed">
+                    Pagamento mensal debitado de forma prática e automática em sua conta G8Pay no dia de vencimento.
+                  </p>
+                </div>
+              </Card>
+
+              {/* Vehicle & Plan summary Card */}
+              <Card className="p-8 bg-white border border-neutral-200/80 rounded-xl space-y-6 shadow-md text-left flex flex-col justify-between">
+                <div className="space-y-5">
+                  <h3 className="text-lg font-black uppercase tracking-wide pb-2 border-b border-neutral-100 flex items-center gap-2">
+                    <Car className="text-[#ff7711] h-5 w-5" /> Dados da Cotação & Plano
+                  </h3>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-0.5">
+                      <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Veículo</span>
+                      <span className="text-xs font-extrabold text-neutral-800 uppercase block truncate">{selectedMarcaTexto} {selectedModeloTexto}</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Placa</span>
+                      <span className="text-xs font-mono font-bold text-neutral-800 uppercase block">{placa}</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Ano / Modelo</span>
+                      <span className="text-xs font-extrabold text-neutral-800 block">{selectedAnoTexto}</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Cor / Chassi</span>
+                      <span className="text-xs font-extrabold text-neutral-800 block truncate">{vehicleColor} / {chassi}</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Tabela FIPE</span>
+                      <span className="text-xs font-extrabold text-[#ff7711] block font-mono">{fipeValueQuoted || (fipeDetails && fipeDetails.price)}</span>
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Código Cotação</span>
+                      <span className="text-xs font-bold text-neutral-800 block font-mono">{quotationCode}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-[#0c0a09] text-white rounded-lg border border-[#ff7711]/20 flex justify-between items-center">
+                    <div className="text-left space-y-0.5">
+                      <Badge className="bg-[#ff7711] text-white border-0 text-[7px] font-black uppercase tracking-wider py-0 px-1.5 rounded-sm">
+                        Plano Escolhido
+                      </Badge>
+                      <h4 className="text-sm font-black uppercase tracking-wide">
+                        {plans.find(p => p.tppId === selectedPlanId)?.name}
+                      </h4>
+                    </div>
+                    <div className="text-right">
+                      <span className="block text-[8px] text-neutral-400 font-bold uppercase leading-none mb-0.5">Valor Mensal</span>
+                      <span className="text-lg font-black font-mono text-[#ff7711]">
+                        {plans.find(p => p.tppId === selectedPlanId)?.price}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-neutral-100 text-left">
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="checkbox"
+                      id="accept-terms"
+                      checked={acceptTerms}
+                      onChange={(e) => setAcceptTerms(e.target.checked)}
+                      className="rounded border-neutral-300 text-[#ff7711] focus:ring-[#ff7711] h-4 w-4 cursor-pointer"
+                    />
+                    <label htmlFor="accept-terms" className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider cursor-pointer select-none">
+                      Estou ciente de que as informações fornecidas e coletadas são verdadeiras e aceito os termos do contrato.
+                    </label>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            <div className="flex justify-between pt-4 border-t border-neutral-200">
+              <Button 
+                onClick={() => setStep(8)}
+                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
+              >
+                <ChevronLeft className="w-4.5 h-4.5" /> Voltar
+              </Button>
+              <Button 
+                onClick={handleFinalSubmit}
+                disabled={!acceptTerms || loading}
+                className="bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-xl flex items-center gap-2"
+              >
                 {loading ? (
                   <>
-                    <RotateCw className="w-4 h-4 animate-spin" /> Finalizando...
+                    <RotateCw className="w-4 h-4 animate-spin" /> Homologando Proposta...
                   </>
                 ) : (
                   <>
-                    Confirmar Contratação <ChevronRight className="w-4 h-4" />
+                    Confirmar e Enviar Proposta <ChevronRight className="w-4 h-4" />
                   </>
                 )}
               </Button>
@@ -1143,8 +1716,8 @@ export default function ProtecaoVeicularPage() {
           </div>
         )}
 
-        {/* STEP 8: Success Screen */}
-        {step === 8 && (
+        {/* STEP 10: Success Screen */}
+        {step === 10 && (
           <div className="w-full max-w-xl space-y-8 animate-in zoom-in duration-300">
             <Card className="p-10 border border-emerald-100 shadow-2xl shadow-emerald-50 bg-white text-[#0c0a09] relative overflow-hidden text-center rounded-xl">
               <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-400 to-green-500" />
@@ -1160,19 +1733,19 @@ export default function ProtecaoVeicularPage() {
                     Solicitação Concluída
                   </Badge>
                   <h2 className="text-3xl font-black tracking-tight uppercase text-neutral-900 leading-tight">
-                    Parabéns, seu veículo está em processo de ativação!
+                    SOLICITAÇÃO DE COTAÇÃO RECEBIDA
                   </h2>
-                  <p className="text-sm font-bold text-neutral-400 leading-relaxed max-w-md mx-auto">
-                    A cotação foi homologada no servidor Sigga sob o código <strong className="font-mono text-neutral-600">{quotationCode}</strong>.
+                  <p className="text-sm font-bold text-neutral-500 leading-relaxed max-w-md mx-auto">
+                    Recebemos sua solicitação de cotação, em breve um consultor entrará em contato para validar as informações e efetivar a contratação.
                   </p>
                 </div>
 
-                <div className="p-6 bg-neutral-50 rounded-sm border border-neutral-100 text-left flex items-start gap-4">
+                <div className="p-4 bg-neutral-50 rounded-sm border border-neutral-100 text-left flex items-start gap-4">
                   <HeartHandshake className="h-6 w-6 text-emerald-600 shrink-0 mt-0.5" />
                   <div className="space-y-1">
-                    <span className="block text-xs font-black uppercase tracking-wider text-neutral-800">Próximos passos</span>
-                    <p className="text-[11px] text-neutral-500 font-bold leading-relaxed">
-                      Em até <strong>2 dias úteis</strong>, um consultor especializado entrará em contato via telefone ou WhatsApp cadastrado para orientar a vistoria digital final e ativação imediata do seu seguro.
+                    <span className="block text-xs font-black uppercase tracking-wider text-neutral-800">Homologado Sigga</span>
+                    <p className="text-[11px] text-neutral-400 font-semibold leading-relaxed">
+                      A cotação foi registrada no servidor Sigga sob o código de proposta <strong className="font-mono text-neutral-700">{quotationCode}</strong>.
                     </p>
                   </div>
                 </div>
@@ -1182,7 +1755,7 @@ export default function ProtecaoVeicularPage() {
                     onClick={handleResetWizard}
                     className="flex-1 h-12 bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[9px] shadow-lg transition-all"
                   >
-                    Fazer Nova Cotação
+                    Voltar para Meus Veículos
                   </Button>
                 </div>
               </div>
@@ -1190,6 +1763,96 @@ export default function ProtecaoVeicularPage() {
           </div>
         )}
       </div>
+
+      {/* Details drawer/modal overlay for "Proteção Ativa" vehicle */}
+      {selectedVehicleDetails && (
+        <div className="fixed inset-0 bg-[#0c0a09]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-neutral-200 max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden animate-in zoom-in duration-300 text-left text-[#0c0a09]">
+            {/* Top brand accent */}
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#ff7711] to-[#ffaa00]" />
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setSelectedVehicleDetails(null)}
+              className="absolute top-4 right-4 p-2 rounded-full hover:bg-neutral-100 transition-all"
+            >
+              <X className="h-5 w-5 text-neutral-400" />
+            </button>
+
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-[#ff7711]/10 rounded-full flex items-center justify-center text-[#ff7711]">
+                  <Shield className="h-6 w-6 stroke-[2]" />
+                </div>
+                <div>
+                  <Badge className="bg-emerald-500/10 text-emerald-600 border-0 px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-wider">
+                    Apólice Ativa • G8 Protegido
+                  </Badge>
+                  <h3 className="text-2xl font-black uppercase text-neutral-900 leading-tight">
+                    {selectedVehicleDetails.brand} {selectedVehicleDetails.model}
+                  </h3>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 py-4 border-y border-neutral-100">
+                <div className="space-y-1">
+                  <span className="block text-[9px] text-neutral-400 font-black uppercase tracking-wider">Placa</span>
+                  <span className="text-sm font-extrabold text-neutral-800 font-mono uppercase">{selectedVehicleDetails.placa}</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="block text-[9px] text-neutral-400 font-black uppercase tracking-wider">Chassi</span>
+                  <span className="text-sm font-extrabold text-neutral-800 font-mono">{selectedVehicleDetails.chassi}</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="block text-[9px] text-neutral-400 font-black uppercase tracking-wider">Plano Ativo</span>
+                  <span className="text-sm font-extrabold text-[#ff7711] uppercase">{selectedVehicleDetails.planName}</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="block text-[9px] text-neutral-400 font-black uppercase tracking-wider">Valor Mensal</span>
+                  <span className="text-sm font-black text-neutral-800 font-mono">{selectedVehicleDetails.price}</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="block text-[9px] text-neutral-400 font-black uppercase tracking-wider">Vigência</span>
+                  <span className="text-xs font-bold text-neutral-600">{selectedVehicleDetails.vigencia}</span>
+                </div>
+                <div className="space-y-1">
+                  <span className="block text-[9px] text-neutral-400 font-black uppercase tracking-wider">Valor de Mercado</span>
+                  <span className="text-xs font-bold text-neutral-600 font-mono">{selectedVehicleDetails.fipeValue}</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Coberturas e Serviços Inclusos</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {selectedVehicleDetails.coberturas?.map((cobertura: string, idx: number) => (
+                    <div key={idx} className="flex items-center gap-2">
+                      <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+                      <span className="text-[11px] font-bold text-neutral-600 leading-none">{cobertura}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-neutral-50 rounded-sm p-4 border border-neutral-100 flex items-center justify-between mt-4">
+                <div className="text-left">
+                  <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none mb-1">Sinistro & Assistência 24h</span>
+                  <span className="text-sm font-black text-[#ff7711] font-mono">0800 940 8888</span>
+                </div>
+                <Button
+                  onClick={() => {
+                    toast.success("Solicitando reboque/socorro... Nossa central de assistência entrará em contato em minutos!");
+                    setSelectedVehicleDetails(null);
+                  }}
+                  className="bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white font-black uppercase tracking-widest text-[9px] px-6 h-10 rounded-sm"
+                >
+                  Acionar Assistência
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
