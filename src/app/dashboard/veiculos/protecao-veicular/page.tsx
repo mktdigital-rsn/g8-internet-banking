@@ -1442,11 +1442,7 @@ export default function ProtecaoVeicularPage() {
                             <span className="text-xs text-neutral-400 font-bold uppercase">/ mês</span>
                           </div>
                           
-                          {/* Access fee details */}
-                          <div className="flex items-center gap-1.5 pt-1.5 border-t border-neutral-100 text-[10px] font-bold text-neutral-500">
-                            <DollarSign className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                            <span>Adesão Única: <strong>R$ 150,00</strong></span>
-                          </div>
+                        
                         </div>
 
                         {/* Short Description */}

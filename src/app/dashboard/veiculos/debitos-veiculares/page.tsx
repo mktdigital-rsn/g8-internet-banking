@@ -46,9 +46,12 @@ export default function DebitosVeicularesPage() {
 
   // DETRAN Search Response Data
   const [debtsData, setDebtsData] = useState<{
+    veiculo: any;
     multas: any[];
     ipvas: any[];
     licenciamentos: any[];
+    dpvats: any[];
+    dividaativa: any;
   } | null>(null);
 
   // Tab State
@@ -104,9 +107,12 @@ export default function DebitosVeicularesPage() {
       if (response.data && response.data.status && response.data.result) {
         const result = response.data.result;
         setDebtsData({
+          veiculo: result.veiculo || null,
           multas: result.multas || [],
           ipvas: result.ipvas || [],
-          licenciamentos: result.licenciamentos || []
+          licenciamentos: result.licenciamentos || [],
+          dpvats: result.dpvats || [],
+          dividaativa: result.debitos || null
         });
         setSearchCompleted(true);
         toast.success("Dados de débitos veiculares carregados com sucesso!");
@@ -483,6 +489,58 @@ export default function DebitosVeicularesPage() {
               </Button>
             </div>
 
+            {/* VEHICLE TECH SPEC CARD (FICHA TÉCNICA) */}
+            {debtsData.veiculo && (
+              <Card className="p-6 border border-neutral-200 bg-white shadow-sm relative overflow-hidden rounded-sm border-l-4 border-l-[#ff7711] animate-in fade-in slide-in-from-top duration-500">
+                <div className="flex items-center gap-2 text-[#0c0a09] pb-4 border-b border-neutral-100 mb-4">
+                  <Car className="h-5 w-5 text-[#ff7711] stroke-[2.5]" />
+                  <span className="font-black uppercase tracking-wider text-xs">Dados Cadastrais do Veículo</span>
+                </div>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 gap-y-3">
+                  <div className="space-y-0.5">
+                    <span className="block text-[8px] font-black text-neutral-400 uppercase tracking-widest">Placa</span>
+                    <span className="block text-xs font-black font-mono text-neutral-800 bg-neutral-50 px-2 py-0.5 rounded border border-neutral-200 w-fit">{debtsData.veiculo.placa || placa}</span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <span className="block text-[8px] font-black text-neutral-400 uppercase tracking-widest">Marca / Modelo</span>
+                    <span className="block text-xs font-black text-neutral-800 uppercase truncate" title={debtsData.veiculo.modelo}>{debtsData.veiculo.modelo || debtsData.veiculo.marca || "N/D"}</span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <span className="block text-[8px] font-black text-neutral-400 uppercase tracking-widest">Ano Fabricação</span>
+                    <span className="block text-xs font-bold text-neutral-800">{debtsData.veiculo.anoFabricacao || "N/D"}</span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <span className="block text-[8px] font-black text-neutral-400 uppercase tracking-widest">Combustível</span>
+                    <span className="block text-xs font-bold text-neutral-800 uppercase">{debtsData.veiculo.combustivel || "N/D"}</span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <span className="block text-[8px] font-black text-neutral-400 uppercase tracking-widest">RENAVAM</span>
+                    <span className="block text-xs font-bold font-mono text-neutral-800">{debtsData.veiculo.renavam || renavam}</span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <span className="block text-[8px] font-black text-neutral-400 uppercase tracking-widest">Município</span>
+                    <span className="block text-xs font-bold text-neutral-800 uppercase">{debtsData.veiculo.municipio_nome || "N/D"}</span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <span className="block text-[8px] font-black text-neutral-400 uppercase tracking-widest">Último Licenciamento</span>
+                    <span className="block text-xs font-extrabold text-[#ff7711]">{debtsData.veiculo.ultimoLicenciamento || "N/D"}</span>
+                  </div>
+
+                  <div className="space-y-0.5">
+                    <span className="block text-[8px] font-black text-neutral-400 uppercase tracking-widest">Categoria</span>
+                    <span className="block text-xs font-bold text-neutral-800 uppercase">{debtsData.veiculo.categoria || "N/D"}</span>
+                  </div>
+                </div>
+              </Card>
+            )}
+
             {/* TAB TRIGGERS BAR */}
             <div className="flex bg-white border border-neutral-200 rounded-sm p-1 gap-1">
               {(["ipva", "licenciamento", "multas"] as TabType[]).map((tab) => {
@@ -800,6 +858,35 @@ export default function DebitosVeicularesPage() {
                 )}
               </div>
             </Card>
+
+            {/* Informational Alerts for DPVAT & Divida Ativa */}
+            {((debtsData.dpvats && debtsData.dpvats.length > 0) || (debtsData.dividaativa && debtsData.dividaativa.total > 0)) && (
+              <Card className="p-5 bg-amber-50/60 border border-amber-200/80 rounded-sm space-y-3 shadow-md animate-in fade-in slide-in-from-bottom duration-500">
+                <div className="flex items-center gap-2 text-amber-800 pb-2 border-b border-amber-200/40">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span className="text-[10px] font-black uppercase tracking-wider">Alertas Importantes DETRAN</span>
+                </div>
+                
+                <div className="space-y-3 text-[10px] font-bold text-neutral-600 leading-normal uppercase">
+                  {debtsData.dpvats && debtsData.dpvats.length > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-amber-800 block font-black">Seguro Obrigatório DPVAT Pendente:</span>
+                      {debtsData.dpvats.map((dpvat: string, idx: number) => (
+                        <span key={idx} className="block text-neutral-500 font-mono text-[9px]">• {dpvat}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {debtsData.dividaativa && debtsData.dividaativa.total > 0 && (
+                    <div className="space-y-1">
+                      <span className="text-amber-800 block font-black">Débito em Dívida Ativa localizado:</span>
+                      <span className="block text-neutral-500 font-mono text-[9px]">• Valor Inscrito: R$ {debtsData.dividaativa.total.toFixed(2)} ({debtsData.dividaativa.tipo})</span>
+                      <span className="block text-red-600 text-[8px] font-black tracking-wider leading-snug pt-1">Atenção: Débitos em dívida ativa estadual devem ser liquidados diretamente na Procuradoria Geral do Estado (PGE).</span>
+                    </div>
+                  )}
+                </div>
+              </Card>
+            )}
           </div>
         </div>
       )}
