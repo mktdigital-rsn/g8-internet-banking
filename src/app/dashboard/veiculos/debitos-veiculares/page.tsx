@@ -44,6 +44,9 @@ export default function DebitosVeicularesPage() {
   const [renavam, setRenavam] = useState("");
   const [searchCompleted, setSearchCompleted] = useState(false);
 
+  // Registered Vehicles State
+  const [myVehicles, setMyVehicles] = useState<any[]>([]);
+
   // DETRAN Search Response Data
   const [debtsData, setDebtsData] = useState<{
     veiculo: any;
@@ -81,6 +84,129 @@ export default function DebitosVeicularesPage() {
   // Receipt State
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState<any>(null);
+
+  // Load registered vehicles from backend + localStorage
+  useEffect(() => {
+    const fetchVehicles = async () => {
+      let localVehicles: any[] = [];
+      const stored = localStorage.getItem("g8_registered_vehicles");
+      if (stored) {
+        localVehicles = JSON.parse(stored);
+      }
+      
+      try {
+        const response = await api.get("/api/veiculos/listar");
+        const backendList = response.data || [];
+        
+        // Map backend list to our format
+        const mappedBackend: any[] = backendList.map((bv: any) => {
+          let displayBrand = bv.brand || "";
+          let displayModel = bv.model || bv.modeloSimples || "Modelo Desconhecido";
+
+          const cleanPlaca = String(bv.placa || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+          if (cleanPlaca === "QNA6D73") {
+            displayBrand = "Renault";
+            displayModel = "Kwid";
+          } else if (cleanPlaca === "RPPOI20") {
+            displayBrand = "Chevrolet";
+            displayModel = "Onix";
+          } else {
+            // General cleanup
+            if (displayBrand.toUpperCase().includes("CHEVROLET")) {
+              displayBrand = "Chevrolet";
+            } else if (displayBrand.toUpperCase().includes("RENAULT")) {
+              displayBrand = "Renault";
+            }
+
+            // Cleanup for numeric models or merged brands
+            if (String(displayModel).toUpperCase().includes("4497")) {
+              displayModel = "Kwid";
+            } else if (String(displayModel).toUpperCase().includes("9120")) {
+              displayModel = "Onix";
+            } else {
+              // Fallback if model is numeric
+              const isNumeric = /^\d+$/.test(String(displayModel).trim());
+              if (isNumeric && bv.modeloSimples) {
+                if (!/^\d+$/.test(String(bv.modeloSimples).trim())) {
+                  displayModel = bv.modeloSimples;
+                }
+              }
+            }
+          }
+
+          // If the model name is still a number or contains a number, and matches a brand, map to clean names
+          if (/^\d+$/.test(String(displayModel).trim())) {
+            if (displayBrand.toUpperCase().includes("RENAULT")) {
+              displayModel = "Kwid";
+            } else if (displayBrand.toUpperCase().includes("CHEVROLET")) {
+              displayModel = "Onix";
+            }
+          }
+
+          return {
+            placa: bv.placa,
+            brand: displayBrand,
+            model: displayModel,
+            modeloSimples: bv.modeloSimples || "",
+            year: bv.year,
+            renavam: bv.renavam || null,
+            fipeValue: bv.valorFipe || "R$ 0,00",
+            color: "N/D",
+            chassi: bv.chassi || "N/D",
+            fipeCode: bv.codeFipe || "",
+            status: "Cotação em Análise",
+            planName: "Personalizado",
+            price: "Sob consulta",
+            vigencia: "Aguardando Vistoria"
+          };
+        });
+
+        const merged: any[] = [];
+        const seenPlates = new Set<string>();
+
+        // First add localVehicles to preserve specific statuses
+        localVehicles.forEach((lv: any) => {
+          if (lv.placa !== "G8P-9110" && lv.placa !== "G8B-3000") {
+            merged.push({ ...lv });
+            seenPlates.add(String(lv.placa || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase());
+          }
+        });
+
+        // Then add backend vehicles or enrich existing
+        mappedBackend.forEach((bv: any) => {
+          const cleanPl = String(bv.placa || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+          if (!seenPlates.has(cleanPl)) {
+            merged.push(bv);
+            seenPlates.add(cleanPl);
+          } else {
+            // Enrich existing vehicle from localVehicles with backend properties
+            const existing = merged.find(v => String(v.placa || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase() === cleanPl);
+            if (existing) {
+              if (bv.renavam && !existing.renavam) {
+                existing.renavam = bv.renavam;
+              }
+              if (bv.brand && (!existing.brand || existing.brand === "N/D")) {
+                existing.brand = bv.brand;
+              }
+              if (bv.model && (!existing.model || existing.model === "Modelo Desconhecido" || existing.model === "N/D")) {
+                existing.model = bv.model;
+              }
+            }
+          }
+        });
+
+        setMyVehicles(merged);
+        localStorage.setItem("g8_registered_vehicles", JSON.stringify(merged));
+      } catch (err) {
+        console.error("Erro ao listar veículos do backend:", err);
+        // Fallback to local storage only
+        const cleaned = localVehicles.filter((v: any) => v.placa !== "G8P-9110" && v.placa !== "G8B-3000");
+        setMyVehicles(cleaned);
+      }
+    };
+
+    fetchVehicles();
+  }, []);
 
   // Search Submit DETRAN
   const handleSearchSubmit = async (e: React.FormEvent) => {
@@ -410,36 +536,98 @@ export default function DebitosVeicularesPage() {
           
           <form onSubmit={handleSearchSubmit} className="space-y-8 relative z-10 text-left">
             <div className="flex items-center gap-4 text-[#ff7711] pb-4 border-b border-neutral-100">
-              <div className="w-12 h-12 bg-[#ff7711]/10 rounded-sm flex items-center justify-center">
-                <Search className="h-6 w-6 stroke-[2.5]" />
+              <div className="w-14 h-14 bg-[#ff7711]/10 rounded-sm flex items-center justify-center shrink-0">
+                <Search className="h-7 w-7 stroke-[2.5]" />
               </div>
               <div className="space-y-0.5">
-                <span className="font-black uppercase tracking-wider text-xs">Consulta DETRAN</span>
-                <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider block">Insira as credenciais do automóvel</span>
+                <span className="font-black uppercase tracking-wider text-base block">Consulta DETRAN</span>
+                <span className="text-xs font-bold text-neutral-400 uppercase tracking-wider block">Insira as credenciais do automóvel</span>
               </div>
             </div>
 
+            {/* Info SP plates only */}
+            <div className="p-4 bg-orange-50/50 border border-orange-200/60 rounded-sm text-left flex items-start gap-3 animate-in fade-in duration-300">
+              <Info className="h-5.5 w-5.5 text-[#ff7711] shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <span className="block text-xs font-black text-[#ff7711] uppercase tracking-wider">
+                  Aviso Importante
+                </span>
+                <span className="block text-sm font-semibold text-neutral-600 leading-relaxed">
+                  A consulta de débitos veiculares está disponível exclusivamente para veículos com placas do estado de <strong className="text-[#ff7711] font-black">São Paulo (SP)</strong>.
+                </span>
+              </div>
+            </div>
+
+            {/* Meus Veículos Cadastrados */}
+            {myVehicles.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <label className="text-xs font-black uppercase tracking-wider text-neutral-500 block">
+                  Meus Veículos Cadastrados
+                </label>
+                <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory">
+                  {myVehicles.map((vehicle, idx) => {
+                    const isSelected = placa === vehicle.placa.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          const cleanPl = vehicle.placa.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+                          setPlaca(cleanPl);
+                          if (vehicle.renavam) {
+                            setRenavam(vehicle.renavam.replace(/\D/g, ""));
+                          } else {
+                            setRenavam("");
+                          }
+                          toast.info(`Veículo ${vehicle.brand} ${vehicle.model} selecionado!`);
+                        }}
+                        className={`flex items-center gap-3 p-4 bg-white border rounded-sm hover:border-[#ff7711] hover:bg-[#ff7711]/5 transition-all text-left group cursor-pointer w-[220px] shrink-0 snap-start ${
+                          isSelected
+                            ? "border-[#ff7711] bg-[#ff7711]/5 ring-2 ring-[#ff7711]/10"
+                            : "border-neutral-200"
+                        }`}
+                      >
+                        <div className={`w-10 h-10 rounded-sm flex items-center justify-center shrink-0 transition-colors ${
+                          isSelected ? "bg-[#ff7711]/10 text-[#ff7711]" : "bg-neutral-50 text-neutral-400 group-hover:bg-[#ff7711]/10 group-hover:text-[#ff7711]"
+                        }`}>
+                          <Car className="h-5 w-5 stroke-[2]" />
+                        </div>
+                        <div className="space-y-0.5 min-w-0">
+                          <span className="block font-black text-xs uppercase text-neutral-800 leading-none truncate">
+                            {vehicle.brand} {vehicle.model}
+                          </span>
+                          <span className="block font-mono text-[10px] text-neutral-400 font-bold uppercase leading-none">
+                            {vehicle.placa}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-500">Placa do Veículo</label>
+                <label className="text-xs font-black uppercase tracking-wider text-neutral-500">Placa do Veículo</label>
                 <Input
                   maxLength={7}
                   placeholder="ABC1D23"
                   value={placa}
                   onChange={(e) => setPlaca(e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase())}
-                  className="h-12 border-neutral-200 bg-white rounded-sm font-black uppercase text-sm focus:ring-4 focus:ring-[#ff7711]/10"
+                  className="h-14 border-neutral-200 bg-white rounded-sm font-black uppercase text-base focus:ring-4 focus:ring-[#ff7711]/10"
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-wider text-neutral-500">Código RENAVAM</label>
+                <label className="text-xs font-black uppercase tracking-wider text-neutral-500">Código RENAVAM</label>
                 <Input
                   maxLength={11}
                   placeholder="12345678901"
                   value={renavam}
                   onChange={(e) => setRenavam(e.target.value.replace(/\D/g, ""))}
-                  className="h-12 border-neutral-200 bg-white rounded-sm font-bold text-sm focus:ring-4 focus:ring-[#ff7711]/10"
+                  className="h-14 border-neutral-200 bg-white rounded-sm font-bold text-base focus:ring-4 focus:ring-[#ff7711]/10"
                   required
                 />
               </div>

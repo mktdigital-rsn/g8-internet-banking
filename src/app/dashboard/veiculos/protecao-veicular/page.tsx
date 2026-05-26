@@ -918,7 +918,7 @@ export default function ProtecaoVeicularPage() {
                         <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Veículo</span>
                         <h4 className="text-base font-black uppercase truncate">{vehicle.brand} {vehicle.model}</h4>
                         <span className={`block font-mono text-xs font-semibold ${isActive ? "text-neutral-300" : "text-neutral-500"}`}>
-                          {vehicle.placa} • {vehicle.year.split(" ")[0]}
+                          {vehicle.placa} • {vehicle.year?.split(" ")[0]}
                         </span>
                       </div>
                     </div>
