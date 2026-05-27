@@ -76,6 +76,7 @@ const menuGroups: { label?: string; items: MenuItem[] }[] = [
         label: "Veículos", 
         href: "#", 
         submenu: [
+          { icon: Car, label: "Meus Veículos", href: "/dashboard/veiculos/meus-veiculos" },
           { icon: Car, label: "Débitos Veiculares", href: "/dashboard/veiculos/debitos-veiculares" },
           { icon: Shield, label: "Proteção Veicular", href: "/dashboard/veiculos/protecao-veicular" }
         ] 

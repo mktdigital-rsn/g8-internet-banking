@@ -20,7 +20,8 @@ import {
   ArrowRight,
   Printer,
   ShoppingBag,
-  Coins
+  Coins,
+  Plus
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,112 @@ export default function DebitosVeicularesPage() {
 
   // Registered Vehicles State
   const [myVehicles, setMyVehicles] = useState<any[]>([]);
+
+  // Add new vehicle Quick Form state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  const [newPlaca, setNewPlaca] = useState("");
+  const [newRenavam, setNewRenavam] = useState("");
+  const [newBrand, setNewBrand] = useState("");
+  const [newModel, setNewModel] = useState("");
+  const [newYear, setNewYear] = useState("");
+  const [newColor, setNewColor] = useState("");
+
+  const resetForm = () => {
+    setNewPlaca("");
+    setNewRenavam("");
+    setNewBrand("");
+    setNewModel("");
+    setNewYear("");
+    setNewColor("");
+  };
+
+  const handleAddVehicleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPl = newPlaca.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    const cleanRen = newRenavam.replace(/\D/g, "");
+
+    if (cleanPl.length !== 7) {
+      toast.error("A placa precisa ter 7 caracteres.");
+      return;
+    }
+    if (cleanRen.length !== 11) {
+      toast.error("O RENAVAM precisa ter 11 dígitos.");
+      return;
+    }
+
+    setAddLoading(true);
+    try {
+      await api.post("/api/veiculos/cadastrar", {
+        placa: cleanPl,
+        renavam: cleanRen,
+        veiculoTipo: "1", // 1 = Carro
+        marcaTexto: newBrand,
+        marcaId: "",
+        modeloTexto: newModel,
+        modeloId: "",
+        anoTexto: newYear,
+        anoId: ""
+      });
+
+      const newVehicleObj = {
+        placa: cleanPl,
+        brand: newBrand,
+        model: newModel,
+        year: newYear,
+        renavam: cleanRen,
+        color: newColor || "N/D",
+        chassi: "N/D",
+        fipeValue: "R$ 0,00",
+        fipeCode: "",
+        status: "Cadastro Simples",
+        planName: "Personalizado",
+        price: "Sob consulta",
+        vigencia: "Aguardando Vistoria"
+      };
+
+      const updated = [newVehicleObj, ...myVehicles.filter(v => v.placa.replace(/[^A-Za-z0-9]/g, "").toUpperCase() !== cleanPl)];
+      setMyVehicles(updated);
+      localStorage.setItem("g8_registered_vehicles", JSON.stringify(updated));
+
+      toast.success("Veículo cadastrado com sucesso!");
+      setShowAddModal(false);
+      resetForm();
+
+      // Automatically select the newly registered vehicle
+      setPlaca(cleanPl);
+      setRenavam(cleanRen);
+    } catch (err) {
+      console.error("Erro ao cadastrar veículo:", err);
+      toast.error("Falha ao registrar veículo no servidor, mas salvando localmente!");
+      
+      const newVehicleObj = {
+        placa: cleanPl,
+        brand: newBrand,
+        model: newModel,
+        year: newYear,
+        renavam: cleanRen,
+        color: newColor || "N/D",
+        chassi: "N/D",
+        fipeValue: "R$ 0,00",
+        fipeCode: "",
+        status: "Cadastro Simples",
+        planName: "Personalizado",
+        price: "Sob consulta",
+        vigencia: "Aguardando Vistoria"
+      };
+      
+      const updated = [newVehicleObj, ...myVehicles.filter(v => v.placa.replace(/[^A-Za-z0-9]/g, "").toUpperCase() !== cleanPl)];
+      setMyVehicles(updated);
+      localStorage.setItem("g8_registered_vehicles", JSON.stringify(updated));
+      setShowAddModal(false);
+      resetForm();
+      setPlaca(cleanPl);
+      setRenavam(cleanRen);
+    } finally {
+      setAddLoading(false);
+    }
+  };
 
   // DETRAN Search Response Data
   const [debtsData, setDebtsData] = useState<{
@@ -218,6 +325,66 @@ export default function DebitosVeicularesPage() {
 
     fetchVehicles();
   }, []);
+
+  // Auto query if redirected from Meus Veículos
+  useEffect(() => {
+    const autoQueryPlate = localStorage.getItem("g8_auto_query_plate");
+    const autoQueryRenavam = localStorage.getItem("g8_auto_query_renavam");
+    
+    if (autoQueryPlate) {
+      const cleanPl = autoQueryPlate.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+      const cleanRen = (autoQueryRenavam || "").replace(/\D/g, "");
+      
+      setPlaca(cleanPl);
+      setRenavam(cleanRen);
+      
+      // Clean up localStorage immediately to avoid search loops on page refresh
+      localStorage.removeItem("g8_auto_query_plate");
+      localStorage.removeItem("g8_auto_query_renavam");
+      
+      const runAutoSearch = async () => {
+        if (cleanPl.length !== 7 || cleanRen.length !== 11) return;
+        setSearchLoading(true);
+        setSearchCompleted(false);
+        setDebtsData(null);
+        handleResetCart();
+        
+        try {
+          const response = await api.get(`/api/multas-carro/infracoes/${cleanPl}/${cleanRen}`);
+          if (response.data && response.data.status && response.data.result) {
+            const result = response.data.result;
+            setDebtsData({
+              veiculo: result.veiculo || null,
+              multas: result.multas || [],
+              ipvas: result.ipvas || [],
+              licenciamentos: result.licenciamentos || [],
+              dpvats: result.dpvats || [],
+              dividaativa: result.debitos || null
+            });
+            setSearchCompleted(true);
+            toast.success("Dados de débitos veiculares carregados com sucesso!");
+            
+            if ((result.ipvas || []).length > 0) {
+              setActiveTab("ipva");
+            } else if ((result.licenciamentos || []).length > 0) {
+              setActiveTab("licenciamento");
+            } else if ((result.multas || []).length > 0) {
+              setActiveTab("multas");
+            }
+          } else {
+            toast.error("Não foram encontrados dados para este veículo. Verifique a Placa e o RENAVAM.");
+          }
+        } catch (err) {
+          console.error("Erro ao buscar débitos DETRAN:", err);
+          toast.error("Ocorreu uma falha de conexão com o DETRAN. Verifique as credenciais e tente novamente.");
+        } finally {
+          setSearchLoading(false);
+        }
+      };
+      
+      setTimeout(runAutoSearch, 100);
+    }
+  }, [myVehicles]);
 
   // Search Submit DETRAN
   const handleSearchSubmit = async (e: React.FormEvent) => {
@@ -918,7 +1085,7 @@ export default function DebitosVeicularesPage() {
                 <label className="text-xs font-black uppercase tracking-wider text-neutral-500 block">
                   Meus Veículos Cadastrados
                 </label>
-                <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory">
+                <div className="flex gap-3 overflow-x-auto pb-3 -mx-2 px-2 snap-x snap-mandatory">
                   {myVehicles.map((vehicle, idx) => {
                     const isSelected = placa === vehicle.placa.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
                     return (
@@ -957,6 +1124,24 @@ export default function DebitosVeicularesPage() {
                       </button>
                     );
                   })}
+                  {/* Quick Register Vehicle Button Card */}
+                  <button
+                    type="button"
+                    onClick={() => setShowAddModal(true)}
+                    className="flex items-center gap-3 p-4 bg-white border border-dashed border-neutral-355 rounded-sm hover:border-[var(--brand-accent)] hover:bg-[var(--brand-accent)]/5 transition-all text-left group cursor-pointer w-[220px] shrink-0 snap-start"
+                  >
+                    <div className="w-10 h-10 rounded-sm flex items-center justify-center shrink-0 bg-neutral-50 text-neutral-400 group-hover:bg-[var(--brand-accent)]/10 group-hover:text-[var(--brand-accent)] transition-colors">
+                      <Plus className="h-5 w-5 stroke-[2.5]" />
+                    </div>
+                    <div className="space-y-0.5 min-w-0">
+                      <span className="block font-black text-xs uppercase text-neutral-800 group-hover:text-[var(--brand-accent)] transition-colors leading-none">
+                        Cadastrar Novo
+                      </span>
+                      <span className="block text-[9px] font-bold text-neutral-400 uppercase tracking-widest leading-none">
+                        Adicionar Veículo
+                      </span>
+                    </div>
+                  </button>
                 </div>
               </div>
             )}
@@ -2170,6 +2355,149 @@ export default function DebitosVeicularesPage() {
               </div>
 
             </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Modal de Cadastro Rápido de Veículo */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-neutral-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
+          <Card className="w-full max-w-md bg-white rounded-md border border-neutral-200 overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200 text-left">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,119,17,0.02),transparent)] pointer-events-none" />
+            
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b border-neutral-100 relative">
+              <div className="flex items-center gap-3 text-[var(--brand-accent)]">
+                <div className="w-10 h-10 bg-[var(--brand-accent)]/10 rounded-sm flex items-center justify-center shrink-0">
+                  <Car className="h-5 w-5 stroke-[2.5]" />
+                </div>
+                <div>
+                  <h3 className="font-black uppercase text-sm tracking-wider leading-none">Cadastrar Veículo</h3>
+                  <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mt-1">G8Pay Consulta Rápida</span>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => { setShowAddModal(false); resetForm(); }}
+                className="text-neutral-400 hover:text-neutral-600 transition-colors p-1 border-0 bg-transparent outline-none cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleAddVehicleSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="newPlaca" className="text-[10px] font-black uppercase text-neutral-500 tracking-wider block">Placa</label>
+                  <Input 
+                    id="newPlaca"
+                    type="text"
+                    maxLength={7}
+                    value={newPlaca}
+                    onChange={(e) => setNewPlaca(e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase())}
+                    placeholder="ABC1D23"
+                    className="border-neutral-200/80 rounded-sm h-11 text-xs font-black uppercase tracking-widest bg-white"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="newRenavam" className="text-[10px] font-black uppercase text-neutral-500 tracking-wider block">RENAVAM</label>
+                  <Input 
+                    id="newRenavam"
+                    type="text"
+                    maxLength={11}
+                    value={newRenavam}
+                    onChange={(e) => setNewRenavam(e.target.value.replace(/\D/g, ""))}
+                    placeholder="12345678901"
+                    className="border-neutral-200/80 rounded-sm h-11 text-xs font-bold bg-white"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="newBrand" className="text-[10px] font-black uppercase text-neutral-500 tracking-wider block">Marca</label>
+                <Input 
+                  id="newBrand"
+                  type="text"
+                  value={newBrand}
+                  onChange={(e) => setNewBrand(e.target.value)}
+                  placeholder="Ex: CHEVROLET, RENAULT, FIAT"
+                  className="border-neutral-200/80 rounded-sm h-11 text-xs font-bold uppercase bg-white"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="newModel" className="text-[10px] font-black uppercase text-neutral-500 tracking-wider block">Modelo</label>
+                <Input 
+                  id="newModel"
+                  type="text"
+                  value={newModel}
+                  onChange={(e) => setNewModel(e.target.value)}
+                  placeholder="Ex: ONIX, KWID, UNO"
+                  className="border-neutral-200/80 rounded-sm h-11 text-xs font-bold uppercase bg-white"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="newYear" className="text-[10px] font-black uppercase text-neutral-500 tracking-wider block">Ano Modelo</label>
+                  <Input 
+                    id="newYear"
+                    type="text"
+                    maxLength={4}
+                    value={newYear}
+                    onChange={(e) => setNewYear(e.target.value.replace(/\D/g, ""))}
+                    placeholder="Ex: 2024"
+                    className="border-neutral-200/80 rounded-sm h-11 text-xs font-bold text-center bg-white"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="newColor" className="text-[10px] font-black uppercase text-neutral-500 tracking-wider block">Cor (Opcional)</label>
+                  <Input 
+                    id="newColor"
+                    type="text"
+                    value={newColor}
+                    onChange={(e) => setNewColor(e.target.value)}
+                    placeholder="Ex: Branco"
+                    className="border-neutral-200/80 rounded-sm h-11 text-xs font-bold uppercase text-center bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 border-t border-neutral-100 flex gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => { setShowAddModal(false); resetForm(); }}
+                  className="flex-1 h-12 border-neutral-200 font-extrabold text-xs uppercase tracking-wider text-neutral-500 rounded-sm"
+                  disabled={addLoading}
+                >
+                  Cancelar
+                </Button>
+                
+                <Button 
+                  type="submit"
+                  className="flex-1 bg-brand-accent hover:bg-brand-accent-hover text-white font-extrabold text-xs uppercase tracking-wider h-12 rounded-sm transition-all shadow-md flex items-center justify-center gap-2 border-0"
+                  disabled={addLoading}
+                >
+                  {addLoading ? (
+                    <>
+                      <RotateCw className="h-4 w-4 animate-spin" /> Salvando...
+                    </>
+                  ) : (
+                    "Cadastrar"
+                  )}
+                </Button>
+              </div>
+            </form>
           </Card>
         </div>
       )}

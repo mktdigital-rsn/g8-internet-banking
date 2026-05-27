@@ -104,6 +104,106 @@ export default function ProtecaoVeicularPage() {
 
   // Registered Vehicles State
   const [myVehicles, setMyVehicles] = useState<any[]>([]);
+
+  // Add new vehicle Quick Form state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [addLoading, setAddLoading] = useState(false);
+  const [newPlaca, setNewPlaca] = useState("");
+  const [newRenavam, setNewRenavam] = useState("");
+  const [newBrand, setNewBrand] = useState("");
+  const [newModel, setNewModel] = useState("");
+  const [newYear, setNewYear] = useState("");
+  const [newColor, setNewColor] = useState("");
+
+  const resetForm = () => {
+    setNewPlaca("");
+    setNewRenavam("");
+    setNewBrand("");
+    setNewModel("");
+    setNewYear("");
+    setNewColor("");
+  };
+
+  const handleAddVehicleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPl = newPlaca.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    const cleanRen = newRenavam.replace(/\D/g, "");
+
+    if (cleanPl.length !== 7) {
+      toast.error("A placa precisa ter 7 caracteres.");
+      return;
+    }
+    if (cleanRen.length !== 11) {
+      toast.error("O RENAVAM precisa ter 11 dígitos.");
+      return;
+    }
+
+    setAddLoading(true);
+    try {
+      await api.post("/api/veiculos/cadastrar", {
+        placa: cleanPl,
+        renavam: cleanRen,
+        veiculoTipo: "1", // 1 = Carro
+        marcaTexto: newBrand,
+        marcaId: "",
+        modeloTexto: newModel,
+        modeloId: "",
+        anoTexto: newYear,
+        anoId: ""
+      });
+
+      const newVehicleObj = {
+        placa: cleanPl,
+        brand: newBrand,
+        model: newModel,
+        year: newYear,
+        renavam: cleanRen,
+        color: newColor || "N/D",
+        chassi: "N/D",
+        fipeValue: "R$ 0,00",
+        fipeCode: "",
+        status: "Cadastro Simples",
+        planName: "Personalizado",
+        price: "Sob consulta",
+        vigencia: "Aguardando Vistoria"
+      };
+
+      const updated = [newVehicleObj, ...myVehicles.filter(v => v.placa.replace(/[^A-Za-z0-9]/g, "").toUpperCase() !== cleanPl)];
+      setMyVehicles(updated);
+      localStorage.setItem("g8_registered_vehicles", JSON.stringify(updated));
+
+      toast.success("Veículo cadastrado com sucesso!");
+      setShowAddModal(false);
+      resetForm();
+    } catch (err) {
+      console.error("Erro ao cadastrar veículo:", err);
+      toast.error("Falha ao registrar veículo no servidor, mas salvando localmente!");
+      
+      const newVehicleObj = {
+        placa: cleanPl,
+        brand: newBrand,
+        model: newModel,
+        year: newYear,
+        renavam: cleanRen,
+        color: newColor || "N/D",
+        chassi: "N/D",
+        fipeValue: "R$ 0,00",
+        fipeCode: "",
+        status: "Cadastro Simples",
+        planName: "Personalizado",
+        price: "Sob consulta",
+        vigencia: "Aguardando Vistoria"
+      };
+      
+      const updated = [newVehicleObj, ...myVehicles.filter(v => v.placa.replace(/[^A-Za-z0-9]/g, "").toUpperCase() !== cleanPl)];
+      setMyVehicles(updated);
+      localStorage.setItem("g8_registered_vehicles", JSON.stringify(updated));
+      setShowAddModal(false);
+      resetForm();
+    } finally {
+      setAddLoading(false);
+    }
+  };
   const [selectedVehicleDetails, setSelectedVehicleDetails] = useState<any | null>(null);
   const [acceptTerms, setAcceptTerms] = useState(false);
 
@@ -130,8 +230,7 @@ export default function ProtecaoVeicularPage() {
   };
 
   const handleStartNewRegistration = () => {
-    handleResetWizard();
-    setStep(2);
+    setShowAddModal(true);
   };
 
   // Load registered vehicles from backend + localStorage (empty by default)
@@ -245,6 +344,24 @@ export default function ProtecaoVeicularPage() {
 
     fetchVehicles();
   }, []);
+
+  // Auto-start FIPE protection wizard if redirected from Meus Veículos
+  useEffect(() => {
+    const prefillPlate = localStorage.getItem("g8_wizard_prefill_plate");
+    if (prefillPlate && myVehicles.length > 0) {
+      const cleanTarget = prefillPlate.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+      const matched = myVehicles.find(v => v.placa.replace(/[^A-Za-z0-9]/g, "").toUpperCase() === cleanTarget);
+      
+      localStorage.removeItem("g8_wizard_prefill_plate");
+      
+      if (matched) {
+        // Run with small timeout to allow component mounting
+        setTimeout(() => {
+          handleSelectRegisteredVehicle(matched);
+        }, 100);
+      }
+    }
+  }, [myVehicles]);
 
   // Fetch user data if not present
   useEffect(() => {
@@ -651,32 +768,105 @@ export default function ProtecaoVeicularPage() {
   };
 
   // Click handler for registered vehicle cards
-  const handleSelectRegisteredVehicle = (vehicle: any) => {
+  const handleSelectRegisteredVehicle = async (vehicle: any) => {
     if (vehicle.status === "Proteção Ativa") {
       setSelectedVehicleDetails(vehicle);
     } else {
-      // It is "Cotação em Análise", let's load details and skip ahead to Plans / Revision
-      setPlaca(vehicle.placa);
-      setSelectedTipo(vehicle.selectedTipo || "1");
-      setSelectedTipoTexto(vehicle.selectedTipo === "2" ? "Motos" : "Carros");
-      setSelectedMarca(vehicle.selectedMarca || "");
-      setSelectedMarcaTexto(vehicle.brand);
-      setSelectedAno(vehicle.selectedAno || "");
-      setSelectedAnoTexto(vehicle.year);
-      setSelectedModelo(vehicle.selectedModelo || "");
-      setSelectedModeloTexto(vehicle.model);
-      
-      // Critical: Clear quotationCode and fipeDetails to natively trigger registration
-      setQuotationCode("");
-      setFipeDetails(null);
-      setFipeValueQuoted("");
-      
-      setChassi(vehicle.chassi || "N/D");
-      setVehicleColor(vehicle.color || "N/D");
+      setLoading(true);
+      try {
+        const cleanPlaca = vehicle.placa.replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+        setPlaca(cleanPlaca);
 
-      // Go straight to Step 7 (Revisão FIPE)
-      setStep(7);
-      toast.info(`Retomando cotação para o veículo ${vehicle.brand} ${vehicle.model}!`);
+        const vTipo = vehicle.selectedTipo || "1";
+        setSelectedTipo(vTipo);
+        setSelectedTipoTexto(vTipo === "2" ? "Motos" : "Carros");
+
+        // 1. Fetch marcas and resolve
+        toast.info("Acessando dados da marca...");
+        const brandsRes = await api.post("/api/protecao-veicular/buscar-marcas", {
+          veiculo: vTipo
+        });
+        const brandsList = brandsRes.data || [];
+        const matchBrand = brandsList.find((b: any) => 
+          b.name.toLowerCase().replace(/\s+/g, "") === vehicle.brand.toLowerCase().replace(/\s+/g, "") ||
+          b.name.toLowerCase().includes(vehicle.brand.toLowerCase()) ||
+          vehicle.brand.toLowerCase().includes(b.name.toLowerCase())
+        );
+
+        const brandId = matchBrand ? matchBrand.code : (vehicle.selectedMarca || "");
+        const brandTexto = matchBrand ? matchBrand.name : vehicle.brand;
+        setSelectedMarca(brandId);
+        setSelectedMarcaTexto(brandTexto);
+
+        if (!brandId) {
+          throw new Error("Não foi possível localizar o código da marca do veículo.");
+        }
+
+        // 2. Fetch years and resolve
+        toast.info("Buscando anos disponíveis no DETRAN...");
+        const yearsRes = await api.post("/api/protecao-veicular/buscar-anos", {
+          veiculo: vTipo,
+          marcaId: brandId
+        });
+        const yearsList = yearsRes.data || [];
+        
+        // Clean year string for comparison, e.g. "2021" or "2021 Gasolina"
+        const targetYearNum = String(vehicle.year).replace(/\D/g, "").substring(0, 4);
+        
+        const matchYear = yearsList.find((y: any) => {
+          const yNum = String(y.name).replace(/\D/g, "").substring(0, 4);
+          return yNum === targetYearNum;
+        }) || yearsList[0];
+
+        const anoId = matchYear ? matchYear.code : (vehicle.selectedAno || "");
+        const anoTexto = matchYear ? matchYear.name : vehicle.year;
+        setSelectedAno(anoId);
+        setSelectedAnoTexto(anoTexto);
+
+        if (!anoId) {
+          throw new Error("Não foi possível localizar o código do ano do veículo.");
+        }
+
+        // 3. Fetch models and resolve
+        toast.info("Localizando modelos correspondentes...");
+        const modelsRes = await api.post("/api/protecao-veicular/buscar-modelos", {
+          veiculo: vTipo,
+          marcaId: brandId,
+          anoId: anoId
+        });
+        const modelsList = modelsRes.data || [];
+        
+        const matchModel = modelsList.find((m: any) => 
+          m.name.toLowerCase().replace(/\s+/g, "") === vehicle.model.toLowerCase().replace(/\s+/g, "") ||
+          m.name.toLowerCase().includes(vehicle.model.toLowerCase()) ||
+          vehicle.model.toLowerCase().includes(m.name.toLowerCase())
+        ) || modelsList[0];
+
+        const modeloId = matchModel ? matchModel.code : (vehicle.selectedModelo || "");
+        const modeloTexto = matchModel ? matchModel.name : vehicle.model;
+        setSelectedModelo(modeloId);
+        setSelectedModeloTexto(modeloTexto);
+
+        if (!modeloId) {
+          throw new Error("Não foi possível obter o código de modelo correspondente.");
+        }
+
+        // Critical: Clear quotationCode and fipeDetails to natively trigger registration
+        setQuotationCode("");
+        setFipeDetails(null);
+        setFipeValueQuoted("");
+        
+        setChassi(vehicle.chassi || "N/D");
+        setVehicleColor(vehicle.color || "N/D");
+
+        toast.success(`Dados integrados! Retomando cotação para ${brandTexto} ${modeloTexto}...`);
+        setStep(7);
+      } catch (err: any) {
+        console.error("Erro na resolução de IDs do veículo:", err);
+        toast.error(err.message || "Erro ao mapear o veículo com a base da FIPE.");
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -955,9 +1145,10 @@ export default function ProtecaoVeicularPage() {
                 </div>
                 <div className="text-center space-y-0.5">
                   <h4 className="text-sm font-black uppercase text-neutral-800 group-hover:text-[var(--brand-accent)] transition-colors">Cadastrar Novo Veículo</h4>
-                  <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">Adicionar proteção ou débitos</p>
+                  <p className="text-[9px] text-neutral-450 font-bold uppercase tracking-wider">Adicionar proteção ou débitos</p>
                 </div>
               </Card>
+            
             </div>
           </div>
         )}
@@ -1846,6 +2037,149 @@ export default function ProtecaoVeicularPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Modal de Cadastro Rápido de Veículo */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-neutral-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-300">
+          <Card className="w-full max-w-md bg-white rounded-md border border-neutral-200 overflow-hidden shadow-2xl relative animate-in zoom-in-95 duration-200 text-left">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,119,17,0.02),transparent)] pointer-events-none" />
+            
+            {/* Modal Header */}
+            <div className="flex justify-between items-center p-6 border-b border-neutral-100 relative">
+              <div className="flex items-center gap-3 text-[var(--brand-accent)]">
+                <div className="w-10 h-10 bg-[var(--brand-accent)]/10 rounded-sm flex items-center justify-center shrink-0">
+                  <Car className="h-5 w-5 stroke-[2.5]" />
+                </div>
+                <div>
+                  <h3 className="font-black uppercase text-sm tracking-wider leading-none">Cadastrar Veículo</h3>
+                  <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mt-1">G8Pay Consulta Rápida</span>
+                </div>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => { setShowAddModal(false); resetForm(); }}
+                className="text-neutral-400 hover:text-neutral-600 transition-colors p-1 border-0 bg-transparent outline-none cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleAddVehicleSubmit} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="newPlaca" className="text-[10px] font-black uppercase text-neutral-500 tracking-wider block">Placa</label>
+                  <Input 
+                    id="newPlaca"
+                    type="text"
+                    maxLength={7}
+                    value={newPlaca}
+                    onChange={(e) => setNewPlaca(e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase())}
+                    placeholder="ABC1D23"
+                    className="border-neutral-200/80 rounded-sm h-11 text-xs font-black uppercase tracking-widest bg-white"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="newRenavam" className="text-[10px] font-black uppercase text-neutral-500 tracking-wider block">RENAVAM</label>
+                  <Input 
+                    id="newRenavam"
+                    type="text"
+                    maxLength={11}
+                    value={newRenavam}
+                    onChange={(e) => setNewRenavam(e.target.value.replace(/\D/g, ""))}
+                    placeholder="12345678901"
+                    className="border-neutral-200/80 rounded-sm h-11 text-xs font-bold bg-white"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="newBrand" className="text-[10px] font-black uppercase text-neutral-500 tracking-wider block">Marca</label>
+                <Input 
+                  id="newBrand"
+                  type="text"
+                  value={newBrand}
+                  onChange={(e) => setNewBrand(e.target.value)}
+                  placeholder="Ex: CHEVROLET, RENAULT, FIAT"
+                  className="border-neutral-200/80 rounded-sm h-11 text-xs font-bold uppercase bg-white"
+                  required
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label htmlFor="newModel" className="text-[10px] font-black uppercase text-neutral-500 tracking-wider block">Modelo</label>
+                <Input 
+                  id="newModel"
+                  type="text"
+                  value={newModel}
+                  onChange={(e) => setNewModel(e.target.value)}
+                  placeholder="Ex: ONIX, KWID, UNO"
+                  className="border-neutral-200/80 rounded-sm h-11 text-xs font-bold uppercase bg-white"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label htmlFor="newYear" className="text-[10px] font-black uppercase text-neutral-500 tracking-wider block">Ano Modelo</label>
+                  <Input 
+                    id="newYear"
+                    type="text"
+                    maxLength={4}
+                    value={newYear}
+                    onChange={(e) => setNewYear(e.target.value.replace(/\D/g, ""))}
+                    placeholder="Ex: 2024"
+                    className="border-neutral-200/80 rounded-sm h-11 text-xs font-bold text-center bg-white"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label htmlFor="newColor" className="text-[10px] font-black uppercase text-neutral-500 tracking-wider block">Cor (Opcional)</label>
+                  <Input 
+                    id="newColor"
+                    type="text"
+                    value={newColor}
+                    onChange={(e) => setNewColor(e.target.value)}
+                    placeholder="Ex: Branco"
+                    className="border-neutral-200/80 rounded-sm h-11 text-xs font-bold uppercase text-center bg-white"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 border-t border-neutral-100 flex gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => { setShowAddModal(false); resetForm(); }}
+                  className="flex-1 h-12 border-neutral-200 font-extrabold text-xs uppercase tracking-wider text-neutral-500 rounded-sm"
+                  disabled={addLoading}
+                >
+                  Cancelar
+                </Button>
+                
+                <Button 
+                  type="submit"
+                  className="flex-1 bg-brand-accent hover:bg-brand-accent-hover text-white font-extrabold text-xs uppercase tracking-wider h-12 rounded-sm transition-all shadow-md flex items-center justify-center gap-2 border-0"
+                  disabled={addLoading}
+                >
+                  {addLoading ? (
+                    <>
+                      <RotateCw className="h-4 w-4 animate-spin" /> Salvando...
+                    </>
+                  ) : (
+                    "Cadastrar"
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Card>
         </div>
       )}
     </div>
