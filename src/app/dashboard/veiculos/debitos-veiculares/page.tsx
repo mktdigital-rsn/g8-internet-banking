@@ -754,6 +754,114 @@ export default function DebitosVeicularesPage() {
     return formatted;
   };
 
+  // Dynamic calculations for Select All bar
+  const totalIpvas = debtsData?.ipvas?.length || 0;
+  const totalLicenciamentos = debtsData?.licenciamentos?.length || 0;
+  const totalMultas = debtsData?.multas?.length || 0;
+
+  let totalItemsInTab = 0;
+  let selectedItemsInTab = 0;
+  let allSelectedInTab = false;
+  let isTabLocked = false;
+
+  if (debtsData) {
+    if (activeTab === "todos") {
+      totalItemsInTab = totalIpvas + totalLicenciamentos + totalMultas;
+      selectedItemsInTab = selectedIpvas.length + selectedLicenciamentos.length + selectedMultas.length;
+      allSelectedInTab = totalItemsInTab > 0 && selectedItemsInTab === totalItemsInTab;
+    } else if (activeTab === "ipva") {
+      totalItemsInTab = totalIpvas;
+      selectedItemsInTab = selectedIpvas.length;
+      allSelectedInTab = totalItemsInTab > 0 && selectedItemsInTab === totalItemsInTab;
+      isTabLocked = !!(selectedCategory && selectedCategory !== "ipva");
+    } else if (activeTab === "licenciamento") {
+      totalItemsInTab = totalLicenciamentos;
+      selectedItemsInTab = selectedLicenciamentos.length;
+      allSelectedInTab = totalItemsInTab > 0 && selectedItemsInTab === totalItemsInTab;
+      isTabLocked = !!(selectedCategory && selectedCategory !== "licenciamento");
+    } else if (activeTab === "multas") {
+      totalItemsInTab = totalMultas;
+      selectedItemsInTab = selectedMultas.length;
+      allSelectedInTab = totalItemsInTab > 0 && selectedItemsInTab === totalItemsInTab;
+      isTabLocked = !!(selectedCategory && selectedCategory !== "multas");
+    }
+  }
+
+  const handleToggleSelectAll = () => {
+    if (!debtsData) return;
+
+    if (activeTab === "todos") {
+      const allIpvas = debtsData.ipvas.map(x => x.ano.toString());
+      const allLic = debtsData.licenciamentos.map(x => x.ano.toString());
+      const allMultas = debtsData.multas.map(x => x.ait);
+
+      const areAllSelected = 
+        selectedIpvas.length === debtsData.ipvas.length &&
+        selectedLicenciamentos.length === debtsData.licenciamentos.length &&
+        selectedMultas.length === debtsData.multas.length;
+
+      if (areAllSelected) {
+        setSelectedIpvas([]);
+        setSelectedLicenciamentos([]);
+        setSelectedMultas([]);
+        setSelectedCategory(null);
+      } else {
+        setSelectedIpvas(allIpvas);
+        setSelectedLicenciamentos(allLic);
+        setSelectedMultas(allMultas);
+        setSelectedCategory("todos");
+      }
+    } else if (activeTab === "ipva") {
+      const isLocked = selectedCategory && selectedCategory !== "ipva";
+      if (isLocked) {
+        toast.warning("Você possui seleções de outras categorias. Limpe o carrinho para selecionar nesta aba.");
+        return;
+      }
+      const allIpvas = debtsData.ipvas.map(x => x.ano.toString());
+      const areAllSelected = selectedIpvas.length === debtsData.ipvas.length;
+
+      if (areAllSelected) {
+        setSelectedIpvas([]);
+        setSelectedCategory(null);
+      } else {
+        setSelectedIpvas(allIpvas);
+        setSelectedCategory("ipva");
+      }
+    } else if (activeTab === "licenciamento") {
+      const isLocked = selectedCategory && selectedCategory !== "licenciamento";
+      if (isLocked) {
+        toast.warning("Você possui seleções de outras categorias. Limpe o carrinho para selecionar nesta aba.");
+        return;
+      }
+      const allLic = debtsData.licenciamentos.map(x => x.ano.toString());
+      const areAllSelected = selectedLicenciamentos.length === debtsData.licenciamentos.length;
+
+      if (areAllSelected) {
+        setSelectedLicenciamentos([]);
+        setSelectedCategory(null);
+      } else {
+        setSelectedLicenciamentos(allLic);
+        setSelectedCategory("licenciamento");
+      }
+    } else if (activeTab === "multas") {
+      const isLocked = selectedCategory && selectedCategory !== "multas";
+      if (isLocked) {
+        toast.warning("Você possui seleções de outras categorias. Limpe o carrinho para selecionar nesta aba.");
+        return;
+      }
+      const allMultas = debtsData.multas.map(x => x.ait);
+      const areAllSelected = selectedMultas.length === debtsData.multas.length;
+
+      if (areAllSelected) {
+        setSelectedMultas([]);
+        setSelectedCategory(null);
+      } else {
+        setSelectedMultas(allMultas);
+        setSelectedCategory("multas");
+      }
+    }
+  };
+
   return (
     <div className="bg-[#f8f9fa] rounded-[4px] p-6 md:p-10 border border-neutral-200/60 space-y-10 relative overflow-hidden text-[#0c0a09]">
       {/* Background Decorativo */}
@@ -1014,11 +1122,50 @@ export default function DebitosVeicularesPage() {
               {/* Category Lock Warning Banner */}
               {selectedCategory && selectedCategory !== "todos" && (
                 <div className="p-3 bg-orange-50 border border-orange-200 text-[var(--brand-accent)] rounded-sm text-left flex items-start gap-2.5">
-                  <ShieldAlert className="h-4.5 h-4.5 shrink-0 mt-0.5" />
+                  <ShieldAlert className="h-4.5 w-4.5 shrink-0 mt-0.5" />
                   <span className="text-xs font-bold leading-normal">
                     Carrinho ativo em <strong>{selectedCategory.toUpperCase()}</strong>. Se deseja pagar débitos de outra aba, desmarque as opções atuais ou limpe o carrinho.
                   </span>
                 </div>
+              )}
+
+              {/* Select All Toggle / Control Card */}
+              {debtsData && totalItemsInTab > 0 && (
+                <Card 
+                  onClick={handleToggleSelectAll}
+                  className={`p-4 border rounded-sm flex items-center justify-between gap-4 transition-all text-left group ${
+                    isTabLocked 
+                      ? "opacity-50 cursor-not-allowed border-neutral-150 bg-neutral-50/50" 
+                      : "cursor-pointer bg-white border-neutral-200 hover:border-[var(--brand-accent)]/60 hover:bg-[var(--brand-accent)]/5"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 transition-all ${
+                      isTabLocked 
+                        ? "border-neutral-200 bg-neutral-50"
+                        : allSelectedInTab 
+                          ? "border-[var(--brand-accent)] bg-[var(--brand-accent)] text-white" 
+                          : "border-neutral-300 group-hover:border-[var(--brand-accent)]"
+                    }`}>
+                      {allSelectedInTab && <Check className="w-4 h-4" />}
+                    </div>
+                    
+                    <div className="space-y-0.5">
+                      <span className={`block text-xs font-black uppercase tracking-wider ${isTabLocked ? "text-neutral-300" : "text-neutral-750"}`}>
+                        {allSelectedInTab ? "Desmarcar Todos" : "Selecionar Todos os Débitos"}
+                      </span>
+                      <span className="block text-[9px] font-bold text-neutral-400 uppercase tracking-widest leading-none">
+                        Aplicar seleção em massa aos itens desta aba
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <Badge variant="secondary" className="bg-neutral-100 text-neutral-500 border-neutral-200 px-2 py-0.5 rounded-sm font-black text-[9px] uppercase tracking-wider">
+                      {selectedItemsInTab} de {totalItemsInTab} Selecionados
+                    </Badge>
+                  </div>
+                </Card>
               )}
 
               {/* TODOS TAB */}
