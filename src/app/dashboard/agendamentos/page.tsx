@@ -292,19 +292,19 @@ export default function AgendamentosPage() {
               </div>
               <div className="flex flex-wrap xl:flex-nowrap items-center gap-4 flex-1">
                 <div className="w-full m:w-30 md:w-36 lg:w-50  relative my-2">
-                  <span className="absolute -top-2.5 left-3 px-1 bg-white text-[10px] font-black text-[#ff7711] uppercase tracking-widest z-10">De</span>
+                  <span className="absolute -top-2.5 left-3 px-1 bg-white text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest z-10">De</span>
                   <Input 
                     type="date"
-                    className="h-12 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all w-full"
+                    className="h-12 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[var(--brand-accent)] transition-all w-full"
                     value={dateRange.start}
                     onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
                   />
                 </div>
                 <div className="w-full sm:w-30 md:w-36 lg:w-50 relative">
-                  <span className="absolute -top-2.5 left-3 px-1 bg-white text-[10px] font-black text-[#ff7711] uppercase tracking-widest z-10">Até</span>
+                  <span className="absolute -top-2.5 left-3 px-1 bg-white text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest z-10">Até</span>
                   <Input 
                     type="date"
-                    className="h-12 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all w-full"
+                    className="h-12 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[var(--brand-accent)] transition-all w-full"
                     value={dateRange.end}
                     onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
                   />
@@ -492,7 +492,7 @@ export default function AgendamentosPage() {
                     <select
                       value={newAgendamento.category}
                       onChange={(e) => setNewAgendamento({ ...newAgendamento, category: e.target.value })}
-                      className="w-full h-14 bg-neutral-50 border border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all outline-none appearance-none cursor-pointer"
+                      className="w-full h-14 bg-neutral-50 border border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[var(--brand-accent)] transition-all outline-none appearance-none cursor-pointer"
                       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1rem' }}
                     >
                       {CATEGORIES.map(cat => (
@@ -505,7 +505,7 @@ export default function AgendamentosPage() {
                     <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Beneficiário / Empresa</label>
                   <Input 
                     placeholder="Nome completo ou Razão Social"
-                    className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all"
+                    className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[var(--brand-accent)] transition-all"
                     value={newAgendamento.beneficiario}
                     onChange={(e) => setNewAgendamento({ ...newAgendamento, beneficiario: e.target.value })}
                   />
@@ -517,7 +517,7 @@ export default function AgendamentosPage() {
                     <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Chave PIX</label>
                     <Input 
                       placeholder="CPF, CNPJ, E-mail, Celular ou Chave Aleatória"
-                      className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all"
+                      className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[var(--brand-accent)] transition-all"
                       value={newAgendamento.pixKey}
                       onChange={(e) => setNewAgendamento({ ...newAgendamento, pixKey: e.target.value })}
                     />
@@ -531,7 +531,7 @@ export default function AgendamentosPage() {
                         <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Banco Destino</label>
                         <Input 
                           placeholder="Ex: 001 - Banco do Brasil"
-                          className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all"
+                          className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[var(--brand-accent)] transition-all"
                           value={newAgendamento.bank}
                           onChange={(e) => setNewAgendamento({ ...newAgendamento, bank: e.target.value })}
                         />
@@ -542,7 +542,7 @@ export default function AgendamentosPage() {
                         <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Agência</label>
                         <Input 
                           placeholder="0001"
-                          className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all"
+                          className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[var(--brand-accent)] transition-all"
                           value={newAgendamento.agency}
                           onChange={(e) => setNewAgendamento({ ...newAgendamento, agency: e.target.value })}
                         />
@@ -551,7 +551,7 @@ export default function AgendamentosPage() {
                         <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Conta Corrente</label>
                         <Input 
                           placeholder="00000000-0"
-                          className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all"
+                          className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[var(--brand-accent)] transition-all"
                           value={newAgendamento.account}
                           onChange={(e) => setNewAgendamento({ ...newAgendamento, account: e.target.value })}
                         />
@@ -565,7 +565,7 @@ export default function AgendamentosPage() {
                     <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Linha Digitável / Código de Barras</label>
                     <Input 
                       placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
-                      className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all"
+                      className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[var(--brand-accent)] transition-all"
                       value={newAgendamento.barcode}
                       onChange={(e) => setNewAgendamento({ ...newAgendamento, barcode: e.target.value })}
                     />
@@ -578,7 +578,7 @@ export default function AgendamentosPage() {
                     <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Valor do Pagamento</label>
                     <Input 
                       placeholder="R$ 0,00"
-                      className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[#ff7711] transition-all font-mono"
+                      className="h-14 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[var(--brand-accent)] transition-all font-mono"
                       value={newAgendamento.valor}
                       onChange={handleValorChange}
                     />

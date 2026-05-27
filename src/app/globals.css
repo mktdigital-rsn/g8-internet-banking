@@ -46,6 +46,12 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  
+  /* Tailwind v4 Multi-Brand accent mapping */
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-accent-hover: var(--brand-accent-hover);
+  --color-brand-accent-light: var(--brand-accent-light);
+  --color-brand-secondary: var(--brand-secondary);
 }
 
 :root {
@@ -70,6 +76,42 @@
   --chart-1: oklch(0.8 0.12 47.5);
   --chart-2: oklch(0.145 0.011 25.5);
   --radius: 1rem;
+}
+
+/* Brand overrides class targets */
+.theme-g8 {
+  --primary: oklch(0.65 0.23 48.5); /* Orange #ff7711 */
+  --ring: oklch(0.65 0.23 48.5);
+  --brand-accent: #ff7711;
+  --brand-accent-hover: #ee6600;
+  --brand-accent-light: rgba(255, 119, 17, 0.1);
+  --brand-secondary: #ffaa00;
+  --brand-scrollbar: rgba(255, 119, 17, 0.4);
+  --brand-scrollbar-hover: rgba(255, 119, 17, 0.8);
+}
+
+.theme-galapagos {
+  --primary: oklch(0.35 0.12 245.5); /* Deep Blue #183C80 */
+  --ring: oklch(0.60 0.18 250.0); /* Royal/Digital Blue #2563eb */
+  --brand-accent: #2563eb; /* Royal/Digital Blue */
+  --brand-accent-hover: #1d4ed8; /* Darker blue hover */
+  --brand-accent-light: rgba(37, 99, 235, 0.12);
+  --brand-secondary: #1e40af; /* Rich navy secondary */
+  --brand-scrollbar: rgba(37, 99, 235, 0.4);
+  --brand-scrollbar-hover: rgba(37, 99, 235, 0.8);
+
+  /* Intercept standard Tailwind orange colors for Galapagos Capital theme */
+  --color-orange-50: #eff6ff;
+  --color-orange-100: #dbeafe;
+  --color-orange-200: #bfdbfe;
+  --color-orange-300: #93c5fd;
+  --color-orange-400: #60a5fa;
+  --color-orange-500: #3b82f6;
+  --color-orange-600: #2563eb; /* Primary Galapagos digital blue */
+  --color-orange-700: #1d4ed8;
+  --color-orange-800: #1e40af; /* Deep navy blue */
+  --color-orange-900: #1e3a8a;
+  --color-orange-950: #172554;
 }
 
 .dark {
@@ -126,10 +168,71 @@
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 119, 17, 0.4);
+    background: var(--brand-scrollbar, rgba(255, 119, 17, 0.4));
     border-radius: 10px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 119, 17, 0.8);
+    background: var(--brand-scrollbar-hover, rgba(255, 119, 17, 0.8));
   }
+}
+
+/* Galapagos Capital interactive elements color overrides - no black buttons allowed */
+.theme-galapagos button.bg-\[\#0c0a09\],
+.theme-galapagos button[class*="bg-[#0c0a09]"],
+.theme-galapagos a.bg-\[\#0c0a09\],
+.theme-galapagos a[class*="bg-[#0c0a09]"],
+.theme-galapagos [role="button"].bg-\[\#0c0a09\],
+.theme-galapagos [role="button"][class*="bg-[#0c0a09]"],
+.theme-galapagos button.bg-black,
+.theme-galapagos a.bg-black,
+.theme-galapagos [role="button"].bg-black {
+  background-color: var(--brand-accent) !important;
+  color: white !important;
+}
+
+.theme-galapagos button.bg-\[\#0c0a09\]:hover,
+.theme-galapagos button[class*="bg-[#0c0a09]"]:hover,
+.theme-galapagos a.bg-\[\#0c0a09\]:hover,
+.theme-galapagos a[class*="bg-[#0c0a09]"]:hover,
+.theme-galapagos [role="button"].bg-\[\#0c0a09\]:hover,
+.theme-galapagos [role="button"][class*="bg-[#0c0a09]"]:hover,
+.theme-galapagos button.bg-black:hover,
+.theme-galapagos a.bg-black:hover,
+.theme-galapagos [role="button"].bg-black:hover {
+  background-color: var(--brand-accent-hover) !important;
+}
+
+/* Galapagos Capital cards background redirects - no black cards allowed */
+.theme-galapagos .bg-\[\#0c0a09\]:not([class*="/"]),
+.theme-galapagos .bg-black:not([class*="/"]),
+.theme-galapagos .bg-neutral-950:not([class*="/"]),
+.theme-galapagos .bg-neutral-900:not([class*="/"]),
+.theme-galapagos div[class*="bg-[#0c0a09]"]:not([class*="/"]),
+.theme-galapagos div[class*="bg-black"]:not([class*="/"]) {
+  background-color: #0b1329 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Style white buttons inside dark/black cards or main container white buttons to become digital royal blue */
+.theme-galapagos button.bg-white.text-\[\#0c0a09\],
+.theme-galapagos button.bg-white[class*="text-[#0c0a09]"],
+.theme-galapagos .bg-white.text-\[\#0c0a09\],
+.theme-galapagos .bg-\[\#0c0a09\] button.bg-white,
+.theme-galapagos .bg-\[\#0c0a09\] button[class*="bg-white"],
+.theme-galapagos [class*="bg-[#0c0a09]"] button.bg-white,
+.theme-galapagos [class*="bg-[#0c0a09]"] button[class*="bg-white"] {
+  background-color: var(--brand-accent) !important;
+  color: white !important;
+  border-color: transparent !important;
+}
+
+.theme-galapagos button.bg-white.text-\[\#0c0a09\]:hover,
+.theme-galapagos button.bg-white[class*="text-[#0c0a09]"]:hover,
+.theme-galapagos .bg-white.text-\[\#0c0a09\]:hover,
+.theme-galapagos .bg-\[\#0c0a09\] button.bg-white:hover,
+.theme-galapagos .bg-\[\#0c0a09\] button[class*="bg-white"]:hover,
+.theme-galapagos [class*="bg-[#0c0a09]"] button.bg-white:hover,
+.theme-galapagos [class*="bg-[#0c0a09]"] button[class*="bg-white"]:hover {
+  background-color: var(--brand-accent-hover) !important;
+  color: white !important;
 }

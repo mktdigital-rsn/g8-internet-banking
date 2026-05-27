@@ -539,19 +539,19 @@ function PixPagarContent() {
               }
             }}>
               <Button variant="ghost" size="icon" className="rounded-sm hover:bg-neutral-100 h-12 w-12">
-                <ArrowLeft className="h-6 w-6 text-[#ff7711]" />
+                <ArrowLeft className="h-6 w-6 text-[var(--brand-accent)]" />
               </Button>
             </Link>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Badge variant="secondary" className="bg-[#ff7711]/10 text-[#ff7711] border-transparent font-black px-2 py-0.5 rounded-[5px] text-[10px] uppercase tracking-widest leading-none">G8Pay &bull; Pix</Badge>
+                <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-transparent font-black px-2 py-0.5 rounded-[5px] text-[10px] uppercase tracking-widest leading-none">G8Pay &bull; Pix</Badge>
                 <span className="text-[10px] text-[#0c0a09] font-bold uppercase tracking-widest leading-none opacity-60">
                   {step === "confirm" ? "Confirmação" : step === "sms" ? "Segurança" : step === "success" ? "Comprovante" : "Indicação de Pagamento"}
                 </span>
               </div>
               <h1 className="text-3xl font-black tracking-tight text-[#0c0a09] flex items-center gap-3 uppercase">
                 {step === "confirm" ? "Confirme os dados" : step === "sms" ? "Validação SMS" : step === "success" ? "Transferência Realizada" : info.title}
-                <info.icon className="h-7 w-7 text-[#ff7711]" />
+                <info.icon className="h-7 w-7 text-[var(--brand-accent)]" />
               </h1>
             </div>
           </div>
@@ -570,8 +570,8 @@ function PixPagarContent() {
                 </div>
               </div>
             )}
-            <div className="flex items-center gap-4 p-5 bg-[#f97316]/10 rounded-[5px] border border-neutral-100/50">
-              <div className="w-10 h-10 bg-white rounded-[5px] flex items-center justify-center text-[#ff7711] shadow-sm">
+            <div className="flex items-center gap-4 p-5 bg-[var(--brand-accent)]/10 rounded-[5px] border border-neutral-100/50">
+              <div className="w-10 h-10 bg-white rounded-[5px] flex items-center justify-center text-[var(--brand-accent)] shadow-sm">
                 <info.icon className="h-5 w-5" />
               </div>
               <div>
@@ -589,7 +589,7 @@ function PixPagarContent() {
                 <div className="space-y-6">
                   <div
                     onClick={() => fileInputRef.current?.click()}
-                    className="p-8 border-2 border-dashed border-neutral-200 rounded-[5px] flex flex-col items-center justify-center gap-4 hover:border-[#ff7711] transition-colors cursor-pointer group bg-neutral-50/50"
+                    className="p-8 border-2 border-dashed border-neutral-200 rounded-[5px] flex flex-col items-center justify-center gap-4 hover:border-[var(--brand-accent)] transition-colors cursor-pointer group bg-neutral-50/50"
                   >
                     <input
                       type="file"
@@ -602,15 +602,15 @@ function PixPagarContent() {
                       <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-300">
                         <div className="bg-white p-6 rounded-2xl shadow-xl shadow-orange-500/10 border border-orange-100/50 relative group">
                           <QRCodeSVG value={pixCode} size={140} level="H" includeMargin={false} />
-                          <div className="absolute inset-0 bg-[#ff7711]/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
-                            <span className="bg-white px-3 py-1.5 rounded-full text-[10px] font-black text-[#ff7711] uppercase tracking-widest shadow-sm">Alterar Arquivo</span>
+                          <div className="absolute inset-0 bg-[var(--brand-accent)]/5 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                            <span className="bg-white px-3 py-1.5 rounded-full text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest shadow-sm">Alterar Arquivo</span>
                           </div>
                         </div>
-                        <p className="text-[10px] font-black text-[#ff7711] uppercase tracking-widest bg-[#f97316]/10 px-4 py-1.5 rounded-full border border-orange-100">Código Detectado com Sucesso</p>
+                        <p className="text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest bg-[var(--brand-accent)]/10 px-4 py-1.5 rounded-full border border-orange-100">Código Detectado com Sucesso</p>
                       </div>
                     ) : (
                       <>
-                        <div className="w-14 h-14 bg-white rounded-[5px] flex items-center justify-center text-neutral-400 group-hover:text-[#ff7711] shadow-sm">
+                        <div className="w-14 h-14 bg-white rounded-[5px] flex items-center justify-center text-neutral-400 group-hover:text-[var(--brand-accent)] shadow-sm">
                           <QrCode className="h-6 w-6" />
                         </div>
                         <div className="text-center">
@@ -628,7 +628,7 @@ function PixPagarContent() {
                     onChange={(e) => setPixCode(e.target.value)}
                     placeholder="Digite ou cole o código"
                     readOnly={!!urlKey}
-                    className={`h-14 bg-neutral-50/50 border-neutral-100 focus:border-[#ff7711] rounded-[5px] px-6 text-[#ff7711] font-black text-xl placeholder:text-neutral-300 shadow-sm ${urlKey ? 'cursor-not-allowed opacity-80' : ''}`}
+                    className={`h-14 bg-neutral-50/50 border-neutral-100 focus:border-[var(--brand-accent)] rounded-[5px] px-6 text-[var(--brand-accent)] font-black text-xl placeholder:text-neutral-300 shadow-sm ${urlKey ? 'cursor-not-allowed opacity-80' : ''}`}
                   />
                 </div>
               ) : type === "copia_cola" ? (
@@ -638,7 +638,7 @@ function PixPagarContent() {
                     value={pixCode}
                     onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setPixCode(e.target.value)}
                     readOnly={!!urlKey}
-                    className={`min-h-[120px] font-black text-xl text-[#ff7711] rounded-md border-neutral-100 bg-neutral-50/50 ${urlKey ? 'cursor-not-allowed opacity-80' : ''}`}
+                    className={`min-h-[120px] font-black text-xl text-[var(--brand-accent)] rounded-md border-neutral-100 bg-neutral-50/50 ${urlKey ? 'cursor-not-allowed opacity-80' : ''}`}
                   />
                   <p className="text-[9px] text-neutral-400 font-bold text-right uppercase tracking-widest opacity-60">Cole o código Pix completo para processar</p>
                 </div>
@@ -649,11 +649,11 @@ function PixPagarContent() {
                     onChange={(e) => setIdentifier(e.target.value)}
                     placeholder={info.placeholder}
                     readOnly={!!urlKey}
-                    className={`h-14 bg-neutral-50/50 border-neutral-100 focus:border-[#ff7711] rounded-[5px] px-6 text-[#ff7711] font-black text-xl placeholder:text-neutral-300 shadow-sm ${urlKey ? 'cursor-not-allowed opacity-80' : ''}`}
+                    className={`h-14 bg-neutral-50/50 border-neutral-100 focus:border-[var(--brand-accent)] rounded-[5px] px-6 text-[var(--brand-accent)] font-black text-xl placeholder:text-neutral-300 shadow-sm ${urlKey ? 'cursor-not-allowed opacity-80' : ''}`}
                   />
                   {!urlKey && (
-                    <button className="flex items-center gap-2 group text-[#ff7711] px-1 translate-y-1">
-                      <span className="text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent group-hover:border-[#ff7711]">Buscar nos Meus Contatos</span>
+                    <button className="flex items-center gap-2 group text-[var(--brand-accent)] px-1 translate-y-1">
+                      <span className="text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent group-hover:border-[var(--brand-accent)]">Buscar nos Meus Contatos</span>
                       <ChevronRight className="h-3 w-3 group-hover:translate-x-1 transition-transform" />
                     </button>
                   )}
@@ -661,7 +661,7 @@ function PixPagarContent() {
               )}
 
               {(isSearching || recipientName) && (
-                <div className="bg-[#f97316]/10 p-5 rounded-[5px] border border-orange-100 animate-in fade-in slide-in-from-top-2 duration-300">
+                <div className="bg-[var(--brand-accent)]/10 p-5 rounded-[5px] border border-orange-100 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-white rounded-[5px] flex items-center justify-center shrink-0 border border-neutral-100 shadow-sm">
                       <Image
@@ -673,18 +673,18 @@ function PixPagarContent() {
                       />
                     </div>
                     <div className="flex-1 space-y-1">
-                      <p className="text-[10px] font-black uppercase text-[#ff7711] tracking-widest leading-none">Dados do Recebedor</p>
+                      <p className="text-[10px] font-black uppercase text-[var(--brand-accent)] tracking-widest leading-none">Dados do Recebedor</p>
                       <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-tighter leading-tight">
                         {isSearching ? "Buscando informações..." : recipientName}
                       </h3>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
                         <div className="flex items-center gap-1.5 opacity-60">
-                          <Building2 className="h-3 w-3 text-[#ff7711]" />
+                          <Building2 className="h-3 w-3 text-[var(--brand-accent)]" />
                           <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">{isSearching ? "..." : (recipientBank || "Instituição não informada")}</p>
                         </div>
                         {recipientDocument && (
                           <div className="flex items-center gap-1.5 opacity-60">
-                            <UserSquare2 className="h-3 w-3 text-[#ff7711]" />
+                            <UserSquare2 className="h-3 w-3 text-[var(--brand-accent)]" />
                             <p className="text-[9px] font-bold text-neutral-500 uppercase tracking-widest">{recipientDocument}</p>
                           </div>
                         )}
@@ -711,10 +711,10 @@ function PixPagarContent() {
                     value={formatCurrency(value)}
                     onChange={handleValueChange}
                     placeholder="R$ 0,00"
-                    className={`h-16 bg-neutral-50/50 border-2 ${amountExceedsBalance ? 'border-rose-300 focus:border-rose-500' : 'border-neutral-100 focus:border-[#ff7711]'} rounded-[5px] px-8 font-black text-4xl text-[#ff7711] placeholder:text-neutral-200 tracking-tighter shadow-sm transition-colors`}
+                    className={`h-16 bg-neutral-50/50 border-2 ${amountExceedsBalance ? 'border-rose-300 focus:border-rose-500' : 'border-neutral-100 focus:border-[var(--brand-accent)]'} rounded-[5px] px-8 font-black text-4xl text-[var(--brand-accent)] placeholder:text-neutral-200 tracking-tighter shadow-sm transition-colors`}
                   />
                   <div className="absolute right-6 top-1/2 -translate-y-1/2">
-                    <Badge className="bg-[#ff7711] text-white hover:bg-[#ff7711] rounded-[5px] px-2 py-0.5 font-black text-[9px] tracking-widest uppercase">BRL</Badge>
+                    <Badge className="bg-[var(--brand-accent)] text-white hover:bg-[var(--brand-accent)] rounded-[5px] px-2 py-0.5 font-black text-[9px] tracking-widest uppercase">BRL</Badge>
                   </div>
                 </div>
                 {amountExceedsBalance && (
@@ -741,7 +741,7 @@ function PixPagarContent() {
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="h-12 bg-neutral-50/50 border-neutral-100 focus:border-[#ff7711] rounded-md px-6 text-[#ff7711] font-black text-base appearance-none cursor-pointer hover:bg-neutral-50 transition-colors shadow-sm"
+                  className="h-12 bg-neutral-50/50 border-neutral-100 focus:border-[var(--brand-accent)] rounded-md px-6 text-[var(--brand-accent)] font-black text-base appearance-none cursor-pointer hover:bg-neutral-50 transition-colors shadow-sm"
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-300">
                   <CalendarIcon className="h-4 w-4" />
@@ -772,7 +772,7 @@ function PixPagarContent() {
               disabled={isSearching || hasInsufficientBalance || amountExceedsBalance}
               className={`w-full h-14 text-white rounded-[5px] font-black text-sm uppercase tracking-widest shadow-xl transition-all active:scale-95 group ${hasInsufficientBalance || amountExceedsBalance
                   ? 'bg-neutral-300 cursor-not-allowed shadow-none'
-                  : 'bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] shadow-orange-200/30'
+                  : 'bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] shadow-orange-200/30'
                 }`}
             >
               {isSearching ? "VALIDANDO DADOS..." : hasInsufficientBalance && !isBalanceLoading ? "SEM SALDO EM CONTA" : amountExceedsBalance ? "VALOR ACIMA DO SALDO" : "PRÓXIMO PASSO"}
@@ -782,7 +782,7 @@ function PixPagarContent() {
         ) : step === "confirm" ? (
           <div className="space-y-8 max-w-2xl bg-white p-12 rounded-[5px] shadow-xl shadow-black/5 border border-neutral-100">
             <div className="space-y-8">
-              <div className="p-10 bg-[#f97316]/10 rounded-[5px] border border-neutral-100 space-y-8">
+              <div className="p-10 bg-[var(--brand-accent)]/10 rounded-[5px] border border-neutral-100 space-y-8">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-[11px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-3 opacity-60">Recebedor</p>
@@ -820,7 +820,7 @@ function PixPagarContent() {
 
                 <div className="pt-6 border-t border-neutral-200/30">
                   <p className="text-[11px] text-neutral-400 font-bold uppercase tracking-widest leading-none mb-3 opacity-60">Valor Total</p>
-                  <p className="text-6xl font-black text-[#ff7711] tracking-tighter">{formatCurrency(value)}</p>
+                  <p className="text-6xl font-black text-[var(--brand-accent)] tracking-tighter">{formatCurrency(value)}</p>
                 </div>
               </div>
 
@@ -837,17 +837,17 @@ function PixPagarContent() {
                 onClick={() => setSaveContact(!saveContact)}
                 className="flex items-center gap-3 p-4 bg-orange-50 rounded-[5px] border border-orange-100 group cursor-pointer"
               >
-                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${saveContact ? 'bg-[#ff7711] border-[#ff7711]' : 'border-neutral-200 bg-white'}`}>
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${saveContact ? 'bg-[var(--brand-accent)] border-[var(--brand-accent)]' : 'border-neutral-200 bg-white'}`}>
                   {saveContact && <CheckCircle2 size={12} className="text-white" />}
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#ff7711]">Salvar este contato para futuras transações</span>
+                <span className="text-[10px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Salvar este contato para futuras transações</span>
               </div>
 
               <div className="pt-4">
                 <Button
                   onClick={handleRequestSms}
                   disabled={isLoadingTransfer}
-                  className="w-full h-20 bg-[#0c0a09] hover:bg-[#ff7711] text-white rounded-[5px] font-black text-xl uppercase tracking-widest shadow-2xl shadow-black/20 transition-all active:scale-95"
+                  className="w-full h-20 bg-[#0c0a09] hover:bg-[var(--brand-accent)] text-white rounded-[5px] font-black text-xl uppercase tracking-widest shadow-2xl shadow-black/20 transition-all active:scale-95"
                 >
                   {isLoadingTransfer ? "PROCESSANDO..." : "AUTORIZAR COM SMS"}
                 </Button>
@@ -856,7 +856,7 @@ function PixPagarContent() {
           </div>
         ) : step === "sms" ? (
           <div className="space-y-8 max-w-2xl bg-white p-12 rounded-sm shadow-xl shadow-black/5 border border-neutral-100 text-center flex flex-col items-center">
-            <div className="w-20 h-20 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#ff7711] mb-4">
+            <div className="w-20 h-20 bg-[var(--brand-accent)]/10 rounded-sm flex items-center justify-center text-[var(--brand-accent)] mb-4">
               <Smartphone className="h-10 w-10 animate-bounce" />
             </div>
             <div className="space-y-4 mb-10">
@@ -871,17 +871,17 @@ function PixPagarContent() {
                 value={smsCode}
                 onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").substring(0, 6))}
                 placeholder="0 0 0 0 0"
-                className="h-20 text-center font-black text-4xl tracking-[0.5em] border-2 border-neutral-100 rounded-[5px] focus:border-[#ff7711] bg-neutral-50/50"
+                className="h-20 text-center font-black text-4xl tracking-[0.5em] border-2 border-neutral-100 rounded-[5px] focus:border-[var(--brand-accent)] bg-neutral-50/50"
               />
               <div className="flex flex-col gap-4">
                 <Button
                   disabled={smsCode.length < 5 || isLoadingTransfer}
                   onClick={handleFinalizeTransfer}
-                  className="w-full h-16 bg-[#0c0a09] hover:bg-[#ff7711] text-white rounded-[5px] font-black text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all disabled:opacity-50"
+                  className="w-full h-16 bg-[#0c0a09] hover:bg-[var(--brand-accent)] text-white rounded-[5px] font-black text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all disabled:opacity-50"
                 >
                   {isLoadingTransfer ? "PROCESSANDO..." : "CONFIRMAR TRANSFERÊNCIA"}
                 </Button>
-                <button className="text-[10px] font-black text-[#ff7711] uppercase tracking-widest hover:underline">Reenviar Código em 00:59</button>
+                <button className="text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest hover:underline">Reenviar Código em 00:59</button>
               </div>
             </div>
           </div>
@@ -906,7 +906,7 @@ function PixPagarContent() {
               <div className="space-y-6 relative z-10">
                 <div className="flex justify-between items-center border-b border-neutral-200 pb-4">
                   <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Valor da Transferência</span>
-                  <span className="text-4xl font-black text-[#ff7711] tracking-tighter">{formatCurrency(value)}</span>
+                  <span className="text-4xl font-black text-[var(--brand-accent)] tracking-tighter">{formatCurrency(value)}</span>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6">
@@ -934,13 +934,13 @@ function PixPagarContent() {
               <Button
                 onClick={() => handlePrintReceipt()}
                 disabled={isDownloadingReceipt}
-                className="flex-1 h-20 bg-[#ff7711] hover:bg-orange-600 text-white rounded-md font-black text-lg shadow-lg shadow-[#ff7711]/20 transition-all active:scale-95 flex items-center justify-center gap-4"
+                className="flex-1 h-20 bg-[var(--brand-accent)] hover:bg-orange-600 text-white rounded-md font-black text-lg shadow-lg shadow-[var(--brand-accent)]/20 transition-all active:scale-95 flex items-center justify-center gap-4"
               >
                 <Download className={`h-8 w-8 ${isDownloadingReceipt ? 'animate-bounce' : ''}`} />
                 {isDownloadingReceipt ? "BAIXANDO..." : "BAIXAR COMPROVANTE"}
               </Button>
               <Link href="/dashboard/pix" className="flex-1">
-                <Button variant="outline" className="w-full h-20 border-2 border-neutral-100 hover:border-[#ff7711] hover:text-[#ff7711] text-neutral-600 rounded-md font-black text-lg uppercase tracking-tighter">
+                <Button variant="outline" className="w-full h-20 border-2 border-neutral-100 hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] text-neutral-600 rounded-md font-black text-lg uppercase tracking-tighter">
                   VOLTAR PARA ÁREA PIX
                 </Button>
               </Link>
@@ -951,7 +951,7 @@ function PixPagarContent() {
 
       {/* Right Column */}
       <div className="w-[380px] shrink-0 space-y-8">
-        <Card className="rounded-md border-0 shadow-2xl shadow-black/10 bg-[#ff7711] overflow-hidden relative group cursor-pointer h-[400px]">
+        <Card className="rounded-md border-0 shadow-2xl shadow-black/10 bg-[var(--brand-accent)] overflow-hidden relative group cursor-pointer h-[400px]">
           <div className="absolute top-0 right-0 w-48 h-48 bg-white/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
           <div className="p-10 space-y-4 relative z-10 text-white">
             <h3 className="text-3xl font-black leading-tight max-w-[220px] uppercase">
@@ -965,7 +965,7 @@ function PixPagarContent() {
             </button>
           </div>
           <div className="absolute bottom-0 right-0 w-[240px] h-[300px] flex items-end justify-end pointer-events-none">
-            <div className="absolute inset-0 bg-gradient-to-t from-[#ff7711] to-transparent z-10" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[var(--brand-accent)] to-transparent z-10" />
             <Diamond className="h-48 w-48 text-white/5 -mb-10 -mr-10 rotate-12" />
           </div>
         </Card>
@@ -974,13 +974,13 @@ function PixPagarContent() {
           <h2 className="text-2xl font-black text-[#0c0a09] uppercase tracking-tight">Ajuda</h2>
           <div className="flex gap-4">
             <button className="flex-1 flex flex-col items-center justify-center p-6 bg-white rounded-md hover:shadow-xl transition-all border border-neutral-100 group">
-              <div className="w-10 h-10 bg-[#f97316]/10 rounded-md flex items-center justify-center mb-4 text-[#ff7711] group-hover:scale-110 transition-all">
+              <div className="w-10 h-10 bg-[var(--brand-accent)]/10 rounded-md flex items-center justify-center mb-4 text-[var(--brand-accent)] group-hover:scale-110 transition-all">
                 <HelpCircle className="h-5 w-5" />
               </div>
               <span className="font-black text-[9px] text-[#0c0a09] uppercase tracking-widest">Suporte</span>
             </button>
             <button className="flex-1 flex flex-col items-center justify-center p-6 bg-white rounded-md hover:shadow-xl transition-all border border-neutral-100 group">
-              <div className="w-10 h-10 bg-[#ff7711] rounded-md flex items-center justify-center mb-4 text-white group-hover:scale-110 transition-all">
+              <div className="w-10 h-10 bg-[var(--brand-accent)] rounded-md flex items-center justify-center mb-4 text-white group-hover:scale-110 transition-all">
                 <MessageCircle className="h-5 w-5" />
               </div>
               <span className="font-black text-[9px] text-[#0c0a09] uppercase tracking-widest">Chat 09h as 17h</span>

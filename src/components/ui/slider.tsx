@@ -36,7 +36,7 @@ const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
       <div className={cn("relative w-full h-8 flex items-center group", className)}>
         <div className="absolute w-full h-2 bg-neutral-100 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-[#f97316] transition-all duration-300 ease-out" 
+            className="h-full bg-[var(--brand-accent)] transition-all duration-300 ease-out" 
             style={{ width: `${percentage}%` }}
           />
         </div>
@@ -55,7 +55,7 @@ const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
             [&::-webkit-slider-thumb]:rounded-full 
             [&::-webkit-slider-thumb]:bg-white 
             [&::-webkit-slider-thumb]:border-4 
-            [&::-webkit-slider-thumb]:border-[#f97316] 
+            [&::-webkit-slider-thumb]:border-[var(--brand-accent)] 
             [&::-webkit-slider-thumb]:shadow-lg 
             [&::-webkit-slider-thumb]:transition-transform 
             [&::-webkit-slider-thumb]:active:scale-110
@@ -64,7 +64,7 @@ const Slider = React.forwardRef<HTMLInputElement, SliderProps>(
             [&::-moz-range-thumb]:rounded-full 
             [&::-moz-range-thumb]:bg-white 
             [&::-moz-range-thumb]:border-4 
-            [&::-moz-range-thumb]:border-[#f97316] 
+            [&::-moz-range-thumb]:border-[var(--brand-accent)] 
             [&::-moz-range-thumb]:shadow-lg
           "
           {...props}

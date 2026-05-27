@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { currentBrand } from "@/config/brand";
 import {
    CreditCard,
    ShieldCheck,
@@ -105,10 +106,10 @@ export default function CartoesPage() {
             <div className="flex gap-4">
                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogTrigger className="h-14 px-8 bg-[#0c0a09] hover:bg-neutral-800 text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all shadow-xl group flex items-center">
-                     <Plus className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform text-orange-600" />
+                     <Plus className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform text-white" />
                      Novo Cartão Virtual
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[450px] p-0 overflow-hidden border-0 bg-white shadow-2xl">
+                  <DialogContent className={`sm:max-w-[450px] p-0 overflow-hidden border-0 bg-white shadow-2xl ${currentBrand.themeClass}`}>
                      {step === 1 ? (
                         <div className="p-8 space-y-8">
                            <div className="space-y-2">
@@ -186,7 +187,7 @@ export default function CartoesPage() {
                   </DialogContent>
                </Dialog>
                <Button className="h-14 px-8 bg-[#0c0a09] hover:bg-neutral-800 text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all shadow-xl group flex items-center">
-                  <CreditCard className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform text-orange-600" />
+                  <CreditCard className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform text-white" />
                   Solicitar Cartão Físico
                </Button>
             </div>

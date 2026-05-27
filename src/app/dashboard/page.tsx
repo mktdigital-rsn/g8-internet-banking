@@ -42,6 +42,7 @@ import api from "@/lib/api";
 import Link from "next/link";
 import { useAtomValue } from "jotai";
 import { userAtom, balanceAtom, isUserLoadingAtom, isBalanceLoadingAtom } from "@/store/auth";
+import { currentBrand } from "@/config/brand";
 
 const PixIcon = (props: any) => (
   <svg {...props} viewBox="0 0 100 100" fill="currentColor">
@@ -80,7 +81,7 @@ const chartData = {
 };
 
 const maturityItems = [
-   { id: 1, label: "Aluguel Imôb.", company: "Quinto Andar S.A", value: "R$ 11.500", icon: Landmark, color: "bg-orange-100 text-[#f97316]" },
+   { id: 1, label: "Aluguel Imôb.", company: "Quinto Andar S.A", value: "R$ 11.500", icon: Landmark, color: "bg-orange-100 text-[var(--brand-accent)]" },
    { id: 2, label: "Finan. Carro", company: "Banco do Brasil", value: "R$ 2.000", icon: Landmark, color: "bg-blue-100 text-blue-600" },
    { id: 3, label: "Seguro. Saúde", company: "SulAmérica", value: "R$ 800", icon: Landmark, color: "bg-purple-100 text-purple-600" },
 ];
@@ -310,7 +311,7 @@ export default function DashboardHome() {
             {/* Upper Section: Welcome & Actions */}
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 px-2">
                 <div className="space-y-4">
-                   <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-6 py-2.5 font-black text-[12px] 2xl:text-xl uppercase tracking-[0.35em] mb-4">Conta Verificada</Badge>
+                   <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-6 py-2.5 font-black text-[12px] 2xl:text-xl uppercase tracking-[0.35em] mb-4">Conta Verificada</Badge>
                    {isLoadingData ? (
                       <div className="space-y-6">
                          <div className="h-16 2xl:h-32 w-2/3 bg-black/5 animate-pulse rounded-md" />
@@ -318,14 +319,18 @@ export default function DashboardHome() {
                       </div>
                    ) : (
                        <>
-                         <h1 className="text-4xl md:text-5xl 2xl:text-5xl font-black tracking-tighter text-[#0c0a09]">Olá, <span className="text-orange-600">{userName.replace(/^\d+(\.\d+)*\s*/, '').split(' ')[0]}</span>!</h1>
+                         <h1 className="text-4xl md:text-5xl 2xl:text-5xl font-black tracking-tighter text-[#0c0a09]">Olá, <span className="text-[var(--brand-accent)]">{userName.replace(/^\d+(\.\d+)*\s*/, '').split(' ')[0]}</span>!</h1>
                          <p className="text-sm md:text-base 2xl:text-xl text-neutral-400 font-bold opacity-70">Aqui está o resumo das suas finanças hoje.</p>
                       </>
                    )}
                 </div>
                 <div className="flex gap-4 w-full sm:w-auto">
                     <Link href="/dashboard/pix" className="flex-1 sm:flex-none">
-                       <Button className="w-full rounded-md h-12 2xl:h-20 px-10 2xl:px-16 font-black text-xs 2xl:text-lg uppercase tracking-widest bg-black text-white hover:bg-[#f97316] shadow-2xl shadow-orange-500/30 transition-all active:scale-95">Nova Transação</Button>
+                       <Button className={`w-full rounded-md h-12 2xl:h-20 px-10 2xl:px-16 font-black text-xs 2xl:text-lg uppercase tracking-widest ${
+                          currentBrand.id === "galapagos" 
+                            ? "bg-brand-accent hover:bg-brand-accent-hover text-white shadow-xl shadow-brand-accent/20" 
+                            : "bg-black text-white hover:bg-[var(--brand-accent)] shadow-2xl shadow-orange-500/30"
+                        } transition-all active:scale-95`}>Nova Transação</Button>
                     </Link>
                 </div>
             </div>
@@ -338,17 +343,29 @@ export default function DashboardHome() {
                   </div>
 
                   <div className="relative group cursor-pointer w-full">
-                     <div className="absolute -inset-1 bg-gradient-to-r from-orange-400 to-orange-600 rounded-md blur-lg opacity-20 group-hover:opacity-40 transition duration-1000"></div>
-                     <div className="relative h-72 2xl:h-80 w-full bg-[#0c0a09] text-white p-8 2xl:p-10 rounded-md shadow-2xl flex flex-col justify-between overflow-hidden border border-white/10 group-hover:scale-[1.02] transition-all duration-500">
+                     <div className={`absolute -inset-1 bg-gradient-to-r ${
+                        currentBrand.id === "galapagos" ? "from-blue-400 to-blue-600" : "from-orange-400 to-orange-600"
+                      } rounded-md blur-lg opacity-20 group-hover:opacity-40 transition duration-1000`}></div>
+                     <div className={`relative h-72 2xl:h-80 w-full ${
+                        currentBrand.id === "galapagos" 
+                          ? "bg-gradient-to-br from-brand-accent to-brand-secondary" 
+                          : "bg-[#0c0a09]"
+                      } text-white p-8 2xl:p-10 rounded-md shadow-2xl flex flex-col justify-between overflow-hidden border border-white/10 group-hover:scale-[1.02] transition-all duration-500`}>
                         {/* Design elements */}
                         <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors duration-700" />
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
-                        <div className="absolute -bottom-32 -left-32 w-80 h-80 bg-[#f97316]/10 rounded-full blur-3xl group-hover:bg-[#f97316]/20 transition-colors duration-700" />
+                        <div className={`absolute -bottom-32 -left-32 w-80 h-80 ${
+                           currentBrand.id === "galapagos" ? "bg-white/10" : "bg-[var(--brand-accent)]/10"
+                         } rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700`} />
 
                         <div className="flex justify-between items-start z-10">
                            <div className="flex flex-col">
-                              <span className="font-black tracking-tighter text-2xl 2xl:text-3xl italic opacity-95 uppercase leading-none text-white drop-shadow-md">G8PAY</span>
-                              <span className="text-[10px] 2xl:text-xs text-orange-400/80 font-black uppercase tracking-[0.3em] mt-3 mb-1">Elite Finance &bull; 2026</span>
+                              <span className="font-black tracking-tighter text-2xl 2xl:text-3xl italic opacity-95 uppercase leading-none text-white drop-shadow-md">
+                                 {currentBrand.id === "g8" ? "G8PAY" : currentBrand.shortName.toUpperCase()}
+                              </span>
+                              <span className={`text-[10px] 2xl:text-xs ${
+                                 currentBrand.id === "galapagos" ? "text-white/80" : "text-orange-400/80"
+                               } font-black uppercase tracking-[0.3em] mt-3 mb-1`}>Elite Finance &bull; 2026</span>
                            </div>
                            <div className="flex flex-col items-end gap-3">
                               <Badge className="bg-white/10 text-white border-0 backdrop-blur-xl px-5 py-2 rounded-md font-black text-[11px] 2xl:text-xs uppercase tracking-[0.2em] shadow-lg">Platinum Elite</Badge>
@@ -357,7 +374,11 @@ export default function DashboardHome() {
 
                         <div className="space-y-6 2xl:space-y-8 z-10 mt-auto">
                            <div className="flex items-center gap-6">
-                              <div className="w-16 2xl:w-20 h-11 2xl:h-14 bg-gradient-to-br from-orange-300 via-[#f97316] to-orange-400 rounded-md flex items-center justify-center shadow-2xl relative overflow-hidden group-hover:scale-110 transition-transform border border-white/20">
+                              <div className={`w-16 2xl:w-20 h-11 2xl:h-14 bg-gradient-to-br ${
+                                 currentBrand.id === "galapagos"
+                                   ? "from-white/40 via-white/25 to-white/30"
+                                   : "from-orange-300 via-[var(--brand-accent)] to-orange-400"
+                               } rounded-md flex items-center justify-center shadow-2xl relative overflow-hidden group-hover:scale-110 transition-transform border border-white/20`}>
                                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.4),transparent)] opacity-50" />
                                  <div className="absolute inset-x-0 h-px bg-white/30 top-1/2 -translate-y-1/2"></div>
                                  <div className="absolute inset-y-0 w-px bg-white/30 left-1/2 -translate-x-1/2"></div>
@@ -394,13 +415,13 @@ export default function DashboardHome() {
                      <div className="flex gap-3 shrink-0">
                         <button 
                            onClick={prevMaturity}
-                           className="w-12 h-12 2xl:w-14 2xl:h-14 rounded-md bg-white border border-neutral-100 flex items-center justify-center hover:bg-neutral-50 transition-all shadow-sm active:scale-95 text-[#f97316]"
+                           className="w-12 h-12 2xl:w-14 2xl:h-14 rounded-md bg-white border border-neutral-100 flex items-center justify-center hover:bg-neutral-50 transition-all shadow-sm active:scale-95 text-[var(--brand-accent)]"
                         >
                            <ChevronRight className="h-6 w-6 rotate-180" />
                         </button>
                         <button 
                            onClick={nextMaturity}
-                           className="w-12 h-12 2xl:w-14 2xl:h-14 rounded-md bg-white border border-neutral-100 flex items-center justify-center hover:bg-neutral-50 transition-all shadow-sm active:scale-95 text-[#f97316]"
+                           className="w-12 h-12 2xl:w-14 2xl:h-14 rounded-md bg-white border border-neutral-100 flex items-center justify-center hover:bg-neutral-50 transition-all shadow-sm active:scale-95 text-[var(--brand-accent)]"
                         >
                            <ChevronRight className="h-6 w-6" />
                         </button>
@@ -427,7 +448,7 @@ export default function DashboardHome() {
                                  </div>
                                  <div className="space-y-6 2xl:space-y-8">
                                     <div>
-                                       <h4 className="font-black text-2xl 2xl:text-3xl text-[#0c0a09] leading-tight break-words group-hover:text-[#f97316] transition-colors">{item.label}</h4>
+                                       <h4 className="font-black text-2xl 2xl:text-3xl text-[#0c0a09] leading-tight break-words group-hover:text-[var(--brand-accent)] transition-colors">{item.label}</h4>
                                        <p className="text-xs 2xl:text-sm font-black text-neutral-400 uppercase tracking-widest mt-2">{item.company}</p>
                                     </div>
                                     <div className="flex items-baseline gap-2 pt-4 border-t border-neutral-50">
@@ -471,8 +492,8 @@ export default function DashboardHome() {
                   {isLoadingTransactions ? (
                      <div className="py-24 flex flex-col items-center justify-center space-y-8">
                         <div className="relative w-16 h-16">
-                           <div className="absolute inset-0 border-4 border-[#f97316]/5 rounded-full" />
-                           <div className="absolute inset-0 border-4 border-t-[#f97316] rounded-full animate-spin" />
+                           <div className="absolute inset-0 border-4 border-[var(--brand-accent)]/5 rounded-full" />
+                           <div className="absolute inset-0 border-4 border-t-[var(--brand-accent)] rounded-full animate-spin" />
                         </div>
                         <p className="text-xs font-black uppercase text-neutral-400 tracking-[0.3em] animate-pulse">Sincronizando registros...</p>
                      </div>
@@ -502,7 +523,7 @@ export default function DashboardHome() {
                                        <TransactionIcon className={`h-full w-full ${t.metodo === "TRANSFERENCIA_PIX" ? "" : "stroke-[2]"}`} />
                                     </div>
                                     <div className="space-y-2 min-w-0 flex-1">
-                                       <p className="font-black text-xl 2xl:text-xl text-[#0c0a09] leading-none group-hover:text-[#f97316] transition-colors truncate max-w-[200px] sm:max-w-[300px] 2xl:max-w-[450px]">{displayName}</p>
+                                       <p className="font-black text-xl 2xl:text-xl text-[#0c0a09] leading-none group-hover:text-[var(--brand-accent)] transition-colors truncate max-w-[200px] sm:max-w-[300px] 2xl:max-w-[450px]">{displayName}</p>
                                        <div className="flex items-center gap-3">
                                           <Badge variant="secondary" className={`text-[10px] 2xl:text-[10px] font-black uppercase border-0 px-3 h-6 flex items-center ${t.tipo === 'CREDITO' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                                              {t.metodoFormatado}
@@ -518,7 +539,7 @@ export default function DashboardHome() {
                                           {t.tipo === 'CREDITO' ? '+' : '-'} {t.valorFormatado}
                                        </p>
                                     </div>
-                                    <div className="w-12 h-12 2xl:w-16 2xl:h-16 rounded-md border border-neutral-50 flex items-center justify-center text-neutral-200 group-hover:text-[#f97316] group-hover:border-orange-100 group-hover:bg-orange-50 transition-all">
+                                    <div className="w-12 h-12 2xl:w-16 2xl:h-16 rounded-md border border-neutral-50 flex items-center justify-center text-neutral-200 group-hover:text-[var(--brand-accent)] group-hover:border-orange-100 group-hover:bg-orange-50 transition-all">
                                        <ChevronRight className="h-6 w-6" />
                                     </div>
                                  </div>
@@ -539,7 +560,7 @@ export default function DashboardHome() {
                   <div className="space-y-2">
                      <div className="flex items-center justify-between group cursor-pointer">
                         <h3 className="text-neutral-400 text-[11px] 2xl:text-xs font-black uppercase tracking-[0.3em]">Saldo Disponível</h3>
-                        <RotateCw className="h-4 w-4 text-neutral-200 group-hover:text-[#f97316] group-hover:rotate-180 transition-all duration-700" />
+                        <RotateCw className="h-4 w-4 text-neutral-200 group-hover:text-[var(--brand-accent)] group-hover:rotate-180 transition-all duration-700" />
                      </div>
                       <div className="flex items-baseline gap-6">
                          {isLoadingData ? (
@@ -561,9 +582,9 @@ export default function DashboardHome() {
                      onValueChange={(val) => setChartPeriod(val as any)}
                   >
                      <TabsList className="bg-slate-50 rounded-md p-2 h-14 2xl:h-16 w-full grid grid-cols-3">
-                        <TabsTrigger value="day" className="rounded-md h-full text-[10px] 2xl:text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[#f97316]">Dia</TabsTrigger>
-                        <TabsTrigger value="week" className="rounded-md h-full text-[10px] 2xl:text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[#f97316]">Semana</TabsTrigger>
-                        <TabsTrigger value="month" className="rounded-md h-full text-[10px] 2xl:text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[#f97316]">Mês</TabsTrigger>
+                        <TabsTrigger value="day" className="rounded-md h-full text-[10px] 2xl:text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[var(--brand-accent)]">Dia</TabsTrigger>
+                        <TabsTrigger value="week" className="rounded-md h-full text-[10px] 2xl:text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[var(--brand-accent)]">Semana</TabsTrigger>
+                        <TabsTrigger value="month" className="rounded-md h-full text-[10px] 2xl:text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[var(--brand-accent)]">Mês</TabsTrigger>
                      </TabsList>
                   </Tabs>
                </div>
@@ -574,8 +595,8 @@ export default function DashboardHome() {
                         <AreaChart data={processedChartData}>
                            <defs>
                               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                                 <stop offset="5%" stopColor="#f97316" stopOpacity={0.2} />
-                                 <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                                 <stop offset="5%" stopColor="var(--brand-accent)" stopOpacity={0.2} />
+                                 <stop offset="95%" stopColor="var(--brand-accent)" stopOpacity={0} />
                               </linearGradient>
                            </defs>
                            <CartesianGrid vertical={false} stroke="#f1f1f1" strokeDasharray="3 3" />
@@ -588,7 +609,7 @@ export default function DashboardHome() {
                            />
                            <Tooltip
                               contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.15)', fontWeight: 'bold' }}
-                              cursor={{ stroke: '#f97316', strokeWidth: 2, strokeDasharray: '5 5' }}
+                              cursor={{ stroke: 'var(--brand-accent)', strokeWidth: 2, strokeDasharray: '5 5' }}
                               labelFormatter={(label, payload) => {
                                  const item = payload[0]?.payload;
                                  return item?.full || label;
@@ -602,11 +623,11 @@ export default function DashboardHome() {
                               type="monotone"
                               dataKey="value"
                               name="Valor"
-                              stroke="#f97316"
+                              stroke="var(--brand-accent)"
                               strokeWidth={4}
                               fillOpacity={1}
                               fill="url(#colorValue)"
-                              activeDot={{ r: 8, fill: "#f97316", stroke: "white", strokeWidth: 4 }}
+                              activeDot={{ r: 8, fill: "var(--brand-accent)", stroke: "white", strokeWidth: 4 }}
                            />
                         </AreaChart>
                      </ResponsiveContainer>
@@ -616,21 +637,35 @@ export default function DashboardHome() {
             
             </Card>
 
-            <Card className="rounded-md border-0 shadow-2xl shadow-black/10 bg-[#0c0a09] p-6 text-white relative overflow-hidden group border border-white/5 ml-10">
-               <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#f97316]/5 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
+            <Card className={`rounded-md border-0 shadow-2xl shadow-black/10 p-6 text-white relative overflow-hidden group border ml-10 ${
+               currentBrand.id === "galapagos"
+                 ? "bg-[#0b1329] border-white/10"
+                 : "bg-[#0c0a09] border-white/5"
+            }`}>
+               <div className="absolute -top-32 -right-32 w-64 h-64 bg-[var(--brand-accent)]/5 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
                <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
                <div className="relative z-10 flex flex-col items-center text-center space-y-10 2xl:space-y-12">
                   <div className="relative">
-                     <div className="absolute -inset-4 bg-orange-500/20 rounded-full blur-2xl group-hover:scale-150 transition-transform" />
-                     <div className="w-24 h-24 2xl:w-32 2xl:h-32 bg-gradient-to-br from-orange-400 to-[#f97316] rounded-md flex items-center justify-center p-6 2xl:p-8 shadow-2xl relative">
+                     <div className={`absolute -inset-4 rounded-full blur-2xl group-hover:scale-150 transition-transform ${
+                        currentBrand.id === "galapagos" ? "bg-brand-accent/20" : "bg-orange-500/20"
+                     }`} />
+                     <div className={`w-24 h-24 2xl:w-32 2xl:h-32 rounded-md flex items-center justify-center p-6 2xl:p-8 shadow-2xl relative bg-gradient-to-br ${
+                        currentBrand.id === "galapagos"
+                          ? "from-brand-accent/80 to-brand-secondary"
+                          : "from-orange-400 to-[var(--brand-accent)]"
+                     }`}>
                         <Users className="h-full w-full text-white" />
                      </div>
                   </div>
                   <div className="space-y-4">
                      <h3 className="font-black text-3xl 2xl:text-4xl tracking-tighter">Expanda sua Rede!</h3>
-                     <p className="text-sm 2xl:text-base font-medium text-white/50 px-4 leading-relaxed">Compartilhe o G8 Digital com seus parceiros e amigos e cresçam juntos.</p>
+                     <p className="text-sm 2xl:text-base font-medium text-white/50 px-4 leading-relaxed">Compartilhe o {currentBrand.name} com seus parceiros e amigos e cresçam juntos.</p>
                   </div>
-                  <Button className="w-full bg-white text-[#0c0a09] hover:bg-[#f97316] hover:text-white transition-all duration-500 rounded-md h-14 2xl:h-16 font-black uppercase tracking-widest text-xs 2xl:text-base shadow-xl shadow-black/20">
+                  <Button className={`w-full transition-all duration-500 rounded-md h-14 2xl:h-16 font-black uppercase tracking-widest text-xs 2xl:text-base shadow-xl ${
+                     currentBrand.id === "galapagos"
+                       ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-brand-accent/20"
+                       : "bg-white text-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white shadow-black/20"
+                  }`}>
                      Compartilhar Agora
                   </Button>
                </div>
@@ -654,16 +689,20 @@ export default function DashboardHome() {
                         <div className="p-6 md:p-8 2xl:p-12 space-y-6 2xl:space-y-10 relative z-10">
                             <div className="text-center space-y-3 2xl:space-y-5">
                                 <div className="relative inline-block">
-                                    <div className="absolute -inset-4 bg-[#f97316]/10 rounded-full blur-xl" />
-                                    <div className="w-14 h-14 2xl:w-20 2xl:h-20 bg-[#0c0a09] rounded-md flex items-center justify-center text-[#f97316] mx-auto shadow-2xl relative border border-white/5">
-                                        <Diamond className="h-7 w-7 2xl:h-10 2xl:w-10 fill-[#f97316]/20" />
+                                    <div className="absolute -inset-4 bg-[var(--brand-accent)]/10 rounded-full blur-xl" />
+                                    <div className={`w-14 h-14 2xl:w-20 2xl:h-20 rounded-md flex items-center justify-center text-[var(--brand-accent)] mx-auto shadow-2xl relative border ${
+                                       currentBrand.id === "galapagos"
+                                         ? "bg-[#0b1329] border-white/10"
+                                         : "bg-[#0c0a09] border-white/5"
+                                    }`}>
+                                        <Diamond className="h-7 w-7 2xl:h-10 2xl:w-10 fill-[var(--brand-accent)]/20" />
                                     </div>
                                 </div>
                                 <div>
                                     <h2 className="text-2xl 2xl:text-4xl font-black text-[#0c0a09] tracking-tighter uppercase font-sans">Comprovante</h2>
                                     <div className="flex items-center justify-center gap-2 mt-1">
                                        <CheckCircle2 className="h-4 w-4 2xl:h-5 2xl:w-5 text-green-500" />
-                                       <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-[0.2em]">Autenticação G8 PAY</p>
+                                       <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-[0.2em]">Autenticação {currentBrand.shortName.toUpperCase()} PAY</p>
                                     </div>
                                 </div>
                             </div>
@@ -671,15 +710,15 @@ export default function DashboardHome() {
                             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
                                <div className="md:col-span-2 text-center py-7 2xl:py-12 bg-neutral-50 rounded-md border border-neutral-100 flex flex-col justify-center">
                                    <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-[0.3em] mb-3">Valor Total</p>
-                                   <p className="text-3xl 2xl:text-5xl font-black text-[#f97316] font-mono tracking-tighter leading-none">
+                                   <p className="text-3xl 2xl:text-5xl font-black text-[var(--brand-accent)] font-mono tracking-tighter leading-none">
                                        {selectedTransaction.tipo === 'CREDITO' ? '+' : '-'} {selectedTransaction.valorFormatado}
                                    </p>
                                </div>
 
                                <div className="md:col-span-3 p-5 2xl:p-8 rounded-md bg-neutral-50 border border-neutral-100 flex flex-col justify-center space-y-2">
                                   <div className="flex items-center gap-2 mb-1">
-                                     <Fingerprint className="h-4 w-4 text-[#f97316]" />
-                                     <p className="text-xs 2xl:text-sm font-black uppercase tracking-[0.2em] text-[#f97316]">Autenticação Digital</p>
+                                     <Fingerprint className="h-4 w-4 text-[var(--brand-accent)]" />
+                                     <p className="text-xs 2xl:text-sm font-black uppercase tracking-[0.2em] text-[var(--brand-accent)]">Autenticação Digital</p>
                                   </div>
                                   <p className="text-xs 2xl:text-sm font-mono font-bold break-all leading-relaxed text-[#0c0a09]/70">{selectedTransaction.codigoDeIdentificacao}</p>
                                </div>
@@ -693,7 +732,7 @@ export default function DashboardHome() {
                                       <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-widest">Origem / Pagador</p>
                                    </div>
                                    <div className="space-y-1">
-                                      <p className="font-black text-[#0c0a09] truncate text-base 2xl:text-xl">{selectedTransaction.pagadorNome || "CLIENTE G8PAY"}</p>
+                                      <p className="font-black text-[#0c0a09] truncate text-base 2xl:text-xl">{selectedTransaction.pagadorNome || `CLIENTE ${currentBrand.id === "g8" ? "G8PAY" : currentBrand.shortName.toUpperCase()}`}</p>
                                       <p className="text-sm 2xl:text-base text-neutral-500 font-mono font-bold opacity-70">
                                          {selectedTransaction.pagadorTaxNumber?.present ? selectedTransaction.pagadorTaxNumber.value : (selectedTransaction.pagadorTaxNumber || "---")}
                                       </p>
@@ -701,7 +740,7 @@ export default function DashboardHome() {
                                    <div className="pt-3 border-t border-neutral-200/50 space-y-2 2xl:space-y-4">
                                       <div className="flex justify-between items-center text-sm 2xl:text-base">
                                          <span className="text-neutral-400 font-bold">Banco</span>
-                                         <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{selectedTransaction.pagadorInstituicao || "G8 BANK (382)"}</span>
+                                         <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{selectedTransaction.pagadorInstituicao || `${currentBrand.bankName} (${currentBrand.bankCode})`}</span>
                                       </div>
                                       <div className="flex justify-between items-center text-xs 2xl:text-sm">
                                          <span className="text-neutral-400 font-bold">Ag/Conta</span>
@@ -719,7 +758,7 @@ export default function DashboardHome() {
                                       <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-widest">Destino / Recebedor</p>
                                    </div>
                                    <div className="space-y-1">
-                                      <p className="font-black text-[#0c0a09] truncate text-base 2xl:text-xl">{selectedTransaction.RecebinteNome || "PAGAMENTO G8PAY"}</p>
+                                      <p className="font-black text-[#0c0a09] truncate text-base 2xl:text-xl">{selectedTransaction.RecebinteNome || `PAGAMENTO ${currentBrand.id === "g8" ? "G8PAY" : currentBrand.shortName.toUpperCase()}`}</p>
                                       <p className="text-sm 2xl:text-base text-neutral-500 font-mono font-bold opacity-70">
                                          {selectedTransaction.RecebinteTaxNumber?.present ? selectedTransaction.RecebinteTaxNumber.value : (selectedTransaction.RecebinteTaxNumber || "---")}
                                       </p>
@@ -743,7 +782,7 @@ export default function DashboardHome() {
                                <div className="grid grid-cols-2 gap-8">
                                    <div>
                                        <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-widest mb-1.5">Metodologia</p>
-                                       <Badge className="bg-[#f97316]/5 text-[#f97316] border-0 px-3 py-1 font-black text-sm 2xl:text-base uppercase tracking-widest rounded-sm">
+                                       <Badge className="bg-[var(--brand-accent)]/5 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-sm 2xl:text-base uppercase tracking-widest rounded-sm">
                                           {selectedTransaction.metodoFormatado}
                                        </Badge>
                                    </div>
@@ -762,7 +801,11 @@ export default function DashboardHome() {
                                        selectedTransaction.idDoBancoLiquidante || selectedTransaction.itemId || selectedTransaction.id,
                                        selectedTransaction.tipo === "CREDITO" ? (selectedTransaction.pagadorNome || "Transacao") : (selectedTransaction.RecebinteNome || "Transacao")
                                    )}
-                                   className="flex-1 h-14 2xl:h-20 bg-[#0c0a09] text-white hover:bg-[#f97316] rounded-md font-black uppercase tracking-widest text-sm 2xl:text-lg transition-all shadow-xl shadow-black/10 group active:scale-95"
+                                   className={`flex-1 h-14 2xl:h-20 text-white rounded-md font-black uppercase tracking-widest text-sm 2xl:text-lg transition-all shadow-xl group active:scale-95 ${
+                                      currentBrand.id === "galapagos"
+                                        ? "bg-brand-accent hover:bg-brand-accent-hover shadow-brand-accent/20"
+                                        : "bg-[#0c0a09] hover:bg-[var(--brand-accent)] shadow-black/10"
+                                   }`}
                                 >
                                     <Download className="h-5 w-5 mr-3 group-hover:-translate-y-1 transition-transform" /> Gerar Comprovante
                                 </Button>

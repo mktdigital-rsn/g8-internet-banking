@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import api from "@/lib/api";
 import { toast } from "sonner";
+import { currentBrand } from "@/config/brand";
 
 // Tabs definitions
 type TabType = "todos" | "ipva" | "licenciamento" | "multas";
@@ -520,12 +521,12 @@ export default function DebitosVeicularesPage() {
     setTimeout(() => {
       setCheckoutLoading(false);
       // Construct simulated tokenization data
-      const mockToken = "tok_g8_" + Math.random().toString(36).substring(2, 15).toUpperCase();
+      const mockToken = "tok_" + currentBrand.id + "_" + Math.random().toString(36).substring(2, 15).toUpperCase();
       const mockPayload = {
         token: mockToken,
         payment_method_id: cleanNumber.startsWith("5") ? "mastercard" : cleanNumber.startsWith("3") ? "amex" : "visa",
         payer: {
-          email: "cliente@g8bank.com.br",
+          email: `cliente@${currentBrand.id}bank.com.br`,
           identification: {
             type: "CPF",
             number: cleanCpf
@@ -535,7 +536,7 @@ export default function DebitosVeicularesPage() {
 
       setCardTokenData(mockPayload);
       setShowCheckoutModal(false);
-      toast.success("Cartão processado com sucesso com segurança G8Pay! Processando pagamento...");
+      toast.success(`Cartão processado com sucesso com segurança ${currentBrand.name}! Processando pagamento...`);
     }, 1200);
   };
 
@@ -592,7 +593,7 @@ export default function DebitosVeicularesPage() {
           token: cardTokenData.token,
           installments: selectedInstallment.parcelas,
           paymentMethodId: cardTokenData.payment_method_id || "visa",
-          payerEmail: cardTokenData.payer?.email || "cliente@g8bank.com.br",
+          payerEmail: cardTokenData.payer?.email || `cliente@${currentBrand.id}bank.com.br`,
           placa: cleanPlaca
         };
 
@@ -756,17 +757,17 @@ export default function DebitosVeicularesPage() {
   return (
     <div className="bg-[#f8f9fa] rounded-[4px] p-6 md:p-10 border border-neutral-200/60 space-y-10 relative overflow-hidden text-[#0c0a09]">
       {/* Background Decorativo */}
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[#ff7711]/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[var(--brand-accent)]/5 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-4 border-b border-neutral-200/60 relative z-10">
         <div className="space-y-3">
-          <Badge variant="secondary" className="bg-[#ff7711]/10 text-[#ff7711] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">
+          <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">
             Serviços Automotivos
           </Badge>
           <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase flex items-center gap-3">
-            Débitos <span className="text-[#ff7711]">Veiculares</span>
-            <Car className="h-10 w-10 text-[#ff7711] stroke-[2.5]" />
+            Débitos <span className="text-[var(--brand-accent)]">Veiculares</span>
+            <Car className="h-10 w-10 text-[var(--brand-accent)] stroke-[2.5]" />
           </h1>
           <p className="text-sm md:text-base text-neutral-400 font-bold max-w-2xl">
             Consulte e pague multas, licenciamento anual e IPVA de maneira 100% integrada e parcelada.
@@ -780,8 +781,8 @@ export default function DebitosVeicularesPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(255,119,17,0.03),transparent)]" />
           
           <form onSubmit={handleSearchSubmit} className="space-y-8 relative z-10 text-left">
-            <div className="flex items-center gap-4 text-[#ff7711] pb-4 border-b border-neutral-100">
-              <div className="w-14 h-14 bg-[#ff7711]/10 rounded-sm flex items-center justify-center shrink-0">
+            <div className="flex items-center gap-4 text-[var(--brand-accent)] pb-4 border-b border-neutral-100">
+              <div className="w-14 h-14 bg-[var(--brand-accent)]/10 rounded-sm flex items-center justify-center shrink-0">
                 <Search className="h-7 w-7 stroke-[2.5]" />
               </div>
               <div className="space-y-0.5">
@@ -792,13 +793,13 @@ export default function DebitosVeicularesPage() {
 
             {/* Info SP plates only */}
             <div className="p-4 bg-orange-50/50 border border-orange-200/60 rounded-sm text-left flex items-start gap-3 animate-in fade-in duration-300">
-              <Info className="h-5.5 w-5.5 text-[#ff7711] shrink-0 mt-0.5" />
+              <Info className="h-5.5 w-5.5 text-[var(--brand-accent)] shrink-0 mt-0.5" />
               <div className="space-y-1">
-                <span className="block text-xs font-black text-[#ff7711] uppercase tracking-wider">
+                <span className="block text-xs font-black text-[var(--brand-accent)] uppercase tracking-wider">
                   Aviso Importante
                 </span>
                 <span className="block text-sm font-semibold text-neutral-600 leading-relaxed">
-                  A consulta de débitos veiculares está disponível exclusivamente para veículos com placas do estado de <strong className="text-[#ff7711] font-black">São Paulo (SP)</strong>.
+                  A consulta de débitos veiculares está disponível exclusivamente para veículos com placas do estado de <strong className="text-[var(--brand-accent)] font-black">São Paulo (SP)</strong>.
                 </span>
               </div>
             </div>
@@ -826,14 +827,14 @@ export default function DebitosVeicularesPage() {
                           }
                           toast.info(`Veículo ${vehicle.brand} ${vehicle.model} selecionado!`);
                         }}
-                        className={`flex items-center gap-3 p-4 bg-white border rounded-sm hover:border-[#ff7711] hover:bg-[#ff7711]/5 transition-all text-left group cursor-pointer w-[220px] shrink-0 snap-start ${
+                        className={`flex items-center gap-3 p-4 bg-white border rounded-sm hover:border-[var(--brand-accent)] hover:bg-[var(--brand-accent)]/5 transition-all text-left group cursor-pointer w-[220px] shrink-0 snap-start ${
                           isSelected
-                            ? "border-[#ff7711] bg-[#ff7711]/5 ring-2 ring-[#ff7711]/10"
+                            ? "border-[var(--brand-accent)] bg-[var(--brand-accent)]/5 ring-2 ring-[var(--brand-accent)]/10"
                             : "border-neutral-200"
                         }`}
                       >
                         <div className={`w-10 h-10 rounded-sm flex items-center justify-center shrink-0 transition-colors ${
-                          isSelected ? "bg-[#ff7711]/10 text-[#ff7711]" : "bg-neutral-50 text-neutral-400 group-hover:bg-[#ff7711]/10 group-hover:text-[#ff7711]"
+                          isSelected ? "bg-[var(--brand-accent)]/10 text-[var(--brand-accent)]" : "bg-neutral-50 text-neutral-400 group-hover:bg-[var(--brand-accent)]/10 group-hover:text-[var(--brand-accent)]"
                         }`}>
                           <Car className="h-5 w-5 stroke-[2]" />
                         </div>
@@ -860,7 +861,7 @@ export default function DebitosVeicularesPage() {
                   placeholder="ABC1D23"
                   value={placa}
                   onChange={(e) => setPlaca(e.target.value.replace(/[^A-Za-z0-9]/g, "").toUpperCase())}
-                  className="h-14 border-neutral-200 bg-white rounded-sm font-black uppercase text-base focus:ring-4 focus:ring-[#ff7711]/10"
+                  className="h-14 border-neutral-200 bg-white rounded-sm font-black uppercase text-base focus:ring-4 focus:ring-[var(--brand-accent)]/10"
                   required
                 />
               </div>
@@ -872,7 +873,7 @@ export default function DebitosVeicularesPage() {
                   placeholder="12345678901"
                   value={renavam}
                   onChange={(e) => setRenavam(e.target.value.replace(/\D/g, ""))}
-                  className="h-14 border-neutral-200 bg-white rounded-sm font-bold text-base focus:ring-4 focus:ring-[#ff7711]/10"
+                  className="h-14 border-neutral-200 bg-white rounded-sm font-bold text-base focus:ring-4 focus:ring-[var(--brand-accent)]/10"
                   required
                 />
               </div>
@@ -881,7 +882,7 @@ export default function DebitosVeicularesPage() {
             <Button
               type="submit"
               disabled={searchLoading}
-              className="w-full h-14 bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all"
+              className="w-full h-14 bg-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 transition-all"
             >
               {searchLoading ? (
                 <>
@@ -924,9 +925,9 @@ export default function DebitosVeicularesPage() {
 
             {/* VEHICLE TECH SPEC CARD (FICHA TÉCNICA) */}
             {debtsData.veiculo && (
-              <Card className="p-6 border border-neutral-200 bg-white shadow-sm relative overflow-hidden rounded-sm border-l-4 border-l-[#ff7711] animate-in fade-in slide-in-from-top duration-500">
+              <Card className="p-6 border border-neutral-200 bg-white shadow-sm relative overflow-hidden rounded-sm border-l-4 border-l-[var(--brand-accent)] animate-in fade-in slide-in-from-top duration-500">
                 <div className="flex items-center gap-2 text-[#0c0a09] pb-4 border-b border-neutral-100 mb-4">
-                  <Car className="h-5 w-5 text-[#ff7711] stroke-[2.5]" />
+                  <Car className="h-5 w-5 text-[var(--brand-accent)] stroke-[2.5]" />
                   <span className="font-black uppercase tracking-wider text-xs">Dados Cadastrais do Veículo</span>
                 </div>
                 
@@ -963,7 +964,7 @@ export default function DebitosVeicularesPage() {
 
                   <div className="space-y-0.5">
                     <span className="block text-[10px] font-black text-neutral-400 uppercase tracking-widest">Último Licenciamento</span>
-                    <span className="block text-sm font-extrabold text-[#ff7711]">{debtsData.veiculo.ultimoLicenciamento || "N/D"}</span>
+                    <span className="block text-sm font-extrabold text-[var(--brand-accent)]">{debtsData.veiculo.ultimoLicenciamento || "N/D"}</span>
                   </div>
 
                   <div className="space-y-0.5">
@@ -990,14 +991,14 @@ export default function DebitosVeicularesPage() {
                     onClick={() => setActiveTab(tab)}
                     className={`flex-1 py-3 px-4 font-black uppercase text-sm tracking-wider rounded-sm transition-all flex items-center justify-center gap-2 cursor-pointer border-0 ${
                       isActive 
-                        ? "bg-gradient-to-r from-[#ff7711] to-[#ff8822] text-white shadow-md shadow-[#ff7711]/30 animate-in fade-in duration-300"
-                        : "hover:bg-[#ff7711]/5 text-neutral-400 hover:text-[#ff7711] bg-transparent"
+                        ? "bg-gradient-to-r from-[var(--brand-accent)] to-[#ff8822] text-white shadow-md shadow-[var(--brand-accent)]/30 animate-in fade-in duration-300"
+                        : "hover:bg-[var(--brand-accent)]/5 text-neutral-400 hover:text-[var(--brand-accent)] bg-transparent"
                     }`}
                   >
                     {tab === "todos" ? "Todos" : tab === "ipva" ? "IPVA" : tab === "licenciamento" ? "Licenciamento" : "Multas"}
                     <span className={`px-2 py-0.5 rounded-full text-xs font-black tracking-normal transition-colors ${
                       isActive 
-                        ? "bg-white text-[#ff7711]"
+                        ? "bg-white text-[var(--brand-accent)]"
                         : "bg-neutral-100 text-neutral-500"
                     }`}>
                       {listLength}
@@ -1012,7 +1013,7 @@ export default function DebitosVeicularesPage() {
               
               {/* Category Lock Warning Banner */}
               {selectedCategory && selectedCategory !== "todos" && (
-                <div className="p-3 bg-orange-50 border border-orange-200 text-[#ff7711] rounded-sm text-left flex items-start gap-2.5">
+                <div className="p-3 bg-orange-50 border border-orange-200 text-[var(--brand-accent)] rounded-sm text-left flex items-start gap-2.5">
                   <ShieldAlert className="h-4.5 h-4.5 shrink-0 mt-0.5" />
                   <span className="text-xs font-bold leading-normal">
                     Carrinho ativo em <strong>{selectedCategory.toUpperCase()}</strong>. Se deseja pagar débitos de outra aba, desmarque as opções atuais ou limpe o carrinho.
@@ -1039,13 +1040,13 @@ export default function DebitosVeicularesPage() {
                             onClick={() => handleToggleItem("ipva", ipva.ano.toString())}
                             className={`p-6 border rounded-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all text-left border-l-4 ${
                               isChecked 
-                                ? "bg-[#ff7711]/5 border-[#ff7711] border-l-[#ff7711] ring-2 ring-[#ff7711]/10 shadow-sm shadow-[#ff7711]/5" 
-                                : "bg-white border-neutral-200 border-l-amber-500 hover:border-[#ff7711]/60 hover:bg-[#ff7711]/5"
+                                ? "bg-[var(--brand-accent)]/5 border-[var(--brand-accent)] border-l-[var(--brand-accent)] ring-2 ring-[var(--brand-accent)]/10 shadow-sm shadow-[var(--brand-accent)]/5" 
+                                : "bg-white border-neutral-200 border-l-amber-500 hover:border-[var(--brand-accent)]/60 hover:bg-[var(--brand-accent)]/5"
                             }`}
                           >
                             <div className="flex items-start gap-4">
                               <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 mt-1 ${
-                                isChecked ? "border-[#ff7711] bg-[#ff7711] text-white" : "border-neutral-300"
+                                isChecked ? "border-[var(--brand-accent)] bg-[var(--brand-accent)] text-white" : "border-neutral-300"
                               }`}>
                                 {isChecked && <Check className="w-4 h-4" />}
                               </div>
@@ -1084,13 +1085,13 @@ export default function DebitosVeicularesPage() {
                             onClick={() => handleToggleItem("licenciamento", lic.ano.toString())}
                             className={`p-6 border rounded-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all text-left border-l-4 ${
                               isChecked 
-                                ? "bg-[#ff7711]/5 border-[#ff7711] border-l-[#ff7711] ring-2 ring-[#ff7711]/10 shadow-sm shadow-[#ff7711]/5" 
-                                : "bg-white border-neutral-200 border-l-blue-500 hover:border-[#ff7711]/60 hover:bg-[#ff7711]/5"
+                                ? "bg-[var(--brand-accent)]/5 border-[var(--brand-accent)] border-l-[var(--brand-accent)] ring-2 ring-[var(--brand-accent)]/10 shadow-sm shadow-[var(--brand-accent)]/5" 
+                                : "bg-white border-neutral-200 border-l-blue-500 hover:border-[var(--brand-accent)]/60 hover:bg-[var(--brand-accent)]/5"
                             }`}
                           >
                             <div className="flex items-start gap-4">
                               <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 mt-1 ${
-                                isChecked ? "border-[#ff7711] bg-[#ff7711] text-white" : "border-neutral-300"
+                                isChecked ? "border-[var(--brand-accent)] bg-[var(--brand-accent)] text-white" : "border-neutral-300"
                               }`}>
                                 {isChecked && <Check className="w-4 h-4" />}
                               </div>
@@ -1128,13 +1129,13 @@ export default function DebitosVeicularesPage() {
                             onClick={() => handleToggleItem("multas", m.ait)}
                             className={`p-6 border rounded-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 transition-all cursor-pointer border-l-4 text-left ${
                               isChecked 
-                                ? "bg-[#ff7711]/5 border-[#ff7711] border-l-[#ff7711] ring-2 ring-[#ff7711]/10 shadow-sm shadow-[#ff7711]/5" 
-                                : "bg-white border-neutral-200 border-l-rose-500 hover:border-[#ff7711]/60 hover:bg-[#ff7711]/5"
+                                ? "bg-[var(--brand-accent)]/5 border-[var(--brand-accent)] border-l-[var(--brand-accent)] ring-2 ring-[var(--brand-accent)]/10 shadow-sm shadow-[var(--brand-accent)]/5" 
+                                : "bg-white border-neutral-200 border-l-rose-500 hover:border-[var(--brand-accent)]/60 hover:bg-[var(--brand-accent)]/5"
                             }`}
                           >
                             <div className="flex items-start gap-4">
                               <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 mt-1 ${
-                                isChecked ? "border-[#ff7711] bg-[#ff7711] text-white" : "border-neutral-300"
+                                isChecked ? "border-[var(--brand-accent)] bg-[var(--brand-accent)] text-white" : "border-neutral-300"
                               }`}>
                                 {isChecked && <Check className="w-4 h-4" />}
                               </div>
@@ -1185,13 +1186,13 @@ export default function DebitosVeicularesPage() {
                             isLocked 
                               ? "opacity-50 cursor-not-allowed border-neutral-100 bg-neutral-50/50" 
                               : isChecked 
-                                ? "cursor-pointer bg-[#ff7711]/5 border-[#ff7711] border-l-[#ff7711] ring-2 ring-[#ff7711]/10 shadow-sm shadow-[#ff7711]/5" 
-                                : "cursor-pointer bg-white border-neutral-200 border-l-amber-500 hover:border-[#ff7711]/60 hover:bg-[#ff7711]/5"
+                                ? "cursor-pointer bg-[var(--brand-accent)]/5 border-[var(--brand-accent)] border-l-[var(--brand-accent)] ring-2 ring-[var(--brand-accent)]/10 shadow-sm shadow-[var(--brand-accent)]/5" 
+                                : "cursor-pointer bg-white border-neutral-200 border-l-amber-500 hover:border-[var(--brand-accent)]/60 hover:bg-[var(--brand-accent)]/5"
                           }`}
                         >
                           <div className="flex items-start gap-4">
                             <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 mt-1 ${
-                              isChecked ? "border-[#ff7711] bg-[#ff7711] text-white" : "border-neutral-300"
+                              isChecked ? "border-[var(--brand-accent)] bg-[var(--brand-accent)] text-white" : "border-neutral-300"
                             }`}>
                               {isChecked && <Check className="w-4 h-4" />}
                             </div>
@@ -1247,13 +1248,13 @@ export default function DebitosVeicularesPage() {
                             isLocked 
                               ? "opacity-50 cursor-not-allowed border-neutral-100 bg-neutral-50/50" 
                               : isChecked 
-                                ? "cursor-pointer bg-[#ff7711]/5 border-[#ff7711] border-l-[#ff7711] ring-2 ring-[#ff7711]/10 shadow-sm shadow-[#ff7711]/5" 
-                                : "cursor-pointer bg-white border-neutral-200 border-l-blue-500 hover:border-[#ff7711]/60 hover:bg-[#ff7711]/5"
+                                ? "cursor-pointer bg-[var(--brand-accent)]/5 border-[var(--brand-accent)] border-l-[var(--brand-accent)] ring-2 ring-[var(--brand-accent)]/10 shadow-sm shadow-[var(--brand-accent)]/5" 
+                                : "cursor-pointer bg-white border-neutral-200 border-l-blue-500 hover:border-[var(--brand-accent)]/60 hover:bg-[var(--brand-accent)]/5"
                           }`}
                         >
                           <div className="flex items-start gap-4">
                             <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 mt-1 ${
-                              isChecked ? "border-[#ff7711] bg-[#ff7711] text-white" : "border-neutral-300"
+                              isChecked ? "border-[var(--brand-accent)] bg-[var(--brand-accent)] text-white" : "border-neutral-300"
                             }`}>
                               {isChecked && <Check className="w-4 h-4" />}
                             </div>
@@ -1306,13 +1307,13 @@ export default function DebitosVeicularesPage() {
                             isLocked 
                               ? "opacity-50 cursor-not-allowed border-neutral-100 bg-neutral-50/50" 
                               : isChecked 
-                                ? "cursor-pointer bg-[#ff7711]/5 border-[#ff7711] border-l-[#ff7711] ring-2 ring-[#ff7711]/10 shadow-sm shadow-[#ff7711]/5" 
-                                : "cursor-pointer bg-white border-neutral-200 border-l-rose-500 hover:border-[#ff7711]/60 hover:bg-[#ff7711]/5"
+                                ? "cursor-pointer bg-[var(--brand-accent)]/5 border-[var(--brand-accent)] border-l-[var(--brand-accent)] ring-2 ring-[var(--brand-accent)]/10 shadow-sm shadow-[var(--brand-accent)]/5" 
+                                : "cursor-pointer bg-white border-neutral-200 border-l-rose-500 hover:border-[var(--brand-accent)]/60 hover:bg-[var(--brand-accent)]/5"
                           }`}
                         >
                           <div className="flex items-start gap-4">
                             <div className={`w-6 h-6 rounded-full border flex items-center justify-center shrink-0 mt-1 ${
-                              isChecked ? "border-[#ff7711] bg-[#ff7711] text-white" : "border-neutral-300"
+                              isChecked ? "border-[var(--brand-accent)] bg-[var(--brand-accent)] text-white" : "border-neutral-300"
                             }`}>
                               {isChecked && <Check className="w-4 h-4" />}
                             </div>
@@ -1356,7 +1357,7 @@ export default function DebitosVeicularesPage() {
               
               {/* Cart Header */}
               <div className="flex items-center gap-3.5 pb-4 border-b border-neutral-100 text-[#0c0a09] relative">
-                <div className="w-10 h-10 bg-[#ff7711]/10 rounded-sm flex items-center justify-center text-[#ff7711] shrink-0">
+                <div className="w-10 h-10 bg-[var(--brand-accent)]/10 rounded-sm flex items-center justify-center text-[var(--brand-accent)] shrink-0">
                   <ShoppingBag className="h-5.5 w-5.5 stroke-[2.5]" />
                 </div>
                 <div>
@@ -1414,14 +1415,14 @@ export default function DebitosVeicularesPage() {
                     </div>
 
                     <div className="bg-[#0c0a09] text-white p-4 rounded-sm border border-neutral-800 space-y-1 relative overflow-hidden shadow-inner">
-                      <div className="absolute top-0 right-0 w-24 h-24 bg-[#ff7711]/10 rounded-full blur-xl pointer-events-none" />
+                      <div className="absolute top-0 right-0 w-24 h-24 bg-[var(--brand-accent)]/10 rounded-full blur-xl pointer-events-none" />
                       <span className="block text-[8px] font-black text-neutral-400 uppercase tracking-widest leading-none">Subtotal do Débito</span>
                       <div className="flex justify-between items-baseline relative z-10">
                         <span className="text-[10px] text-neutral-400 font-bold uppercase">Valor Principal</span>
                         {sumLoading ? (
                           <div className="h-6 w-24 bg-neutral-800 animate-pulse rounded-sm" />
                         ) : (
-                          <span className="text-2xl font-black font-mono text-[#ff7711]">
+                          <span className="text-2xl font-black font-mono text-[var(--brand-accent)]">
                             {totalSumFormatted || "R$ 0,00"}
                           </span>
                         )}
@@ -1432,7 +1433,7 @@ export default function DebitosVeicularesPage() {
                     {installmentsOptions.length > 0 && (
                       <div className="border-t border-neutral-100 pt-4 space-y-3">
                         <label className="text-[9px] font-black uppercase tracking-widest text-neutral-400 flex items-center gap-1.5">
-                          <Coins className="h-3.5 w-3.5 text-[#ff7711]" /> Opções de Parcelamento no Cartão
+                          <Coins className="h-3.5 w-3.5 text-[var(--brand-accent)]" /> Opções de Parcelamento no Cartão
                         </label>
                         
                         <div className="relative">
@@ -1442,7 +1443,7 @@ export default function DebitosVeicularesPage() {
                               const found = installmentsOptions.find(o => o.parcelas === parseInt(e.target.value));
                               if (found) setSelectedInstallment(found);
                             }}
-                            className="w-full h-12 px-3.5 pr-10 border border-neutral-200 rounded-sm font-black text-xs bg-white text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[#ff7711]/20 focus:border-[#ff7711] appearance-none cursor-pointer"
+                            className="w-full h-12 px-3.5 pr-10 border border-neutral-200 rounded-sm font-black text-xs bg-white text-neutral-800 focus:outline-none focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)] appearance-none cursor-pointer"
                           >
                             {installmentsOptions.map((opt) => (
                               <option key={opt.parcelas} value={opt.parcelas}>
@@ -1458,10 +1459,10 @@ export default function DebitosVeicularesPage() {
                         {selectedInstallment && selectedInstallment.valorJuros > 0 && (
                           <div className="bg-orange-50/60 border border-orange-100 rounded-sm p-3 flex justify-between items-center text-[10px] font-bold text-neutral-600 leading-normal uppercase">
                             <div className="flex items-center gap-1.5">
-                              <span className="w-1.5 h-1.5 bg-[#ff7711] rounded-full animate-pulse" />
+                              <span className="w-1.5 h-1.5 bg-[var(--brand-accent)] rounded-full animate-pulse" />
                               <span>Tarifa do Parcelamento</span>
                             </div>
-                            <span className="text-[#ff7711] font-black">+{selectedInstallment.valorTotalJurosFormatado}</span>
+                            <span className="text-[var(--brand-accent)] font-black">+{selectedInstallment.valorTotalJurosFormatado}</span>
                           </div>
                         )}
                       </div>
@@ -1482,7 +1483,7 @@ export default function DebitosVeicularesPage() {
                 <Button
                   onClick={handleProceedToCheckout}
                   disabled={!selectedCategory || checkoutLoading}
-                  className="w-full h-14 bg-[#ff7711] hover:bg-[#0c0a09] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-lg flex items-center justify-center gap-2.5 transition-all group active:scale-[0.98] cursor-pointer border-0"
+                  className="w-full h-14 bg-[var(--brand-accent)] hover:bg-[#0c0a09] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-lg flex items-center justify-center gap-2.5 transition-all group active:scale-[0.98] cursor-pointer border-0"
                 >
                   {checkoutLoading ? (
                     <>
@@ -1556,16 +1557,16 @@ export default function DebitosVeicularesPage() {
           return "G8Pay";
         };
         return (
-          <div className="fixed inset-0 bg-neutral-950/80 z-50 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="fixed inset-0 bg-neutral-955/80 z-50 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-300" style={{ backgroundColor: "rgba(10, 8, 7, 0.85)" }}>
             <Card className="w-full max-w-4xl bg-white border border-neutral-100 rounded-[10px] relative overflow-hidden flex flex-col shadow-2xl animate-in zoom-in duration-300">
               {/* Modal Header */}
-              <div className="bg-neutral-955 text-white p-5 flex justify-between items-center border-b border-neutral-800" style={{ backgroundColor: "#0c0a09" }}>
+              <div className="text-white p-5 flex justify-between items-center border-b border-neutral-800" style={{ backgroundColor: "#0c0a09" }}>
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-[6px] bg-orange-500/10 text-orange-500 border border-orange-500/20">
+                  <div className="p-2 rounded-[6px] bg-brand-accent/10 text-brand-accent border border-brand-accent/20 animate-pulse">
                     <CreditCard className="h-5 w-5" />
                   </div>
-                  <div>
-                    <span className="font-extrabold uppercase tracking-widest text-sm block">G8Pay Checkout</span>
+                  <div className="text-left">
+                    <span className="font-extrabold uppercase tracking-widest text-sm block">{currentBrand.name} Checkout</span>
                     <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider block">Gateway de Pagamento Criptografado &amp; Autenticado</span>
                   </div>
                 </div>
@@ -1584,7 +1585,7 @@ export default function DebitosVeicularesPage() {
                   
                   {/* Transaction Summary */}
                   <div className="space-y-4">
-                    <span className="text-[10px] font-black uppercase text-neutral-400 tracking-wider block">Resumo do Pagamento</span>
+                    <span className="text-[10px] font-black uppercase text-neutral-400 tracking-wider block text-left">Resumo do Pagamento</span>
                     
                     <div className="bg-white p-4 rounded-[8px] border border-neutral-200/60 shadow-sm space-y-3">
                       <div className="flex justify-between items-center border-b border-neutral-100 pb-2">
@@ -1594,7 +1595,7 @@ export default function DebitosVeicularesPage() {
 
                       <div className="flex justify-between items-center border-b border-neutral-100 pb-2">
                         <span className="text-[10px] text-neutral-500 font-bold uppercase">Categoria</span>
-                        <span className="font-extrabold text-xs text-orange-600 uppercase">
+                        <span className="font-extrabold text-xs text-brand-accent uppercase">
                           {selectedCategory === "ipva" ? "IPVA" 
                            : selectedCategory === "licenciamento" ? "Licenciamento" 
                            : selectedCategory === "multas" ? "Multas de Trânsito" 
@@ -1634,13 +1635,13 @@ export default function DebitosVeicularesPage() {
                           }}
                         >
                           {/* Radial Glowing Accents */}
-                          <div className="absolute top-[-30%] right-[-20%] w-48 h-48 bg-orange-600/10 rounded-full blur-3xl pointer-events-none" />
-                          <div className="absolute bottom-[-30%] left-[-20%] w-48 h-48 bg-orange-500/5 rounded-full blur-3xl pointer-events-none" />
+                          <div className="absolute top-[-30%] right-[-20%] w-48 h-48 bg-brand-accent/10 rounded-full blur-3xl pointer-events-none" />
+                          <div className="absolute bottom-[-30%] left-[-20%] w-48 h-48 bg-brand-accent/5 rounded-full blur-3xl pointer-events-none" />
 
                           {/* Top Row: Brand & Wireless Wave */}
                           <div className="flex justify-between items-center z-10">
                             <div className="flex items-center">
-                              <img src="/logo_g8_official.png" alt="G8Pay" className="h-5 object-contain" />
+                              <img src={currentBrand.logoWhite} alt={currentBrand.name} className="h-5.5 object-contain" />
                             </div>
                             
                             {/* contactless pay symbol SVG */}
@@ -1672,7 +1673,7 @@ export default function DebitosVeicularesPage() {
                               </span>
                             </div>
 
-                            <div className="flex gap-4">
+                            <div className="flex gap-4 flex-shrink-0">
                               <div className="space-y-0.5 text-right">
                                 <span className="text-[7px] text-neutral-400 font-bold uppercase tracking-wider block">Validade</span>
                                 <span className="font-mono font-bold text-[10px] tracking-widest block text-neutral-100">
@@ -1692,7 +1693,7 @@ export default function DebitosVeicularesPage() {
                                   </div>
                                 )}
                                 {getCardBrand() === "G8Pay" && (
-                                  <span className="text-orange-500 font-black italic text-xs tracking-tighter">G8</span>
+                                  <span className="text-brand-secondary font-black italic text-xs tracking-tighter">{currentBrand.shortName}</span>
                                 )}
                               </div>
                             </div>
@@ -1724,10 +1725,10 @@ export default function DebitosVeicularesPage() {
                           {/* Info text & legal notes */}
                           <div className="space-y-1 text-center">
                             <span className="text-[6px] text-neutral-500 tracking-wider block max-w-xs mx-auto">
-                              Este cartão é propriedade do G8 Bank S/A. O uso deste cartão está sujeito aos termos do Contrato de Abertura de Conta e Serviços de Cartão.
+                              Este cartão é propriedade do {currentBrand.bankName}. O uso deste cartão está sujeito aos termos do Contrato de Abertura de Conta e Serviços de Cartão.
                             </span>
-                            <span className="text-[7px] text-orange-500 font-black tracking-widest block">
-                              SAC 24H: 0800 888 8000
+                            <span className="text-[7px] text-brand-accent font-black tracking-widest block">
+                              SAC 24H: {currentBrand.supportPhone}
                             </span>
                           </div>
                         </div>
@@ -1739,10 +1740,10 @@ export default function DebitosVeicularesPage() {
                   </div>
 
                   {/* Total sum indicator */}
-                  <div className="bg-neutral-900 text-white p-4.5 rounded-[8px] border border-neutral-800/60 shadow-lg space-y-1 w-full text-left">
+                  <div className="bg-neutral-900 text-white p-4.5 rounded-[8px] border border-neutral-800/40 shadow-lg space-y-1 w-full text-left">
                     <span className="text-[9px] font-black text-neutral-400 uppercase tracking-wider block">Total a ser debitado</span>
                     {selectedInstallment && (
-                      <span className="text-lg font-black text-orange-500 font-mono tracking-tight block">
+                      <span className="text-lg font-black text-brand-accent font-mono tracking-tight block">
                         {selectedInstallment.valorTotalFormatado}
                       </span>
                     )}
@@ -1758,14 +1759,14 @@ export default function DebitosVeicularesPage() {
                     <div className="flex border-b border-neutral-100 pb-1">
                       <button 
                         onClick={() => setCardTab("novo-cartao")}
-                        className={`flex-1 pb-3 text-xs font-black uppercase tracking-wider border-b-2 text-center transition-all cursor-pointer ${cardTab === "novo-cartao" ? "border-orange-500 text-orange-500" : "border-transparent text-neutral-400 hover:text-neutral-600"}`}
+                        className={`flex-1 pb-3 text-xs font-black uppercase tracking-wider border-b-2 text-center transition-all cursor-pointer ${cardTab === "novo-cartao" ? "border-brand-accent text-brand-accent" : "border-transparent text-neutral-400 hover:text-neutral-600"}`}
                         type="button"
                       >
                         Pagar com Novo Cartão
                       </button>
                       <button 
                         onClick={() => setCardTab("meus-cartoes")}
-                        className={`flex-1 pb-3 text-xs font-black uppercase tracking-wider border-b-2 text-center transition-all cursor-pointer ${cardTab === "meus-cartoes" ? "border-orange-500 text-orange-500" : "border-transparent text-neutral-400 hover:text-neutral-600"}`}
+                        className={`flex-1 pb-3 text-xs font-black uppercase tracking-wider border-b-2 text-center transition-all cursor-pointer ${cardTab === "meus-cartoes" ? "border-brand-accent text-brand-accent" : "border-transparent text-neutral-400 hover:text-neutral-600"}`}
                         type="button"
                       >
                         Meus Cartões Salvos
@@ -1781,7 +1782,7 @@ export default function DebitosVeicularesPage() {
                         <div className="space-y-1 max-w-sm">
                           <span className="font-extrabold text-neutral-700 text-sm block">Nenhum cartão de crédito salvo</span>
                           <span className="text-neutral-400 text-[10px] font-bold uppercase tracking-wide leading-relaxed block">
-                            Você ainda não possui cartões de crédito salvos vinculados à sua conta G8 Pay. Preencha os dados do novo cartão na aba ao lado para realizar o pagamento.
+                            Você ainda não possui cartões de crédito salvos vinculados à sua conta {currentBrand.name}. Preencha os dados do novo cartão na aba ao lado para realizar o pagamento.
                           </span>
                         </div>
                       </div>
@@ -1883,7 +1884,7 @@ export default function DebitosVeicularesPage() {
                             id="saveCardCheckbox" 
                             checked={saveCard}
                             onChange={(e) => setSaveCard(e.target.checked)}
-                            className="h-4 w-4 rounded-[3px] border-neutral-300 text-orange-500 focus:ring-orange-500 cursor-pointer"
+                            className="h-4 w-4 rounded-[3px] border-neutral-300 text-brand-accent focus:ring-brand-accent cursor-pointer"
                           />
                           <label htmlFor="saveCardCheckbox" className="text-[9px] font-extrabold uppercase text-neutral-500 tracking-wide select-none cursor-pointer text-left">
                             Salvar este cartão de crédito de forma segura para compras futuras
@@ -1895,7 +1896,7 @@ export default function DebitosVeicularesPage() {
                           <Button 
                             type="submit"
                             disabled={checkoutLoading || paymentLoading}
-                            className="w-full bg-[#ff7711] hover:bg-[#ee6600] text-white font-extrabold text-xs uppercase tracking-widest h-12 rounded-[8px] transition-all shadow-md flex items-center justify-center gap-2"
+                            className="w-full bg-brand-accent hover:bg-brand-accent-hover text-white font-extrabold text-xs uppercase tracking-widest h-12 rounded-[8px] transition-all shadow-md flex items-center justify-center gap-2 animate-pulse"
                           >
                             {checkoutLoading ? (
                               <>
@@ -1924,7 +1925,7 @@ export default function DebitosVeicularesPage() {
                       </svg>
                       <span>Criptografia de Dados SSL / Padrão de Segurança PCI-DSS</span>
                     </div>
-                    <span>G8 Shield ATIVO</span>
+                    <span>{currentBrand.shortName.toUpperCase()} Shield ATIVO</span>
                   </div>
 
                 </div>
@@ -1939,7 +1940,7 @@ export default function DebitosVeicularesPage() {
         <div className="max-w-xl mx-auto space-y-8 animate-in zoom-in duration-300 relative z-10">
           <Card className="border border-neutral-200 bg-white shadow-2xl relative overflow-hidden rounded-xl text-[#0c0a09]">
             {/* Top decorative receipt cut stripes */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#ff7711] to-[#ffaa00]" />
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-brand-accent to-brand-secondary" />
             
             <div className="p-8 space-y-8">
               
@@ -1966,7 +1967,7 @@ export default function DebitosVeicularesPage() {
 
                   <div className="space-y-1">
                     <span className="text-[9px] text-neutral-400 block font-black">Tipo de Débito</span>
-                    <span className="text-sm font-extrabold text-[#ff7711]">{receiptData.category}</span>
+                    <span className="text-sm font-extrabold text-[var(--brand-accent)]">{receiptData.category}</span>
                   </div>
 
                   <div className="space-y-1">
@@ -2007,7 +2008,7 @@ export default function DebitosVeicularesPage() {
               <div className="flex gap-4">
                 <Button
                   onClick={() => { setShowReceipt(false); setPlaca(""); setRenavam(""); }}
-                  className="flex-1 h-12 bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[9px] shadow-lg transition-all"
+                  className="flex-1 h-12 bg-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[9px] shadow-lg transition-all"
                 >
                   Consultar Outro Veículo
                 </Button>
@@ -2029,7 +2030,7 @@ export default function DebitosVeicularesPage() {
       {/* Global Processing payment spinner overlay */}
       {paymentLoading && (
         <div className="fixed inset-0 bg-neutral-900/60 z-50 flex flex-col items-center justify-center space-y-4 backdrop-blur-sm">
-          <RotateCw className="w-16 h-16 text-[#ff7711] animate-spin" />
+          <RotateCw className="w-16 h-16 text-[var(--brand-accent)] animate-spin" />
           <span className="text-sm font-black uppercase tracking-widest text-white animate-pulse">
             Efetivando liquidação com o DETRAN... Não feche esta tela!
           </span>

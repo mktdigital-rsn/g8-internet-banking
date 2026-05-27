@@ -105,14 +105,14 @@ export default function PixPage() {
     return (
         <div className="p-4 md:p-8 xl:p-12 flex flex-col xl:flex-row gap-8 xl:gap-12 h-full overflow-y-auto w-full no-scrollbar bg-[#f8f9fa] relative">
             {/* Background elements */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#f97316]/5 rounded-full blur-[120px] -mr-64 -mt-64 pointer-events-none" />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--brand-accent)]/5 rounded-full blur-[120px] -mr-64 -mt-64 pointer-events-none" />
 
             {/* Main Content Area */}
             <div className="flex-1 space-y-12 relative z-10">
                 {/* Header Section */}
                 <div className="space-y-4">
                     <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none">
-                        Área <span className="text-[#f97316]">PIX</span>
+                        Área <span className="text-[var(--brand-accent)]">PIX</span>
                     </h1>
                 </div>
 

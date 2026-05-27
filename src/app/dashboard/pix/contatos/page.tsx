@@ -106,21 +106,21 @@ export default function PixContatosPage() {
   return (
     <div className="bg-[#f8f9fa] rounded-[32px] p-6 md:p-10 border border-neutral-200/60 space-y-10 relative">
       {/* Background Decorativo */}
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[#f97316]/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[var(--brand-accent)]/5 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 relative z-10">
         <div className="flex items-start gap-4 w-full">
           <Link href="/dashboard/pix" className="mt-1">
             <Button variant="ghost" size="icon" className="rounded-xl hover:bg-neutral-200/50 h-12 w-12 shrink-0 border border-neutral-200/80 bg-white shadow-sm transition-all">
-               <ArrowLeft className="h-6 w-6 text-[#f97316]" />
+               <ArrowLeft className="h-6 w-6 text-[var(--brand-accent)]" />
             </Button>
           </Link>
           <div className="space-y-4 flex-1">
-             <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">G8Pay • Pix</Badge>
+             <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">G8Pay • Pix</Badge>
              <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase flex items-center gap-3 flex-wrap">
-               Favoritos & <span className="text-[#f97316]">Contatos</span>
-               <Contact2 className="h-10 w-10 text-[#f97316] stroke-[2.5]" />
+               Favoritos & <span className="text-[var(--brand-accent)]">Contatos</span>
+               <Contact2 className="h-10 w-10 text-[var(--brand-accent)] stroke-[2.5]" />
              </h1>
              <p className="text-sm md:text-base text-neutral-400 font-bold max-w-2xl">
                Gerencie seus contatos frequentes e realize transferências com apenas um clique.
@@ -134,12 +134,12 @@ export default function PixContatosPage() {
         <main className="lg:col-span-8 space-y-10">
           {/* Campo de Busca Inteligente */}
           <div className="relative group">
-             <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[#f97316] transition-colors" />
+             <Search className="absolute left-6 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400 group-focus-within:text-[var(--brand-accent)] transition-colors" />
              <Input 
                value={searchTerm}
                onChange={(e) => setSearchTerm(e.target.value)}
                placeholder="Pesquisar por nome, chave ou banco..." 
-               className="h-16 bg-white border border-neutral-200/80 rounded-2xl pl-16 pr-8 focus:ring-4 focus:ring-[#f97316]/10 focus:border-[#f97316] transition-all shadow-sm font-bold text-lg text-[#0c0a09]"
+               className="h-16 bg-white border border-neutral-200/80 rounded-2xl pl-16 pr-8 focus:ring-4 focus:ring-[var(--brand-accent)]/10 focus:border-[var(--brand-accent)] transition-all shadow-sm font-bold text-lg text-[#0c0a09]"
              />
           </div>
 
@@ -158,8 +158,8 @@ export default function PixContatosPage() {
                        className="flex flex-col items-center gap-3 group cursor-pointer shrink-0"
                      >
                         <div className="relative">
-                           <div className="w-24 h-24 rounded-[28px] bg-white border border-neutral-200/50 group-hover:border-[#f97316] group-hover:scale-105 p-1.5 transition-all shadow-md group-hover:shadow-orange-500/10">
-                              <div className="w-full h-full rounded-[20px] bg-orange-500/5 flex items-center justify-center font-black text-2xl text-[#f97316] overflow-hidden relative">
+                           <div className="w-24 h-24 rounded-[28px] bg-white border border-neutral-200/50 group-hover:border-[var(--brand-accent)] group-hover:scale-105 p-1.5 transition-all shadow-md group-hover:shadow-orange-500/10">
+                              <div className="w-full h-full rounded-[20px] bg-orange-500/5 flex items-center justify-center font-black text-2xl text-[var(--brand-accent)] overflow-hidden relative">
                                  {c.nome ? c.nome.charAt(0).toUpperCase() : "?"}
                               </div>
                            </div>
@@ -168,7 +168,7 @@ export default function PixContatosPage() {
                            </div>
                         </div>
                         <div className="text-center w-24">
-                           <p className="text-xs font-black text-[#0c0a09] truncate group-hover:text-[#f97316] transition-colors uppercase">{c.nome}</p>
+                           <p className="text-xs font-black text-[#0c0a09] truncate group-hover:text-[var(--brand-accent)] transition-colors uppercase">{c.nome}</p>
                            <p className="text-[9px] text-neutral-400 font-bold uppercase truncate">{c.instituicao || "PIX"}</p>
                         </div>
                      </div>
@@ -188,8 +188,8 @@ export default function PixContatosPage() {
                      onClick={() => setSelectedLetter(null)}
                      className={`px-4 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border shrink-0 ${
                        !selectedLetter 
-                         ? "bg-[#f97316] text-white border-[#f97316] shadow-md shadow-orange-500/10" 
-                         : "bg-white text-neutral-400 border-neutral-200/60 hover:text-[#f97316] hover:border-orange-200"
+                         ? "bg-[var(--brand-accent)] text-white border-[var(--brand-accent)] shadow-md shadow-orange-500/10" 
+                         : "bg-white text-neutral-400 border-neutral-200/60 hover:text-[var(--brand-accent)] hover:border-orange-200"
                      }`}
                    >
                       Todos
@@ -200,8 +200,8 @@ export default function PixContatosPage() {
                         onClick={() => setSelectedLetter(selectedLetter === letter ? null : letter)}
                         className={`w-10 h-10 shrink-0 rounded-xl text-[10px] font-black uppercase transition-all border flex items-center justify-center ${
                           selectedLetter === letter 
-                            ? "bg-[#f97316] text-white border-[#f97316] shadow-md shadow-orange-500/10" 
-                            : "bg-white text-neutral-400 border-neutral-200/60 hover:text-[#f97316] hover:border-orange-200"
+                            ? "bg-[var(--brand-accent)] text-white border-[var(--brand-accent)] shadow-md shadow-orange-500/10" 
+                            : "bg-white text-neutral-400 border-neutral-200/60 hover:text-[var(--brand-accent)] hover:border-orange-200"
                         }`}
                       >
                          {letter}
@@ -228,13 +228,13 @@ export default function PixContatosPage() {
                          className="relative p-5 xl:p-6 bg-white rounded-3xl border border-neutral-200/60 shadow-sm hover:shadow-md hover:border-orange-200/80 transition-all cursor-pointer group flex flex-row xl:flex-col items-center gap-4 xl:gap-3 justify-start xl:justify-between min-h-0 xl:min-h-[220px]"
                        >
                           {/* Avatar da Letra */}
-                          <div className="w-12 h-12 xl:w-14 xl:h-14 rounded-2xl bg-orange-500/5 border border-orange-100/50 flex items-center justify-center font-black text-xl text-[#f97316] group-hover:scale-105 transition-transform shrink-0 xl:mb-1">
+                          <div className="w-12 h-12 xl:w-14 xl:h-14 rounded-2xl bg-orange-500/5 border border-orange-100/50 flex items-center justify-center font-black text-xl text-[var(--brand-accent)] group-hover:scale-105 transition-transform shrink-0 xl:mb-1">
                              {c.nome ? c.nome.charAt(0).toUpperCase() : "?"}
                           </div>
 
                           {/* Informações do Contato */}
                           <div className="flex-1 flex flex-col xl:items-center text-left xl:text-center min-w-0">
-                             <p className="font-black text-base text-[#0c0a09] leading-tight mb-1 xl:mb-2 group-hover:text-[#f97316] transition-colors break-words max-w-full xl:max-w-[150px] uppercase line-clamp-1 xl:line-clamp-2">
+                             <p className="font-black text-base text-[#0c0a09] leading-tight mb-1 xl:mb-2 group-hover:text-[var(--brand-accent)] transition-colors break-words max-w-full xl:max-w-[150px] uppercase line-clamp-1 xl:line-clamp-2">
                                 {c.nome}
                              </p>
                              <div className="flex items-center xl:flex-col gap-2 xl:gap-1.5 flex-wrap">
@@ -242,7 +242,7 @@ export default function PixContatosPage() {
                                    {c.instituicao || "Instituição PIX"}
                                 </p>
                                 <div className="w-1 h-1 bg-neutral-200 rounded-full shrink-0 xl:hidden" />
-                                <Badge variant="secondary" className="bg-[#f97316]/5 text-[#f97316] text-[8px] font-black tracking-widest uppercase py-0.5 px-2 border-0 shrink-0">
+                                <Badge variant="secondary" className="bg-[var(--brand-accent)]/5 text-[var(--brand-accent)] text-[8px] font-black tracking-widest uppercase py-0.5 px-2 border-0 shrink-0">
                                    PIX
                                 </Badge>
                              </div>
@@ -257,7 +257,7 @@ export default function PixContatosPage() {
                                  e.stopPropagation();
                                  setActiveMenuId(activeMenuId === c.id ? null : c.id);
                                }}
-                               className="h-8 w-8 rounded-xl text-neutral-400 hover:text-[#f97316] hover:bg-neutral-100 transition-all flex items-center justify-center"
+                               className="h-8 w-8 rounded-xl text-neutral-400 hover:text-[var(--brand-accent)] hover:bg-neutral-100 transition-all flex items-center justify-center"
                                title="Opções"
                              >
                                 <MoreVertical className="h-4 w-4" />
@@ -280,7 +280,7 @@ export default function PixContatosPage() {
                                          setActiveMenuId(null);
                                          handleSendPix(c);
                                        }}
-                                       className="w-full text-left px-4 py-2.5 text-xs font-black uppercase tracking-wider text-neutral-700 hover:text-[#f97316] hover:bg-neutral-50 transition-all flex items-center gap-2"
+                                       className="w-full text-left px-4 py-2.5 text-xs font-black uppercase tracking-wider text-neutral-700 hover:text-[var(--brand-accent)] hover:bg-neutral-50 transition-all flex items-center gap-2"
                                      >
                                         <Send className="h-3.5 w-3.5" />
                                         Enviar Pix
@@ -310,7 +310,7 @@ export default function PixContatosPage() {
         {/* Coluna Lateral */}
         <aside className="lg:col-span-4 space-y-8">
            <div className="rounded-3xl border-0 bg-neutral-900 p-8 text-white relative overflow-hidden group shadow-md">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-[#f97316]/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--brand-accent)]/20 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-1000" />
               <div className="relative z-10 flex flex-col items-center text-center space-y-6">
                  <div className="w-16 h-16 bg-white/5 rounded-2xl flex items-center justify-center p-4 group-hover:rotate-12 transition-transform duration-500">
                     <Star className="h-full w-full text-yellow-400 fill-yellow-400" />
@@ -326,7 +326,7 @@ export default function PixContatosPage() {
               <h4 className="font-black text-[#0c0a09]/50 uppercase tracking-widest text-[10px]">Busca Inteligente</h4>
               <div className="space-y-4">
                  <p className="text-xs text-neutral-400 font-bold leading-relaxed">Agora você pode buscar contatos também pelo Banco ou pelo final do CPF cadastrado.</p>
-                 <button className="text-[10px] font-black text-[#f97316] border-b-2 border-[#f97316]/10 hover:border-[#f97316] transition-colors pb-0.5 uppercase tracking-widest">Saber Mais</button>
+                 <button className="text-[10px] font-black text-[var(--brand-accent)] border-b-2 border-[var(--brand-accent)]/10 hover:border-[var(--brand-accent)] transition-colors pb-0.5 uppercase tracking-widest">Saber Mais</button>
               </div>
            </div>
         </aside>
@@ -353,7 +353,7 @@ export default function PixContatosPage() {
             {/* Card com Detalhes do Contato */}
             {contactToDelete && (
               <div className="p-6 bg-gradient-to-r from-rose-500/5 to-rose-500/[0.02] border border-rose-100 rounded-2xl flex items-center gap-4">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500 to-[#f97316] text-white flex items-center justify-center font-black text-2xl shadow-md shadow-rose-500/20 shrink-0">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-rose-500 to-[var(--brand-accent)] text-white flex items-center justify-center font-black text-2xl shadow-md shadow-rose-500/20 shrink-0">
                   {contactToDelete.nome ? contactToDelete.nome.charAt(0).toUpperCase() : "?"}
                 </div>
                 <div className="text-left min-w-0 flex-1">

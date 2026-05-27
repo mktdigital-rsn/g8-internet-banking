@@ -238,12 +238,12 @@ export default function PagadorDataPage() {
       <div className="mb-10 flex items-center gap-6">
         <button
           onClick={() => router.back()}
-          className="p-3 hover:bg-neutral-100 rounded-sm transition-colors text-[#0c0a09] border border-transparent hover:border-[#f97316]"
+          className="p-3 hover:bg-neutral-100 rounded-sm transition-colors text-[#0c0a09] border border-transparent hover:border-[var(--brand-accent)]"
         >
           <ArrowLeft className="h-6 w-6" />
         </button>
         <div>
-          <Badge className="bg-[#f97316] text-white border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-sm mb-2 shadow-lg shadow-orange-500/20">Aguardando Dados</Badge>
+          <Badge className="bg-[var(--brand-accent)] text-white border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-sm mb-2 shadow-lg shadow-orange-500/20">Aguardando Dados</Badge>
           <h1 className="text-4xl font-black text-[#0c0a09] tracking-tighter uppercase mb-2">Dados do Pagador</h1>
           <p className="text-neutral-500 font-medium italic">Falta pouco! Preencha as informações de quem irá realizar o pagamento.</p>
         </div>
@@ -253,42 +253,42 @@ export default function PagadorDataPage() {
         <div className="grid md:grid-cols-2 gap-8">
           {/* Dados Pessoais */}
           <Card className="border-none shadow-2xl bg-white rounded-sm relative overflow-hidden">
-            <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#f97316]" />
+            <div className="absolute left-0 top-0 bottom-0 w-2 bg-[var(--brand-accent)]" />
             <CardHeader className="border-b border-neutral-50 p-8 bg-neutral-50/30">
               <CardTitle className="text-xl font-black uppercase flex items-center gap-3 text-[#0c0a09]">
-                <User className="h-5 w-5 text-[#f97316]" />
+                <User className="h-5 w-5 text-[var(--brand-accent)]" />
                 Identificação
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <div className="space-y-2">
-                <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Nome Completo / Razão Social</label>
+                <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Nome Completo / Razão Social</label>
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
                   <Input
                     value={formData.pagadorNome}
                     onChange={(e) => setFormData({ ...formData, pagadorNome: e.target.value })}
                     placeholder="Ex: João da Silva"
-                    className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                    className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] focus:ring-0 rounded-sm"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">CPF ou CNPJ</label>
+                <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">CPF ou CNPJ</label>
                 <div className="relative">
                   <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
                   <Input
                     value={formData.pagadorTaxNumber}
                     onChange={(e) => setFormData({ ...formData, pagadorTaxNumber: e.target.value })}
                     placeholder="Somente números"
-                    className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                    className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] focus:ring-0 rounded-sm"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">E-mail</label>
+                <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">E-mail</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
                   <Input
@@ -296,20 +296,20 @@ export default function PagadorDataPage() {
                     value={formData.pagadorEmail}
                     onChange={(e) => setFormData({ ...formData, pagadorEmail: e.target.value })}
                     placeholder="cliente@email.com"
-                    className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                    className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] focus:ring-0 rounded-sm"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Telefone de Contato</label>
+                <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Telefone de Contato</label>
                 <div className="relative">
                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
                   <Input
                     value={formData.pagadorTelefone}
                     onChange={(e) => setFormData({ ...formData, pagadorTelefone: e.target.value })}
                     placeholder="(11) 99999-9999"
-                    className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                    className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] focus:ring-0 rounded-sm"
                   />
                 </div>
               </div>
@@ -317,7 +317,7 @@ export default function PagadorDataPage() {
               <div className="space-y-4 pt-4 border-t border-neutral-100">
                 <div className="flex items-center justify-between p-4 bg-orange-50/50 rounded-sm border border-orange-100/50 group hover:border-orange-500/30 transition-all">
                   <div className="space-y-1">
-                    <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316] flex items-center gap-2">
+                    <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)] flex items-center gap-2">
                       <Repeat className={cn("h-4 w-4 transition-all", isRecorrente ? "rotate-180 text-orange-600" : "text-neutral-400")} />
                       Cobrança Recorrente
                     </label>
@@ -326,14 +326,14 @@ export default function PagadorDataPage() {
                   <Switch
                     checked={isRecorrente}
                     onCheckedChange={setIsRecorrente}
-                    className="data-[state=checked]:bg-[#f97316]"
+                    className="data-[state=checked]:bg-[var(--brand-accent)]"
                   />
                 </div>
 
                 {isRecorrente ? (
                   <div className="grid grid-cols-2 gap-4 animate-in slide-in-from-top-2 duration-300">
                     <div className="space-y-2">
-                      <label className="text-[11px] font-black uppercase tracking-widest text-[#f97316] flex items-center gap-2">
+                      <label className="text-[11px] font-black uppercase tracking-widest text-[var(--brand-accent)] flex items-center gap-2">
                         <CalendarCheck className="h-3.5 w-3.5" /> Dia do Venc.
                       </label>
                       <Input
@@ -346,11 +346,11 @@ export default function PagadorDataPage() {
                             setDiaVencimento(val === "" ? 0 : Number(val));
                           }
                         }}
-                        className="h-12 bg-neutral-50 border-neutral-100 font-black focus:border-[#f97316] transition-all rounded-sm text-center"
+                        className="h-12 bg-neutral-50 border-neutral-100 font-black focus:border-[var(--brand-accent)] transition-all rounded-sm text-center"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-[11px] font-black uppercase tracking-widest text-[#f97316] flex items-center gap-2">
+                      <label className="text-[11px] font-black uppercase tracking-widest text-[var(--brand-accent)] flex items-center gap-2">
                         <Layers className="h-3.5 w-3.5" /> Qtd. Meses
                       </label>
                       <Input
@@ -363,18 +363,18 @@ export default function PagadorDataPage() {
                             setQuantidadeMeses(val === "" ? 0 : Number(val));
                           }
                         }}
-                        className="h-12 bg-neutral-50 border-neutral-100 font-black focus:border-[#f97316] transition-all rounded-sm text-center"
+                        className="h-12 bg-neutral-50 border-neutral-100 font-black focus:border-[var(--brand-accent)] transition-all rounded-sm text-center"
                       />
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-2 animate-in fade-in duration-300">
-                    <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Data de Vencimento</label>
+                    <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Data de Vencimento</label>
                     <Input
                       type="date"
                       value={formData.dataVencimento}
                       onChange={(e) => setFormData({ ...formData, dataVencimento: e.target.value })}
-                      className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                      className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] focus:ring-0 rounded-sm"
                     />
                   </div>
                 )}
@@ -384,88 +384,88 @@ export default function PagadorDataPage() {
 
           {/* Endereço */}
           <Card className="border-none shadow-2xl bg-white rounded-sm relative overflow-hidden">
-            <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#f97316]" />
+            <div className="absolute left-0 top-0 bottom-0 w-2 bg-[var(--brand-accent)]" />
             <CardHeader className="border-b border-neutral-50 p-8 bg-neutral-50/30">
               <CardTitle className="text-xl font-black uppercase flex items-center gap-3 text-[#0c0a09]">
-                <MapPin className="h-5 w-5 text-[#f97316]" />
+                <MapPin className="h-5 w-5 text-[var(--brand-accent)]" />
                 Endereço
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">CEP</label>
+                  <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">CEP</label>
                   <div className="relative">
                     <Input
                       value={formData.pagadorCep}
                       onChange={(e) => setFormData({ ...formData, pagadorCep: e.target.value })}
                       onBlur={handleCepBlur}
                       placeholder="00000-000"
-                      className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                      className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] focus:ring-0 rounded-sm"
                     />
                     {isCepLoading && (
-                      <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[#f97316]" />
+                      <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-[var(--brand-accent)]" />
                     )}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Número</label>
+                  <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Número</label>
                   <Input
                     value={formData.pagadorNumero}
                     onChange={(e) => setFormData({ ...formData, pagadorNumero: e.target.value })}
                     placeholder="123"
-                    className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                    className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] focus:ring-0 rounded-sm"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Rua / Logradouro</label>
+                <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Rua / Logradouro</label>
                 <Input
                   value={formData.pagadorRua}
                   onChange={(e) => setFormData({ ...formData, pagadorRua: e.target.value })}
                   placeholder="Nome da rua"
-                  className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                  className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] focus:ring-0 rounded-sm"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Bairro</label>
+                <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Bairro</label>
                 <Input
                   value={formData.pagadorBairro}
                   onChange={(e) => setFormData({ ...formData, pagadorBairro: e.target.value })}
                   placeholder="Seu bairro"
-                  className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                  className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] focus:ring-0 rounded-sm"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Complemento (Opcional)</label>
+                <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Complemento (Opcional)</label>
                 <Input
                   value={formData.pagadorComplemento}
                   onChange={(e) => setFormData({ ...formData, pagadorComplemento: e.target.value })}
                   placeholder="Ex: Apto 101, Sala 2"
-                  className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                  className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] focus:ring-0 rounded-sm"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">Cidade</label>
+                  <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Cidade</label>
                   <Input
                     value={formData.pagadorCidade}
                     onChange={(e) => setFormData({ ...formData, pagadorCidade: e.target.value })}
                     placeholder="Cidade"
-                    className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                    className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] focus:ring-0 rounded-sm"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[12px] font-black uppercase tracking-widest text-[#f97316]">UF</label>
+                  <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">UF</label>
                   <Input
                     value={formData.pagadorUf}
                     onChange={(e) => setFormData({ ...formData, pagadorUf: e.target.value })}
                     placeholder="UF"
-                    className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[#f97316] focus:ring-0 rounded-sm"
+                    className="h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] focus:ring-0 rounded-sm"
                   />
                 </div>
               </div>
@@ -475,8 +475,8 @@ export default function PagadorDataPage() {
 
         <div className="mt-10 flex flex-col items-center gap-6">
           <div className="flex items-center gap-3 text-neutral-400 font-bold text-sm">
-            <div className="p-2 bg-[#f97316]/10 rounded-sm border border-[#f97316]/20">
-              <Hash className="h-4 w-4 text-[#f97316]" />
+            <div className="p-2 bg-[var(--brand-accent)]/10 rounded-sm border border-[var(--brand-accent)]/20">
+              <Hash className="h-4 w-4 text-[var(--brand-accent)]" />
             </div>
             Valor selecionado: <span className="text-[#0c0a09] font-black text-xl tracking-tighter">{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cobrancaData.valor)}</span>
           </div>
@@ -484,7 +484,7 @@ export default function PagadorDataPage() {
           <Button
             type="submit"
             disabled={isLoading}
-            className="w-full h-24 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm text-2xl font-black uppercase tracking-[0.3em] transition-all shadow-2xl relative overflow-hidden group"
+            className="w-full h-24 bg-[#0c0a09] hover:bg-[var(--brand-accent)] text-white rounded-sm text-2xl font-black uppercase tracking-[0.3em] transition-all shadow-2xl relative overflow-hidden group"
           >
             {isLoading ? (
               <Loader2 className="h-6 w-6 animate-spin" />
@@ -492,7 +492,7 @@ export default function PagadorDataPage() {
               <>
                 <span className="relative z-10">Gerar Cobrança Agora</span>
                 <Send className="ml-3 h-6 w-6 relative z-10 group-hover:translate-x-2 group-hover:-translate-y-2 transition-transform" />
-                <div className="absolute inset-0 bg-[#f97316] opacity-0 group-hover:opacity-100 transition-all duration-500 -translate-x-full group-hover:translate-x-0" />
+                <div className="absolute inset-0 bg-[var(--brand-accent)] opacity-0 group-hover:opacity-100 transition-all duration-500 -translate-x-full group-hover:translate-x-0" />
               </>
             )}
           </Button>

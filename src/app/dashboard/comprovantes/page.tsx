@@ -33,7 +33,7 @@ import {
 } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 
-const COLORS = ["#f97316", "#3b82f6", "#10b981", "#ef4444", "#a855f7"];
+const COLORS = ["var(--brand-accent)", "#3b82f6", "#10b981", "#ef4444", "#a855f7"];
 
 export default function ComprovantesPage() {
     const router = useRouter();

@@ -751,17 +751,17 @@ export default function ProtecaoVeicularPage() {
   return (
     <div className="bg-[#f8f9fa] rounded-[4px] p-6 md:p-10 border border-neutral-200/60 space-y-10 relative overflow-hidden">
       {/* Background Decorativo */}
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[#ff7711]/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[var(--brand-accent)]/5 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-4 border-b border-neutral-200/60 relative z-10">
         <div className="space-y-3">
-          <Badge variant="secondary" className="bg-[#ff7711]/10 text-[#ff7711] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">
+          <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">
             Serviços Automotivos Premium
           </Badge>
           <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase flex items-center gap-3">
-            Proteção <span className="text-[#ff7711]">Veicular</span>
-            <Shield className="h-10 w-10 text-[#ff7711] stroke-[2.5]" />
+            Proteção <span className="text-[var(--brand-accent)]">Veicular</span>
+            <Shield className="h-10 w-10 text-[var(--brand-accent)] stroke-[2.5]" />
           </h1>
           <p className="text-sm md:text-base text-neutral-400 font-bold max-w-2xl">
             Assistência 24h, seguro completo e proteção FIPE integrada em minutos de forma 100% nativa.
@@ -772,7 +772,7 @@ export default function ProtecaoVeicularPage() {
           <div className="flex items-center gap-3 self-start md:self-auto">
             <Button 
               onClick={() => setStep(step - 1)} 
-              className="h-10 px-5 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-[10px] tracking-widest rounded-sm flex items-center gap-1.5 transition-all"
+              className="h-10 px-5 border-2 border-[var(--brand-accent)] bg-[var(--brand-accent)]/5 hover:bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] font-black uppercase text-[10px] tracking-widest rounded-sm flex items-center gap-1.5 transition-all"
             >
               <ChevronLeft className="h-4 w-4" /> Voltar Passo
             </Button>
@@ -792,7 +792,7 @@ export default function ProtecaoVeicularPage() {
         {/* Mobile View */}
         <div className="md:hidden flex items-center justify-between bg-white border border-neutral-200 p-4 rounded-sm">
           <div className="space-y-1">
-            <span className="text-[10px] font-black text-[#ff7711] uppercase tracking-widest">
+            <span className="text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest">
               Passo {step} de 10
             </span>
             <h3 className="font-black text-[#0c0a09] text-base">
@@ -806,11 +806,11 @@ export default function ProtecaoVeicularPage() {
                 <div 
                   key={i} 
                   onClick={() => selectable && setStep(i + 1)}
-                  className={`h-2 rounded-full transition-all duration-300 ${selectable ? "cursor-pointer hover:bg-[#ff7711]/80" : ""} ${
+                  className={`h-2 rounded-full transition-all duration-300 ${selectable ? "cursor-pointer hover:bg-[var(--brand-accent)]/80" : ""} ${
                     i + 1 === step 
-                      ? "w-6 bg-[#ff7711]" 
+                      ? "w-6 bg-[var(--brand-accent)]" 
                       : i + 1 < step 
-                        ? "w-2 bg-[#ff7711]/60" 
+                        ? "w-2 bg-[var(--brand-accent)]/60" 
                         : "w-2 bg-neutral-200"
                   }`}
                 />
@@ -823,7 +823,7 @@ export default function ProtecaoVeicularPage() {
         <div className="hidden md:flex justify-between items-center relative w-full px-4">
           <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-neutral-200 -translate-y-1/2 z-0" />
           <div 
-            className="absolute top-1/2 left-0 h-0.5 bg-[#ff7711] -translate-y-1/2 z-0 transition-all duration-500"
+            className="absolute top-1/2 left-0 h-0.5 bg-[var(--brand-accent)] -translate-y-1/2 z-0 transition-all duration-500"
             style={{ width: `${((step - 1) / (stepsConfig.length - 1)) * 100}%` }}
           />
 
@@ -842,22 +842,22 @@ export default function ProtecaoVeicularPage() {
                 <div 
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs transition-all duration-300 border-2 ${
                     isActive 
-                      ? "bg-[#0c0a09] border-[#ff7711] text-white shadow-lg shadow-[#ff7711]/20 scale-110" 
+                      ? "bg-[#0c0a09] border-[var(--brand-accent)] text-white shadow-lg shadow-[var(--brand-accent)]/20 scale-110" 
                       : isCompleted 
-                        ? "bg-[#ff7711] border-[#ff7711] text-white" 
+                        ? "bg-[var(--brand-accent)] border-[var(--brand-accent)] text-white" 
                         : "bg-white border-neutral-300 text-neutral-400"
-                  } ${selectable && !isActive ? "group-hover/step:border-[#ffaa00] group-hover/step:bg-neutral-50 group-hover/step:text-[#ff7711]" : ""}`}
+                  } ${selectable && !isActive ? "group-hover/step:border-[#ffaa00] group-hover/step:bg-neutral-50 group-hover/step:text-[var(--brand-accent)]" : ""}`}
                 >
                   {isCompleted ? <Check className="h-5 w-5" /> : idx + 1}
                 </div>
                 <div className="mt-3 text-center">
                   <span className={`block font-black text-[9px] uppercase tracking-wider ${
                     isActive 
-                      ? "text-[#ff7711]" 
+                      ? "text-[var(--brand-accent)]" 
                       : isCompleted 
                         ? "text-neutral-600" 
                         : "text-neutral-400"
-                  } ${selectable && !isActive ? "group-hover/step:text-[#ff7711] transition-colors" : ""}`}>
+                  } ${selectable && !isActive ? "group-hover/step:text-[var(--brand-accent)] transition-colors" : ""}`}>
                     {s.label}
                   </span>
                 </div>
@@ -871,8 +871,8 @@ export default function ProtecaoVeicularPage() {
       <div className="relative z-10 min-h-[400px] flex items-center justify-center w-full">
         {loading && (
           <div className="absolute inset-0 bg-white/70 rounded-sm z-30 flex flex-col items-center justify-center space-y-4">
-            <RotateCw className="w-12 h-12 text-[#ff7711] animate-spin" />
-            <span className="text-xs font-black uppercase tracking-widest text-[#ff7711] animate-pulse">
+            <RotateCw className="w-12 h-12 text-[var(--brand-accent)] animate-spin" />
+            <span className="text-xs font-black uppercase tracking-widest text-[var(--brand-accent)] animate-pulse">
               Processando sua solicitação...
             </span>
           </div>
@@ -898,8 +898,8 @@ export default function ProtecaoVeicularPage() {
                     onClick={() => handleSelectRegisteredVehicle(vehicle)}
                     className={`p-6 border rounded-xl shadow-lg relative overflow-hidden flex flex-col justify-between transition-all hover:scale-[1.02] duration-300 cursor-pointer ${
                       isActive 
-                        ? "bg-[#0c0a09] border-[#ff7711]/40 text-white shadow-[#ff7711]/5" 
-                        : "bg-white border-dashed border-[#ff7711]/30 border-2 hover:border-[#ff7711] text-[#0c0a09]"
+                        ? "bg-[#0c0a09] border-[var(--brand-accent)]/40 text-white shadow-[var(--brand-accent)]/5" 
+                        : "bg-white border-dashed border-[var(--brand-accent)]/30 border-2 hover:border-[var(--brand-accent)] text-[#0c0a09]"
                     }`}
                   >
                     <div className="space-y-4">
@@ -911,7 +911,7 @@ export default function ProtecaoVeicularPage() {
                         }`}>
                           {vehicle.status}
                         </Badge>
-                        <Car className={`h-6 w-6 ${isActive ? "text-[#ff7711]" : "text-neutral-400"}`} />
+                        <Car className={`h-6 w-6 ${isActive ? "text-[var(--brand-accent)]" : "text-neutral-400"}`} />
                       </div>
 
                       <div className="text-left space-y-1">
@@ -927,14 +927,14 @@ export default function ProtecaoVeicularPage() {
                       {isActive ? (
                         <>
                           <span className="text-[9px] font-bold text-neutral-400 uppercase">Premium Ativo</span>
-                          <span className="text-xs font-black text-[#ff7711]">{vehicle.price}/mês</span>
+                          <span className="text-xs font-black text-[var(--brand-accent)]">{vehicle.price}/mês</span>
                         </>
                       ) : (
                         <>
                           <span className="text-[9px] font-bold text-neutral-400 uppercase">Cotação Pendente</span>
                           <Button 
                             size="sm"
-                            className="bg-[#ff7711] hover:bg-[#ff7711]/90 text-white text-[8px] font-black tracking-wider uppercase h-8 px-3 rounded-sm"
+                            className="bg-[var(--brand-accent)] hover:bg-[var(--brand-accent)]/90 text-white text-[8px] font-black tracking-wider uppercase h-8 px-3 rounded-sm"
                           >
                             Finalizar Cotação
                           </Button>
@@ -948,13 +948,13 @@ export default function ProtecaoVeicularPage() {
               {/* Add New Vehicle Card */}
               <Card 
                 onClick={handleStartNewRegistration}
-                className="p-6 border-2 border-dashed border-neutral-300 bg-white/50 hover:bg-white hover:border-[#ff7711] rounded-xl flex flex-col items-center justify-center space-y-3 cursor-pointer group transition-all duration-300 shadow-md min-h-[190px]"
+                className="p-6 border-2 border-dashed border-neutral-300 bg-white/50 hover:bg-white hover:border-[var(--brand-accent)] rounded-xl flex flex-col items-center justify-center space-y-3 cursor-pointer group transition-all duration-300 shadow-md min-h-[190px]"
               >
-                <div className="w-12 h-12 rounded-full bg-neutral-100 group-hover:bg-[#ff7711]/10 group-hover:text-[#ff7711] flex items-center justify-center text-neutral-400 transition-colors">
+                <div className="w-12 h-12 rounded-full bg-neutral-100 group-hover:bg-[var(--brand-accent)]/10 group-hover:text-[var(--brand-accent)] flex items-center justify-center text-neutral-400 transition-colors">
                   <Plus className="h-6 w-6 stroke-[3]" />
                 </div>
                 <div className="text-center space-y-0.5">
-                  <h4 className="text-sm font-black uppercase text-neutral-800 group-hover:text-[#ff7711] transition-colors">Cadastrar Novo Veículo</h4>
+                  <h4 className="text-sm font-black uppercase text-neutral-800 group-hover:text-[var(--brand-accent)] transition-colors">Cadastrar Novo Veículo</h4>
                   <p className="text-[9px] text-neutral-400 font-bold uppercase tracking-wider">Adicionar proteção ou débitos</p>
                 </div>
               </Card>
@@ -974,7 +974,7 @@ export default function ProtecaoVeicularPage() {
 
             <form onSubmit={handlePlacaSubmit} className="space-y-6">
               {/* Brazilian Mercosul Style Plate Input Box */}
-              <div className="border-[3px] border-[#0c0a09] rounded-xl bg-white shadow-2xl relative overflow-hidden max-w-sm mx-auto group focus-within:ring-4 focus-within:ring-[#ff7711]/20 focus-within:border-[#ff7711] transition-all">
+              <div className="border-[3px] border-[#0c0a09] rounded-xl bg-white shadow-2xl relative overflow-hidden max-w-sm mx-auto group focus-within:ring-4 focus-within:ring-[var(--brand-accent)]/20 focus-within:border-[var(--brand-accent)] transition-all">
                 {/* Mercosul top blue bar */}
                 <div className="bg-[#0f4c81] text-white flex justify-between items-center px-4 py-1.5 select-none border-b-[3px] border-[#0c0a09]">
                   <span className="text-[8px] font-black tracking-widest">MERCOSUL</span>
@@ -1004,7 +1004,7 @@ export default function ProtecaoVeicularPage() {
                 <Button 
                   type="submit" 
                   disabled={placa.length !== 7 || searchLoading}
-                  className="w-full h-14 bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-xl transition-all"
+                  className="w-full h-14 bg-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 shadow-xl transition-all"
                 >
                   {searchLoading ? (
                     <>
@@ -1022,7 +1022,7 @@ export default function ProtecaoVeicularPage() {
                 <button
                   type="button"
                   onClick={() => setStep(3)}
-                  className="text-center text-xs font-black text-[#ff7711] hover:underline uppercase tracking-widest"
+                  className="text-center text-xs font-black text-[var(--brand-accent)] hover:underline uppercase tracking-widest"
                 >
                   Pular e preencher dados manualmente
                 </button>
@@ -1048,13 +1048,13 @@ export default function ProtecaoVeicularPage() {
                   <Card 
                     key={tipo.code}
                     onClick={() => handleSelectTipo(tipo.code, tipo.name)}
-                    className="p-8 border border-neutral-200/80 rounded-sm hover:border-[#ff7711] hover:shadow-xl hover:shadow-[#ff7711]/5 hover:scale-[1.02] transition-all duration-300 cursor-pointer flex flex-col items-center justify-center space-y-4 group bg-white text-[#0c0a09]"
+                    className="p-8 border border-neutral-200/80 rounded-sm hover:border-[var(--brand-accent)] hover:shadow-xl hover:shadow-[var(--brand-accent)]/5 hover:scale-[1.02] transition-all duration-300 cursor-pointer flex flex-col items-center justify-center space-y-4 group bg-white text-[#0c0a09]"
                   >
-                    <div className="w-16 h-16 rounded-full bg-neutral-50 flex items-center justify-center text-neutral-400 group-hover:bg-[#ff7711]/10 group-hover:text-[#ff7711] transition-all duration-300">
+                    <div className="w-16 h-16 rounded-full bg-neutral-50 flex items-center justify-center text-neutral-400 group-hover:bg-[var(--brand-accent)]/10 group-hover:text-[var(--brand-accent)] transition-all duration-300">
                       {isCar ? <Car className="h-8 w-8" /> : <Layers className="h-8 w-8" />}
                     </div>
                     <div className="text-center">
-                      <h3 className="text-xl font-black group-hover:text-[#ff7711] transition-colors">{tipo.name}</h3>
+                      <h3 className="text-xl font-black group-hover:text-[var(--brand-accent)] transition-colors">{tipo.name}</h3>
                       <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">Selecionar categoria</span>
                     </div>
                   </Card>
@@ -1065,7 +1065,7 @@ export default function ProtecaoVeicularPage() {
             <div className="flex justify-between pt-4 border-t border-neutral-200">
               <Button 
                 onClick={() => setStep(2)}
-                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
+                className="h-12 px-8 border-2 border-[var(--brand-accent)] bg-[var(--brand-accent)]/5 hover:bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
               >
                 <ChevronLeft className="w-4.5 h-4.5" /> Voltar
               </Button>
@@ -1091,7 +1091,7 @@ export default function ProtecaoVeicularPage() {
                   placeholder="Pesquisar fabricante..."
                   value={brandFilter}
                   onChange={(e) => setBrandFilter(e.target.value)}
-                  className="pl-10 h-10 border-neutral-200 font-bold rounded-sm focus:ring-2 focus:ring-[#ff7711]/20 bg-white"
+                  className="pl-10 h-10 border-neutral-200 font-bold rounded-sm focus:ring-2 focus:ring-[var(--brand-accent)]/20 bg-white"
                 />
               </div>
             </div>
@@ -1102,7 +1102,7 @@ export default function ProtecaoVeicularPage() {
                   <Card
                     key={brand.code}
                     onClick={() => handleSelectMarca(brand.code, brand.name)}
-                    className="p-5 border border-neutral-100 hover:border-[#ff7711] rounded-sm hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col items-center justify-center space-y-3 bg-white hover:scale-[1.02] text-[#0c0a09] text-center"
+                    className="p-5 border border-neutral-100 hover:border-[var(--brand-accent)] rounded-sm hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col items-center justify-center space-y-3 bg-white hover:scale-[1.02] text-[#0c0a09] text-center"
                   >
                     {/* Dynamic logo wrapper */}
                     <div className="w-12 h-12 bg-neutral-50 rounded-sm flex items-center justify-center relative overflow-hidden p-1">
@@ -1115,7 +1115,7 @@ export default function ProtecaoVeicularPage() {
                           // Fallback to stylized letters if image fails
                           (e.target as HTMLElement).style.display = "none";
                           const fallbackNode = document.createElement("div");
-                          fallbackNode.className = "text-sm font-black text-[#ff7711] bg-[#ff7711]/10 w-full h-full flex items-center justify-center rounded-sm uppercase";
+                          fallbackNode.className = "text-sm font-black text-[var(--brand-accent)] bg-[var(--brand-accent)]/10 w-full h-full flex items-center justify-center rounded-sm uppercase";
                           fallbackNode.innerText = brand.name.substring(0, 2);
                           e.currentTarget.parentElement?.appendChild(fallbackNode);
                         }}
@@ -1135,7 +1135,7 @@ export default function ProtecaoVeicularPage() {
             <div className="flex justify-between pt-4 border-t border-neutral-200">
               <Button 
                 onClick={() => setStep(3)}
-                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
+                className="h-12 px-8 border-2 border-[var(--brand-accent)] bg-[var(--brand-accent)]/5 hover:bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
               >
                 <ChevronLeft className="w-4.5 h-4.5" /> Voltar
               </Button>
@@ -1154,7 +1154,7 @@ export default function ProtecaoVeicularPage() {
             </div>
 
             {autoSelectedAno && (
-              <Card className="p-4 bg-orange-50 border border-orange-200 text-[#ff7711] rounded-sm flex items-center gap-3 animate-pulse">
+              <Card className="p-4 bg-orange-50 border border-orange-200 text-[var(--brand-accent)] rounded-sm flex items-center gap-3 animate-pulse">
                 <Sparkles className="h-5 w-5 shrink-0" />
                 <div className="text-left">
                   <span className="block font-black uppercase text-[10px] tracking-wider">Detecção Inteligente ativada</span>
@@ -1172,12 +1172,12 @@ export default function ProtecaoVeicularPage() {
                     onClick={() => handleSelectAno(ano.code, ano.name)}
                     className={`w-full p-4 border rounded-sm flex justify-between items-center transition-all ${
                       isSelected 
-                        ? "bg-[#0c0a09] border-[#ff7711] text-white shadow-md shadow-[#ff7711]/10" 
+                        ? "bg-[#0c0a09] border-[var(--brand-accent)] text-white shadow-md shadow-[var(--brand-accent)]/10" 
                         : "bg-white border-neutral-200 hover:border-neutral-400 text-neutral-900"
                     }`}
                   >
                     <span className="font-extrabold text-sm uppercase tracking-wide">{ano.name}</span>
-                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? "border-[#ff7711] bg-[#ff7711] text-white" : "border-neutral-300"}`}>
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? "border-[var(--brand-accent)] bg-[var(--brand-accent)] text-white" : "border-neutral-300"}`}>
                       {isSelected && <Check className="w-3.5 h-3.5" />}
                     </div>
                   </button>
@@ -1188,14 +1188,14 @@ export default function ProtecaoVeicularPage() {
             <div className="flex justify-between pt-4 border-t border-neutral-200">
               <Button 
                 onClick={() => setStep(4)}
-                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
+                className="h-12 px-8 border-2 border-[var(--brand-accent)] bg-[var(--brand-accent)]/5 hover:bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
               >
                 <ChevronLeft className="w-4.5 h-4.5" /> Voltar
               </Button>
               {selectedAno && (
                 <Button 
                   onClick={() => setStep(6)}
-                  className="bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-md flex items-center gap-2"
+                  className="bg-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-md flex items-center gap-2"
                 >
                   Continuar <ChevronRight className="w-4 h-4" />
                 </Button>
@@ -1222,7 +1222,7 @@ export default function ProtecaoVeicularPage() {
                   placeholder="Pesquisar versão/modelo..."
                   value={modelFilter}
                   onChange={(e) => setModelFilter(e.target.value)}
-                  className="pl-10 h-10 border-neutral-200 font-bold rounded-sm focus:ring-2 focus:ring-[#ff7711]/20 bg-white"
+                  className="pl-10 h-10 border-neutral-200 font-bold rounded-sm focus:ring-2 focus:ring-[var(--brand-accent)]/20 bg-white"
                 />
               </div>
             </div>
@@ -1233,15 +1233,15 @@ export default function ProtecaoVeicularPage() {
                   <button
                     key={modelo.code}
                     onClick={() => handleSelectModelo(modelo.code, modelo.name)}
-                    className="w-full p-5 bg-white border border-neutral-200 hover:border-[#ff7711] hover:shadow-lg transition-all rounded-sm flex items-center justify-between text-left group"
+                    className="w-full p-5 bg-white border border-neutral-200 hover:border-[var(--brand-accent)] hover:shadow-lg transition-all rounded-sm flex items-center justify-between text-left group"
                   >
                     <div className="space-y-1">
-                      <span className="block font-black text-sm text-neutral-900 uppercase group-hover:text-[#ff7711] transition-colors">
+                      <span className="block font-black text-sm text-neutral-900 uppercase group-hover:text-[var(--brand-accent)] transition-colors">
                         {modelo.name}
                       </span>
                       <span className="block text-[9px] font-black text-neutral-400 uppercase tracking-widest">Código Fipe: {modelo.code}</span>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-neutral-400 group-hover:text-[#ff7711] transition-colors shrink-0 ml-4" />
+                    <ChevronRight className="h-5 w-5 text-neutral-400 group-hover:text-[var(--brand-accent)] transition-colors shrink-0 ml-4" />
                   </button>
                 ))
               ) : (
@@ -1255,7 +1255,7 @@ export default function ProtecaoVeicularPage() {
             <div className="flex justify-between pt-4 border-t border-neutral-200">
               <Button 
                 onClick={() => setStep(5)}
-                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
+                className="h-12 px-8 border-2 border-[var(--brand-accent)] bg-[var(--brand-accent)]/5 hover:bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
               >
                 <ChevronLeft className="w-4.5 h-4.5" /> Voltar
               </Button>
@@ -1283,7 +1283,7 @@ export default function ProtecaoVeicularPage() {
                 
                 <div className="space-y-6 relative z-10">
                   <div className="flex justify-between items-center">
-                    <Badge className="bg-[#ff7711] text-white border-0 text-[8px] font-black tracking-[0.2em] px-2 py-0.5 rounded-sm">
+                    <Badge className="bg-[var(--brand-accent)] text-white border-0 text-[8px] font-black tracking-[0.2em] px-2 py-0.5 rounded-sm">
                       VALOR DE MERCADO
                     </Badge>
                     <span className="text-[10px] font-mono font-bold text-neutral-400">{fipeDetails.referenceMonth}</span>
@@ -1291,7 +1291,7 @@ export default function ProtecaoVeicularPage() {
 
                   <div className="space-y-1">
                     <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-black block">Tabela FIPE</span>
-                    <span className="text-4xl font-extrabold text-[#ff7711] font-mono tracking-tight block">
+                    <span className="text-4xl font-extrabold text-[var(--brand-accent)] font-mono tracking-tight block">
                       {fipeDetails.price || fipeValueQuoted}
                     </span>
                   </div>
@@ -1311,7 +1311,7 @@ export default function ProtecaoVeicularPage() {
                     </div>
                     <div className="text-left">
                       <span className="block font-black text-xs uppercase tracking-wide leading-none mb-1">{fipeDetails.brand}</span>
-                      <span className="text-[9px] font-black text-[#ff7711] uppercase tracking-widest">G8 Protegido</span>
+                      <span className="text-[9px] font-black text-[var(--brand-accent)] uppercase tracking-widest">G8 Protegido</span>
                     </div>
                   </div>
 
@@ -1326,7 +1326,7 @@ export default function ProtecaoVeicularPage() {
               <Card className="md:col-span-7 p-8 bg-white border border-neutral-200/80 rounded-xl space-y-6 flex flex-col justify-between shadow-md text-[#0c0a09]">
                 <div className="space-y-4">
                   <h3 className="text-lg font-black uppercase tracking-wide pb-2 border-b border-neutral-100 flex items-center gap-2">
-                    <Car className="text-[#ff7711] h-5 w-5" /> Ficha Técnica Homologada
+                    <Car className="text-[var(--brand-accent)] h-5 w-5" /> Ficha Técnica Homologada
                   </h3>
 
                   <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-left">
@@ -1365,7 +1365,7 @@ export default function ProtecaoVeicularPage() {
                 </div>
 
                 <div className="bg-orange-50 border border-orange-100 rounded-sm p-4 text-left flex items-start gap-3">
-                  <Info className="h-5 w-5 text-[#ff7711] shrink-0 mt-0.5" />
+                  <Info className="h-5 w-5 text-[var(--brand-accent)] shrink-0 mt-0.5" />
                   <p className="text-[11px] text-neutral-600 font-bold leading-relaxed">
                     Certifique-se de que os dados do veículo estão corretos. Ao prosseguir, buscaremos as ofertas de planos e valores mensais de seguros oficiais da Sigga para seu perfil.
                   </p>
@@ -1376,13 +1376,13 @@ export default function ProtecaoVeicularPage() {
             <div className="flex justify-between pt-4 border-t border-neutral-200">
               <Button 
                 onClick={() => setStep(6)}
-                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
+                className="h-12 px-8 border-2 border-[var(--brand-accent)] bg-[var(--brand-accent)]/5 hover:bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
               >
                 <ChevronLeft className="w-4.5 h-4.5" /> Voltar
               </Button>
               <Button 
                 onClick={() => setStep(8)}
-                className="bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-xl flex items-center gap-2"
+                className="bg-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-xl flex items-center gap-2"
               >
                 Ver Planos Disponíveis <ChevronRight className="w-4 h-4" />
               </Button>
@@ -1402,8 +1402,8 @@ export default function ProtecaoVeicularPage() {
 
             {plansLoading ? (
               <div className="py-20 flex flex-col items-center justify-center space-y-4 bg-white rounded-sm border border-neutral-200">
-                <RotateCw className="w-10 h-10 text-[#ff7711] animate-spin" />
-                <span className="text-xs font-black uppercase tracking-widest text-[#ff7711] animate-pulse">
+                <RotateCw className="w-10 h-10 text-[var(--brand-accent)] animate-spin" />
+                <span className="text-xs font-black uppercase tracking-widest text-[var(--brand-accent)] animate-pulse">
                   Consultando tabelas de planos e benefícios...
                 </span>
               </div>
@@ -1421,20 +1421,20 @@ export default function ProtecaoVeicularPage() {
                       onClick={() => setSelectedPlanId(plan.tppId)}
                       className={`p-8 border rounded-xl flex flex-col justify-between transition-all duration-300 cursor-pointer text-left relative overflow-hidden group hover:scale-[1.02] ${
                         isSelected 
-                          ? "bg-white border-[#ff7711] shadow-2xl shadow-[#ff7711]/10 ring-2 ring-[#ff7711]" 
+                          ? "bg-white border-[var(--brand-accent)] shadow-2xl shadow-[var(--brand-accent)]/10 ring-2 ring-[var(--brand-accent)]" 
                           : "bg-white border-neutral-200/80 hover:border-neutral-400 hover:shadow-xl"
                       }`}
                     >
                       {/* Top ribbon decor for the premium plan */}
                       {!isBronze && (
-                        <div className="absolute top-0 right-0 bg-gradient-to-l from-[#ffaa00] to-[#ff7711] text-white text-[7px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-bl-sm">
+                        <div className="absolute top-0 right-0 bg-gradient-to-l from-[#ffaa00] to-[var(--brand-accent)] text-white text-[7px] font-black uppercase tracking-[0.2em] px-3 py-1 rounded-bl-sm">
                           MAIS VENDIDO
                         </div>
                       )}
 
                       <div className="space-y-6 flex-1">
                         <div className="space-y-2">
-                          <span className={`text-[10px] font-black uppercase tracking-widest ${isBronze ? "text-neutral-400" : "text-[#ff7711]"}`}>
+                          <span className={`text-[10px] font-black uppercase tracking-widest ${isBronze ? "text-neutral-400" : "text-[var(--brand-accent)]"}`}>
                             {plan.name}
                           </span>
                           <div className="flex items-baseline gap-1 text-[#0c0a09]">
@@ -1454,7 +1454,7 @@ export default function ProtecaoVeicularPage() {
                           <button
                             type="button"
                             onClick={(e) => togglePlanExpand(plan.name, e)}
-                            className="text-[#ff7711] hover:text-[#ffaa00] font-black uppercase text-[9px] tracking-widest flex items-center gap-1 transition-colors focus:outline-none"
+                            className="text-[var(--brand-accent)] hover:text-[#ffaa00] font-black uppercase text-[9px] tracking-widest flex items-center gap-1 transition-colors focus:outline-none"
                           >
                             {isExpanded ? (
                               <>
@@ -1512,8 +1512,8 @@ export default function ProtecaoVeicularPage() {
                           type="button"
                           className={`w-full h-11 font-black uppercase text-[10px] tracking-widest rounded-sm transition-all flex items-center justify-center gap-2 ${
                             isSelected 
-                              ? "bg-[#ff7711] hover:bg-[#ff7711]/90 text-white shadow-lg shadow-orange-500/20" 
-                              : "bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white"
+                              ? "bg-[var(--brand-accent)] hover:bg-[var(--brand-accent)]/90 text-white shadow-lg shadow-orange-500/20" 
+                              : "bg-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white text-white"
                           }`}
                         >
                           {isSelected ? (
@@ -1534,14 +1534,14 @@ export default function ProtecaoVeicularPage() {
             <div className="flex justify-between pt-4 border-t border-neutral-200">
               <Button 
                 onClick={() => setStep(7)}
-                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
+                className="h-12 px-8 border-2 border-[var(--brand-accent)] bg-[var(--brand-accent)]/5 hover:bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
               >
                 <ChevronLeft className="w-4.5 h-4.5" /> Voltar
               </Button>
               <Button 
                 onClick={handleConfirmPlan}
                 disabled={!selectedPlanId || loading}
-                className="bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-xl flex items-center gap-2"
+                className="bg-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-xl flex items-center gap-2"
               >
                 Continuar para Resumo <ChevronRight className="w-4 h-4" />
               </Button>
@@ -1564,7 +1564,7 @@ export default function ProtecaoVeicularPage() {
               <Card className="p-8 bg-white border border-neutral-200/80 rounded-xl space-y-6 shadow-md text-left flex flex-col justify-between">
                 <div className="space-y-4">
                   <h3 className="text-lg font-black uppercase tracking-wide pb-2 border-b border-neutral-100 flex items-center gap-2">
-                    <User className="text-[#ff7711] h-5 w-5" /> Dados do Proprietário
+                    <User className="text-[var(--brand-accent)] h-5 w-5" /> Dados do Proprietário
                   </h3>
 
                   <div className="space-y-4">
@@ -1621,7 +1621,7 @@ export default function ProtecaoVeicularPage() {
               <Card className="p-8 bg-white border border-neutral-200/80 rounded-xl space-y-6 shadow-md text-left flex flex-col justify-between">
                 <div className="space-y-5">
                   <h3 className="text-lg font-black uppercase tracking-wide pb-2 border-b border-neutral-100 flex items-center gap-2">
-                    <Car className="text-[#ff7711] h-5 w-5" /> Dados da Cotação & Plano
+                    <Car className="text-[var(--brand-accent)] h-5 w-5" /> Dados da Cotação & Plano
                   </h3>
 
                   <div className="grid grid-cols-2 gap-4">
@@ -1643,7 +1643,7 @@ export default function ProtecaoVeicularPage() {
                     </div>
                     <div className="space-y-0.5">
                       <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Tabela FIPE</span>
-                      <span className="text-xs font-extrabold text-[#ff7711] block font-mono">{fipeValueQuoted || (fipeDetails && fipeDetails.price)}</span>
+                      <span className="text-xs font-extrabold text-[var(--brand-accent)] block font-mono">{fipeValueQuoted || (fipeDetails && fipeDetails.price)}</span>
                     </div>
                     <div className="space-y-0.5">
                       <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Código Cotação</span>
@@ -1651,9 +1651,9 @@ export default function ProtecaoVeicularPage() {
                     </div>
                   </div>
 
-                  <div className="p-4 bg-[#0c0a09] text-white rounded-lg border border-[#ff7711]/20 flex justify-between items-center">
+                  <div className="p-4 bg-[#0c0a09] text-white rounded-lg border border-[var(--brand-accent)]/20 flex justify-between items-center">
                     <div className="text-left space-y-0.5">
-                      <Badge className="bg-[#ff7711] text-white border-0 text-[7px] font-black uppercase tracking-wider py-0 px-1.5 rounded-sm">
+                      <Badge className="bg-[var(--brand-accent)] text-white border-0 text-[7px] font-black uppercase tracking-wider py-0 px-1.5 rounded-sm">
                         Plano Escolhido
                       </Badge>
                       <h4 className="text-sm font-black uppercase tracking-wide">
@@ -1662,7 +1662,7 @@ export default function ProtecaoVeicularPage() {
                     </div>
                     <div className="text-right">
                       <span className="block text-[8px] text-neutral-400 font-bold uppercase leading-none mb-0.5">Valor Mensal</span>
-                      <span className="text-lg font-black font-mono text-[#ff7711]">
+                      <span className="text-lg font-black font-mono text-[var(--brand-accent)]">
                         {plans.find(p => p.tppId === selectedPlanId)?.price}
                       </span>
                     </div>
@@ -1676,7 +1676,7 @@ export default function ProtecaoVeicularPage() {
                       id="accept-terms"
                       checked={acceptTerms}
                       onChange={(e) => setAcceptTerms(e.target.checked)}
-                      className="rounded border-neutral-300 text-[#ff7711] focus:ring-[#ff7711] h-4 w-4 cursor-pointer"
+                      className="rounded border-neutral-300 text-[var(--brand-accent)] focus:ring-[var(--brand-accent)] h-4 w-4 cursor-pointer"
                     />
                     <label htmlFor="accept-terms" className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider cursor-pointer select-none">
                       Estou ciente de que as informações fornecidas e coletadas são verdadeiras e aceito os termos do contrato.
@@ -1689,14 +1689,14 @@ export default function ProtecaoVeicularPage() {
             <div className="flex justify-between pt-4 border-t border-neutral-200">
               <Button 
                 onClick={() => setStep(8)}
-                className="h-12 px-8 border-2 border-[#ff7711] bg-[#ff7711]/5 hover:bg-[#ff7711]/10 text-[#ff7711] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
+                className="h-12 px-8 border-2 border-[var(--brand-accent)] bg-[var(--brand-accent)]/5 hover:bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] font-black uppercase text-xs tracking-widest rounded-sm flex items-center gap-2 transition-all"
               >
                 <ChevronLeft className="w-4.5 h-4.5" /> Voltar
               </Button>
               <Button 
                 onClick={handleFinalSubmit}
                 disabled={!acceptTerms || loading}
-                className="bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-xl flex items-center gap-2"
+                className="bg-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[10px] shadow-xl flex items-center gap-2"
               >
                 {loading ? (
                   <>
@@ -1749,7 +1749,7 @@ export default function ProtecaoVeicularPage() {
                 <div className="pt-4 flex gap-4">
                   <Button
                     onClick={handleResetWizard}
-                    className="flex-1 h-12 bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[9px] shadow-lg transition-all"
+                    className="flex-1 h-12 bg-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white text-white rounded-sm font-black uppercase tracking-widest text-[9px] shadow-lg transition-all"
                   >
                     Voltar para Meus Veículos
                   </Button>
@@ -1765,7 +1765,7 @@ export default function ProtecaoVeicularPage() {
         <div className="fixed inset-0 bg-[#0c0a09]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl border border-neutral-200 max-w-2xl w-full p-8 shadow-2xl relative overflow-hidden animate-in zoom-in duration-300 text-left text-[#0c0a09]">
             {/* Top brand accent */}
-            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[#ff7711] to-[#ffaa00]" />
+            <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-[var(--brand-accent)] to-[#ffaa00]" />
             
             {/* Close Button */}
             <button 
@@ -1777,7 +1777,7 @@ export default function ProtecaoVeicularPage() {
 
             <div className="space-y-6">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 bg-[#ff7711]/10 rounded-full flex items-center justify-center text-[#ff7711]">
+                <div className="w-12 h-12 bg-[var(--brand-accent)]/10 rounded-full flex items-center justify-center text-[var(--brand-accent)]">
                   <Shield className="h-6 w-6 stroke-[2]" />
                 </div>
                 <div>
@@ -1801,7 +1801,7 @@ export default function ProtecaoVeicularPage() {
                 </div>
                 <div className="space-y-1">
                   <span className="block text-[9px] text-neutral-400 font-black uppercase tracking-wider">Plano Ativo</span>
-                  <span className="text-sm font-extrabold text-[#ff7711] uppercase">{selectedVehicleDetails.planName}</span>
+                  <span className="text-sm font-extrabold text-[var(--brand-accent)] uppercase">{selectedVehicleDetails.planName}</span>
                 </div>
                 <div className="space-y-1">
                   <span className="block text-[9px] text-neutral-400 font-black uppercase tracking-wider">Valor Mensal</span>
@@ -1832,14 +1832,14 @@ export default function ProtecaoVeicularPage() {
               <div className="bg-neutral-50 rounded-sm p-4 border border-neutral-100 flex items-center justify-between mt-4">
                 <div className="text-left">
                   <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none mb-1">Sinistro & Assistência 24h</span>
-                  <span className="text-sm font-black text-[#ff7711] font-mono">0800 940 8888</span>
+                  <span className="text-sm font-black text-[var(--brand-accent)] font-mono">0800 940 8888</span>
                 </div>
                 <Button
                   onClick={() => {
                     toast.success("Solicitando reboque/socorro... Nossa central de assistência entrará em contato em minutos!");
                     setSelectedVehicleDetails(null);
                   }}
-                  className="bg-[#0c0a09] hover:bg-[#ff7711] hover:text-white text-white font-black uppercase tracking-widest text-[9px] px-6 h-10 rounded-sm"
+                  className="bg-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white text-white font-black uppercase tracking-widest text-[9px] px-6 h-10 rounded-sm"
                 >
                   Acionar Assistência
                 </Button>

@@ -37,6 +37,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAtomValue } from "jotai";
 import { temporaryDeviceIdAtom } from "@/store/auth";
 import { useRouter } from "next/navigation";
+import { currentBrand } from "@/config/brand";
 
 type Step = 'menu' | 'select_target' | 'form' | 'pin' | 'confirming' | 'success' | 'error';
 type SearchMode = 'cpf' | 'account';
@@ -398,15 +399,15 @@ export default function TransferenciaPage() {
     return (
         <div className="min-h-screen bg-[#f8f9fa] text-[#0c0a09] p-4 md:p-8 xl:p-12 overflow-y-auto relative">
             {/* Background Decor */}
-            <div className="absolute top-1/4 right-0 w-[800px] h-[800px] bg-[#f97316]/5 rounded-full blur-[150px] pointer-events-none" />
+            <div className="absolute top-1/4 right-0 w-[800px] h-[800px] bg-brand-accent/5 rounded-full blur-[150px] pointer-events-none" />
 
             <div className="max-w-[1440px] mx-auto space-y-12 relative z-10 px-4 md:px-0 pb-32">
                 {/* Header */}
                 <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
                     <div className="space-y-1">
-                        <Badge className="bg-orange-600/10 text-orange-600 border-0 text-[10px] font-black tracking-[0.3em] uppercase px-3 py-1 mb-2">G8 Transactional</Badge>
+                        <Badge className="bg-brand-accent/10 text-brand-accent border-0 text-[10px] font-black tracking-[0.3em] uppercase px-3 py-1 mb-2">{currentBrand.name} Transactional</Badge>
                         <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none text-[#0c0a09]">
-                            Transferir <span className="text-orange-600">RECURSOS</span>
+                            Transferir <span className="text-brand-accent">RECURSOS</span>
                         </h1>
                     </div>
                 </header>
@@ -424,8 +425,8 @@ export default function TransferenciaPage() {
                                 >
                                     <TransferOption
                                         icon={Landmark}
-                                        title="Entre Contas G8"
-                                        description="Transferência instantânea e grátis para clientes G8 Bank"
+                                        title={`Entre Contas ${currentBrand.shortName}`}
+                                        description={`Transferência instantânea e grátis para clientes ${currentBrand.bankName}`}
                                         onClick={() => setStep('select_target')}
                                         premium
                                     />
@@ -459,8 +460,8 @@ export default function TransferenciaPage() {
                                 >
                                     <Card className="bg-white border-0 p-10 rounded-md shadow-2xl shadow-black/5">
                                         <div className="flex items-center justify-between mb-8">
-                                            <h2 className="text-xl font-black uppercase tracking-widest text-[#f97316]">
-                                                {transferType === 'G8' ? 'Transferência G8' : 'Transferência via TED'}
+                                            <h2 className="text-xl font-black uppercase tracking-widest text-brand-accent">
+                                                {transferType === 'G8' ? `Transferência ${currentBrand.shortName}` : 'Transferência via TED'}
                                             </h2>
                                             <button onClick={resetFlow} className="text-[#0c0a09]/30 hover:text-[#0c0a09] transition-colors"><X size={20} /></button>
                                         </div>
@@ -469,13 +470,13 @@ export default function TransferenciaPage() {
                                             <div className="flex gap-4 mb-8">
                                                 <button
                                                     onClick={() => setSearchMode('cpf')}
-                                                    className={`flex-1 py-4 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all ${searchMode === 'cpf' ? 'bg-[#f97316] text-white shadow-xl shadow-orange-500/20 scale-105' : 'bg-[#f97316]/10 text-[#f97316] hover:bg-orange-50'}`}
+                                                    className={`flex-1 py-4 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all ${searchMode === 'cpf' ? 'bg-brand-accent text-white shadow-xl shadow-brand-accent/20 scale-105' : 'bg-brand-accent/10 text-brand-accent hover:bg-brand-accent/5'}`}
                                                 >
                                                     CPF / CNPJ
                                                 </button>
                                                 <button
                                                     disabled
-                                                    className="flex-1 py-4 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all bg-[#f97316]/10 text-[#f97316]/40 cursor-not-allowed opacity-60"
+                                                    className="flex-1 py-4 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all bg-brand-accent/10 text-brand-accent/40 cursor-not-allowed opacity-60"
                                                 >
                                                     Agência e Conta (Em breve)
                                                 </button>
@@ -488,7 +489,7 @@ export default function TransferenciaPage() {
                                                         <select 
                                                             value={targetBankCode}
                                                             onChange={(e) => setTargetBankCode(e.target.value)}
-                                                            className="w-full h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-bold text-[#f97316] px-4 appearance-none focus:outline-none"
+                                                            className="w-full h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-bold text-brand-accent px-4 appearance-none focus:outline-none"
                                                         >
                                                             <option value="" className="text-neutral-400">Selecione o banco</option>
                                                             {COMMON_BANKS.map(b => (
@@ -501,13 +502,13 @@ export default function TransferenciaPage() {
                                                         <div className="flex gap-2">
                                                             <button 
                                                                 onClick={() => setTargetAccountType('corrente')}
-                                                                className={`flex-1 h-14 font-black text-[9px] uppercase tracking-widest rounded-sm border-2 transition-all ${targetAccountType === 'corrente' ? 'bg-[#f97316] text-white border-[#f97316]' : 'bg-white text-neutral-400 border-neutral-100 hover:border-orange-200'}`}
+                                                                className={`flex-1 h-14 font-black text-[9px] uppercase tracking-widest rounded-sm border-2 transition-all ${targetAccountType === 'corrente' ? 'bg-brand-accent text-white border-brand-accent' : 'bg-white text-neutral-400 border-neutral-100 hover:border-brand-accent/20'}`}
                                                             >
                                                                 Corrente
                                                             </button>
                                                             <button 
                                                                 onClick={() => setTargetAccountType('poupanca')}
-                                                                className={`flex-1 h-14 font-black text-[9px] uppercase tracking-widest rounded-sm border-2 transition-all ${targetAccountType === 'poupanca' ? 'bg-[#f97316] text-white border-[#f97316]' : 'bg-white text-neutral-400 border-neutral-100 hover:border-orange-200'}`}
+                                                                className={`flex-1 h-14 font-black text-[9px] uppercase tracking-widest rounded-sm border-2 transition-all ${targetAccountType === 'poupanca' ? 'bg-brand-accent text-white border-brand-accent' : 'bg-white text-neutral-400 border-neutral-100 hover:border-brand-accent/20'}`}
                                                             >
                                                                 Poupança
                                                             </button>
@@ -521,7 +522,7 @@ export default function TransferenciaPage() {
                                                         value={targetReceiverName} 
                                                         onChange={(e) => setTargetReceiverName(e.target.value)} 
                                                         placeholder="Ex: Pedro Henrique Marques" 
-                                                        className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-bold text-[#f97316]" 
+                                                        className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-bold text-brand-accent" 
                                                     />
                                                 </div>
 
@@ -531,7 +532,7 @@ export default function TransferenciaPage() {
                                                         value={targetDocument} 
                                                         onChange={(e) => setTargetDocument(e.target.value)} 
                                                         placeholder="000.000.000-00" 
-                                                        className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-bold text-[#f97316]" 
+                                                        className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-bold text-brand-accent" 
                                                     />
                                                 </div>
                                             </div>
@@ -547,7 +548,7 @@ export default function TransferenciaPage() {
                                                                 placeholder="000.000.000-00"
                                                                 value={targetCpf}
                                                                 onChange={(e) => setTargetCpf(e.target.value)}
-                                                                className="h-16 bg-[#f97316]/10 border-neutral-100 rounded-sm text-xl font-mono focus:border-[#f97316] transition-all text-[#f97316] font-bold"
+                                                                className="h-16 bg-brand-accent/10 border-neutral-100 rounded-sm text-xl font-mono focus:border-brand-accent transition-all text-brand-accent font-bold"
                                                             />
                                                         </div>
                                                     ) : null
@@ -557,25 +558,25 @@ export default function TransferenciaPage() {
                                                     <div className="grid grid-cols-12 gap-4">
                                                         <div className="col-span-4 space-y-2">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Agência</label>
-                                                            <Input value={targetAgencia} onChange={(e) => setTargetAgencia(e.target.value)} placeholder="0001" className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-mono font-bold text-[#f97316]" />
+                                                            <Input value={targetAgencia} onChange={(e) => setTargetAgencia(e.target.value)} placeholder="0001" className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-mono font-bold text-brand-accent" />
                                                         </div>
                                                         <div className="col-span-6 space-y-2">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Conta</label>
-                                                            <Input value={targetConta} onChange={(e) => setTargetConta(e.target.value)} placeholder="12345" className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-mono font-bold text-[#f97316]" />
+                                                            <Input value={targetConta} onChange={(e) => setTargetConta(e.target.value)} placeholder="12345" className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-mono font-bold text-brand-accent" />
                                                         </div>
                                                         <div className="col-span-2 space-y-2">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Díg.</label>
-                                                            <Input value={targetDigito} onChange={(e) => setTargetDigito(e.target.value)} placeholder="0" className="h-14 bg-[#f97316]/10 border-neutral-100 rounded-sm font-mono text-center font-bold text-[#f97316]" />
+                                                            <Input value={targetDigito} onChange={(e) => setTargetDigito(e.target.value)} placeholder="0" className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-mono text-center font-bold text-brand-accent" />
                                                         </div>
                                                     </div>
                                                 )}
                                                 
                                                 {transferType === 'TED' && (
-                                                    <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-sm border border-orange-100 group cursor-pointer" onClick={() => setSaveAsFavorite(!saveAsFavorite)}>
-                                                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${saveAsFavorite ? 'bg-[#f97316] border-[#f97316]' : 'border-neutral-200'}`}>
+                                                    <div className="flex items-center gap-3 p-4 bg-brand-accent/5 rounded-sm border border-brand-accent/10 group cursor-pointer" onClick={() => setSaveAsFavorite(!saveAsFavorite)}>
+                                                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${saveAsFavorite ? 'bg-brand-accent border-brand-accent' : 'border-neutral-200'}`}>
                                                             {saveAsFavorite && <CheckCircle2 size={12} className="text-white" />}
                                                         </div>
-                                                        <span className="text-[10px] font-black uppercase tracking-widest text-orange-700">Salvar como contato favorito</span>
+                                                        <span className="text-[10px] font-black uppercase tracking-widest text-brand-secondary">Salvar como contato favorito</span>
                                                     </div>
                                                 )}
                                             </div>
@@ -587,7 +588,7 @@ export default function TransferenciaPage() {
                                         <Button
                                             onClick={handleLookup}
                                             disabled={isLoading}
-                                            className="w-full h-16 mt-8 bg-[#f97316] text-white hover:bg-orange-600 rounded-sm font-black uppercase tracking-[0.2em] text-xs transition-all active:scale-95 shadow-xl shadow-orange-500/20"
+                                            className="w-full h-16 mt-8 bg-brand-accent text-white hover:bg-brand-accent-hover rounded-sm font-black uppercase tracking-[0.2em] text-xs transition-all active:scale-95 shadow-xl shadow-brand-accent/20"
                                         >
                                             {isLoading ? "Consultando..." : "Continuar"}
                                         </Button>
@@ -607,16 +608,16 @@ export default function TransferenciaPage() {
                                         </div>
 
                                         <div className="space-y-8">
-                                            <div className="flex items-center gap-6 p-6 bg-[#f97316]/10 rounded-md border border-orange-200 shadow-sm relative overflow-hidden group">
-                                                <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/5 rounded-full blur-2xl -mr-12 -mt-12" />
-                                                <div className="w-16 h-16 bg-[#f97316] rounded-md flex items-center justify-center text-white shadow-lg shadow-orange-500/20 group-hover:scale-105 transition-transform">
+                                            <div className="flex items-center gap-6 p-6 bg-brand-accent/10 rounded-md border border-brand-accent/20 shadow-sm relative overflow-hidden group">
+                                                <div className="absolute top-0 right-0 w-24 h-24 bg-brand-accent/5 rounded-full blur-2xl -mr-12 -mt-12" />
+                                                <div className="w-16 h-16 bg-brand-accent rounded-md flex items-center justify-center text-white shadow-lg shadow-brand-accent/20 group-hover:scale-105 transition-transform">
                                                     <User size={32} />
                                                 </div>
                                                 <div className="relative z-10 flex-1">
-                                                    <p className="text-[11px] font-black uppercase tracking-[0.2em] text-[#f97316] mb-1">DADOS DO RECEBEDOR</p>
+                                                    <p className="text-[11px] font-black uppercase tracking-[0.2em] text-brand-accent mb-1">DADOS DO RECEBEDOR</p>
                                                     <p className="text-2xl font-black tracking-tighter text-[#0c0a09] leading-tight">{receiver.name}</p>
                                                     <p className="text-[12px] font-mono text-[#0c0a09]/50 uppercase mt-1 font-bold">
-                                                        {transferType === 'G8' ? 'G8 BANK' : receiver.bankName} • AG {receiver.agencia} • CC {receiver.conta}-{receiver.digito}
+                                                        {transferType === 'G8' ? currentBrand.bankName : receiver.bankName} • AG {receiver.agencia} • CC {receiver.conta}-{receiver.digito}
                                                     </p>
                                                 </div>
                                             </div>
@@ -628,7 +629,7 @@ export default function TransferenciaPage() {
                                                         value={formatCurrency(amount)}
                                                         onChange={handleValueChange}
                                                         placeholder="R$ 0,00"
-                                                        className="h-24 bg-white border-2 border-neutral-100 rounded-sm px-8 text-4xl font-black font-mono focus:ring-4 focus:ring-[#f97316]/10 focus:border-[#f97316] transition-all text-[#0c0a09] placeholder:text-neutral-100"
+                                                        className="h-24 bg-white border-2 border-neutral-100 rounded-sm px-8 text-4xl font-black font-mono focus:ring-4 focus:ring-brand-accent/10 focus:border-brand-accent transition-all text-[#0c0a09] placeholder:text-neutral-100"
                                                     />
                                                 </div>
                                             </div>
@@ -644,7 +645,7 @@ export default function TransferenciaPage() {
                                                 <Button
                                                     onClick={handleRequestPin}
                                                     disabled={!amount || parseInt(amount) <= 0 || isLoading}
-                                                    className="h-16 flex-[2] bg-[#f97316] text-white hover:bg-orange-600 rounded-sm font-black uppercase text-sm tracking-[0.2em] transition-all shadow-xl shadow-orange-500/20 active:scale-95"
+                                                    className="h-16 flex-[2] bg-brand-accent text-white hover:bg-brand-accent-hover rounded-sm font-black uppercase text-sm tracking-[0.2em] transition-all shadow-xl shadow-brand-accent/20 active:scale-95"
                                                 >
                                                     Próximo
                                                 </Button>
@@ -661,14 +662,14 @@ export default function TransferenciaPage() {
                                     className="max-w-xl mx-auto w-full"
                                 >
                                     <Card className="bg-white border-0 p-10 md:p-16 rounded-[5px] shadow-[0_40px_80px_-15px_rgba(0,0,0,0.1)] text-center flex flex-col items-center">
-                                        <div className="w-24 h-24 bg-[#f97316]/10 rounded-[5px] flex items-center justify-center text-[#f97316] mb-8 shadow-sm">
+                                        <div className="w-24 h-24 bg-brand-accent/10 rounded-[5px] flex items-center justify-center text-brand-accent mb-8 shadow-sm">
                                             <Smartphone className="h-12 w-12 animate-pulse" />
                                         </div>
 
                                         <div className="space-y-4 mb-12">
                                             <h2 className="text-4xl font-black text-[#0c0a09] uppercase tracking-tighter">Validação de Segurança</h2>
                                             <p className="text-base font-bold text-[#0c0a09]/30 uppercase tracking-[0.1em]">
-                                                Confirme seu código PIN para validar a transferência de <span className="text-[#f97316] font-black">{formatCurrency(amount)}</span>
+                                                Confirme seu código PIN para validar a transferência de <span className="text-brand-accent font-black">{formatCurrency(amount)}</span>
                                             </p>
                                         </div>
 
@@ -679,7 +680,7 @@ export default function TransferenciaPage() {
                                                 value={pin}
                                                 onChange={(e) => setPin(e.target.value.replace(/\D/g, "").substring(0, 6))}
                                                 placeholder="0 0 0 0"
-                                                className="h-24 text-center font-black text-5xl tracking-[0.5em] border-2 border-neutral-100 rounded-[5px] focus:border-[#f97316] bg-[#f8f9fa] shadow-inner"
+                                                className="h-24 text-center font-black text-5xl tracking-[0.5em] border-2 border-neutral-100 rounded-[5px] focus:border-brand-accent bg-[#f8f9fa] shadow-inner"
                                                 autoFocus
                                             />
 
@@ -687,14 +688,14 @@ export default function TransferenciaPage() {
                                                 <Button
                                                     disabled={pin.length < 4 || isLoading}
                                                     onClick={handleFinalize}
-                                                    className="w-full h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-[5px] font-black text-sm uppercase tracking-[0.3em] shadow-2xl shadow-black/20 transition-all active:scale-95"
+                                                    className="w-full h-20 bg-gradient-to-r from-brand-accent to-brand-secondary hover:from-brand-secondary hover:to-brand-accent text-white rounded-[5px] font-black text-sm uppercase tracking-[0.3em] shadow-2xl shadow-black/20 transition-all active:scale-95"
                                                 >
                                                     {isLoading ? "PROCESSANDO..." : "CONFIRMAR TRANSFERÊNCIA"}
                                                 </Button>
 
                                                 <button
                                                     onClick={() => setStep('form')}
-                                                    className="text-[11px] font-black text-[#f97316] uppercase tracking-[0.2em] hover:underline"
+                                                    className="text-[11px] font-black text-brand-accent uppercase tracking-[0.2em] hover:underline"
                                                 >
                                                     Alterar valor da transferência
                                                 </button>
@@ -706,7 +707,7 @@ export default function TransferenciaPage() {
 
                             {step === 'confirming' && (
                                 <div className="flex flex-col items-center justify-center py-20 space-y-6">
-                                    <div className="h-12 w-12 border-4 border-[#f97316] border-t-transparent rounded-full animate-spin" />
+                                    <div className="h-12 w-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin" />
                                     <p className="font-black uppercase tracking-[0.3em] text-[10px] text-[#0c0a09]/50">Processando sua transferência...</p>
                                 </div>
                             )}
@@ -717,7 +718,7 @@ export default function TransferenciaPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     className="max-w-lg mx-auto"
                                 >
-                                    <Card className="bg-orange-400 border-0 p-1 rounded-md shadow-2xl">
+                                    <Card className="bg-brand-accent border-0 p-1 rounded-md shadow-2xl">
                                         <div className="bg-white p-10 rounded-md space-y-8 text-center">
                                             <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto text-emerald-500 mb-4">
                                                 <CheckCircle2 size={48} strokeWidth={3} />
@@ -730,7 +731,7 @@ export default function TransferenciaPage() {
                                             <div className="border-y border-neutral-100 py-6 space-y-4">
                                                 <div className="flex justify-between items-center text-[10px] uppercase font-black">
                                                     <span className="text-[#0c0a09]/30">Valor</span>
-                                                    <span className="text-xl text-orange-400">{formatCurrency(amount)}</span>
+                                                    <span className="text-xl text-brand-accent">{formatCurrency(amount)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-[10px] uppercase font-black">
                                                     <span className="text-[#0c0a09]/30">Protocolo</span>
@@ -746,7 +747,7 @@ export default function TransferenciaPage() {
                                                 >
                                                     Comprovante
                                                 </Button>
-                                                <Button onClick={resetFlow} className="h-12 bg-[#0c0a09] hover:bg-orange-600 text-white rounded-sm font-black text-[9px] uppercase shadow-lg shadow-black/10">Voltar p/ área de transferência</Button>
+                                                <Button onClick={resetFlow} className="h-12 bg-[#0c0a09] hover:bg-brand-accent-hover text-white rounded-sm font-black text-[9px] uppercase shadow-lg shadow-black/10">Voltar p/ área de transferência</Button>
                                             </div>
                                         </div>
                                     </Card>
@@ -778,13 +779,13 @@ export default function TransferenciaPage() {
                     {/* Sidebar Area */}
                     <aside className="lg:col-span-4 space-y-8">
                         {/* Balance Card */}
-                        <div className="bg-orange-50 border border-orange-100 p-8 rounded-md space-y-4 shadow-xl shadow-orange-100/20 group relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-600/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000" />
-                            <div className="flex items-center gap-3 text-orange-600 relative z-10 font-black">
+                        <div className="bg-brand-accent/5 border border-brand-accent/10 p-8 rounded-md space-y-4 shadow-xl shadow-brand-accent/5 group relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000" />
+                            <div className="flex items-center gap-3 text-brand-accent relative z-10 font-black">
                                 <Wallet size={16} />
                                 <span className="text-[10px] font-black uppercase tracking-widest">Saldo Disponível</span>
                             </div>
-                            <p className="text-4xl font-black font-mono tracking-tighter text-orange-700 relative z-10">{balance}</p>
+                            <p className="text-4xl font-black font-mono tracking-tighter text-brand-secondary relative z-10">{balance}</p>
                         </div>
 
                         {/* Recent Favorites */}
@@ -807,10 +808,10 @@ export default function TransferenciaPage() {
                                                 }
                                             }
                                         }}
-                                        className="flex items-center justify-between p-5 bg-white rounded-md border border-neutral-100 hover:border-[#f97316]/30 hover:shadow-2xl transition-all cursor-pointer group"
+                                        className="flex items-center justify-between p-5 bg-white rounded-md border border-neutral-100 hover:border-brand-accent/30 hover:shadow-2xl transition-all cursor-pointer group"
                                     >
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-lg bg-[#f97316]/10 overflow-hidden group-hover:ring-4 ring-orange-500/10 transition-all border border-orange-100 p-1 flex items-center justify-center font-black text-orange-600">
+                                            <div className="w-12 h-12 rounded-lg bg-brand-accent/10 overflow-hidden group-hover:ring-4 ring-brand-accent/10 transition-all border border-brand-accent/10 p-1 flex items-center justify-center font-black text-brand-accent">
                                                 {c.nome ? c.nome.charAt(0).toUpperCase() : "?"}
                                             </div>
                                             <div className="text-left">
@@ -818,7 +819,7 @@ export default function TransferenciaPage() {
                                                 <p className="text-[10px] text-[#0c0a09]/30 font-bold uppercase tracking-wider truncate max-w-[150px]">{c.instituicao || "PIX"}</p>
                                             </div>
                                         </div>
-                                        <ChevronRight size={16} className="text-[#0c0a09]/20 group-hover:text-[#f97316] group-hover:translate-x-1 transition-all" />
+                                        <ChevronRight size={16} className="text-[#0c0a09]/20 group-hover:text-brand-accent group-hover:translate-x-1 transition-all" />
                                     </div>
                                 ))}
                                 {favorites.length === 0 && (
@@ -830,10 +831,10 @@ export default function TransferenciaPage() {
                         </div>
 
                         {/* Security Info */}
-                        <div className="p-8 bg-[#f97316]/10 rounded-md border border-orange-100 space-y-4 shadow-xl shadow-black/5">
-                            <div className="flex items-center gap-2 text-[#f97316]">
+                        <div className="p-8 bg-brand-accent/10 rounded-md border border-brand-accent/10 space-y-4 shadow-xl shadow-black/5">
+                            <div className="flex items-center gap-2 text-brand-accent">
                                 <ShieldCheck size={20} />
-                                <span className="text-[11px] font-black uppercase tracking-widest">Segurança G8</span>
+                                <span className="text-[11px] font-black uppercase tracking-widest">Segurança {currentBrand.shortName}</span>
                             </div>
                             <p className="text-[11px] text-[#0c0a09]/60 font-medium leading-relaxed">Suas transferências internas são protegidas por criptografia de ponta e validação via PIN.</p>
                         </div>
@@ -866,31 +867,31 @@ function TransferOption({
             onClick={onClick}
             disabled={disabled}
             className={`w-full group p-8 rounded-md text-left transition-all relative overflow-hidden flex flex-col justify-between h-[240px] border ${premium
-                    ? 'bg-orange-50 border-orange-100 text-orange-700 shadow-xl shadow-orange-100/20 active:scale-[0.98]'
+                    ? 'bg-brand-accent/5 border-brand-accent/10 text-brand-secondary shadow-xl shadow-brand-accent/5 active:scale-[0.98]'
                     : disabled
                         ? 'bg-neutral-50 border-neutral-100 opacity-40 cursor-not-allowed grayscale'
-                        : 'bg-white border-orange-100 hover:bg-orange-50 hover:shadow-xl hover:border-orange-200 active:scale-[0.98]'
+                        : 'bg-white border-brand-accent/10 hover:bg-brand-accent/5 hover:shadow-xl hover:border-brand-accent/20 active:scale-[0.98]'
                 }`}
         >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/40 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/10 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />
 
-            <div className={`w-14 h-14 rounded-md flex items-center justify-center mb-6 transition-transform group-hover:rotate-6 ${premium ? 'bg-orange-600/10 text-orange-600' : 'bg-orange-50 text-orange-600 border border-orange-100 shadow-sm'
+            <div className={`w-14 h-14 rounded-md flex items-center justify-center mb-6 transition-transform group-hover:rotate-6 ${premium ? 'bg-brand-accent/10 text-brand-accent' : 'bg-brand-accent/5 text-brand-accent border border-brand-accent/10 shadow-sm'
                 }`}>
                 <Icon size={28} strokeWidth={2.5} />
             </div>
 
             <div className="space-y-2 relative z-10">
                 <div className="flex items-center gap-2">
-                    <h3 className={`text-xl font-black tracking-tight ${premium ? 'text-orange-700' : 'text-orange-600'}`}>{title}</h3>
+                    <h3 className={`text-xl font-black tracking-tight ${premium ? 'text-brand-secondary' : 'text-brand-accent'}`}>{title}</h3>
                     {disabled && <Badge className="bg-[#0c0a09]/10 text-[#0c0a09] text-[8px] font-black uppercase border-0">Breve</Badge>}
-                    {badge && <Badge className="bg-orange-600/10 text-orange-600 border-0 text-[8px] font-black uppercase tracking-widest">{badge}</Badge>}
+                    {badge && <Badge className="bg-brand-accent/10 text-brand-accent border-0 text-[8px] font-black uppercase tracking-widest">{badge}</Badge>}
                 </div>
-                <p className={`text-[11px] font-black leading-relaxed ${premium ? 'text-orange-600/70' : 'text-orange-600'}`}>
+                <p className={`text-[11px] font-black leading-relaxed ${premium ? 'text-brand-accent/70' : 'text-brand-accent'}`}>
                     {description}
                 </p>
             </div>
 
-            <div className={`flex items-center gap-2 mt-4 font-black uppercase text-[9px] tracking-[0.2em] transform translate-x-0 group-hover:translate-x-2 transition-transform ${premium ? 'text-orange-700' : 'text-orange-600'
+            <div className={`flex items-center gap-2 mt-4 font-black uppercase text-[9px] tracking-[0.2em] transform translate-x-0 group-hover:translate-x-2 transition-transform ${premium ? 'text-brand-secondary' : 'text-brand-accent'
                 }`}>
                 {disabled ? 'Indisponível' : 'Começar'} <ArrowRight size={14} />
             </div>
@@ -903,20 +904,20 @@ function SimpleAction({ icon: Icon, label, onClick, badge }: { icon: any, label:
         <button 
             onClick={onClick}
             disabled={!!badge}
-            className={`flex flex-col items-center justify-center p-6 bg-white border border-orange-100 rounded-sm transition-all relative overflow-hidden group w-full ${!!badge ? 'opacity-60 grayscale cursor-not-allowed' : 'hover:bg-orange-50 hover:shadow-xl hover:shadow-orange-100/20 hover:scale-[1.03] active:scale-[0.98]'}`}
+            className={`flex flex-col items-center justify-center p-6 bg-white border border-brand-accent/10 rounded-sm transition-all relative overflow-hidden group w-full ${!!badge ? 'opacity-60 grayscale cursor-not-allowed' : 'hover:bg-brand-accent/5 hover:shadow-xl hover:shadow-brand-accent/5 hover:scale-[1.03] active:scale-[0.98]'}`}
         >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/30 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-125" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/10 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-125" />
             
             {badge && (
-                <Badge className="absolute top-2 left-2 bg-orange-600/10 text-orange-600 border-0 text-[7px] font-black uppercase tracking-tight px-1.5 py-0 z-20">
+                <Badge className="absolute top-2 left-2 bg-brand-accent/10 text-brand-accent border-0 text-[7px] font-black uppercase tracking-tight px-1.5 py-0 z-20">
                     {badge}
                 </Badge>
             )}
 
-            <div className="w-10 h-10 bg-orange-50 rounded-sm flex items-center justify-center text-orange-600 mb-3 group-hover:scale-110 group-hover:bg-orange-100 transition-all relative z-10">
+            <div className="w-10 h-10 bg-brand-accent/5 rounded-sm flex items-center justify-center text-brand-accent mb-3 group-hover:scale-110 group-hover:bg-brand-accent/10 transition-all relative z-10">
                 <Icon size={18} />
             </div>
-            <span className="text-[9px] font-black uppercase tracking-widest text-orange-700 relative z-10">{label}</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-brand-secondary relative z-10">{label}</span>
         </button>
     );
 }

@@ -244,7 +244,7 @@ export default function CobrancaSucessoPage() {
 
         <Card className="border-none shadow-2xl bg-white rounded-sm mb-10 relative overflow-hidden">
           <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#0c0a09]" />
-          <div className="bg-gradient-to-br from-[#f97316] to-[#ea580c] p-8 md:p-12 text-white flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden">
+          <div className="bg-gradient-to-br from-[var(--brand-accent)] to-[#ea580c] p-8 md:p-12 text-white flex flex-col md:flex-row md:items-center justify-between gap-8 relative overflow-hidden">
             <div className="absolute right-0 top-0 w-64 h-64 bg-white/20 rounded-full blur-3xl -mr-32 -mt-32" />
             <div className="flex items-center gap-6 relative z-10">
               <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-sm flex items-center justify-center shadow-xl border border-white/30">
@@ -282,12 +282,12 @@ export default function CobrancaSucessoPage() {
 
                   <div className="w-full mx-auto">
                     <div className="flex justify-between items-end mb-3">
-                        <span className="text-[11px] font-black text-[#f97316] uppercase tracking-widest">Progresso do Registro Bancário</span>
+                        <span className="text-[11px] font-black text-[var(--brand-accent)] uppercase tracking-widest">Progresso do Registro Bancário</span>
                         <span className="text-[11px] font-black text-neutral-400 font-mono">{Math.round(progress)}%</span>
                     </div>
                     <div className="h-5 w-full bg-neutral-100 rounded-full overflow-hidden border border-neutral-200 p-[3px] shadow-inner">
                       <div 
-                        className="h-full bg-gradient-to-r from-[#f97316] to-[#ea580c] rounded-full transition-all duration-300 ease-out shadow-lg shadow-orange-500/20"
+                        className="h-full bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] rounded-full transition-all duration-300 ease-out shadow-lg shadow-orange-500/20"
                         style={{ width: `${progress}%` }}
                       />
                     </div>
@@ -298,7 +298,7 @@ export default function CobrancaSucessoPage() {
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#0c0a09]" />
                   <div className="flex items-start gap-4 text-left">
                     <div className="p-2 bg-white rounded-sm shadow-sm border border-neutral-100">
-                      <Layers className="h-5 w-5 text-[#f97316]" />
+                      <Layers className="h-5 w-5 text-[var(--brand-accent)]" />
                     </div>
                     <div>
                       <h4 className="text-sm font-black text-[#0c0a09] uppercase tracking-widest mb-1">Onde encontrar?</h4>
@@ -323,7 +323,7 @@ export default function CobrancaSucessoPage() {
                     onClick={handlePrint}
                     className="w-full h-28 bg-[#0c0a09] hover:bg-black text-white rounded-sm font-black uppercase text-sm tracking-widest transition-all gap-4 shadow-xl active:scale-95 flex flex-col items-center justify-center py-4 group"
                   >
-                    <Printer className="h-8 w-8 text-[#f97316] group-hover:scale-110 transition-transform" />
+                    <Printer className="h-8 w-8 text-[var(--brand-accent)] group-hover:scale-110 transition-transform" />
                     Salvar PDF ou Imprimir
                   </Button>
                 </div>
@@ -352,11 +352,11 @@ export default function CobrancaSucessoPage() {
            </Button>
            <Button
              onClick={() => router.push("/dashboard/cobrancas")}
-             className="flex-[2] h-20 bg-[#0c0a09] hover:bg-[#f97316] text-white rounded-sm font-black uppercase tracking-[0.2em] text-[11px] group relative overflow-hidden shadow-2xl transition-all"
+             className="flex-[2] h-20 bg-[#0c0a09] hover:bg-[var(--brand-accent)] text-white rounded-sm font-black uppercase tracking-[0.2em] text-[11px] group relative overflow-hidden shadow-2xl transition-all"
            >
              <span className="relative z-10">Gerar Outra Cobrança</span>
              <ArrowRight className="ml-3 h-5 w-5 relative z-10 group-hover:translate-x-1 transition-transform" />
-             <div className="absolute inset-0 bg-[#f97316] opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-full group-hover:translate-y-0" />
+             <div className="absolute inset-0 bg-[var(--brand-accent)] opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-full group-hover:translate-y-0" />
            </Button>
         </div>
       </div>

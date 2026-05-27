@@ -13,15 +13,15 @@ export default function AereoPage() {
   return (
     <div className="bg-[#f8f9fa] rounded-[4px] p-6 md:p-10 border border-neutral-200/60 space-y-10 relative">
       {/* Background Decorativo */}
-      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[#ff7711]/5 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[var(--brand-accent)]/5 rounded-full blur-[100px] pointer-events-none" />
 
       {/* Header */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 relative z-10">
         <div className="space-y-4">
-          <Badge variant="secondary" className="bg-[#ff7711]/10 text-[#ff7711] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">Lazer & Turismo</Badge>
+          <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">Lazer & Turismo</Badge>
           <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase flex items-center gap-3">
-            Passagens <span className="text-[#ff7711]">Aéreas</span>
-            <Plane className="h-10 w-10 text-[#ff7711] stroke-[2.5]" />
+            Passagens <span className="text-[var(--brand-accent)]">Aéreas</span>
+            <Plane className="h-10 w-10 text-[var(--brand-accent)] stroke-[2.5]" />
           </h1>
           <p className="text-sm md:text-base text-neutral-400 font-bold max-w-2xl">
             Pesquise e reserve voos nacionais e internacionais com tarifas exclusivas G8.
@@ -35,8 +35,8 @@ export default function AereoPage() {
           <div className="relative w-full h-[85vh] min-h-[600px] bg-white border border-neutral-200/80 rounded-[8px] overflow-hidden shadow-sm">
             {isIframeLoading && (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 space-y-4">
-                <div className="w-12 h-12 border-4 border-[#ff7711] border-t-transparent rounded-full animate-spin" />
-                <span className="text-sm font-black uppercase tracking-widest text-[#ff7711] animate-pulse">
+                <div className="w-12 h-12 border-4 border-[var(--brand-accent)] border-t-transparent rounded-full animate-spin" />
+                <span className="text-sm font-black uppercase tracking-widest text-[var(--brand-accent)] animate-pulse">
                   Conectando ao Portal de Passagens...
                 </span>
               </div>
@@ -74,14 +74,14 @@ export default function AereoPage() {
                   <div className="absolute inset-0 bg-neutral-900/10 group-hover:bg-neutral-900/0 transition-all duration-300" />
                 </div>
                 <div className="p-6 space-y-3">
-                  <Badge className="bg-[#ff7711]/10 text-[#ff7711] border-transparent font-black px-2.5 py-1 rounded-[2px] text-[9px] uppercase tracking-widest">Especial</Badge>
-                  <h3 className="font-black text-[#0c0a09] text-base leading-snug group-hover:text-[#ff7711] transition-colors">
+                  <Badge className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-transparent font-black px-2.5 py-1 rounded-[2px] text-[9px] uppercase tracking-widest">Especial</Badge>
+                  <h3 className="font-black text-[#0c0a09] text-base leading-snug group-hover:text-[var(--brand-accent)] transition-colors">
                     As 10 praias mais bonitas e isoladas das Maldivas para visitar in 2026
                   </h3>
                   <p className="text-sm text-neutral-500 font-medium line-clamp-2 leading-relaxed">
                     Confira o roteiro de luxo exclusivo preparado pela equipe G8 Elite Travel com suporte do Concierge Premium.
                   </p>
-                  <div className="flex items-center gap-1 text-xs font-black text-[#ff7711] uppercase tracking-widest pt-2">
+                  <div className="flex items-center gap-1 text-xs font-black text-[var(--brand-accent)] uppercase tracking-widest pt-2">
                     Ler Artigo <ChevronRight size={14} />
                   </div>
                 </div>
@@ -95,13 +95,13 @@ export default function AereoPage() {
                 </div>
                 <div className="p-6 space-y-3">
                   <Badge className="bg-emerald-500/10 text-emerald-500 border-transparent font-black px-2.5 py-1 rounded-[2px] text-[9px] uppercase tracking-widest">G8 Lounge</Badge>
-                  <h3 className="font-black text-[#0c0a09] text-base leading-snug group-hover:text-[#ff7711] transition-colors">
+                  <h3 className="font-black text-[#0c0a09] text-base leading-snug group-hover:text-[var(--brand-accent)] transition-colors">
                     Novos Lounges VIP do G8 Bank inauguram em Paris (CDG) e Frankfurt
                   </h3>
                   <p className="text-sm text-neutral-500 font-medium line-clamp-2 leading-relaxed">
                     Clientes com o cartão digital G8 Lounge Premium terão entrada prioritária e gratuita nas novas salas parceiras.
                   </p>
-                  <div className="flex items-center gap-1 text-xs font-black text-[#ff7711] uppercase tracking-widest pt-2">
+                  <div className="flex items-center gap-1 text-xs font-black text-[var(--brand-accent)] uppercase tracking-widest pt-2">
                     Ler Artigo <ChevronRight size={14} />
                   </div>
                 </div>
@@ -115,13 +115,13 @@ export default function AereoPage() {
                 </div>
                 <div className="p-6 space-y-3">
                   <Badge className="bg-neutral-100 text-neutral-500 border-transparent font-black px-2.5 py-1 rounded-[2px] text-[9px] uppercase tracking-widest">Turismo</Badge>
-                  <h3 className="font-black text-[#0c0a09] text-base leading-snug group-hover:text-[#ff7711] transition-colors">
+                  <h3 className="font-black text-[#0c0a09] text-base leading-snug group-hover:text-[var(--brand-accent)] transition-colors">
                     Eurotrip 2026: Dicas de planejamento financeiro para sua viagem de férias
                   </h3>
                   <p className="text-sm text-neutral-500 font-medium line-clamp-2 leading-relaxed">
                     Como utilizar o cashback de cartões e o câmbio global do G8 Bank para economizar em hospedagens e passagens.
                   </p>
-                  <div className="flex items-center gap-1 text-xs font-black text-[#ff7711] uppercase tracking-widest pt-2">
+                  <div className="flex items-center gap-1 text-xs font-black text-[var(--brand-accent)] uppercase tracking-widest pt-2">
                     Ler Artigo <ChevronRight size={14} />
                   </div>
                 </div>

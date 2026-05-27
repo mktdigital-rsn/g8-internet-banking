@@ -247,7 +247,7 @@ export default function ExtratoGeralPage() {
                     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                     <head><meta charset="utf-8" /><style>table { border-collapse: collapse; } td { border: 1px solid #ccc; }</style></head>
                     <body><table>
-                        <tr>${headers.map(h => `<th style="background: #f97316; color: white;">${h}</th>`).join('')}</tr>
+                        <tr>${headers.map(h => `<th style="background: var(--brand-accent); color: white;">${h}</th>`).join('')}</tr>
                 `;
 
                 filteredItems.forEach((item: any) => {
@@ -499,9 +499,9 @@ export default function ExtratoGeralPage() {
                             <div className="p-6 md:p-10 space-y-8 relative z-10">
                                 <div className="text-center space-y-3">
                                     <div className="relative inline-block">
-                                        <div className="absolute -inset-4 bg-[#f97316]/10 rounded-full blur-xl" />
-                                        <div className="w-16 h-16 bg-[#0c0a09] rounded-md flex items-center justify-center text-[#f97316] mx-auto shadow-2xl relative border border-white/5">
-                                            <Diamond className="h-8 w-8 fill-[#f97316]/20" />
+                                        <div className="absolute -inset-4 bg-[var(--brand-accent)]/10 rounded-full blur-xl" />
+                                        <div className="w-16 h-16 bg-[#0c0a09] rounded-md flex items-center justify-center text-[var(--brand-accent)] mx-auto shadow-2xl relative border border-white/5">
+                                            <Diamond className="h-8 w-8 fill-[var(--brand-accent)]/20" />
                                         </div>
                                     </div>
                                     <div>
@@ -515,7 +515,7 @@ export default function ExtratoGeralPage() {
 
                                 <div className="text-center py-2">
                                     <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.3em] mb-2">Valor Total</p>
-                                    <p className="text-5xl font-black text-[#f97316] font-mono tracking-tighter">
+                                    <p className="text-5xl font-black text-[var(--brand-accent)] font-mono tracking-tighter">
                                         {selectedTransaction.tipo === 'CREDITO' ? '+' : '-'} {selectedTransaction.valorFormatado}
                                     </p>
                                 </div>
@@ -576,7 +576,7 @@ export default function ExtratoGeralPage() {
                                     <div className="grid grid-cols-2 gap-12">
                                         <div>
                                             <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Metodologia</p>
-                                            <Badge className="bg-[#f97316]/5 text-[#f97316] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-sm">
+                                            <Badge className="bg-[var(--brand-accent)]/5 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-sm">
                                                 {selectedTransaction.metodoFormatado === "SERVIÇOS DIGITAIS" ? "SERVIÇOS DIGITAIS/RECARGA" : selectedTransaction.metodoFormatado}
                                             </Badge>
                                         </div>
@@ -590,8 +590,8 @@ export default function ExtratoGeralPage() {
 
                                     <div className="p-4 rounded-md bg-[#0c0a09] text-white/50 space-y-2 border border-white/5 shadow-2xl">
                                         <div className="flex items-center gap-2 mb-1">
-                                            <Fingerprint className="h-3 w-3 text-[#f97316]" />
-                                            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[#f97316]">Autenticação Digital G8</p>
+                                            <Fingerprint className="h-3 w-3 text-[var(--brand-accent)]" />
+                                            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--brand-accent)]">Autenticação Digital G8</p>
                                         </div>
                                         <p className="text-[9px] font-mono font-bold break-all leading-relaxed whitespace-pre-wrap">{selectedTransaction.codigoDeIdentificacao}</p>
                                     </div>
@@ -603,7 +603,7 @@ export default function ExtratoGeralPage() {
                                             selectedTransaction.idDoBancoLiquidante || selectedTransaction.itemId || selectedTransaction.id,
                                             selectedTransaction.tipo === "CREDITO" ? (selectedTransaction.pagadorNome || "Transacao") : (selectedTransaction.RecebinteNome || "Transacao")
                                         )}
-                                        className="flex-1 h-14 bg-[#0c0a09] text-white hover:bg-[#f97316] rounded-md font-black uppercase tracking-widest text-[11px] transition-all shadow-xl shadow-black/10 group active:scale-95"
+                                        className="flex-1 h-14 bg-[#0c0a09] text-white hover:bg-[var(--brand-accent)] rounded-md font-black uppercase tracking-widest text-[11px] transition-all shadow-xl shadow-black/10 group active:scale-95"
                                     >
                                         <Download className="h-4 w-4 mr-2 group-hover:-translate-y-1 transition-transform" /> Gerar Comprovante
                                     </Button>
@@ -626,8 +626,8 @@ export default function ExtratoGeralPage() {
                 {/* Header Section */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 px-2">
                     <div className="space-y-1">
-                        <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-2 md:px-3 py-0.5 md:py-1 font-black text-[8px] md:text-[10px] uppercase tracking-[0.25em] rounded-sm">Fluxo de Caixa</Badge>
-                        <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">MINHA <span className="text-[#f97316]">MOVIMENTAÇÃO</span></h1>
+                        <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-2 md:px-3 py-0.5 md:py-1 font-black text-[8px] md:text-[10px] uppercase tracking-[0.25em] rounded-sm">Fluxo de Caixa</Badge>
+                        <h1 className="text-2xl md:text-4xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">MINHA <span className="text-[var(--brand-accent)]">MOVIMENTAÇÃO</span></h1>
                         <p className="text-xs md:text-sm text-neutral-400 font-bold">Consulte e exporte seu histórico bancário detalhado.</p>
                     </div>
                     <div className="flex items-center gap-2 md:gap-3 w-full sm:w-auto">
@@ -637,7 +637,7 @@ export default function ExtratoGeralPage() {
                             variant="outline"
                             className="flex-1 sm:flex-none h-10 md:h-11 border-neutral-100 bg-white rounded-sm px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all active:scale-95 text-neutral-400 hover:text-black"
                         >
-                            {exportingType === 'pdf' ? <div className="h-4 w-4 border-2 border-[#f97316] border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-[#f97316]" />}
+                            {exportingType === 'pdf' ? <div className="h-4 w-4 border-2 border-[var(--brand-accent)] border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-[var(--brand-accent)]" />}
                             PDF
                         </Button>
                         <Button
@@ -652,7 +652,7 @@ export default function ExtratoGeralPage() {
                         <Button
                             onClick={() => handleExport('xls')}
                             disabled={!!exportingType}
-                            className="flex-1 sm:flex-none h-10 md:h-11 bg-[#f97316] hover:bg-[#c2410c] text-white rounded-sm px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all active:scale-95"
+                            className="flex-1 sm:flex-none h-10 md:h-11 bg-[var(--brand-accent)] hover:bg-[#c2410c] text-white rounded-sm px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all active:scale-95"
                         >
                             {exportingType === 'xls' ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4" />}
                             XLS
@@ -686,7 +686,7 @@ export default function ExtratoGeralPage() {
                     </Card>
                     <Card 
                         onClick={() => window.open("https://wa.me/5551996297077", "_blank")}
-                        className="rounded-[2px] border-0 shadow-xl bg-[#f97316] p-6 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex flex-row items-center gap-5 active:scale-95 transition-all min-h-[110px]"
+                        className="rounded-[2px] border-0 shadow-xl bg-[var(--brand-accent)] p-6 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex flex-row items-center gap-5 active:scale-95 transition-all min-h-[110px]"
                     >
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-1000" />
                         <div className="w-12 h-12 bg-white/10 rounded-[2px] flex items-center justify-center text-white border border-white/20 shadow-inner group-hover:scale-110 transition-transform shrink-0 relative z-10">
@@ -708,16 +708,16 @@ export default function ExtratoGeralPage() {
                         </div>
                         <Tabs value={chartPeriod} onValueChange={(val: any) => setChartPeriod(val)} className="w-fit">
                             <TabsList className="bg-neutral-50 rounded-sm p-0.5 h-8 gap-0.5 border border-neutral-100">
-                                <TabsTrigger value="day" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316] transition-all font-sans">Dia</TabsTrigger>
-                                <TabsTrigger value="week" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316] transition-all font-sans">Semana</TabsTrigger>
-                                <TabsTrigger value="month" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[#f97316] transition-all font-sans">Mês</TabsTrigger>
+                                <TabsTrigger value="day" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[var(--brand-accent)] transition-all font-sans">Dia</TabsTrigger>
+                                <TabsTrigger value="week" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[var(--brand-accent)] transition-all font-sans">Semana</TabsTrigger>
+                                <TabsTrigger value="month" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[var(--brand-accent)] transition-all font-sans">Mês</TabsTrigger>
                             </TabsList>
                         </Tabs>
                     </div>
                     <div className="flex-1 w-full min-h-0 relative">
                         {isLoading && (
                             <div className="absolute inset-0 bg-white/50 z-20 flex items-center justify-center">
-                                <div className="h-4 w-4 bg-[#f97316] rounded-full animate-ping" />
+                                <div className="h-4 w-4 bg-[var(--brand-accent)] rounded-full animate-ping" />
                             </div>
                         )}
                         {mounted && (
@@ -766,7 +766,7 @@ export default function ExtratoGeralPage() {
                             <div className="flex flex-col sm:flex-row items-center gap-4">
                                 <Tabs value={filter} onValueChange={(val: any) => setFilter(val)} className="w-full sm:w-auto">
                                     <TabsList className="bg-neutral-100/50 rounded-md p-0.5 h-10 gap-0.5 border border-neutral-200/20">
-                                        <TabsTrigger value="all" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#f97316] transition-all font-sans">Todas</TabsTrigger>
+                                        <TabsTrigger value="all" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[var(--brand-accent)] transition-all font-sans">Todas</TabsTrigger>
                                         <TabsTrigger value="in" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-green-600 transition-all font-sans">Entrada</TabsTrigger>
                                         <TabsTrigger value="out" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-red-500 transition-all font-sans">Saída</TabsTrigger>
                                     </TabsList>
@@ -777,7 +777,7 @@ export default function ExtratoGeralPage() {
                                 <Tabs value={methodFilter} onValueChange={(val: any) => setMethodFilter(val)} className="w-full sm:w-auto">
                                     <TabsList className="bg-neutral-100/50 rounded-md p-0.5 h-10 gap-1 border border-neutral-200/20">
                                         <TabsTrigger value="all" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[#0c0a09] data-[state=active]:text-white transition-all">Métodos</TabsTrigger>
-                                        <TabsTrigger value="PIX" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[#f97316] data-[state=active]:text-white transition-all">PIX</TabsTrigger>
+                                        <TabsTrigger value="PIX" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all">PIX</TabsTrigger>
                                         <TabsTrigger value="P2P" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[#ea580c] data-[state=active]:text-white transition-all">P2P</TabsTrigger>
                                         <TabsTrigger value="BOLETO" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[#c2410c] data-[state=active]:text-white transition-all">BOLETO</TabsTrigger>
                                         <TabsTrigger value="TARIFA" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-neutral-500 data-[state=active]:text-white transition-all">TARIFA</TabsTrigger>
@@ -888,7 +888,7 @@ export default function ExtratoGeralPage() {
                                                 </p>
                                             </div>
 
-                                            <div className="flex sm:col-span-2 items-center justify-between sm:justify-end gap-3 w-full sm:w-auto text-neutral-300 group-hover:text-[#f97316] transition-colors border-t sm:border-t-0 border-neutral-50 pt-3 sm:pt-0">
+                                            <div className="flex sm:col-span-2 items-center justify-between sm:justify-end gap-3 w-full sm:w-auto text-neutral-300 group-hover:text-[var(--brand-accent)] transition-colors border-t sm:border-t-0 border-neutral-50 pt-3 sm:pt-0">
                                                 <div className="sm:hidden">
                                                     <Badge variant="outline" className={`text-[8px] font-black uppercase tracking-[0.05em] border-0 px-2 py-1 rounded-sm whitespace-nowrap ${t.tipo === 'CREDITO' ? 'text-green-600 bg-green-50/50' : 'text-neutral-400 bg-neutral-100/50'}`}>
                                                         {t.metodoFormatado?.toUpperCase() === "SERVIÇOS DIGITAIS" ? "SERVIÇOS DIGITAIS / RECARGA" : t.metodoFormatado}

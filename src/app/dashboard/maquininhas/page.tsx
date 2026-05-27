@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import api from "@/lib/api";
+import { currentBrand } from "@/config/brand";
 import {
   CreditCard,
   Store,
@@ -46,7 +47,7 @@ type MaquininhaModel = {
 const modelos: MaquininhaModel[] = [
   {
     id: "g8-smart",
-    name: "G8 Smart",
+    name: currentBrand.id === "g8" ? "G8 Smart" : "Galapagos Smart",
     description: "Compacta e inteligente. Ideal para o dia a dia.",
     features: ["Wi-Fi + Chip 4G", "NFC Contactless", "Bateria 12h", "Impressão rápida"],
     price: "R$ 89,90 / mês",
@@ -57,19 +58,19 @@ const modelos: MaquininhaModel[] = [
   },
   {
     id: "g8-pro",
-    name: "G8 Pro",
+    name: currentBrand.id === "g8" ? "G8 Pro" : "Galapagos Pro",
     description: "Para alto volume de vendas. Tela touch de 5.5 polegadas.",
     features: ["Android integrado", "Tela 5.5\" HD", "4G + Wi-Fi + Bluetooth", "Impressão térmica"],
     price: "R$ 89,90 / mês",
     taxRate: "1,49%",
     icon: CreditCard,
     popular: true,
-    color: "from-[#f97316] to-[#ea580c]",
+    color: "from-[var(--brand-accent)] to-[#ea580c]",
     revenueLabel: "Até R$ 500 mil / mês",
   },
   {
     id: "g8-ultra",
-    name: "G8 Ultra",
+    name: currentBrand.id === "g8" ? "G8 Ultra" : "Galapagos Ultra",
     description: "A mais completa. Gestão total no seu ponto de venda.",
     features: ["PDV completo", "Tela 7\" touch", "Câmera QR", "Relatórios avançados"],
     price: "R$ 89,90 / mês",
@@ -135,7 +136,7 @@ export default function MaquininhasPage() {
   });
 
   const [bancosList, setBancosList] = useState<{ code: string, name: string }[]>([
-    { code: "065", name: "G8 Bank" },
+    { code: currentBrand.bankCode, name: currentBrand.bankName },
     { code: "382", name: "FIDUCIA I S.C.M. S/A" },
     { code: "001", name: "Banco do Brasil" },
     { code: "033", name: "Santander" },
@@ -158,13 +159,13 @@ export default function MaquininhasPage() {
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
 
-          // Ensure G8 and Fiducia are at the top
+          // Ensure dynamic brand bank and Fiducia are at the top
           const important = [
-            { code: "065", name: "G8 Bank" },
+            { code: currentBrand.bankCode, name: currentBrand.bankName },
             { code: "382", name: "FIDUCIA I S.C.M. S/A" }
           ];
 
-          const filtered = formatted.filter(b => b.code !== "065" && b.code !== "382");
+          const filtered = formatted.filter(b => b.code !== currentBrand.bankCode && b.code !== "382");
           setBancosList([...important, ...filtered]);
         }
       } catch (err) {
@@ -449,16 +450,16 @@ export default function MaquininhasPage() {
 
   return (
     <div className="p-4 md:p-8 xl:p-12 flex flex-col gap-8 h-full overflow-y-auto w-full no-scrollbar bg-[#f8f9fa] relative">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#f97316]/5 rounded-full blur-[120px] -mr-64 -mt-64 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--brand-accent)]/5 rounded-full blur-[120px] -mr-64 -mt-64 pointer-events-none" />
 
       <div className="flex-1 space-y-12 relative z-10">
         {/* Header */}
         <div className="space-y-4">
-          <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">
-            Adquirência G8
+          <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">
+            Adquirência {currentBrand.id === "g8" ? "G8" : "Galapagos"}
           </Badge>
           <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">
-            Maquininhas <span className="text-orange-600">G8 Pay</span>
+            Maquininhas <span className="text-orange-600">{currentBrand.id === "g8" ? "G8 Pay" : currentBrand.name}</span>
           </h1>
           <p className="text-sm md:text-base text-neutral-700 font-bold max-w-2xl">
             Solicite sua maquininha e comece a receber pagamentos com as melhores taxas do mercado.
@@ -477,9 +478,9 @@ export default function MaquininhasPage() {
               ].map((metric, i) => (
                 <div
                   key={i}
-                  className="bg-white p-6 rounded-sm border border-neutral-100 shadow-sm flex items-center gap-5 group hover:shadow-lg hover:border-[#f97316]/20 transition-all"
+                  className="bg-white p-6 rounded-sm border border-neutral-100 shadow-sm flex items-center gap-5 group hover:shadow-lg hover:border-[var(--brand-accent)]/20 transition-all"
                 >
-                  <div className="w-12 h-12 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316] shrink-0 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 bg-[var(--brand-accent)]/10 rounded-sm flex items-center justify-center text-[var(--brand-accent)] shrink-0 group-hover:scale-110 transition-transform">
                     <metric.icon className="h-6 w-6 stroke-[2.5]" />
                   </div>
                   <div>
@@ -500,27 +501,27 @@ export default function MaquininhasPage() {
                   return (
                     <div
                       key={model.id}
-                      className={`bg-white rounded-sm border ${model.popular ? "border-[#f97316]/30 shadow-xl shadow-orange-100/50" : "border-neutral-100 shadow-sm"} overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer relative`}
+                      className={`bg-white rounded-sm border ${model.popular ? "border-[var(--brand-accent)]/30 shadow-xl shadow-orange-100/50" : "border-neutral-100 shadow-sm"} overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer relative`}
                       onClick={() => handleSelectModel(model)}
                     >
                       {model.popular && (
-                        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[#f97316] to-[#ea580c]" />
+                        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c]" />
                       )}
                       <div className={`h-40 bg-gradient-to-br ${model.color} flex items-center justify-center relative overflow-hidden`}>
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.2),transparent)]" />
                         <IconComp className="h-16 w-16 text-white/90 drop-shadow-lg group-hover:scale-125 transition-transform duration-500" />
                         {model.popular && (
-                          <Badge className="absolute top-4 right-4 bg-white text-[#f97316] border-0 font-black text-[8px] uppercase tracking-widest shadow-lg">
-                            <Star className="h-3 w-3 mr-1 fill-[#f97316]" /> Mais vendido
+                          <Badge className="absolute top-4 right-4 bg-white text-[var(--brand-accent)] border-0 font-black text-[8px] uppercase tracking-widest shadow-lg">
+                            <Star className="h-3 w-3 mr-1 fill-[var(--brand-accent)]" /> Mais vendido
                           </Badge>
                         )}
                       </div>
                       <div className="p-8 space-y-6">
                         <div className="space-y-1">
                           <h3 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">{model.name}</h3>
-                          <div className="inline-flex items-center px-2 py-0.5 bg-[#f97316]/10 rounded-sm border border-[#f97316]/20">
-                            <TrendingUp className="h-3 w-3 text-[#f97316] mr-1.5" />
-                            <span className="text-[13px] font-black text-[#f97316] uppercase tracking-wider">
+                          <div className="inline-flex items-center px-2 py-0.5 bg-[var(--brand-accent)]/10 rounded-sm border border-[var(--brand-accent)]/20">
+                            <TrendingUp className="h-3 w-3 text-[var(--brand-accent)] mr-1.5" />
+                            <span className="text-[13px] font-black text-[var(--brand-accent)] uppercase tracking-wider">
                               {model.revenueLabel}
                             </span>
                           </div>
@@ -542,10 +543,10 @@ export default function MaquininhasPage() {
                             </div>
                             <div className="text-right">
                               <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">Taxa débito</p>
-                              <p className="text-lg font-black text-[#f97316]">{model.taxRate}</p>
+                              <p className="text-lg font-black text-[var(--brand-accent)]">{model.taxRate}</p>
                             </div>
                           </div>
-                          <Button className="w-full h-12 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95">
+                          <Button className="w-full h-12 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-sm font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95">
                             Solicitar <ArrowRight className="h-4 w-4 ml-2" />
                           </Button>
                         </div>
@@ -558,12 +559,12 @@ export default function MaquininhasPage() {
 
             {/* Info banner */}
             <div className="bg-[#0c0a09] rounded-sm p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
-              <div className="absolute -top-32 -right-32 w-64 h-64 bg-[#f97316]/10 rounded-full blur-3xl" />
-              <div className="w-20 h-20 bg-gradient-to-br from-[#f97316] to-[#ea580c] rounded-sm flex items-center justify-center shrink-0 shadow-2xl">
+              <div className="absolute -top-32 -right-32 w-64 h-64 bg-[var(--brand-accent)]/10 rounded-full blur-3xl" />
+              <div className="w-20 h-20 bg-gradient-to-br from-[var(--brand-accent)] to-[#ea580c] rounded-sm flex items-center justify-center shrink-0 shadow-2xl">
                 <TrendingUp className="h-10 w-10 text-white" />
               </div>
               <div className="flex-1 space-y-2 text-center md:text-left relative z-10">
-                <h3 className="text-xl font-black text-white uppercase tracking-tight">Fature mais com G8 Pay</h3>
+                <h3 className="text-xl font-black text-white uppercase tracking-tight">Fature mais com {currentBrand.id === "g8" ? "G8 Pay" : currentBrand.name}</h3>
                 <p className="text-sm text-white/50 font-medium max-w-lg leading-relaxed">
                   Nossas maquininhas aceitam todas as bandeiras: Visa, Mastercard, Elo, Amex, Hipercard e muito mais. Receba via débito, crédito e voucher.
                 </p>
@@ -583,20 +584,20 @@ export default function MaquininhasPage() {
         {step === "form" && selectedModel && (
           <div className="max-w-7xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
             {/* Selected model summary */}
-            <div className="flex items-center gap-6 p-6 bg-white border-2 border-[#f97316]/20 rounded-sm shadow-md">
+            <div className="flex items-center gap-6 p-6 bg-white border-2 border-[var(--brand-accent)]/20 rounded-sm shadow-md">
               <div className={`w-14 h-14 bg-gradient-to-br ${selectedModel.color} rounded-sm flex items-center justify-center shrink-0`}>
                 <selectedModel.icon className="h-7 w-7 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[9px] font-black text-[#f97316] uppercase tracking-widest">Modelo selecionado</p>
+                <p className="text-[9px] font-black text-[var(--brand-accent)] uppercase tracking-widest">Modelo selecionado</p>
                 <div className="flex items-center gap-3">
                   <p className="text-lg font-black text-[#0c0a09] uppercase tracking-tight">{selectedModel.name}</p>
-                  <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 text-[10px] font-black uppercase tracking-widest">{selectedModel.revenueLabel}</Badge>
+                  <Badge className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 text-[10px] font-black uppercase tracking-widest">{selectedModel.revenueLabel}</Badge>
                 </div>
               </div>
               <button
                 onClick={() => setStep("select")}
-                className="text-[10px] font-black text-[#f97316] uppercase tracking-widest shrink-0 px-4 py-2 border-2 border-[#f97316]/30 rounded-sm hover:bg-[#f97316]/10 transition-all"
+                className="text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest shrink-0 px-4 py-2 border-2 border-[var(--brand-accent)]/30 rounded-sm hover:bg-[var(--brand-accent)]/10 transition-all"
               >
                 Alterar modelo
               </button>
@@ -605,9 +606,9 @@ export default function MaquininhasPage() {
             {/* Form Sections */}
             <div className="space-y-12">
               {/* Informações Básicas */}
-              <Card className="p-8 border-l-[6px] border-l-[#f97316] shadow-xl space-y-8">
+              <Card className="p-8 border-l-[6px] border-l-[var(--brand-accent)] shadow-xl space-y-8">
                 <div className="flex items-center gap-3 border-b border-neutral-100 pb-5">
-                  <div className="w-10 h-10 bg-[#f97316] rounded-sm flex items-center justify-center">
+                  <div className="w-10 h-10 bg-[var(--brand-accent)] rounded-sm flex items-center justify-center">
                     <AlertCircle className="h-5 w-5 text-white" />
                   </div>
                   <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Informações Básicas</h3>
@@ -853,10 +854,10 @@ export default function MaquininhasPage() {
               </Card>
 
               {/* Seção de Documentos - Botão Solicitado */}
-              <Card className="p-8 border-l-[6px] border-l-[#f97316] shadow-xl bg-orange-50/30 space-y-6 rounded-[2px]">
+              <Card className="p-8 border-l-[6px] border-l-[var(--brand-accent)] shadow-xl bg-orange-50/30 space-y-6 rounded-[2px]">
                 <div className="flex items-center justify-between flex-wrap gap-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-[#f97316] rounded-[2px] flex items-center justify-center shadow-lg shadow-orange-500/20">
+                    <div className="w-12 h-12 bg-[var(--brand-accent)] rounded-[2px] flex items-center justify-center shadow-lg shadow-orange-500/20">
                       <FileUp className="h-6 w-6 text-white" />
                     </div>
                     <div className="space-y-1">
@@ -875,7 +876,7 @@ export default function MaquininhasPage() {
                   </div>
                   <Button
                     onClick={() => setStep("documents")}
-                    className="bg-white border-2 border-[#f97316] text-[#f97316] hover:bg-[#f97316] hover:text-white transition-all font-black text-[11px] uppercase tracking-[0.2em] px-8 h-14 rounded-[2px]"
+                    className="bg-white border-2 border-[var(--brand-accent)] text-[var(--brand-accent)] hover:bg-[var(--brand-accent)] hover:text-white transition-all font-black text-[11px] uppercase tracking-[0.2em] px-8 h-14 rounded-[2px]"
                   >
                     {attachedDocs.length > 0 ? "Gerenciar Documentos" : "+ Anexar Documentos"}
                   </Button>
@@ -886,7 +887,7 @@ export default function MaquininhasPage() {
               <div className="pt-10 flex flex-col items-center gap-6">
                 <Button
                   onClick={handleSubmitForm}
-                  className="w-full max-w-2xl h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-[2px] font-black text-lg uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 transition-all active:scale-[0.98]"
+                  className="w-full max-w-2xl h-20 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-[2px] font-black text-lg uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 transition-all active:scale-[0.98]"
                 >
                   Revisar Solicitação e Continuar <ArrowRight className="h-6 w-6 ml-4" />
                 </Button>
@@ -903,17 +904,17 @@ export default function MaquininhasPage() {
         {step === "documents" && selectedModel && (
           <div className="max-w-4xl mx-auto space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
             <div className="text-center space-y-3">
-              <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 px-4 py-1 text-[10px] font-black uppercase tracking-widest">Documentação</Badge>
+              <Badge className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-4 py-1 text-[10px] font-black uppercase tracking-widest">Documentação</Badge>
               <h2 className="text-4xl font-black text-[#0c0a09] tracking-tighter uppercase leading-none">Envio de Documentos</h2>
               <p className="text-xs text-neutral-400 font-bold uppercase tracking-[0.2em]">Gerencie os documentos obrigatórios da sua empresa</p>
             </div>
 
             <div className="bg-orange-50 border border-orange-200 p-6 rounded-[2px] flex items-center gap-4">
-              <div className="w-10 h-10 bg-[#f97316]/20 rounded-[2px] flex items-center justify-center text-[#f97316] shrink-0">
+              <div className="w-10 h-10 bg-[var(--brand-accent)]/20 rounded-[2px] flex items-center justify-center text-[var(--brand-accent)] shrink-0">
                 <AlertCircle className="h-6 w-6" />
               </div>
               <div className="space-y-0.5">
-                <p className="text-[11px] font-black text-[#f97316] uppercase tracking-widest">Atenção</p>
+                <p className="text-[11px] font-black text-[var(--brand-accent)] uppercase tracking-widest">Atenção</p>
                 <p className="text-sm font-bold text-neutral-700">Os documentos são opcionais para o envio inicial, mas recomendados para facilitar o processo de credenciamento.</p>
               </div>
             </div>
@@ -921,7 +922,7 @@ export default function MaquininhasPage() {
             <div className="grid grid-cols-1 gap-6">
               <DocumentUploadCard
                 title="Contrato Assinado"
-                desc="Documento que formaliza a parceria com a G8 Pay"
+                desc={`Documento que formaliza a parceria com a ${currentBrand.id === "g8" ? "G8 Pay" : currentBrand.name}`}
                 attached={(formData.documents["Contrato Assinado"]?.length || 0) > 0}
                 files={formData.documents["Contrato Assinado"] || []}
                 onUpload={(f) => handleFileUpload("Contrato Assinado", f)}
@@ -981,13 +982,13 @@ export default function MaquininhasPage() {
               <Button
                 onClick={() => setStep("form")}
                 variant="outline"
-                className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-[2px] font-black text-sm uppercase tracking-[0.2em] hover:border-[#f97316] hover:text-[#f97316] hover:bg-orange-50 transition-all"
+                className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-[2px] font-black text-sm uppercase tracking-[0.2em] hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] hover:bg-orange-50 transition-all"
               >
                 Voltar ao Formulário
               </Button>
               <Button
                 onClick={() => setStep("confirm")}
-                className="flex-3 h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-[2px] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 transition-all active:scale-[0.98]"
+                className="flex-3 h-20 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-[2px] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 transition-all active:scale-[0.98]"
               >
                 Próximo Passo <ArrowRight className="h-6 w-6 ml-3" />
               </Button>
@@ -999,7 +1000,7 @@ export default function MaquininhasPage() {
         {step === "confirm" && selectedModel && (
           <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
             <div className="text-center space-y-3">
-              <Badge className="bg-[#f97316]/10 text-[#f97316] border-0 px-4 py-1 text-[10px] font-black uppercase tracking-widest">Revisão Final</Badge>
+              <Badge className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-4 py-1 text-[10px] font-black uppercase tracking-widest">Revisão Final</Badge>
               <h2 className="text-4xl font-black text-[#0c0a09] tracking-tighter uppercase leading-none">Confirme sua solicitação</h2>
               <p className="text-xs text-neutral-400 font-bold uppercase tracking-[0.2em]">Verifique se todos os dados estão corretos</p>
             </div>
@@ -1089,14 +1090,14 @@ export default function MaquininhasPage() {
                 <Button
                   onClick={() => setStep("form")}
                   variant="outline"
-                  className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-[2px] font-black text-sm uppercase tracking-[0.2em] hover:border-[#f97316] hover:text-[#f97316] hover:bg-orange-50 transition-all"
+                  className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-[2px] font-black text-sm uppercase tracking-[0.2em] hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] hover:bg-orange-50 transition-all"
                 >
                   Voltar e Corrigir
                 </Button>
                 <Button
                   onClick={handleConfirm}
                   disabled={isSubmitting}
-                  className="flex-[2] h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-[2px] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                  className="flex-[2] h-20 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-[2px] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
@@ -1140,7 +1141,7 @@ export default function MaquininhasPage() {
                 "Prazo de entrega: 5 a 10 dias úteis.",
               ].map((text, i) => (
                 <div key={i} className="flex items-start gap-3">
-                  <div className="w-6 h-6 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316] shrink-0 mt-0.5">
+                  <div className="w-6 h-6 bg-[var(--brand-accent)]/10 rounded-sm flex items-center justify-center text-[var(--brand-accent)] shrink-0 mt-0.5">
                     <span className="text-[10px] font-black">{i + 1}</span>
                   </div>
                   <p className="text-sm font-bold text-neutral-500">{text}</p>
@@ -1150,7 +1151,7 @@ export default function MaquininhasPage() {
 
             <Button
               onClick={handleReset}
-              className="w-full h-16 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-sm uppercase tracking-widest shadow-xl shadow-black/10 transition-all"
+              className="w-full h-16 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-sm font-black text-sm uppercase tracking-widest shadow-xl shadow-black/10 transition-all"
             >
               Voltar ao início
             </Button>
@@ -1182,14 +1183,14 @@ function FormField({
     <div className="space-y-2.5">
       <label className="text-[11px] font-black text-[#0c0a09] uppercase tracking-widest block flex items-center gap-1">
         {label}
-        {required && <span className="text-[#f97316] text-sm leading-none">*</span>}
+        {required && <span className="text-[var(--brand-accent)] text-sm leading-none">*</span>}
       </label>
       <Input
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-14 bg-white border-2 border-neutral-200 rounded-sm text-sm font-black focus:ring-2 focus:ring-[#f97316]/30 focus:border-[#f97316] transition-all placeholder:text-neutral-400 text-[#0c0a09] shadow-sm"
+        className="h-14 bg-white border-2 border-neutral-200 rounded-sm text-sm font-black focus:ring-2 focus:ring-[var(--brand-accent)]/30 focus:border-[var(--brand-accent)] transition-all placeholder:text-neutral-400 text-[#0c0a09] shadow-sm"
       />
     </div>
   );
@@ -1198,7 +1199,7 @@ function FormField({
 function ConfirmSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="space-y-6">
-      <h3 className="text-xs font-black text-[#f97316] uppercase tracking-[0.2em] border-b border-orange-100 pb-2">
+      <h3 className="text-xs font-black text-[var(--brand-accent)] uppercase tracking-[0.2em] border-b border-orange-100 pb-2">
         {title}
       </h3>
       {children}
@@ -1236,12 +1237,12 @@ function FormSelect({
     <div className="space-y-2.5">
       <label className="text-[11px] font-black text-[#0c0a09] uppercase tracking-widest block flex items-center gap-1">
         {label}
-        {required && <span className="text-[#f97316] text-sm leading-none">*</span>}
+        {required && <span className="text-[var(--brand-accent)] text-sm leading-none">*</span>}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-14 w-full bg-white border-2 border-neutral-200 rounded-[2px] px-4 text-sm font-black focus:ring-2 focus:ring-[#f97316]/30 focus:border-[#f97316] transition-all outline-none text-[#0c0a09] shadow-sm appearance-none cursor-pointer"
+        className="h-14 w-full bg-white border-2 border-neutral-200 rounded-[2px] px-4 text-sm font-black focus:ring-2 focus:ring-[var(--brand-accent)]/30 focus:border-[var(--brand-accent)] transition-all outline-none text-[#0c0a09] shadow-sm appearance-none cursor-pointer"
         style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f97316' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2rem' }}
       >
         <option value="" disabled>Selecione...</option>
@@ -1269,11 +1270,11 @@ function DocumentUploadCard({
   onRemove: (index: number) => void;
 }) {
   return (
-    <Card className={`p-8 group hover:border-[#f97316]/50 transition-all duration-300 rounded-[2px] ${attached ? 'bg-green-50/10 border-green-200' : 'bg-white'}`}>
+    <Card className={`p-8 group hover:border-[var(--brand-accent)]/50 transition-all duration-300 rounded-[2px] ${attached ? 'bg-green-50/10 border-green-200' : 'bg-white'}`}>
       <div className="flex flex-col md:flex-row items-start gap-8">
         <div className="flex-1 space-y-4 text-center md:text-left">
           <div className="flex items-center gap-3 justify-center md:justify-start">
-            <div className={`w-10 h-10 rounded-[2px] flex items-center justify-center shrink-0 ${attached ? 'bg-green-500 text-white' : 'bg-orange-50 text-[#f97316]'}`}>
+            <div className={`w-10 h-10 rounded-[2px] flex items-center justify-center shrink-0 ${attached ? 'bg-green-500 text-white' : 'bg-orange-50 text-[var(--brand-accent)]'}`}>
               <FileText className="h-5 w-5" />
             </div>
             <div>
@@ -1294,7 +1295,7 @@ function DocumentUploadCard({
                       <p className="text-[10px] font-black text-[#0c0a09] truncate uppercase">{file.name}</p>
                       <button
                         onClick={() => window.open(file.url, '_blank')}
-                        className="text-[9px] font-black text-[#f97316] uppercase hover:underline"
+                        className="text-[9px] font-black text-[var(--brand-accent)] uppercase hover:underline"
                       >
                         Visualizar Arquivo
                       </button>
@@ -1315,12 +1316,12 @@ function DocumentUploadCard({
         </div>
 
         <div className="w-full md:w-64 shrink-0">
-          <label className={`flex flex-col items-center justify-center h-40 w-full border-2 border-dashed rounded-[2px] cursor-pointer transition-all ${attached ? 'border-green-300 bg-green-50/30' : 'border-neutral-200 hover:bg-neutral-50 group-hover:border-[#f97316]/30 bg-white'}`}>
+          <label className={`flex flex-col items-center justify-center h-40 w-full border-2 border-dashed rounded-[2px] cursor-pointer transition-all ${attached ? 'border-green-300 bg-green-50/30' : 'border-neutral-200 hover:bg-neutral-50 group-hover:border-[var(--brand-accent)]/30 bg-white'}`}>
             <div className="flex flex-col items-center justify-center pt-5 pb-6 px-4 text-center">
-              <div className={`w-12 h-12 rounded-full mb-3 flex items-center justify-center transition-all ${attached ? 'bg-green-100 text-green-600' : 'bg-neutral-100 text-neutral-400 group-hover:bg-[#f97316]/10 group-hover:text-[#f97316]'}`}>
+              <div className={`w-12 h-12 rounded-full mb-3 flex items-center justify-center transition-all ${attached ? 'bg-green-100 text-green-600' : 'bg-neutral-100 text-neutral-400 group-hover:bg-[var(--brand-accent)]/10 group-hover:text-[var(--brand-accent)]'}`}>
                 <FileUp className="h-6 w-6" />
               </div>
-              <p className={`text-[10px] font-black uppercase tracking-widest ${attached ? 'text-green-600' : 'text-neutral-500 group-hover:text-[#f97316]'}`}>
+              <p className={`text-[10px] font-black uppercase tracking-widest ${attached ? 'text-green-600' : 'text-neutral-500 group-hover:text-[var(--brand-accent)]'}`}>
                 {attached ? 'Adicionar mais' : 'Clique para enviar'}
               </p>
               <p className="text-[8px] font-bold text-neutral-300 uppercase mt-1">PDF, JPG, JPEG ou PNG</p>

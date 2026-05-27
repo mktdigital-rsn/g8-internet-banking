@@ -36,6 +36,7 @@ import axios from "axios";
 import api from "@/lib/api";
 import { useSetAtom, useAtom } from "jotai";
 import { temporaryDeviceIdAtom, balanceAtom, isBalanceLoadingAtom, userAtom, isUserLoadingAtom } from "@/store/auth";
+import { currentBrand } from "@/config/brand";
 
 interface MenuItem {
   icon: any;
@@ -230,41 +231,67 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const THEME_BG = "bg-[#141210]"; // Slightly lighter than #0c0a09
+  const sidebarBg = currentBrand.id === "galapagos" ? "bg-[#0b1329] border-r border-white/5" : THEME_BG;
+  const headerBg = currentBrand.id === "galapagos" ? "bg-[#0b1329] border-b border-white/5" : THEME_BG;
 
   return (
-    <div className={`flex h-screen ${THEME_BG} text-white overflow-hidden font-sans`}>
+    <div className={`flex h-screen ${THEME_BG} text-white overflow-hidden font-sans ${currentBrand.themeClass}`}>
       {/* Sidebar */}
-      <aside className={`w-72 2xl:w-80 flex flex-col p-6 2xl:p-10 space-y-8 z-20 relative ${THEME_BG} shrink-0`}>
+      <aside className={`w-72 2xl:w-80 flex flex-col p-6 2xl:p-10 space-y-8 z-20 relative ${sidebarBg} shrink-0`}>
         <div className="px-2 relative z-10">
-          <Image src="/logo_g8_official.png" alt="G8Pay" width={180} height={60} className="object-contain 2xl:scale-110" />
+          {currentBrand.id === "g8" ? (
+            <Image src={currentBrand.logoOfficial} alt={currentBrand.name} width={180} height={60} className="object-contain 2xl:scale-110" />
+          ) : (
+            <div className="flex items-center gap-3.5 select-none animate-in fade-in duration-300">
+              <img src={currentBrand.logoOfficial} alt={currentBrand.name} className="h-9 w-auto object-contain brightness-100" />
+              <div className="flex flex-col justify-center text-left">
+                <span className="text-[17px] font-semibold tracking-wide leading-none text-white font-sans">
+                  {currentBrand.name.split(" ")[0]}
+                </span>
+                <span className="text-[8px] font-black tracking-[0.38em] uppercase text-white mt-1 leading-none">
+                  {(currentBrand.name.split(" ")[1] || "Capital").toUpperCase()}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col space-y-5 relative z-10 flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
           {/* User Card with Yellowish Background */}
-          <div className="flex-shrink-0 flex items-center gap-4 p-4 bg-[#ffaa00]/10 rounded-md border border-[#ffaa00]/20 shadow-2xl relative overflow-hidden group">
+          <div className={`flex-shrink-0 flex items-center gap-4 p-4 rounded-md shadow-2xl relative overflow-hidden group ${
+            currentBrand.id === "galapagos"
+              ? "bg-white/[0.04] border border-white/10"
+              : "bg-brand-secondary/10 border border-brand-secondary/20"
+          }`}>
             <div className="absolute top-0 right-0 p-2 opacity-10">
-               <User className="h-10 w-10 text-[#ffaa00]" />
+               <User className="h-10 w-10 text-brand-secondary" />
             </div>
-            <Avatar className="h-12 w-12 border-2 border-[#ff7711] rounded-md shadow-lg shrink-0">
+            <Avatar className="h-12 w-12 border-2 border-brand-accent rounded-md shadow-lg shrink-0">
               <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
               <AvatarFallback className="bg-neutral-800 text-white font-black uppercase">{cleanName(userName)[0]}</AvatarFallback>
             </Avatar>
-            <div className="flex flex-col min-w-0 flex-1">
-              <span className="text-[9px] text-[#ff7711] font-black uppercase tracking-[0.2em] mb-0.5">Status Platinum</span>
+            <div className="flex flex-col min-w-0 flex-1 text-left">
+              <span className="text-[9px] text-brand-accent font-black uppercase tracking-[0.2em] mb-0.5">Status Platinum</span>
               <span className="text-lg font-black text-white leading-tight truncate mb-1.5">{cleanName(userName)}</span>
               
               <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
                 <div className="flex flex-col">
-                  <span className="text-[8px] text-[#ffaa00]/60 font-black uppercase tracking-widest leading-none mb-1">Banco</span>
-                  <span className="text-[10px] font-mono font-black text-white leading-none">065 • G8 BANK</span>
+                  <span className={`text-[8px] font-black uppercase tracking-widest leading-none mb-1 ${
+                    currentBrand.id === "galapagos" ? "text-white/50" : "text-brand-secondary/60"
+                  }`}>Banco</span>
+                  <span className="text-[10px] font-mono font-black text-white leading-none">{currentBrand.bankCode} • {currentBrand.bankName}</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col">
-                    <span className="text-[8px] text-[#ffaa00]/60 font-black uppercase tracking-widest leading-none mb-1">Ag</span>
+                    <span className={`text-[8px] font-black uppercase tracking-widest leading-none mb-1 ${
+                      currentBrand.id === "galapagos" ? "text-white/50" : "text-brand-secondary/60"
+                    }`}>Ag</span>
                     <span className="text-[10px] font-mono font-black text-white leading-none">{accountInfo.agency}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[8px] text-[#ffaa00]/60 font-black uppercase tracking-widest leading-none mb-1">C/C</span>
+                    <span className={`text-[8px] font-black uppercase tracking-widest leading-none mb-1 ${
+                      currentBrand.id === "galapagos" ? "text-white/50" : "text-brand-secondary/60"
+                    }`}>C/C</span>
                     <span className="text-[10px] font-mono font-black text-white leading-none">{accountInfo.account}</span>
                   </div>
                 </div>
@@ -273,8 +300,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
 
           <nav className="space-y-4">
-            {menuGroups.map((group, gIdx) => (
-              <div key={gIdx} className="space-y-1">
+            {menuGroups.map((group, groupIdx) => (
+              <div key={groupIdx} className="space-y-1">
                 {group.items.map((item) => {
                   const isActive = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
                   
@@ -286,17 +313,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           onClick={() => setExpandedMenus(prev => ({ ...prev, [item.label]: !prev[item.label] }))}
                           className={`flex items-center gap-5 px-6 py-3 w-full rounded-md transition-all group relative overflow-hidden border border-transparent ${
                             isAnySubActive
-                              ? "text-[#ff7711] bg-white shadow-lg"
-                              : "text-white/80 hover:bg-white hover:text-[#ff7711]"
+                              ? "text-brand-accent bg-white shadow-lg shadow-brand-accent/5"
+                              : "text-white/80 hover:bg-white hover:text-brand-accent"
                           }`}
                         >
-                          <item.icon className={`h-5 w-5 relative z-10 ${isAnySubActive ? "text-[#ff7711]" : "text-white/60 group-hover:text-[#ff7711]"}`} />
+                          <item.icon className={`h-5 w-5 relative z-10 ${isAnySubActive ? "text-brand-accent" : "text-white/60 group-hover:text-brand-accent"}`} />
                           <div className="flex items-center justify-between flex-1 relative z-10">
-                            <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isAnySubActive ? "text-[#ff7711]" : "text-white/80 group-hover:text-[#ff7711] transition-colors duration-300"}`}>{item.label}</span>
+                            <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isAnySubActive ? "text-brand-accent" : "text-white/80 group-hover:text-brand-accent transition-colors duration-300"}`}>{item.label}</span>
                             {expandedMenus[item.label] ? (
-                              <ChevronUp className="h-4 w-4 text-[#ff7711] relative z-10 shrink-0" />
+                              <ChevronUp className="h-4 w-4 text-brand-accent relative z-10 shrink-0" />
                             ) : (
-                              <ChevronDown className={`h-4 w-4 relative z-10 shrink-0 ${isAnySubActive ? "text-[#ff7711]" : "text-white/60 group-hover:text-[#ff7711]"}`} />
+                              <ChevronDown className={`h-4 w-4 relative z-10 shrink-0 ${isAnySubActive ? "text-brand-accent" : "text-white/60 group-hover:text-brand-accent"}`} />
                             )}
                           </div>
                         </button>
@@ -310,12 +337,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                   href={sub.href}
                                   className={`flex items-center gap-4 px-6 py-2.5 rounded-md transition-all group border border-transparent ${
                                     isSubActive
-                                      ? "text-white bg-[#ff7711] shadow-md shadow-orange-600/10"
-                                      : "text-white/70 hover:bg-white hover:text-[#ff7711]"
+                                      ? currentBrand.id === "galapagos"
+                                        ? "text-brand-accent bg-white shadow-md shadow-black/5"
+                                        : "text-white bg-brand-accent shadow-md shadow-brand-accent/10"
+                                      : "text-white/70 hover:bg-white hover:text-brand-accent"
                                   }`}
                                 >
-                                  <sub.icon className={`h-4 w-4 shrink-0 ${isSubActive ? "text-white" : "text-white/40 group-hover:text-[#ff7711]"}`} />
-                                  <span className={`text-[10px] uppercase tracking-[0.15em] font-black ${isSubActive ? "text-white" : "text-white/70 group-hover:text-[#ff7711]"}`}>{sub.label}</span>
+                                  <sub.icon className={`h-4 w-4 shrink-0 ${isSubActive ? (currentBrand.id === "galapagos" ? "text-brand-accent" : "text-white") : "text-white/40 group-hover:text-brand-accent"}`} />
+                                  <span className={`text-[10px] uppercase tracking-[0.15em] font-black ${isSubActive ? (currentBrand.id === "galapagos" ? "text-brand-accent" : "text-white") : "text-white/70 group-hover:text-brand-accent"}`}>{sub.label}</span>
                                 </Link>
                               );
                             })}
@@ -331,15 +360,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       href={item.disabled ? "#" : item.href}
                       onClick={(e) => item.disabled && e.preventDefault()}
                       className={`flex items-center gap-5 px-6 py-3 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
-                        ? "text-white bg-[#ff7711] shadow-lg shadow-orange-600/20"
+                        ? currentBrand.id === "galapagos"
+                          ? "text-brand-accent bg-white shadow-lg shadow-black/10"
+                          : "text-white bg-brand-accent shadow-lg shadow-brand-accent/20"
                         : item.disabled
                           ? "opacity-60 cursor-not-allowed"
-                          : "text-white/80 hover:bg-white hover:text-[#ff7711]"
+                          : "text-white/80 hover:bg-white hover:text-brand-accent"
                         }`}
                     >
-                      <item.icon className={`h-5 w-5 relative z-10 ${isActive ? "text-white" : item.disabled ? "text-white/40" : "text-white/60 group-hover:text-[#ff7711]"}`} />
+                      <item.icon className={`h-5 w-5 relative z-10 ${isActive ? (currentBrand.id === "galapagos" ? "text-brand-accent" : "text-white") : item.disabled ? "text-white/40" : "text-white/60 group-hover:text-brand-accent"}`} />
                       <div className="flex items-center justify-between flex-1 relative z-10">
-                        <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isActive ? "text-white" : item.disabled ? "text-white/40" : "text-white/80 group-hover:text-[#ff7711] transition-colors duration-300"}`}>{item.label}</span>
+                        <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isActive ? (currentBrand.id === "galapagos" ? "text-brand-accent" : "text-white") : item.disabled ? "text-white/40" : "text-white/80 group-hover:text-brand-accent transition-colors duration-300"}`}>{item.label}</span>
                         {item.badge && (
                           <span className={`font-black text-[9px] px-1.5 py-0.5 rounded-sm tracking-tighter ${item.badge === "EM BREVE" ? "bg-[#ffdd00] text-black" : "bg-white/10 text-white"}`}>
                             {item.badge}
@@ -349,16 +380,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </Link>
                   );
                 })}
-                {gIdx < menuGroups.length - 1 && <Separator className="bg-white/5 my-4" />}
+                {groupIdx < menuGroups.length - 1 && <Separator className="bg-white/5 my-4" />}
               </div>
             ))}
           </nav>
         </div>
 
         <div className="mt-auto relative z-10 pt-6 border-t border-white/5">
-          <button onClick={handleLogout} className="flex items-center gap-5 px-5 py-4 w-full text-white/60 hover:bg-white hover:text-[#ff7711] rounded-md transition-all border border-transparent group">
-            <LogOut className="h-5 w-5 text-white/60 group-hover:text-[#ff7711]" />
-            <span className="text-[11px] font-black uppercase tracking-widest text-white/60 group-hover:text-[#ff7711]">Encerrar Sessão</span>
+          <button onClick={handleLogout} className="flex items-center gap-5 px-5 py-4 w-full text-white/60 hover:bg-white hover:text-brand-accent rounded-md transition-all border border-transparent group">
+            <LogOut className="h-5 w-5 text-white/60 group-hover:text-brand-accent" />
+            <span className="text-[11px] font-black uppercase tracking-widest text-white/60 group-hover:text-brand-accent">Encerrar Sessão</span>
           </button>
         </div>
       </aside>
@@ -366,20 +397,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col relative overflow-hidden">
         {/* Top Header */}
-        <header className={`h-24 flex items-center justify-between px-10 z-10 shrink-0 ${THEME_BG}`}>
+        <header className={`h-24 flex items-center justify-between px-10 z-10 shrink-0 ${headerBg}`}>
           <div className="flex items-center max-w-[280px] xl:max-w-sm w-full">
             <div className="relative w-full group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-[#ff7711] transition-colors" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-brand-accent transition-colors" />
               <Input 
                 placeholder="Pesquisar transações..." 
-                className="w-full bg-white/[0.08] border-white/5 pl-12 focus:bg-white/[0.12] focus:border-[#ff7711]/60 rounded-md h-12 transition-all font-black placeholder:text-white/30 text-white text-sm" 
+                className="w-full bg-white/[0.08] border-white/5 pl-12 focus:bg-white/[0.12] focus:border-brand-accent/60 rounded-md h-12 transition-all font-black placeholder:text-white/30 text-white text-sm" 
               />
             </div>
           </div>
 
           <div className="flex items-center gap-8 xl:gap-12">
             {/* Balance Section */}
-            <div className="flex flex-col items-end justify-center h-12 border-r border-white/10 pr-8 xl:pr-12">
+            <div className={`flex flex-col items-end justify-center h-12 border-r pr-8 xl:pr-12 ${
+              currentBrand.id === "galapagos" ? "border-white/5" : "border-white/10"
+            }`}>
               <span className="text-[10px] text-white/60 font-black uppercase tracking-[0.2em] mb-2 leading-none">Saldo Líquido</span>
               <div className="flex items-center gap-4">
                 {isLoadingData ? (
@@ -388,17 +421,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <span className="text-2xl xl:text-3xl font-black text-white font-mono tracking-tighter">{balance}</span>
                 )}
                 <button onClick={() => window.location.reload()} className="group/sync">
-                   <RotateCw className="h-4 w-4 text-[#ff7711] group-hover/sync:rotate-180 transition-transform duration-700" />
+                   <RotateCw className="h-4 w-4 text-brand-accent group-hover/sync:rotate-180 transition-transform duration-700" />
                 </button>
               </div>
             </div>
 
             {/* Profile Section */}
             <div className="flex items-center gap-6 xl:gap-8 relative">
-              <div className="hidden lg:flex flex-col items-center gap-1.5 px-4 py-2 bg-[#ffaa00]/10 border border-[#ffaa00]/20 rounded-md shadow-lg">
+              <div className={`hidden lg:flex flex-col items-center gap-1.5 px-4 py-2 rounded-md shadow-lg ${
+                currentBrand.id === "galapagos"
+                  ? "bg-white/10 border border-white/20"
+                  : "bg-brand-secondary/10 border border-brand-secondary/20"
+              }`}>
                  <div className="flex items-center gap-2">
-                    <Clock className="h-3 w-3 text-[#ffaa00] animate-pulse" />
-                    <span className="text-[9px] font-black text-[#ffaa00] uppercase tracking-widest">Sessão Segura</span>
+                    <Clock className={`h-3 w-3 animate-pulse ${
+                      currentBrand.id === "galapagos" ? "text-white" : "text-brand-secondary"
+                    }`} />
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${
+                      currentBrand.id === "galapagos" ? "text-white" : "text-brand-secondary"
+                    }`}>Sessão Segura</span>
                  </div>
                  <span className="text-sm font-mono font-black text-white tabular-nums leading-none">
                    {timeLeft !== null ? formatTime(timeLeft) : "00:00"}
@@ -407,16 +448,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               <Link href="/dashboard/conta" className="flex items-center gap-4 cursor-pointer group">
                 <div className="text-right flex flex-col justify-center hidden sm:flex">
-                  <p className="text-base font-black text-white group-hover:text-[#ff7711] transition-colors leading-none truncate max-w-[200px] xl:max-w-[300px]">
+                  <p className="text-base font-black text-white group-hover:text-brand-accent transition-colors leading-none truncate max-w-[200px] xl:max-w-[300px]">
                     {cleanName(userName)}
                   </p>
                   <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mt-1.5 leading-none">PLATINUM ELITE</p>
                 </div>
                 <div className="relative">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-[#ff7711] to-[#ffaa00] rounded-md blur opacity-0 group-hover:opacity-20 transition-opacity" />
+                  <div className="absolute -inset-1 bg-gradient-to-r from-brand-accent to-brand-secondary rounded-md blur opacity-0 group-hover:opacity-20 transition-opacity" />
                   <Avatar className="h-12 w-12 border border-white/5 rounded-md relative z-10 shadow-lg">
                     <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
-                    <AvatarFallback className="bg-[#ff7711] text-white font-black">{cleanName(userName)[0]}</AvatarFallback>
+                    <AvatarFallback className="bg-brand-accent text-white font-black">{cleanName(userName)[0]}</AvatarFallback>
                   </Avatar>
                 </div>
               </Link>

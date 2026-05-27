@@ -21,6 +21,7 @@ import { temporaryDeviceIdAtom } from "@/store/auth";
 import { useAtom } from "jotai";
 import api from "@/lib/api";
 import { toast } from "sonner";
+import { currentBrand } from "@/config/brand";
 
 type LoginStep = "identifier" | "virtual" | "qrcode";
 type ChallengeStatus = "PENDING" | "APPROVED" | "EXPIRED";
@@ -296,7 +297,7 @@ export default function LoginScreen() {
   }, [challengeExpiresAt]);
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-[#0c0a09]">
+    <div className={`min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-[#0c0a09] ${currentBrand.themeClass}`}>
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px]" />
 
@@ -308,7 +309,21 @@ export default function LoginScreen() {
       >
         <div className="hidden md:flex flex-col justify-between p-16 bg-gradient-to-br from-primary/10 to-transparent">
           <div>
-            <Image src="/logo_g8_white.png" alt="G8Pay Logo" width={160} height={60} className="object-contain 2xl:scale-125 origin-left" />
+            {currentBrand.id === "g8" ? (
+              <Image src={currentBrand.logoWhite} alt={`${currentBrand.name} Logo`} width={160} height={60} className="object-contain 2xl:scale-125 origin-left" />
+            ) : (
+              <div className="flex items-center gap-3.5 select-none animate-in fade-in duration-300 2xl:scale-125 origin-left">
+                <img src={currentBrand.logoWhite} alt={`${currentBrand.name} Logo`} className="h-10 w-auto object-contain brightness-100" />
+                <div className="flex flex-col justify-center text-left">
+                  <span className="text-[17px] font-semibold tracking-wide leading-none text-white font-sans">
+                    {currentBrand.name.split(" ")[0]}
+                  </span>
+                  <span className="text-[8px] font-black tracking-[0.38em] uppercase text-white mt-1.5 leading-none">
+                    {(currentBrand.name.split(" ")[1] || "Capital").toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-8 2xl:space-y-12">
@@ -351,12 +366,12 @@ export default function LoginScreen() {
 
                 <form onSubmit={handleIdentifierSubmit} className="space-y-6 2xl:space-y-10">
                   <div className="space-y-2 2xl:space-y-4">
-                    <label className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-[#f97316] ml-1">Acessar com</label>
+                    <label className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-brand-accent ml-1">Acessar com</label>
                     <div className="relative group">
-                      <User className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 2xl:h-7 2xl:w-7 text-white/20 group-focus-within:text-[#ea580c] transition-colors" />
+                      <User className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 2xl:h-7 2xl:w-7 text-white/20 group-focus-within:text-brand-accent transition-colors" />
                       <Input
                         placeholder="000.000.000-00"
-                        className="pl-14 2xl:pl-20 h-16 2xl:h-24 bg-white/[0.02] border-white/10 focus:border-[#ea580c]/50 focus:bg-white/[0.04] transition-all text-white font-bold text-xl 2xl:text-3xl rounded-[2px] placeholder:text-white/5 shadow-inner"
+                        className="pl-14 2xl:pl-20 h-16 2xl:h-24 bg-white/[0.02] border-white/10 focus:border-brand-accent/50 focus:bg-white/[0.04] transition-all text-white font-bold text-xl 2xl:text-3xl rounded-[2px] placeholder:text-white/5 shadow-inner"
                         value={identifier}
                         onChange={(e) => setIdentifier(e.target.value)}
                         autoFocus
@@ -366,7 +381,7 @@ export default function LoginScreen() {
 
                   <Button
                     type="submit"
-                    className="w-full h-16 2xl:h-24 text-sm 2xl:text-xl font-black transition-all bg-[#ea580c] hover:bg-[#c2410c] text-white cursor-pointer rounded-[2px] tracking-widest shadow-xl shadow-orange-950/20"
+                    className="w-full h-16 2xl:h-24 text-sm 2xl:text-xl font-black transition-all bg-brand-accent hover:bg-brand-accent-hover text-white cursor-pointer rounded-[2px] tracking-widest shadow-xl shadow-brand-accent/20"
                     disabled={!identifier}
                   >
                     AVANÇAR PARA SENHA
@@ -376,7 +391,7 @@ export default function LoginScreen() {
 
                 <div className="pt-6 2xl:pt-10 border-t border-white/5 flex items-center justify-between">
                   <button className="text-[10px] 2xl:text-xs font-black text-neutral-400 uppercase tracking-widest hover:text-white transition-colors">Dificuldade em acessar?</button>
-                  <button className="text-[10px] 2xl:text-xs font-black text-[#f97316] uppercase tracking-widest hover:underline">Solicitar Acesso</button>
+                  <button className="text-[10px] 2xl:text-xs font-black text-brand-accent uppercase tracking-widest hover:underline">Solicitar Acesso</button>
                 </div>
               </motion.div>
             )}
@@ -414,7 +429,7 @@ export default function LoginScreen() {
                         key={idx}
                         type="button"
                         onClick={() => addPasswordPair(pair)}
-                        className="h-14 bg-white/[0.10] hover:bg-[#f97316] border border-white/[0.14] rounded-[2px] text-white font-black text-lg transition-all"
+                        className="h-14 bg-white/[0.10] hover:bg-brand-accent border border-white/[0.14] rounded-[2px] text-white font-black text-lg transition-all"
                       >
                         {pair[0]} ou {pair[1]}
                       </button>
@@ -430,7 +445,7 @@ export default function LoginScreen() {
 
                   <Button
                     onClick={handleLoginSubmit}
-                    className="w-full h-16 text-lg font-black bg-[#f97316] hover:bg-[#ea580c] text-white rounded-[2px] shadow-lg cursor-pointer"
+                    className="w-full h-16 text-lg font-black bg-brand-accent hover:bg-brand-accent-hover text-white rounded-[2px] shadow-lg cursor-pointer"
                     disabled={isLoading || passwordKeys.length === 0}
                   >
                     {isLoading ? "Aguarde um instante" : "CONTINUAR"}
@@ -501,7 +516,7 @@ export default function LoginScreen() {
 
                       <div className="w-full max-w-sm space-y-4 pt-4 relative z-10">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-[#f97316] font-black uppercase tracking-widest animate-pulse text-left">
+                          <span className="text-brand-accent font-black uppercase tracking-widest animate-pulse text-left">
                             {progress < 30 ? "Estabelecendo conexão segura..." :
                              progress < 60 ? "Autenticando criptografia..." :
                              progress < 90 ? "Sincronizando dados..." :
@@ -516,7 +531,7 @@ export default function LoginScreen() {
                         <div className="w-full h-3 bg-neutral-900 rounded-full overflow-hidden border border-white/5 p-[2px]">
                           {/* Inner glowing bar */}
                           <div 
-                            className="h-full bg-gradient-to-r from-[#ff7711] to-[#ffaa00] rounded-full transition-all duration-100 ease-out shadow-[0_0_12px_rgba(255,119,17,0.5)]"
+                            className="h-full bg-gradient-to-r from-brand-accent to-brand-secondary rounded-full transition-all duration-100 ease-out shadow-[0_0_12px_var(--brand-accent)]"
                             style={{ width: `${progress}%` }}
                           />
                         </div>
@@ -528,7 +543,7 @@ export default function LoginScreen() {
                         transition={{ delay: 0.8 }}
                         className="flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-4 rounded-xl shadow-2xl"
                       >
-                        <Loader2 className="h-4 w-4 animate-spin text-[#ff7711]" />
+                        <Loader2 className="h-4 w-4 animate-spin text-brand-accent" />
                         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Carregando painel de controle...</span>
                       </motion.div>
                     </motion.div>
@@ -572,7 +587,7 @@ export default function LoginScreen() {
                       {challengeStatus === "EXPIRED" ? (
                         <Button
                           onClick={handleRestartFlow}
-                          className="w-full max-w-md h-14 text-base font-black bg-[#f97316] hover:bg-[#ea580c] text-white rounded-[2px]"
+                          className="w-full max-w-md h-14 text-base font-black bg-brand-accent hover:bg-brand-accent-hover text-white rounded-[2px]"
                         >
                           <RefreshCcw className="h-5 w-5 mr-2" />
                           REINICIAR ACESSO

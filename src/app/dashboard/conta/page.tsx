@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import api from "@/lib/api";
+import { currentBrand } from "@/config/brand";
 
 export default function ContaPage() {
   const [userData, setUserData] = useState<any>(null);
@@ -107,9 +108,9 @@ export default function ContaPage() {
               <Mail className="h-4 w-4 text-neutral-400" />
               <span className="text-sm font-bold text-neutral-500">{userData?.email}</span>
             </div>
-            <div className="flex items-center gap-2 bg-[#f97316]/10 px-4 py-2 rounded-sm border border-[#f97316]/20">
-              <span className="text-[10px] font-black text-[#f97316] uppercase tracking-widest">Saldo:</span>
-              <span className="text-sm font-black text-[#f97316] font-mono">{formatCurrency(balanceData?.valor)}</span>
+            <div className="flex items-center gap-2 bg-brand-accent/10 px-4 py-2 rounded-sm border border-brand-accent/20">
+              <span className="text-[10px] font-black text-brand-accent uppercase tracking-widest">Saldo:</span>
+              <span className="text-sm font-black text-brand-accent font-mono">{formatCurrency(balanceData?.valor)}</span>
             </div>
           </div>
         </div>
@@ -128,7 +129,14 @@ export default function ContaPage() {
                 <div className="flex justify-between items-start">
                   <div className="space-y-1">
                     <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">PLATINUM</p>
-                    <img src="/logo_g8_official.png" className="h-6 object-contain" />
+                    {currentBrand.id === "g8" ? (
+                      <img src={currentBrand.logoWhite} className="h-6 object-contain" />
+                    ) : (
+                      <div className="flex items-center gap-1.5 select-none">
+                        <img src={currentBrand.logoWhite} className="h-6 w-auto object-contain brightness-100" />
+                        <span className="text-[9px] font-extrabold tracking-wider uppercase text-white font-sans">{currentBrand.name.split(" ")[0]}</span>
+                      </div>
+                    )}
                   </div>
                   <CreditCard className="h-8 w-8 text-primary opacity-80" />
                 </div>
@@ -163,9 +171,9 @@ export default function ContaPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 border-primary/80 text-[#f97316]  font-bold text-[10px] uppercase tracking-widest rounded-sm hover:bg-primary/5 active:scale-95 transition-all"
+                  className="h-8 border-primary/80 text-brand-accent font-bold text-[10px] uppercase tracking-widest rounded-sm hover:bg-primary/5 active:scale-95 transition-all"
                   onClick={() => {
-                    const msg = `Esta é minha conta no banco G8PAY:\n\nNome: ${userData?.name}\nCPF/CNPJ: ${userData?.taxNumber}\nBanco: ${userData?.bankNumber || '384'} - G8 PAY \nAgência: ${userData?.accountBranch || '0001'}\nConta: ${userData?.accountNumber}`;
+                    const msg = `Esta é minha conta no ${currentBrand.bankName}:\n\nNome: ${userData?.name}\nCPF/CNPJ: ${userData?.taxNumber}\nBanco: ${userData?.bankNumber || currentBrand.bankCode} - ${currentBrand.name}\nAgência: ${userData?.accountBranch || '0001'}\nConta: ${userData?.accountNumber}`;
                     navigator.clipboard.writeText(msg);
                     toast.success("Dados da conta formatados para compartilhamento!");
                   }}
@@ -175,10 +183,10 @@ export default function ContaPage() {
               </div>
 
               <div className="space-y-4">
-                <div className="flex justify-between items-center p-4 bg-neutral-50 rounded-sm border border-neutral-100 group cursor-pointer" onClick={() => handleCopy(userData?.bankNumber || '384', 'bank')}>
+                <div className="flex justify-between items-center p-4 bg-neutral-50 rounded-sm border border-neutral-100 group cursor-pointer" onClick={() => handleCopy(userData?.bankNumber || currentBrand.bankCode, 'bank')}>
                   <div className="space-y-0.5">
                     <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest">Banco</p>
-                    <p className="text-sm font-black text-[#0c0a09]">{userData?.bankNumber || '384'} - G8 PAY IP</p>
+                    <p className="text-sm font-black text-[#0c0a09]">{userData?.bankNumber || currentBrand.bankCode} - {currentBrand.bankName}</p>
                   </div>
                   <Copy className="h-4 w-4 text-neutral-300 group-hover:text-primary transition-colors" />
                 </div>
@@ -266,7 +274,7 @@ export default function ContaPage() {
                   <h3 className="text-2xl font-black uppercase tracking-tighter">Precisa de Ajuda?</h3>
                   <p className="text-sm text-white/50 font-medium leading-relaxed font-sans">Nossa equipe de suporte especializado está disponível das 09h as 17h para te auxiliar em qualquer dúvida ou problema.</p>
                 </div>
-                <Button className="bg-[#f97316] hover:bg-[#ea580c] text-white rounded-sm font-black uppercase tracking-widest h-14 px-10">
+                <Button className="bg-brand-accent hover:bg-brand-accent-hover text-white rounded-sm font-black uppercase tracking-widest h-14 px-10">
                   Falar com Atendimento
                 </Button>
               </div>

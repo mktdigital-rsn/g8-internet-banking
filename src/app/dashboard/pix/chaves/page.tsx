@@ -210,7 +210,7 @@ export default function MyPixKeysPage() {
          {/* Toast Notification */}
          {toast && (
             <div className={`fixed top-8 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top-4 duration-500`}>
-               <div className={`flex items-center gap-3 px-6 py-4 rounded-md shadow-2xl ${toast.type === 'success' ? 'bg-[#0c0a09] border-[#f97316] text-[#f97316]' : 'bg-red-600 text-white'} border min-w-[320px]`}>
+               <div className={`flex items-center gap-3 px-6 py-4 rounded-md shadow-2xl ${toast.type === 'success' ? 'bg-[#0c0a09] border-[var(--brand-accent)] text-[var(--brand-accent)]' : 'bg-red-600 text-white'} border min-w-[320px]`}>
                   {toast.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
                   <div className="flex-1">
                      <p className="text-[10px] font-black uppercase tracking-widest opacity-60 leading-none mb-1">Notificação G8</p>
@@ -230,16 +230,16 @@ export default function MyPixKeysPage() {
                <div className="flex items-center gap-4">
                   <Link href="/dashboard/pix">
                      <Button variant="ghost" size="icon" className="rounded-md hover:bg-neutral-100 h-11 w-11 border border-neutral-100 bg-white shadow-sm">
-                        <ArrowLeft className="h-5 w-5 text-[#f97316]" />
+                        <ArrowLeft className="h-5 w-5 text-[var(--brand-accent)]" />
                      </Button>
                   </Link>
                   <div>
                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="secondary" className="bg-[#f97316]/10 text-[#f97316] border-transparent font-black px-3 py-0.5 rounded-sm text-[10px] uppercase tracking-widest leading-none">G8Pay &bull; Pix</Badge>
+                        <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-transparent font-black px-3 py-0.5 rounded-sm text-[10px] uppercase tracking-widest leading-none">G8Pay &bull; Pix</Badge>
                         <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none">Minhas Chaves</span>
                      </div>
                      <h1 className="text-3xl font-black tracking-tighter text-[#0c0a09] flex items-center gap-3">
-                        Gerenciar <span className="text-[#f97316]">Chaves</span>
+                        Gerenciar <span className="text-[var(--brand-accent)]">Chaves</span>
                      </h1>
                   </div>
                </div>
@@ -251,7 +251,7 @@ export default function MyPixKeysPage() {
                      className={`w-full sm:w-auto h-14 rounded-md px-8 font-black flex items-center gap-3 shadow-lg transition-all active:scale-95 ${
                         keysReachedLimit 
                         ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed shadow-none' 
-                        : 'bg-[#f97316] hover:bg-orange-600 text-white shadow-orange-500/10'
+                        : 'bg-[var(--brand-accent)] hover:bg-orange-600 text-white shadow-orange-500/10'
                      }`}
                   >
                      <Plus className="h-6 w-6" />
@@ -275,7 +275,7 @@ export default function MyPixKeysPage() {
                            {[...Array(MAX_KEYS)].map((_, i) => (
                               <div 
                                  key={i} 
-                                 className={`h-1.5 w-6 rounded-full ${i < keys.length ? 'bg-[#f97316]' : 'bg-neutral-100'}`} 
+                                 className={`h-1.5 w-6 rounded-full ${i < keys.length ? 'bg-[var(--brand-accent)]' : 'bg-neutral-100'}`} 
                               />
                            ))}
                         </div>
@@ -284,19 +284,19 @@ export default function MyPixKeysPage() {
                         </span>
                      </div>
                      {keysReachedLimit && (
-                        <Badge className="bg-orange-50 text-[#f97316] border-0 text-[9px] font-black uppercase tracking-tighter">Conta no Limite</Badge>
+                        <Badge className="bg-orange-50 text-[var(--brand-accent)] border-0 text-[9px] font-black uppercase tracking-tighter">Conta no Limite</Badge>
                      )}
                   </div>
                )}
 
                {isLoading ? (
                   <div className="flex flex-col items-center justify-center p-20 space-y-4 bg-white rounded-md border border-dashed border-neutral-200 w-full">
-                     <Loader2 className="w-10 h-10 text-[#f97316] animate-spin" />
+                     <Loader2 className="w-10 h-10 text-[var(--brand-accent)] animate-spin" />
                      <p className="text-neutral-400 font-bold uppercase tracking-widest text-[10px]">Verificando registros...</p>
                   </div>
                ) : keys.length === 0 ? (
                   <div className="flex flex-col items-center justify-center p-20 space-y-6 bg-white rounded-md border border-neutral-200 text-center w-full">
-                     <div className="w-20 h-20 bg-[#f97316]/10 rounded-md flex items-center justify-center text-[#f97316] shadow-sm">
+                     <div className="w-20 h-20 bg-[var(--brand-accent)]/10 rounded-md flex items-center justify-center text-[var(--brand-accent)] shadow-sm">
                         <Key className="h-10 w-10 stroke-[1.5]" />
                      </div>
                      <div className="space-y-2">
@@ -305,7 +305,7 @@ export default function MyPixKeysPage() {
                      </div>
                      <Button 
                         onClick={() => toggleModal(true)}
-                        className="bg-[#0c0a09] text-white hover:bg-[#f97316] rounded-md h-12 px-8 font-black text-[10px] uppercase tracking-widest shadow-xl transition-all"
+                        className="bg-[#0c0a09] text-white hover:bg-[var(--brand-accent)] rounded-md h-12 px-8 font-black text-[10px] uppercase tracking-widest shadow-xl transition-all"
                      >
                         CADASTRAR MINHA PRIMEIRA CHAVE
                      </Button>
@@ -318,14 +318,14 @@ export default function MyPixKeysPage() {
 
                      return (
                         <Card key={index} className="bg-white border border-neutral-100 rounded-md p-6 shadow-sm hover:shadow-xl hover:shadow-orange-500/5 transition-all group flex flex-col md:flex-row items-start md:items-center justify-between relative overflow-hidden gap-6 w-full">
-                           <div className="absolute top-0 left-0 w-1 h-full bg-[#f97316] opacity-0 group-hover:opacity-100 transition-opacity" />
+                           <div className="absolute top-0 left-0 w-1 h-full bg-[var(--brand-accent)] opacity-0 group-hover:opacity-100 transition-opacity" />
                            <div className="flex items-center gap-6 z-10 w-full md:flex-1 min-w-0">
-                              <div className="w-16 h-16 bg-[#f8f9fa] rounded-md flex items-center justify-center text-[#0c0a09] group-hover:bg-[#f97316]/10 group-hover:text-[#f97316] transition-colors border border-neutral-100/50 shrink-0">
+                              <div className="w-16 h-16 bg-[#f8f9fa] rounded-md flex items-center justify-center text-[#0c0a09] group-hover:bg-[var(--brand-accent)]/10 group-hover:text-[var(--brand-accent)] transition-colors border border-neutral-100/50 shrink-0">
                                  <Icon className="h-7 w-7 stroke-[2]" />
                               </div>
                               <div className="flex-1 min-w-0">
                                  <p className="text-[10px] text-neutral-400 font-black uppercase tracking-[0.2em] mb-1">{getLabelForType(key.tipo)}</p>
-                                 <p className="text-base sm:text-lg md:text-xl font-black text-[#f97316] font-mono tracking-tighter break-all leading-tight">
+                                 <p className="text-base sm:text-lg md:text-xl font-black text-[var(--brand-accent)] font-mono tracking-tighter break-all leading-tight">
                                     {key.chave}
                                  </p>
                               </div>
@@ -356,7 +356,7 @@ export default function MyPixKeysPage() {
                                  {isThisKeyDeleting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trash2 className="h-5 w-5" />}
                               </button>
                               
-                              <ChevronRight className="h-6 w-6 text-neutral-200 group-hover:text-[#f97316] group-hover:translate-x-1 transition-all hidden md:block" />
+                              <ChevronRight className="h-6 w-6 text-neutral-200 group-hover:text-[var(--brand-accent)] group-hover:translate-x-1 transition-all hidden md:block" />
                            </div>
                         </Card>
                      )
@@ -368,34 +368,34 @@ export default function MyPixKeysPage() {
          {/* Side Column */}
          <div className="w-full min-[1268px]:w-[380px] shrink-0 space-y-8 pb-10">
             <Card className="rounded-md border-0 shadow-xl bg-[#0c0a09] p-10 text-white relative overflow-hidden group min-h-[300px] cursor-pointer border border-white/5">
-               <div className="absolute bottom-0 right-0 w-48 h-48 bg-[#f97316]/10 rounded-full -mr-24 -mb-24 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
+               <div className="absolute bottom-0 right-0 w-48 h-48 bg-[var(--brand-accent)]/10 rounded-full -mr-24 -mb-24 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
                <div className="relative z-10 space-y-8 flex flex-col h-full justify-between">
-                  <div className="w-16 h-16 bg-white/5 rounded-md flex items-center justify-center text-[#f97316] shadow-xl border border-white/5 group-hover:rotate-12 transition-transform shrink-0">
+                  <div className="w-16 h-16 bg-white/5 rounded-md flex items-center justify-center text-[var(--brand-accent)] shadow-xl border border-white/5 group-hover:rotate-12 transition-transform shrink-0">
                      <Share2 className="h-8 w-8" />
                   </div>
                   <div className="space-y-4">
                      <h3 className="text-3xl font-black leading-tight tracking-tighter">Compartilhe sua chave e receba mais rápido</h3>
                      <p className="text-xs font-medium text-white/50 leading-relaxed uppercase tracking-widest">Aumente sua produtividade financeira</p>
                   </div>
-                  <button className="flex items-center gap-3 text-xs font-black text-[#f97316] uppercase tracking-[0.2em] group/btn">
+                  <button className="flex items-center gap-3 text-xs font-black text-[var(--brand-accent)] uppercase tracking-[0.2em] group/btn">
                      COMPARTILHAR AGORA
                      <ChevronRight className="h-4 w-4 group-hover/btn:translate-x-2 transition-transform" />
                   </button>
                </div>
             </Card>
 
-            <div className="bg-[#f97316]/10 rounded-md p-8 border border-orange-100/50 space-y-8 shadow-sm">
+            <div className="bg-[var(--brand-accent)]/10 rounded-md p-8 border border-orange-100/50 space-y-8 shadow-sm">
                <div className="flex items-center justify-between">
                   <h4 className="font-black text-[#0c0a09] uppercase tracking-[0.2em] text-[10px] leading-none">Portabilidade</h4>
-                  <AlertCircle className="h-4 w-4 text-[#f97316]" />
+                  <AlertCircle className="h-4 w-4 text-[var(--brand-accent)]" />
                </div>
                
-               <div className="p-6 bg-white rounded-md border border-orange-100 shadow-sm space-y-4 group cursor-pointer hover:border-[#f97316] transition-colors">
+               <div className="p-6 bg-white rounded-md border border-orange-100 shadow-sm space-y-4 group cursor-pointer hover:border-[var(--brand-accent)] transition-colors">
                   <p className="text-sm font-black text-[#0c0a09] tracking-tight uppercase">Manutenção de Dados</p>
                   <p className="text-[10px] font-bold text-neutral-400 leading-relaxed uppercase tracking-widest">Verifique se existem chaves vinculadas a outras instituições bancárias.</p>
                   <div className="flex items-center justify-between pt-2">
-                     <Badge className="bg-orange-50 text-[#f97316] border-0 font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-sm">Pendente</Badge>
-                     <button className="text-[10px] font-black text-[#f97316] hover:underline uppercase tracking-widest">REVISAR</button>
+                     <Badge className="bg-orange-50 text-[var(--brand-accent)] border-0 font-black text-[9px] uppercase tracking-widest px-3 py-1 rounded-sm">Pendente</Badge>
+                     <button className="text-[10px] font-black text-[var(--brand-accent)] hover:underline uppercase tracking-widest">REVISAR</button>
                   </div>
                </div>
             </div>
@@ -428,7 +428,7 @@ export default function MyPixKeysPage() {
                            <div className="space-y-2">
                               <label className="text-[10px] font-black text-[#0c0a09] uppercase tracking-widest ml-1">Tipo de Chave</label>
                               <Select value={newKeyType} onValueChange={(val) => setNewKeyType(val || "CPF")}>
-                                 <SelectTrigger className="h-14 w-full bg-neutral-50 border-neutral-100 rounded-md font-bold text-sm focus:ring-0 focus:border-[#f97316] transition-all px-4">
+                                 <SelectTrigger className="h-14 w-full bg-neutral-50 border-neutral-100 rounded-md font-bold text-sm focus:ring-0 focus:border-[var(--brand-accent)] transition-all px-4">
                                     <SelectValue placeholder="Selecione o tipo" />
                                  </SelectTrigger>
                                  <SelectContent className="rounded-md border-0 shadow-2xl z-[60] bg-white">
@@ -454,7 +454,7 @@ export default function MyPixKeysPage() {
                                  }
                                  value={newKeyValue}
                                  onChange={(e) => setNewKeyValue(e.target.value)}
-                                 className="h-14 bg-neutral-50 border-neutral-100 rounded-md font-bold text-sm placeholder:text-neutral-300 focus:ring-0 focus:border-[#f97316] transition-all"
+                                 className="h-14 bg-neutral-50 border-neutral-100 rounded-md font-bold text-sm placeholder:text-neutral-300 focus:ring-0 focus:border-[var(--brand-accent)] transition-all"
                               />
                            </div>
 
@@ -462,7 +462,7 @@ export default function MyPixKeysPage() {
                               <Button 
                                  onClick={handleCreateKey}
                                  disabled={isCreating || (!newKeyValue && newKeyType !== "CHAVE_ALEATORIA")}
-                                 className="h-14 bg-[#f97316] hover:bg-orange-600 text-white rounded-md font-black uppercase tracking-[0.2em] text-[11px] shadow-lg shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-50"
+                                 className="h-14 bg-[var(--brand-accent)] hover:bg-orange-600 text-white rounded-md font-black uppercase tracking-[0.2em] text-[11px] shadow-lg shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-50"
                               >
                                  {isCreating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
                                  CADASTRAR CHAVE
@@ -472,10 +472,10 @@ export default function MyPixKeysPage() {
                      ) : (
                         <div className="space-y-6">
                            <div className="flex items-center gap-4 p-4 bg-orange-50 rounded-md border border-orange-100">
-                              <ShieldCheck className="h-8 w-8 text-[#f97316]" />
+                              <ShieldCheck className="h-8 w-8 text-[var(--brand-accent)]" />
                               <div>
-                                 <p className="text-[10px] font-black text-[#f97316] uppercase tracking-widest leading-none mb-1">Passo de Segurança</p>
-                                 <p className="text-xs font-bold text-[#0c0a09]">A chave <span className="text-[#f97316]">{keyToConfirm}</span> precisa ser validada.</p>
+                                 <p className="text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest leading-none mb-1">Passo de Segurança</p>
+                                 <p className="text-xs font-bold text-[#0c0a09]">A chave <span className="text-[var(--brand-accent)]">{keyToConfirm}</span> precisa ser validada.</p>
                               </div>
                            </div>
 
@@ -485,7 +485,7 @@ export default function MyPixKeysPage() {
                                  placeholder="Digite o código aqui..."
                                  value={confirmToken}
                                  onChange={(e) => setConfirmToken(e.target.value)}
-                                 className="h-14 bg-neutral-50 border-neutral-100 rounded-md font-bold text-sm placeholder:text-neutral-300 focus:ring-0 focus:border-[#f97316] transition-all text-center tracking-[0.5em]"
+                                 className="h-14 bg-neutral-50 border-neutral-100 rounded-md font-bold text-sm placeholder:text-neutral-300 focus:ring-0 focus:border-[var(--brand-accent)] transition-all text-center tracking-[0.5em]"
                               />
                               <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest text-center">O código foi enviado para o contato da chave.</p>
                            </div>
@@ -501,7 +501,7 @@ export default function MyPixKeysPage() {
                               </Button>
                               <button 
                                  onClick={() => setStep('CREATE')}
-                                 className="text-[10px] font-black text-[#f97316] uppercase tracking-widest hover:underline"
+                                 className="text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest hover:underline"
                               >
                                  Voltar e corrigir chave
                               </button>

@@ -354,7 +354,7 @@ export default function PagamentosPage() {
 
   return (
     <div className="p-4 md:p-8 xl:p-12 flex flex-col xl:flex-row gap-8 xl:gap-12 h-full overflow-y-auto w-full no-scrollbar bg-[#f8f9fa] relative">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#f97316]/5 rounded-full blur-[120px] -mr-64 -mt-64 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--brand-accent)]/5 rounded-full blur-[120px] -mr-64 -mt-64 pointer-events-none" />
 
       <div className="flex-1 space-y-12 relative z-10">
         {/* Step-based Content */}
@@ -374,7 +374,7 @@ export default function PagamentosPage() {
               <div className="lg:col-span-8 space-y-12">
                 {/* Boleto input card */}
                 <div className="bg-orange-50 p-8 md:p-12 rounded-sm border border-neutral-100 shadow-2xl shadow-black/[0.03] space-y-8 relative overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-64 h-64 bg-[#f97316]/5 rounded-full blur-3xl -mr-32 -mt-32" />
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--brand-accent)]/5 rounded-full blur-3xl -mr-32 -mt-32" />
 
                   <div className="space-y-2 relative z-10">
                     <h2 className="text-2xl font-black text-[#0c0a09] tracking-tight">Pagar novo boleto</h2>
@@ -383,13 +383,13 @@ export default function PagamentosPage() {
 
                   <div className="flex flex-col md:flex-row gap-2 md:gap-4 relative z-10 items-stretch">
                     <div className="flex-[4] relative group/input">
-                      <div className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within/input:text-[#f97316] transition-colors">
+                      <div className="absolute left-6 top-1/2 -translate-y-1/2 text-neutral-300 group-focus-within/input:text-[var(--brand-accent)] transition-colors">
                         <Barcode className="h-6 w-6" />
                       </div>
                       <Input
                         id="barcode-input"
                         placeholder="00000.00000 00000.000000 00000.000000 0 00000000000000"
-                        className="h-16 pl-16 bg-neutral-50 border-neutral-200 rounded-sm text-sm font-black tracking-widest focus:ring-2 focus:ring-[#f97316]/20 focus:border-[#f97316]/30 transition-all placeholder:text-neutral-300 text-[#0c0a09]"
+                        className="h-16 pl-16 bg-neutral-50 border-neutral-200 rounded-sm text-sm font-black tracking-widest focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)]/30 transition-all placeholder:text-neutral-300 text-[#0c0a09]"
                         value={barcode}
                         onChange={(e) => setBarcode(e.target.value)}
                       />
@@ -533,12 +533,12 @@ export default function PagamentosPage() {
                 <div className="w-full max-w-3xl bg-white rounded-sm shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden max-h-[85vh] flex flex-col">
                   <div className="flex items-center justify-between p-8 border-b border-neutral-100 shrink-0">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316]">
+                      <div className="w-10 h-10 bg-[var(--brand-accent)]/10 rounded-sm flex items-center justify-center text-[var(--brand-accent)]">
                         <ListChecks className="h-5 w-5" />
                       </div>
                       <div>
                         <h2 className="text-xl font-black text-[#0c0a09] uppercase tracking-tight">Histórico de Pagamentos</h2>
-                        <p className="text-[10px] font-bold text-[#f97316] uppercase tracking-[0.2em] animate-pulse">
+                        <p className="text-[10px] font-bold text-[var(--brand-accent)] uppercase tracking-[0.2em] animate-pulse">
                           {isLoadingHistory ? "Sincronizando com o banco..." : `${pagamentosHistory.length} pagamentos encontrados`}
                         </p>
                       </div>
@@ -551,8 +551,8 @@ export default function PagamentosPage() {
                     {isLoadingHistory ? (
                       <div className="space-y-4">
                         <div className="flex items-center gap-3 p-4 bg-orange-50/50 rounded-sm border border-orange-100/50 animate-pulse">
-                          <div className="w-2 h-2 bg-[#f97316] rounded-full animate-bounce" />
-                          <p className="text-[10px] font-black text-[#f97316] uppercase tracking-widest">Aguarde um instante, estamos processando...</p>
+                          <div className="w-2 h-2 bg-[var(--brand-accent)] rounded-full animate-bounce" />
+                          <p className="text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest">Aguarde um instante, estamos processando...</p>
                         </div>
                         {Array(5).fill(0).map((_, i) => (
                           <div key={i} className="p-5 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between opacity-60">
@@ -595,7 +595,7 @@ export default function PagamentosPage() {
                               setActiveSection(null); // Fecha o modal de histórico
                             }
                           }}
-                          className="p-5 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between group hover:shadow-lg hover:border-[#f97316]/20 transition-all cursor-pointer"
+                          className="p-5 bg-neutral-50 rounded-sm border border-neutral-100 flex items-center justify-between group hover:shadow-lg hover:border-[var(--brand-accent)]/20 transition-all cursor-pointer"
                         >
                           <div className="flex items-center gap-4 min-w-0 flex-1">
                             <div className="w-10 h-10 bg-green-50 rounded-sm flex items-center justify-center text-green-500 shrink-0">
@@ -614,7 +614,7 @@ export default function PagamentosPage() {
                             <p className="text-base font-black text-[#0c0a09] font-mono tracking-tight">
                               {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Math.abs(item.valor))}
                             </p>
-                            <ChevronRight className="h-4 w-4 text-neutral-200 group-hover:text-[#f97316] transition-colors" />
+                            <ChevronRight className="h-4 w-4 text-neutral-200 group-hover:text-[var(--brand-accent)] transition-colors" />
                           </div>
                         </div>
                       ))
@@ -640,9 +640,9 @@ export default function PagamentosPage() {
                     </button>
                   </div>
                   <div className="p-8 space-y-8">
-                    <div className="p-6 bg-[#f97316]/10 rounded-sm border border-orange-100 space-y-4">
+                    <div className="p-6 bg-[var(--brand-accent)]/10 rounded-sm border border-orange-100 space-y-4">
                       <div className="flex items-center gap-3">
-                        <AlertCircle className="h-5 w-5 text-[#f97316]" />
+                        <AlertCircle className="h-5 w-5 text-[var(--brand-accent)]" />
                         <span className="text-xs font-black text-[#0c0a09] uppercase tracking-widest">O que é DDA?</span>
                       </div>
                       <p className="text-sm text-neutral-600 font-medium leading-relaxed">
@@ -687,7 +687,7 @@ export default function PagamentosPage() {
           <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="icon" onClick={() => setStep("landing")} className="rounded-sm h-12 w-12 hover:bg-neutral-100">
-                <ArrowLeft className="h-6 w-6 text-[#f97316]" />
+                <ArrowLeft className="h-6 w-6 text-[var(--brand-accent)]" />
               </Button>
               <h2 className="text-3xl font-black text-[#0c0a09] tracking-tighter uppercase">Confirme os dados</h2>
             </div>
@@ -703,13 +703,13 @@ export default function PagamentosPage() {
                         <p className="text-[11px] font-bold text-neutral-500 mt-1">{boletoData.documentoBeneficiario}</p>
                       )}
                       {boletoData.bancoBeneficiario && (
-                        <p className="text-[10px] font-black text-[#f97316] uppercase tracking-[0.1em] mt-2 opacity-80 flex items-center gap-1">
+                        <p className="text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-[0.1em] mt-2 opacity-80 flex items-center gap-1">
                           <Building2 className="h-3 w-3" />
                           {boletoData.bancoBeneficiario}
                         </p>
                       )}
                     </div>
-                    <div className="w-16 h-16 bg-[#f97316]/10 rounded-sm flex items-center justify-center text-[#f97316] shrink-0">
+                    <div className="w-16 h-16 bg-[var(--brand-accent)]/10 rounded-sm flex items-center justify-center text-[var(--brand-accent)] shrink-0">
                       <Building2 className="h-8 w-8" />
                     </div>
                   </div>
@@ -760,11 +760,11 @@ export default function PagamentosPage() {
                         <p className="text-lg font-black text-[#0c0a09] tracking-tight">{boletoData.vencimento}</p>
                       </div>
                       <div className={`p-4 rounded-sm border-2 transition-colors ${paymentMode === "schedule" && !scheduleDate
-                        ? "bg-[#f97316]/5 border-[#f97316]/30"
+                        ? "bg-[var(--brand-accent)]/5 border-[var(--brand-accent)]/30"
                         : "bg-white border-neutral-100"
                         }`}>
                         <p className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-2">Data de Pagamento</p>
-                        <p className={`text-lg font-black tracking-tight ${paymentMode === "now" ? "text-[#0c0a09]" : scheduleDate ? "text-[#f97316]" : "text-[#f97316]/40"
+                        <p className={`text-lg font-black tracking-tight ${paymentMode === "now" ? "text-[#0c0a09]" : scheduleDate ? "text-[var(--brand-accent)]" : "text-[var(--brand-accent)]/40"
                           }`}>
                           {paymentMode === "now" ? "Hoje" : scheduleDate ? new Date(scheduleDate + "T12:00:00").toLocaleDateString("pt-BR") : "Selecione →"}
                         </p>
@@ -794,7 +794,7 @@ export default function PagamentosPage() {
                         value={selectedCategory} 
                         onValueChange={(val) => setSelectedCategory(val || "OUTROS")}
                       >
-                        <SelectTrigger size="xl" className="w-full bg-white border-neutral-200 shadow-sm focus:border-[#f97316] group transition-all">
+                        <SelectTrigger size="xl" className="w-full bg-white border-neutral-200 shadow-sm focus:border-[var(--brand-accent)] group transition-all">
                           <SelectValue placeholder="Selecione o motivo..." />
                         </SelectTrigger>
                         <SelectContent>
@@ -803,7 +803,7 @@ export default function PagamentosPage() {
                             return (
                               <SelectItem key={cat} value={cat}>
                                 <div className="flex items-center gap-3 py-1">
-                                  <div className="w-8 h-8 rounded-sm bg-neutral-50 flex items-center justify-center text-neutral-400 group-focus:bg-[#f97316]/10 group-focus:text-[#f97316] transition-colors">
+                                  <div className="w-8 h-8 rounded-sm bg-neutral-50 flex items-center justify-center text-neutral-400 group-focus:bg-[var(--brand-accent)]/10 group-focus:text-[var(--brand-accent)] transition-colors">
                                     <Icon className="h-4 w-4" />
                                   </div>
                                   <span className="font-black text-[11px] uppercase tracking-widest">{CATEGORY_MAP[cat].label}</span>
@@ -816,9 +816,9 @@ export default function PagamentosPage() {
                     </div>
                   </div>
 
-                  <div className="p-8 bg-[#f97316]/10 rounded-sm border border-orange-100">
+                  <div className="p-8 bg-[var(--brand-accent)]/10 rounded-sm border border-orange-100">
                     <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest mb-3 opacity-60">Valor do Pagamento</p>
-                    <p className="text-5xl font-black text-[#f97316] font-mono tracking-tighter">
+                    <p className="text-5xl font-black text-[var(--brand-accent)] font-mono tracking-tighter">
                       {formatCurrency(boletoData.valor)}
                     </p>
                   </div>
@@ -861,8 +861,8 @@ export default function PagamentosPage() {
                     className={`w-full h-20 rounded-sm font-black text-lg uppercase tracking-widest shadow-2xl transition-all ${userBalance !== null && boletoData.valor > userBalance
                       ? "bg-red-500/10 text-red-500 border border-red-200 cursor-not-allowed hover:bg-red-500/10 shadow-none"
                       : paymentMode === "schedule"
-                        ? "bg-[#0c0a09] hover:bg-[#f97316] text-white shadow-black/10"
-                        : "bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white shadow-black/20"
+                        ? "bg-[#0c0a09] hover:bg-[var(--brand-accent)] text-white shadow-black/10"
+                        : "bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white shadow-black/20"
                       }`}
                   >
                     {isLoading ? "PROCESSANDO..." : (
@@ -878,9 +878,9 @@ export default function PagamentosPage() {
 
               <div className="md:col-span-4 space-y-6">
                 <div className="p-8 bg-white border border-neutral-100 rounded-sm shadow-xl space-y-6 relative overflow-hidden group">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-[#f97316]" />
+                  <div className="absolute top-0 left-0 w-1 h-full bg-[var(--brand-accent)]" />
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-[#fff9e6] rounded-sm flex items-center justify-center text-[#f97316] shrink-0">
+                    <div className="w-10 h-10 bg-[#fff9e6] rounded-sm flex items-center justify-center text-[var(--brand-accent)] shrink-0">
                       <ShieldCheck className="h-5 w-5" />
                     </div>
                     <h4 className="text-xs font-black text-[#0c0a09] uppercase tracking-widest">Aviso Importante</h4>
@@ -891,9 +891,9 @@ export default function PagamentosPage() {
                       Certifique-se de que os dados acima correspondam ao boleto que você deseja pagar.
                     </p>
                     <div className="p-4 bg-neutral-50 rounded-sm border border-neutral-100 flex gap-3">
-                      <Clock className="h-4 w-4 text-[#f97316] shrink-0 mt-0.5" />
+                      <Clock className="h-4 w-4 text-[var(--brand-accent)] shrink-0 mt-0.5" />
                       <p className="text-[10px] font-bold text-neutral-400 leading-normal uppercase">
-                        Pagamentos após as <span className="text-[#f97316]">20h</span> serão liquidados no próximo dia útil.
+                        Pagamentos após as <span className="text-[var(--brand-accent)]">20h</span> serão liquidados no próximo dia útil.
                       </p>
                     </div>
                   </div>
@@ -905,8 +905,8 @@ export default function PagamentosPage() {
 
         {step === "sms" && (
           <div className="max-w-xl mx-auto flex flex-col items-center text-center space-y-10 py-12 animate-in fade-in zoom-in-95 duration-500">
-            <div className="w-20 h-20 bg-[#f97316]/10 rounded-[4px] flex items-center justify-center text-[#f97316] shadow-xl relative group">
-              <Smartphone className="h-10 w-10 animate-bounce text-[#f97316]" />
+            <div className="w-20 h-20 bg-[var(--brand-accent)]/10 rounded-[4px] flex items-center justify-center text-[var(--brand-accent)] shadow-xl relative group">
+              <Smartphone className="h-10 w-10 animate-bounce text-[var(--brand-accent)]" />
             </div>
 
             <div className="space-y-4">
@@ -920,18 +920,18 @@ export default function PagamentosPage() {
               <Input
                 value={smsCode}
                 onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").substring(0, 6))}
-                className="h-20 text-center font-black text-4xl tracking-[0.5em] border-2 border-neutral-100 rounded-sm focus:border-[#f97316] bg-white shadow-2xl"
+                className="h-20 text-center font-black text-4xl tracking-[0.5em] border-2 border-neutral-100 rounded-sm focus:border-[var(--brand-accent)] bg-white shadow-2xl"
                 placeholder="0 0 0 0 0"
               />
               <div className="flex flex-col gap-4 w-full">
                 <Button
                   onClick={handleFinalizePayment}
                   disabled={isLoading || smsCode.length < 5}
-                  className="w-full h-16 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 disabled:opacity-50"
+                  className="w-full h-16 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-sm font-black text-base uppercase tracking-widest shadow-xl shadow-black/10 transition-all active:scale-95 disabled:opacity-50"
                 >
                   {isLoading ? "PROCESSANDO..." : "CONFIRMAR PAGAMENTO"}
                 </Button>
-                <button className="text-[10px] font-black text-[#f97316] uppercase tracking-widest hover:underline transition-colors py-2">
+                <button className="text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest hover:underline transition-colors py-2">
                   Reenviar código em 00:59
                 </button>
               </div>
@@ -1026,7 +1026,7 @@ function SuccessStep({ boletoData, transactionId, setTransactionId, handlePrintR
         <div className="space-y-8 relative z-10">
           <div className="flex flex-col items-center border-b border-neutral-50 pb-8 text-center">
             <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mb-2 opacity-60">Valor Total Pago</span>
-            <span className="text-5xl font-black text-[#f97316] tracking-tighter">{formatCurrency(boletoData?.valor)}</span>
+            <span className="text-5xl font-black text-[var(--brand-accent)] tracking-tighter">{formatCurrency(boletoData?.valor)}</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-y-8 gap-x-12">
@@ -1038,7 +1038,7 @@ function SuccessStep({ boletoData, transactionId, setTransactionId, handlePrintR
                   <p className="text-[11px] font-medium text-neutral-500">{boletoData.documentoBeneficiario}</p>
                 )}
                 {boletoData?.bancoBeneficiario && (
-                  <p className="text-[11px] font-bold text-[#f97316] uppercase mt-1 flex items-center gap-1">
+                  <p className="text-[11px] font-bold text-[var(--brand-accent)] uppercase mt-1 flex items-center gap-1">
                     <Building2 className="h-3 w-3" />
                     {boletoData.bancoBeneficiario}
                   </p>
@@ -1085,7 +1085,7 @@ function SuccessStep({ boletoData, transactionId, setTransactionId, handlePrintR
         <Button 
           onClick={handlePrintReceipt} 
           disabled={isSyncing}
-          className="flex-[2] h-20 bg-gradient-to-r from-[#f97316] to-[#ea580c] hover:from-[#ea580c] hover:to-[#f97316] text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-70"
+          className="flex-[2] h-20 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-70"
         >
           {isSyncing ? (
             <>
@@ -1102,7 +1102,7 @@ function SuccessStep({ boletoData, transactionId, setTransactionId, handlePrintR
         <Button
           onClick={onNewPayment}
           variant="outline"
-          className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-sm font-black text-lg uppercase tracking-widest hover:border-[#f97316] hover:text-[#f97316] transition-all"
+          className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-sm font-black text-lg uppercase tracking-widest hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] transition-all"
         >
           NOVO PAGAMENTO
         </Button>

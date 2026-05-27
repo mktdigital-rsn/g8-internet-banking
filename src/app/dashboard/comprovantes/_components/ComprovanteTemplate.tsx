@@ -261,7 +261,7 @@ export default function ComprovanteTemplate({
                     <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                     <head><meta charset="utf-8" /><style>table { border-collapse: collapse; } td { border: 1px solid #ccc; }</style></head>
                     <body><table>
-                        <tr>${headers.map(h => `<th style="background: #f97316; color: white;">${h}</th>`).join('')}</tr>
+                        <tr>${headers.map(h => `<th style="background: var(--brand-accent); color: white;">${h}</th>`).join('')}</tr>
                 `;
 
                 filteredItems.forEach((item: any) => {

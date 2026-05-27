@@ -250,17 +250,17 @@ export default function PixReceberPage() {
           <div className="flex items-center gap-4">
             <Link href="/dashboard/pix">
               <Button variant="ghost" size="icon" className="rounded-full hover:bg-neutral-100 h-10 w-10">
-                 <ArrowLeft className="h-6 w-6 text-[#ff7711]" />
+                 <ArrowLeft className="h-6 w-6 text-[var(--brand-accent)]" />
               </Button>
             </Link>
             <div>
                <div className="flex items-center gap-2 mb-1">
-                 <Badge variant="secondary" className="bg-[#ff7711]/10 text-[#ff7711] border-transparent font-black px-3 py-0.5 rounded-full text-[10px] uppercase tracking-widest">G8Pay &bull; Pix</Badge>
+                 <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-transparent font-black px-3 py-0.5 rounded-full text-[10px] uppercase tracking-widest">G8Pay &bull; Pix</Badge>
                  <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none">Receber Pagamento</span>
                </div>
                <h1 className="text-3xl font-black tracking-tighter text-[#0c0a09] flex items-center gap-3">
                  {step === "setup" ? "Quanto quer receber?" : "QR Code Gerado"}
-                 <QrCode className="h-7 w-7 text-[#ff7711] stroke-[2]" />
+                 <QrCode className="h-7 w-7 text-[var(--brand-accent)] stroke-[2]" />
                </h1>
             </div>
           </div>
@@ -278,7 +278,7 @@ export default function PixReceberPage() {
                       value={formatCurrency(value)}
                       onChange={handleValueChange}
                       placeholder="R$ 0,00" 
-                      className="h-24 bg-[#f8f9fa] border-neutral-100 focus:border-[#ff7711] hover:border-[#ff7711]/30 focus:ring-4 focus:ring-orange-500/5 rounded-2xl px-8 font-black text-5xl text-[#ff7711] placeholder:text-neutral-200 tracking-tighter transition-all"
+                      className="h-24 bg-[#f8f9fa] border-neutral-100 focus:border-[var(--brand-accent)] hover:border-[var(--brand-accent)]/30 focus:ring-4 focus:ring-orange-500/5 rounded-2xl px-8 font-black text-5xl text-[var(--brand-accent)] placeholder:text-neutral-200 tracking-tighter transition-all"
                    />
                 </div>
                 <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest px-2">Se deixar zerado, quem paga define o valor.</p>
@@ -290,20 +290,20 @@ export default function PixReceberPage() {
                    value={description}
                    onChange={(e) => setDescription(e.target.value)}
                    placeholder="Ex: Almoço de domingo" 
-                   className="h-16 bg-[#f8f9fa] border-neutral-100 focus:border-[#ff7711] rounded-2xl px-6 text-[#0c0a09] font-black text-lg placeholder:text-neutral-300"
+                   className="h-16 bg-[#f8f9fa] border-neutral-100 focus:border-[var(--brand-accent)] rounded-2xl px-6 text-[#0c0a09] font-black text-lg placeholder:text-neutral-300"
                 />
              </div>
 
-             <div className="p-6 bg-[#f97316]/10 rounded-[24px] border border-yellow-100/50 flex items-center justify-between relative z-10">
+             <div className="p-6 bg-[var(--brand-accent)]/10 rounded-[24px] border border-yellow-100/50 flex items-center justify-between relative z-10">
                 <div>
                    <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest leading-none mb-2">Chave Pix Selecionada</p>
                    <p className="font-black text-[#0c0a09] text-base">{userKey} ({keyType})</p>
                 </div>
                 {hasKeys ? (
-                   <button className="text-[#ff7711] font-black text-[10px] uppercase tracking-widest underline hover:text-orange-600 transition-colors">Alterar</button>
+                   <button className="text-[var(--brand-accent)] font-black text-[10px] uppercase tracking-widest underline hover:text-orange-600 transition-colors">Alterar</button>
                 ) : (
                    <Link href="/dashboard/pix/chaves">
-                      <Button size="sm" className="bg-[#ff7711] hover:bg-orange-600 text-white rounded-full font-black text-[9px] uppercase tracking-widest px-4 h-8">CADASTRAR</Button>
+                      <Button size="sm" className="bg-[var(--brand-accent)] hover:bg-orange-600 text-white rounded-full font-black text-[9px] uppercase tracking-widest px-4 h-8">CADASTRAR</Button>
                    </Link>
                 )}
              </div>
@@ -311,7 +311,7 @@ export default function PixReceberPage() {
              <Button 
                disabled={loading || !hasKeys}
                onClick={generatePixPayload}
-               className="w-full h-16 bg-[#ff7711] hover:bg-orange-600 text-white rounded-2xl font-black text-xl shadow-2xl shadow-[#ff7711]/20 transition-all active:scale-95 flex items-center gap-3 disabled:opacity-50"
+               className="w-full h-16 bg-[var(--brand-accent)] hover:bg-orange-600 text-white rounded-2xl font-black text-xl shadow-2xl shadow-[var(--brand-accent)]/20 transition-all active:scale-95 flex items-center gap-3 disabled:opacity-50"
              >
                 {loading ? <RefreshCw className="h-6 w-6 animate-spin" /> : "GERAR QR CODE"}
              </Button>
@@ -337,7 +337,7 @@ export default function PixReceberPage() {
                    <div className="absolute inset-0 flex items-center justify-center bg-white/90 opacity-0 group-hover:opacity-100 transition-opacity rounded-[32px]">
                       <button 
                         onClick={handleDownloadQR}
-                        className="bg-[#ff7711] text-white p-4 rounded-full shadow-lg"
+                        className="bg-[var(--brand-accent)] text-white p-4 rounded-full shadow-lg"
                       >
                          <Download className="h-6 w-6" />
                       </button>
@@ -358,20 +358,20 @@ export default function PixReceberPage() {
                    onClick={handleCopyCode}
                    className="w-full h-16 bg-[#0c0a09] hover:bg-neutral-800 text-white rounded-2xl font-black text-lg flex items-center gap-4 transition-all active:scale-95 group disabled:opacity-50"
                 >
-                   <Copy className="h-6 w-6 text-[#ff7711] group-hover:scale-110 transition-transform" />
+                   <Copy className="h-6 w-6 text-[var(--brand-accent)] group-hover:scale-110 transition-transform" />
                    {pixPayload ? "COPIAR CÓDIGO PIX" : "CÓDIGO INDISPONÍVEL"}
                 </Button>
                 <Button 
                    onClick={handleShare}
-                   className="w-full h-16 bg-white border-2 border-neutral-100 hover:border-[#ff7711]/20 hover:bg-neutral-50 text-[#0c0a09] rounded-2xl font-black text-lg flex items-center gap-4 transition-all active:scale-95"
+                   className="w-full h-16 bg-white border-2 border-neutral-100 hover:border-[var(--brand-accent)]/20 hover:bg-neutral-50 text-[#0c0a09] rounded-2xl font-black text-lg flex items-center gap-4 transition-all active:scale-95"
                 >
-                   <Share2 className="h-6 w-6 text-[#ff7711]" />
+                   <Share2 className="h-6 w-6 text-[var(--brand-accent)]" />
                    COMPARTILHAR
                 </Button>
                 <Button 
                   variant="ghost"
                   onClick={() => setStep("setup")}
-                  className="w-full h-16 text-neutral-400 hover:text-[#ff7711] font-black uppercase tracking-widest text-[10px] flex items-center gap-3"
+                  className="w-full h-16 text-neutral-400 hover:text-[var(--brand-accent)] font-black uppercase tracking-widest text-[10px] flex items-center gap-3"
                 >
                    <RefreshCw className="h-4 w-4" />
                    Gerar Novo QR Code
@@ -384,9 +384,9 @@ export default function PixReceberPage() {
       {/* Side Column */}
       <div className="w-[380px] shrink-0 space-y-8">
          <Card className="rounded-[40px] border-0 bg-[#0c0a09] p-10 text-white relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-[#ff7711]/10 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity" />
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--brand-accent)]/10 rounded-full blur-3xl opacity-50 group-hover:opacity-100 transition-opacity" />
             <div className="relative z-10 space-y-6">
-               <div className="w-16 h-16 bg-[#ff7711] rounded-2xl flex items-center justify-center shadow-xl shadow-orange-500/20">
+               <div className="w-16 h-16 bg-[var(--brand-accent)] rounded-2xl flex items-center justify-center shadow-xl shadow-orange-500/20">
                   <Diamond className="h-8 w-8 text-white" />
                </div>
                <h3 className="text-2xl font-black leading-tight">G8Pay &bull; Business</h3>

@@ -51,7 +51,7 @@ export default function AjudaPage() {
     <div className="p-4 md:p-10 space-y-10 animate-in fade-in duration-700 max-w-6xl mx-auto">
       {/* Search Header */}
       <div className="bg-[#0c0a09] rounded-sm p-10 md:p-20 text-center space-y-8 relative overflow-hidden border border-white/5 shadow-2xl">
-         <div className="absolute top-0 right-0 w-96 h-96 bg-[#f97316]/10 rounded-full blur-[100px] -mr-48 -mt-48" />
+         <div className="absolute top-0 right-0 w-96 h-96 bg-[var(--brand-accent)]/10 rounded-full blur-[100px] -mr-48 -mt-48" />
          <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full blur-[80px] -ml-32 -mb-32 opacity-30" />
          
          <div className="relative z-10 space-y-6">
