@@ -29,6 +29,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Building2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { currentBrand } from "@/config/brand";
 
 const PixIcon = (props: any) => (
     <svg {...props} viewBox="0 0 100 100" fill="currentColor">
@@ -144,7 +145,11 @@ export default function PixPage() {
                                                 value={pixKey}
                                                 onChange={(e) => handleKeyChange(e.target.value)}
                                                 onKeyDown={(e) => { if (e.key === 'Enter') handleContinue(); }}
-                                                className="h-14 bg-white border border-orange-100 rounded-sm pl-6 pr-12 font-black text-sm focus:ring-4 focus:ring-orange-100 transition-all text-[#0c0a09] placeholder:text-neutral-400 shadow-sm"
+                                                className={
+                                                    currentBrand.id === "galapagos"
+                                                        ? "h-14 bg-white/100 border-2 border-blue-200 focus:border-blue-500 rounded-sm pl-6 pr-12 font-semibold text-sm focus:ring-2 focus:ring-blue-500/20 transition-all text-neutral-800 placeholder:text-neutral-400 shadow-sm"
+                                                        : "h-14 bg-white border border-orange-100 rounded-sm pl-6 pr-12 font-black text-sm focus:ring-4 focus:ring-orange-100 transition-all text-[#0c0a09] placeholder:text-neutral-400 shadow-sm"
+                                                }
                                             />
                                             {pixKey && (
                                                 <button

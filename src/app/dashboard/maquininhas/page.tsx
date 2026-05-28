@@ -501,13 +501,31 @@ export default function MaquininhasPage() {
                   return (
                     <div
                       key={model.id}
-                      className={`bg-white rounded-sm border ${model.popular ? "border-[var(--brand-accent)]/30 shadow-xl shadow-orange-100/50" : "border-neutral-100 shadow-sm"} overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer relative`}
+                      className={`bg-white rounded-sm border ${
+                        model.popular
+                          ? currentBrand.id === "galapagos"
+                            ? "border-blue-500/30 shadow-xl shadow-blue-100/50"
+                            : "border-[var(--brand-accent)]/30 shadow-xl shadow-orange-100/50"
+                          : "border-neutral-100 shadow-sm"
+                      } overflow-hidden group hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer relative`}
                       onClick={() => handleSelectModel(model)}
                     >
                       {model.popular && (
-                        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c]" />
+                        <div className={`absolute top-0 inset-x-0 h-1 ${
+                          currentBrand.id === "galapagos"
+                            ? "bg-[var(--brand-accent)]"
+                            : "bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c]"
+                        }`} />
                       )}
-                      <div className={`h-40 bg-gradient-to-br ${model.color} flex items-center justify-center relative overflow-hidden`}>
+                      <div className={`h-40 bg-gradient-to-br ${
+                        currentBrand.id === "galapagos"
+                          ? model.id === "g8-pro"
+                            ? "from-[#0b1329] to-[#1e3a8a]"
+                            : model.id === "g8-smart"
+                            ? "from-[#0b1329] to-[#111c3a]"
+                            : "from-[#0a0f1d] to-[#0f172a]"
+                          : model.color
+                      } flex items-center justify-center relative overflow-hidden`}>
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.2),transparent)]" />
                         <IconComp className="h-16 w-16 text-white/90 drop-shadow-lg group-hover:scale-125 transition-transform duration-500" />
                         {model.popular && (
@@ -546,7 +564,11 @@ export default function MaquininhasPage() {
                               <p className="text-lg font-black text-[var(--brand-accent)]">{model.taxRate}</p>
                             </div>
                           </div>
-                          <Button className="w-full h-12 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-sm font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95">
+                          <Button className={`w-full h-12 text-white rounded-sm font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95 ${
+                            currentBrand.id === "galapagos"
+                              ? "bg-[#0b1329] hover:bg-[#111c3a]"
+                              : "bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)]"
+                          }`}>
                             Solicitar <ArrowRight className="h-4 w-4 ml-2" />
                           </Button>
                         </div>
@@ -560,7 +582,11 @@ export default function MaquininhasPage() {
             {/* Info banner */}
             <div className="bg-[#0c0a09] rounded-sm p-8 md:p-12 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
               <div className="absolute -top-32 -right-32 w-64 h-64 bg-[var(--brand-accent)]/10 rounded-full blur-3xl" />
-              <div className="w-20 h-20 bg-gradient-to-br from-[var(--brand-accent)] to-[#ea580c] rounded-sm flex items-center justify-center shrink-0 shadow-2xl">
+              <div className={`w-20 h-20 rounded-sm flex items-center justify-center shrink-0 shadow-2xl ${
+                currentBrand.id === "galapagos"
+                  ? "bg-gradient-to-br from-[#0b1329] to-[#1e3a8a]"
+                  : "bg-gradient-to-br from-[var(--brand-accent)] to-[#ea580c]"
+              }`}>
                 <TrendingUp className="h-10 w-10 text-white" />
               </div>
               <div className="flex-1 space-y-2 text-center md:text-left relative z-10">
@@ -887,7 +913,11 @@ export default function MaquininhasPage() {
               <div className="pt-10 flex flex-col items-center gap-6">
                 <Button
                   onClick={handleSubmitForm}
-                  className="w-full max-w-2xl h-20 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-[2px] font-black text-lg uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 transition-all active:scale-[0.98]"
+                  className={`w-full max-w-2xl h-20 text-white rounded-[2px] font-black text-lg uppercase tracking-[0.2em] transition-all active:scale-[0.98] ${
+                    currentBrand.id === "galapagos"
+                      ? "bg-[#0b1329] hover:bg-[#111c3a] shadow-2xl shadow-blue-900/20"
+                      : "bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] shadow-2xl shadow-orange-500/20"
+                  }`}
                 >
                   Revisar Solicitação e Continuar <ArrowRight className="h-6 w-6 ml-4" />
                 </Button>
@@ -988,7 +1018,11 @@ export default function MaquininhasPage() {
               </Button>
               <Button
                 onClick={() => setStep("confirm")}
-                className="flex-3 h-20 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-[2px] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 transition-all active:scale-[0.98]"
+                className={`flex-3 h-20 text-white rounded-[2px] font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-[0.98] ${
+                  currentBrand.id === "galapagos"
+                    ? "bg-[#0b1329] hover:bg-[#111c3a] shadow-2xl shadow-blue-900/20"
+                    : "bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] shadow-2xl shadow-orange-500/20"
+                }`}
               >
                 Próximo Passo <ArrowRight className="h-6 w-6 ml-3" />
               </Button>
@@ -1097,7 +1131,11 @@ export default function MaquininhasPage() {
                 <Button
                   onClick={handleConfirm}
                   disabled={isSubmitting}
-                  className="flex-[2] h-20 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-[2px] font-black text-sm uppercase tracking-[0.2em] shadow-2xl shadow-orange-500/20 transition-all active:scale-[0.98] disabled:opacity-50"
+                  className={`flex-[2] h-20 text-white rounded-[2px] font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-[0.98] disabled:opacity-50 ${
+                    currentBrand.id === "galapagos"
+                      ? "bg-[#0b1329] hover:bg-[#111c3a] shadow-2xl shadow-blue-900/20"
+                      : "bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] shadow-2xl shadow-orange-500/20"
+                  }`}
                 >
                   {isSubmitting ? (
                     <>
@@ -1151,7 +1189,11 @@ export default function MaquininhasPage() {
 
             <Button
               onClick={handleReset}
-              className="w-full h-16 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-sm font-black text-sm uppercase tracking-widest shadow-xl shadow-black/10 transition-all"
+              className={`w-full h-16 text-white rounded-sm font-black text-sm uppercase tracking-widest shadow-xl shadow-black/10 transition-all ${
+                currentBrand.id === "galapagos"
+                  ? "bg-[#0b1329] hover:bg-[#111c3a]"
+                  : "bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)]"
+              }`}
             >
               Voltar ao início
             </Button>
@@ -1190,7 +1232,11 @@ function FormField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className="h-14 bg-white border-2 border-neutral-200 rounded-sm text-sm font-black focus:ring-2 focus:ring-[var(--brand-accent)]/30 focus:border-[var(--brand-accent)] transition-all placeholder:text-neutral-400 text-[#0c0a09] shadow-sm"
+        className={
+          currentBrand.id === "galapagos"
+            ? "h-14 bg-white/100 border-2 border-blue-200 focus:border-blue-500 rounded-sm text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 transition-all placeholder:text-neutral-400 text-neutral-800 shadow-sm"
+            : "h-14 bg-white border-2 border-neutral-200 rounded-sm text-sm font-black focus:ring-2 focus:ring-[var(--brand-accent)]/30 focus:border-[var(--brand-accent)] transition-all placeholder:text-neutral-400 text-[#0c0a09] shadow-sm"
+        }
       />
     </div>
   );
@@ -1242,8 +1288,19 @@ function FormSelect({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-14 w-full bg-white border-2 border-neutral-200 rounded-[2px] px-4 text-sm font-black focus:ring-2 focus:ring-[var(--brand-accent)]/30 focus:border-[var(--brand-accent)] transition-all outline-none text-[#0c0a09] shadow-sm appearance-none cursor-pointer"
-        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f97316' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1.2rem' }}
+        className={
+          currentBrand.id === "galapagos"
+            ? "h-14 w-full bg-white/100 border-2 border-blue-200 focus:border-blue-500 rounded-[2px] px-4 text-sm font-semibold focus:ring-2 focus:ring-blue-500/20 transition-all outline-none text-neutral-800 shadow-sm appearance-none cursor-pointer"
+            : "h-14 w-full bg-white border-2 border-neutral-200 rounded-[2px] px-4 text-sm font-black focus:ring-2 focus:ring-[var(--brand-accent)]/30 focus:border-[var(--brand-accent)] transition-all outline-none text-[#0c0a09] shadow-sm appearance-none cursor-pointer"
+        }
+        style={{
+          backgroundImage: currentBrand.id === "galapagos"
+            ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%232563eb' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`
+            : `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f97316' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`,
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right 1rem center',
+          backgroundSize: '1.2rem'
+        }}
       >
         <option value="" disabled>Selecione...</option>
         {options.map((opt) => (
