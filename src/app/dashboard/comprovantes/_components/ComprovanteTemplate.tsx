@@ -511,7 +511,7 @@ export default function ComprovanteTemplate({
                                 <div className="space-y-6 pt-4">
                                     <div className="grid grid-cols-2 gap-12">
                                         <div>
-                                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Metodologia</p>
+                                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Tipo</p>
                                             <Badge className="bg-orange-500/5 text-orange-600 border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-[5px]">
                                                 {selectedTransaction.metodoFormatado}
                                             </Badge>

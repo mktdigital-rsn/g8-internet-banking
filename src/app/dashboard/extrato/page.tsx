@@ -575,7 +575,7 @@ export default function ExtratoGeralPage() {
                                 <div className="space-y-6 pt-4">
                                     <div className="grid grid-cols-2 gap-12">
                                         <div>
-                                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Metodologia</p>
+                                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Tipo</p>
                                             <Badge className="bg-[var(--brand-accent)]/5 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest rounded-sm">
                                                 {selectedTransaction.metodoFormatado === "SERVIÇOS DIGITAIS" ? "SERVIÇOS DIGITAIS/RECARGA" : selectedTransaction.metodoFormatado}
                                             </Badge>
@@ -854,7 +854,8 @@ export default function ExtratoGeralPage() {
                             <div className="space-y-2">
                                 {filteredItems.map((t, idx) => {
                                     const Icon = getIconForMetodo(t.metodo);
-                                    const description = t.tipo === "CREDITO" ? (t.pagadorNome || "Recebimento G8Pay") : (t.RecebinteNome || "Pagamento Efetuado");
+                                    const rawDescription = t.tipo === "CREDITO" ? (t.pagadorNome || "Recebimento G8Pay") : (t.RecebinteNome || "Pagamento Efetuado");
+                                    const description = rawDescription.toUpperCase() === "PAGAMENTO EFETUADO" ? "PAGAMENTO EFETUADO" : rawDescription;
                                     const dateParts = t.dataDaTransacaoFormatada.split(" ");
 
                                     return (

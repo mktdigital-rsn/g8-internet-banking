@@ -506,7 +506,8 @@ export default function DashboardHome() {
                      <div className="grid gap-6">
                         {filteredTransactions.map((t, idx) => {
                            const TransactionIcon = getIconForMetodo(t.metodo);
-                           const displayName = t.tipo === "CREDITO" ? (t.pagadorNome || "Depósito Recebido") : (t.RecebinteNome || "Pagamento Efetuado");
+                            const rawDisplayName = t.tipo === "CREDITO" ? (t.pagadorNome || "Depósito Recebido") : (t.RecebinteNome || "Pagamento Efetuado");
+                            const displayName = rawDisplayName.toUpperCase() === "PAGAMENTO EFETUADO" ? "PAGAMENTO EFETUADO" : rawDisplayName;
                            const dateOnly = t.dataDaTransacaoFormatada?.split(" ")[0] || "---";
 
                            return (
@@ -781,7 +782,7 @@ export default function DashboardHome() {
                             <div className="space-y-5 pt-2">
                                <div className="grid grid-cols-2 gap-8">
                                    <div>
-                                       <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-widest mb-1.5">Metodologia</p>
+                                       <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-widest mb-1.5">Tipo</p>
                                        <Badge className="bg-[var(--brand-accent)]/5 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-sm 2xl:text-base uppercase tracking-widest rounded-sm">
                                           {selectedTransaction.metodoFormatado}
                                        </Badge>
