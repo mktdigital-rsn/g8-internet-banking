@@ -611,7 +611,15 @@ export default function MaquininhasPage() {
           <div className="max-w-7xl space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
             {/* Selected model summary */}
             <div className="flex items-center gap-6 p-6 bg-white border-2 border-[var(--brand-accent)]/20 rounded-sm shadow-md">
-              <div className={`w-14 h-14 bg-gradient-to-br ${selectedModel.color} rounded-sm flex items-center justify-center shrink-0`}>
+              <div className={`w-14 h-14 bg-gradient-to-br ${
+                currentBrand.id === "galapagos"
+                  ? selectedModel.id === "g8-pro"
+                    ? "from-[#0b1329] to-[#1e3a8a]"
+                    : selectedModel.id === "g8-smart"
+                    ? "from-[#0b1329] to-[#111c3a]"
+                    : "from-[#0a0f1d] to-[#0f172a]"
+                  : selectedModel.color
+              } rounded-sm flex items-center justify-center shrink-0`}>
                 <selectedModel.icon className="h-7 w-7 text-white" />
               </div>
               <div className="flex-1 min-w-0">
@@ -1041,7 +1049,15 @@ export default function MaquininhasPage() {
 
             <div className="bg-white rounded-[2px] border border-neutral-100 shadow-2xl overflow-hidden">
               {/* Model Header */}
-              <div className={`p-10 bg-gradient-to-br ${selectedModel.color} flex items-center justify-between relative overflow-hidden`}>
+              <div className={`p-10 bg-gradient-to-br ${
+                currentBrand.id === "galapagos"
+                  ? selectedModel.id === "g8-pro"
+                    ? "from-[#0b1329] to-[#1e3a8a]"
+                    : selectedModel.id === "g8-smart"
+                    ? "from-[#0b1329] to-[#111c3a]"
+                    : "from-[#0a0f1d] to-[#0f172a]"
+                  : selectedModel.color
+              } flex items-center justify-between relative overflow-hidden`}>
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(255,255,255,0.2),transparent)]" />
                 <div className="flex items-center gap-6 relative z-10">
                   <div className="w-20 h-20 bg-white/20 rounded-[2px] flex items-center justify-center shadow-2xl backdrop-blur-sm border border-white/30">
