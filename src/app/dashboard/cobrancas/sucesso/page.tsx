@@ -14,6 +14,7 @@ import {
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { currentBrand } from "@/config/brand";
 
 export default function CobrancaSucessoPage() {
   const router = useRouter();
@@ -323,7 +324,9 @@ export default function CobrancaSucessoPage() {
                     onClick={handlePrint}
                     className="w-full h-28 bg-[#0c0a09] hover:bg-black text-white rounded-sm font-black uppercase text-sm tracking-widest transition-all gap-4 shadow-xl active:scale-95 flex flex-col items-center justify-center py-4 group"
                   >
-                    <Printer className="h-8 w-8 text-[var(--brand-accent)] group-hover:scale-110 transition-transform" />
+                    <Printer className={`h-8 w-8 group-hover:scale-110 transition-transform ${
+                      currentBrand.id === "galapagos" ? "text-white" : "text-[var(--brand-accent)]"
+                    }`} />
                     Salvar PDF ou Imprimir
                   </Button>
                 </div>

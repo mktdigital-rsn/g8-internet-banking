@@ -474,7 +474,11 @@ export default function DashboardHome() {
                   </div>
                   <div className="flex gap-4">
                      <Select value={filter} onValueChange={(val) => val && setFilter(val)}>
-                        <SelectTrigger className="w-[200px] 2xl:w-[280px] bg-white border-white/10 rounded-md h-12 2xl:h-14 shadow-sm font-bold px-8 text-[#0c0a09] transition-all hover:bg-neutral-50">
+                        <SelectTrigger className={`w-[200px] 2xl:w-[280px] rounded-md h-12 2xl:h-14 shadow-sm font-bold px-8 transition-all hover:bg-neutral-50 ${
+                           currentBrand.id === "galapagos"
+                             ? "bg-[#ffffff] text-[#0c0a09] border border-neutral-200"
+                             : "bg-white text-[#0c0a09] border-white/10"
+                        }`}>
                            <SelectValue placeholder="Filtrar" />
                         </SelectTrigger>
                         <SelectContent className="rounded-md border-0 shadow-2xl font-bold">

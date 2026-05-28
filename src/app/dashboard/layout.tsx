@@ -243,7 +243,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {currentBrand.id === "g8" ? (
             <Image src={currentBrand.logoOfficial} alt={currentBrand.name} width={180} height={60} className="object-contain 2xl:scale-110" />
           ) : (
-            <div className="flex items-center gap-3.5 select-none animate-in fade-in duration-300">
+            <div className="flex items-center gap-3.5 select-none animate-in fade-in duration-300 scale-125 2xl:scale-[1.4] origin-left">
               <img src={currentBrand.logoOfficial} alt={currentBrand.name} className="h-9 w-auto object-contain brightness-100" />
               <div className="flex flex-col justify-center text-left">
                 <span className="text-[17px] font-semibold tracking-wide leading-none text-white font-sans">

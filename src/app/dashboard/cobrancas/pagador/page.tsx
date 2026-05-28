@@ -68,14 +68,33 @@ export default function PagadorDataPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.pagadorNome || !formData.pagadorTaxNumber || !formData.pagadorEmail || !formData.pagadorCep || !formData.pagadorNumero) {
-      toast.error("Por favor, preencha todos os campos obrigatórios.");
-      return;
-    }
-
-    if (isRecorrente && (!diaVencimento || !quantidadeMeses)) {
-      toast.error("Por favor, preencha o dia de vencimento e a quantidade de meses.");
-      return;
+    if (isRecorrente) {
+      if (
+        !formData.pagadorNome || 
+        !formData.pagadorTaxNumber || 
+        !formData.pagadorEmail || 
+        !formData.pagadorTelefone || 
+        !formData.pagadorCep || 
+        !formData.pagadorNumero || 
+        !formData.pagadorRua || 
+        !formData.pagadorBairro || 
+        !formData.pagadorCidade || 
+        !formData.pagadorUf || 
+        !formData.pagadorComplemento
+      ) {
+        toast.error("Para cobranças recorrentes, todos os campos do endereço (incluindo Telefone e Complemento) são obrigatórios.");
+        return;
+      }
+      
+      if (!diaVencimento || !quantidadeMeses) {
+        toast.error("Por favor, preencha o dia de vencimento e a quantidade de meses.");
+        return;
+      }
+    } else {
+      if (!formData.pagadorNome || !formData.pagadorTaxNumber || !formData.pagadorEmail || !formData.pagadorCep || !formData.pagadorNumero) {
+        toast.error("Por favor, preencha todos os campos obrigatórios.");
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -302,7 +321,9 @@ export default function PagadorDataPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Telefone de Contato</label>
+                <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">
+                  {isRecorrente ? "Telefone de Contato (Obrigatório em Recorrência)" : "Telefone de Contato"}
+                </label>
                 <div className="relative">
                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
                   <Input
@@ -440,7 +461,9 @@ export default function PagadorDataPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">Complemento (Opcional)</label>
+                <label className="text-[12px] font-black uppercase tracking-widest text-[var(--brand-accent)]">
+                  {isRecorrente ? "Complemento (Obrigatório em Recorrência)" : "Complemento (Opcional)"}
+                </label>
                 <Input
                   value={formData.pagadorComplemento}
                   onChange={(e) => setFormData({ ...formData, pagadorComplemento: e.target.value })}
