@@ -312,7 +312,7 @@ export default function LoginScreen() {
             {currentBrand.id === "g8" ? (
               <Image src={currentBrand.logoWhite} alt={`${currentBrand.name} Logo`} width={160} height={60} className="object-contain 2xl:scale-125 origin-left" />
             ) : (
-              <div className="flex items-center gap-3.5 select-none animate-in fade-in duration-300 2xl:scale-125 origin-left">
+              <div className="flex items-center gap-3.5 select-none animate-in fade-in duration-300 scale-125 md:scale-150 2xl:scale-[1.75] origin-left">
                 <img src={currentBrand.logoWhite} alt={`${currentBrand.name} Logo`} className="h-10 w-auto object-contain brightness-100" />
                 <div className="flex flex-col justify-center text-left">
                   <span className="text-[17px] font-semibold tracking-wide leading-none text-white font-sans">
@@ -328,7 +328,11 @@ export default function LoginScreen() {
 
           <div className="space-y-8 2xl:space-y-12">
             <div className="space-y-5 2xl:space-y-8">
-              <div className="inline-flex items-center rounded-[2px] px-3 py-1 text-[11px] 2xl:text-xs bg-white/5 text-white/70 border border-white/10 font-bold uppercase tracking-widest w-fit">
+              <div className={`inline-flex items-center rounded-[2px] px-3 py-1 text-[11px] 2xl:text-xs font-bold uppercase tracking-widest w-fit ${
+                currentBrand.id === "galapagos"
+                  ? "bg-amber-400/20 text-amber-400 border border-amber-400/40"
+                  : "bg-white/5 text-white/70 border border-white/10"
+              }`}>
                 Internet Banking
               </div>
               <h1 className="text-5xl 2xl:text-7xl font-black tracking-tighter text-white leading-[1.05]">
@@ -342,7 +346,7 @@ export default function LoginScreen() {
           </div>
 
           <div className="p-3 bg-amber-200/20 border border-amber-500/20 rounded-sm inline-flex items-center gap-3 text-white 2xl:gap-5 shadow-lg shadow-amber-400/10 w-fit">
-            <ShieldCheck className="h-4 w-4 2xl:h-6 2xl:w-6 opacity-90" />
+            <ShieldCheck className={`h-4 w-4 2xl:h-6 2xl:w-6 opacity-90 ${currentBrand.id === "galapagos" ? "text-green-500" : ""}`} />
             <span className="text-[9px] 2xl:text-xs font-bold uppercase tracking-[0.2em] leading-none">SSL SECURE PROTOCOL</span>
           </div>
         </div>
@@ -368,7 +372,11 @@ export default function LoginScreen() {
                   <div className="space-y-2 2xl:space-y-4">
                     <label className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-brand-accent ml-1">Acessar com</label>
                     <div className="relative group">
-                      <User className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 2xl:h-7 2xl:w-7 text-white/20 group-focus-within:text-brand-accent transition-colors" />
+                      <User className={`absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 2xl:h-7 2xl:w-7 text-white/20 transition-colors ${
+                        currentBrand.id === "galapagos"
+                          ? "group-focus-within:text-white"
+                          : "group-focus-within:text-brand-accent"
+                      }`} />
                       <Input
                         placeholder="000.000.000-00"
                         className="pl-14 2xl:pl-20 h-16 2xl:h-24 bg-white/[0.02] border-white/10 focus:border-brand-accent/50 focus:bg-white/[0.04] transition-all text-white font-bold text-xl 2xl:text-3xl rounded-[2px] placeholder:text-white/5 shadow-inner"
@@ -381,7 +389,11 @@ export default function LoginScreen() {
 
                   <Button
                     type="submit"
-                    className="w-full h-16 2xl:h-24 text-sm 2xl:text-xl font-black transition-all bg-brand-accent hover:bg-brand-accent-hover text-white cursor-pointer rounded-[2px] tracking-widest shadow-xl shadow-brand-accent/20"
+                    className={`w-full h-16 2xl:h-24 text-sm 2xl:text-xl font-black transition-all text-white cursor-pointer rounded-[2px] tracking-widest shadow-xl ${
+                      currentBrand.id === "galapagos"
+                        ? "bg-blue-500 hover:bg-blue-400 shadow-blue-500/10"
+                        : "bg-brand-accent hover:bg-brand-accent-hover shadow-brand-accent/20"
+                    }`}
                     disabled={!identifier}
                   >
                     AVANÇAR PARA SENHA
@@ -419,7 +431,9 @@ export default function LoginScreen() {
                 </div>
 
                 <div className="space-y-6">
-                  <div className="h-16 flex items-center justify-center gap-3 bg-white/[0.07] rounded-[2px] border border-white/[0.12] font-mono text-2xl text-primary tracking-[0.5em]">
+                  <div className={`h-16 flex items-center justify-center gap-3 bg-white/[0.07] rounded-[2px] border border-white/[0.12] font-mono text-2xl tracking-[0.5em] ${
+                    currentBrand.id === "galapagos" ? "text-white" : "text-primary"
+                  }`}>
                     {shownPassword || <span className="text-white/20 text-[10px] uppercase font-black tracking-[0.3em]">Teclado Virtual</span>}
                   </div>
 
@@ -429,7 +443,11 @@ export default function LoginScreen() {
                         key={idx}
                         type="button"
                         onClick={() => addPasswordPair(pair)}
-                        className="h-14 bg-white/[0.10] hover:bg-brand-accent border border-white/[0.14] rounded-[2px] text-white font-black text-lg transition-all"
+                        className={`h-14 border rounded-[2px] text-white font-black text-lg transition-all ${
+                          currentBrand.id === "galapagos"
+                            ? "bg-transparent hover:bg-[rgba(255,255,255,0.06)] border-white/10"
+                            : "bg-white/[0.10] hover:bg-brand-accent border-white/[0.14]"
+                        }`}
                       >
                         {pair[0]} ou {pair[1]}
                       </button>
@@ -445,7 +463,11 @@ export default function LoginScreen() {
 
                   <Button
                     onClick={handleLoginSubmit}
-                    className="w-full h-16 text-lg font-black bg-brand-accent hover:bg-brand-accent-hover text-white rounded-[2px] shadow-lg cursor-pointer"
+                    className={`w-full h-16 text-lg font-black text-white rounded-[2px] shadow-lg cursor-pointer transition-all ${
+                      currentBrand.id === "galapagos"
+                        ? "bg-blue-500 hover:bg-blue-400"
+                        : "bg-brand-accent hover:bg-brand-accent-hover"
+                    }`}
                     disabled={isLoading || passwordKeys.length === 0}
                   >
                     {isLoading ? "Aguarde um instante" : "CONTINUAR"}
@@ -516,7 +538,9 @@ export default function LoginScreen() {
 
                       <div className="w-full max-w-sm space-y-4 pt-4 relative z-10">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-brand-accent font-black uppercase tracking-widest animate-pulse text-left">
+                          <span className={`font-black uppercase tracking-widest animate-pulse text-left ${
+                            currentBrand.id === "galapagos" ? "text-amber-400" : "text-brand-accent"
+                          }`}>
                             {progress < 30 ? "Estabelecendo conexão segura..." :
                              progress < 60 ? "Autenticando criptografia..." :
                              progress < 90 ? "Sincronizando dados..." :
@@ -531,7 +555,11 @@ export default function LoginScreen() {
                         <div className="w-full h-3 bg-neutral-900 rounded-full overflow-hidden border border-white/5 p-[2px]">
                           {/* Inner glowing bar */}
                           <div 
-                            className="h-full bg-gradient-to-r from-brand-accent to-brand-secondary rounded-full transition-all duration-100 ease-out shadow-[0_0_12px_var(--brand-accent)]"
+                            className={`h-full rounded-full transition-all duration-100 ease-out ${
+                              currentBrand.id === "galapagos"
+                                ? "bg-gradient-to-r from-amber-400 to-yellow-500 shadow-[0_0_12px_#f59e0b]"
+                                : "bg-gradient-to-r from-brand-accent to-brand-secondary shadow-[0_0_12px_var(--brand-accent)]"
+                            }`}
                             style={{ width: `${progress}%` }}
                           />
                         </div>
@@ -543,7 +571,9 @@ export default function LoginScreen() {
                         transition={{ delay: 0.8 }}
                         className="flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-4 rounded-xl shadow-2xl"
                       >
-                        <Loader2 className="h-4 w-4 animate-spin text-brand-accent" />
+                        <Loader2 className={`h-4 w-4 animate-spin ${
+                          currentBrand.id === "galapagos" ? "text-amber-400" : "text-brand-accent"
+                        }`} />
                         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Carregando painel de controle...</span>
                       </motion.div>
                     </motion.div>
@@ -571,10 +601,16 @@ export default function LoginScreen() {
                         )}
                       </div>
 
-                      <div className="w-full max-w-md space-y-3 rounded-[2px] border border-white/10 bg-white/[0.05] p-5 text-left">
+                      <div className={`w-full max-w-md space-y-3 rounded-[2px] p-5 text-left border transition-all ${
+                        currentBrand.id === "galapagos"
+                          ? "bg-amber-400/10 border-amber-400/20"
+                          : "bg-white/[0.05] border-white/10"
+                      }`}>
                         <div className="flex items-center gap-3 text-white">
-                          <Smartphone className="h-5 w-5 text-primary" />
-                          <span className="text-sm font-bold">{statusLabel}</span>
+                          <Smartphone className={`h-5 w-5 ${
+                            currentBrand.id === "galapagos" ? "text-blue-400" : "text-primary"
+                          }`} />
+                          <span className="text-sm font-bold text-white">{statusLabel}</span>
                         </div>
                         <div className="flex items-center gap-3 text-white/50">
                           <AlertCircle className="h-5 w-5" />
