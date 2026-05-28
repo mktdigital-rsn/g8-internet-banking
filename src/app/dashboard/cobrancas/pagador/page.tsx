@@ -70,17 +70,17 @@ export default function PagadorDataPage() {
 
     if (isRecorrente) {
       if (
-        !formData.pagadorNome || 
-        !formData.pagadorTaxNumber || 
-        !formData.pagadorEmail || 
-        !formData.pagadorTelefone || 
-        !formData.pagadorCep || 
-        !formData.pagadorNumero || 
-        !formData.pagadorRua || 
-        !formData.pagadorBairro || 
-        !formData.pagadorCidade || 
-        !formData.pagadorUf || 
-        !formData.pagadorComplemento
+        !formData.pagadorNome?.trim() || 
+        !formData.pagadorTaxNumber?.trim() || 
+        !formData.pagadorEmail?.trim() || 
+        !formData.pagadorTelefone?.trim() || 
+        !formData.pagadorCep?.trim() || 
+        !formData.pagadorNumero?.trim() || 
+        !formData.pagadorRua?.trim() || 
+        !formData.pagadorBairro?.trim() || 
+        !formData.pagadorCidade?.trim() || 
+        !formData.pagadorUf?.trim() || 
+        !formData.pagadorComplemento?.trim()
       ) {
         toast.error("Para cobranças recorrentes, todos os campos do endereço (incluindo Telefone e Complemento) são obrigatórios.");
         return;

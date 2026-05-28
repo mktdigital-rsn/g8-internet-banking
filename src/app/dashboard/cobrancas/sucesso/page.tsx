@@ -153,7 +153,7 @@ export default function CobrancaSucessoPage() {
       printWindow.document.write(`
         <html>
           <head>
-            <title>Impressão G8 Pay</title>
+            <title>Impressão ${currentBrand.name}</title>
             <style>
               @media print {
                 @page { margin: 0; }
@@ -230,15 +230,27 @@ export default function CobrancaSucessoPage() {
             <div className="absolute inset-0 border-4 border-white/20" />
             <CheckCircle2 className="h-12 w-12 text-white relative z-10" />
           </div>
-          <Badge className="bg-emerald-500 text-white border-0 px-4 py-1 font-black text-[10px] uppercase tracking-widest rounded-sm mb-4">
-            {cobrancaData.isRecorrente ? "PROCESSAMENTO EM LOTE" : "REGISTRO EFETUADO"}
-          </Badge>
-          <h1 className="text-4xl md:text-6xl font-black text-[#0c0a09] tracking-tighter uppercase mb-2">
-            {cobrancaData.isRecorrente ? "Sincronizando..." : "Cobrança Gerada!"}
-          </h1>
-          <p className="text-neutral-500 font-medium max-w-md italic">
+          <Badge className={cn(
+            "transition-all duration-500 border-0 px-4 py-1 font-black text-[10px] uppercase tracking-widest rounded-sm mb-4",
+            cobrancaData.isRecorrente && progress < 100 ? "bg-orange-500 text-white animate-pulse" : "bg-emerald-500 text-white"
+          )}>
             {cobrancaData.isRecorrente 
-              ? `As ${cobrancaData.quantidadeMeses} parcelas para ${cobrancaData.pagadorNome} estão sendo processadas.`
+              ? (progress >= 100 ? "REGISTRO EFETUADO" : "PROCESSAMENTO EM LOTE") 
+              : "REGISTRO EFETUADO"}
+          </Badge>
+          <h1 className={cn(
+            "text-4xl md:text-6xl font-black text-[#0c0a09] tracking-tighter uppercase mb-2 transition-all duration-700",
+            progress >= 100 ? "scale-105 text-emerald-600" : ""
+          )}>
+            {cobrancaData.isRecorrente 
+              ? (progress >= 100 ? "Boletos Gerados!" : "Sincronizando...") 
+              : "Cobrança Gerada!"}
+          </h1>
+          <p className="text-neutral-500 font-medium max-w-md italic transition-all duration-700">
+            {cobrancaData.isRecorrente 
+              ? (progress >= 100 
+                  ? `Todas as ${cobrancaData.quantidadeMeses} parcelas para ${cobrancaData.pagadorNome} foram geradas e estão prontas!`
+                  : `As ${cobrancaData.quantidadeMeses} parcelas para ${cobrancaData.pagadorNome} estão sendo processadas.`)
               : `O boleto para ${cobrancaData.pagadorNome} está pronto para ser pago.`}
           </p>
         </div>
@@ -275,20 +287,44 @@ export default function CobrancaSucessoPage() {
               <div className="flex flex-col items-center text-center space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                 <div className="space-y-6 w-full">
                   <div className="space-y-3">
-                    <h3 className="text-xl md:text-2xl font-black text-[#0c0a09] uppercase tracking-tighter">Registrando Parcelas</h3>
-                    <p className="text-neutral-500 font-medium leading-relaxed max-w-xl mx-auto text-sm md:text-base">
-                      Estamos processando o registro dos seus boletos. Isso garante que eles possam ser pagos em qualquer banco ou aplicativo. <span className="font-bold text-[#0c0a09]">Este processo pode levar alguns instantes.</span>
+                    <h3 className={cn(
+                      "text-xl md:text-2xl font-black uppercase tracking-tighter transition-colors duration-500",
+                      progress >= 100 ? "text-emerald-600 animate-pulse" : "text-[#0c0a09]"
+                    )}>
+                      {progress >= 100 ? "Parcelas Registradas!" : "Registrando Parcelas"}
+                    </h3>
+                    <p className="text-neutral-500 font-medium leading-relaxed max-w-xl mx-auto text-sm md:text-base transition-all duration-500">
+                      {progress >= 100 ? (
+                        <span>
+                          Todos os boletos foram gerados com sucesso e já estão registrados no Banco Central. 
+                          Você já pode visualizá-los na aba <span className="font-bold text-[#0c0a09]">Gestão de Boletos</span>.
+                        </span>
+                      ) : (
+                        <span>
+                          Estamos processando o registro dos seus boletos. Isso garante que eles possam ser pagos em qualquer banco ou aplicativo. <span className="font-bold text-[#0c0a09]">Este processo pode levar alguns instantes.</span>
+                        </span>
+                      )}
                     </p>
                   </div>
 
                   <div className="w-full mx-auto">
                     <div className="flex justify-between items-end mb-3">
-                        <span className="text-[11px] font-black text-[var(--brand-accent)] uppercase tracking-widest">Progresso do Registro Bancário</span>
+                        <span className={cn(
+                          "text-[11px] font-black uppercase tracking-widest transition-colors duration-500",
+                          progress >= 100 ? "text-emerald-600" : "text-[var(--brand-accent)]"
+                        )}>
+                          {progress >= 100 ? "Registro Concluído" : "Progresso do Registro Bancário"}
+                        </span>
                         <span className="text-[11px] font-black text-neutral-400 font-mono">{Math.round(progress)}%</span>
                     </div>
                     <div className="h-5 w-full bg-neutral-100 rounded-full overflow-hidden border border-neutral-200 p-[3px] shadow-inner">
                       <div 
-                        className="h-full bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] rounded-full transition-all duration-300 ease-out shadow-lg shadow-orange-500/20"
+                        className={cn(
+                          "h-full rounded-full transition-all duration-300 ease-out shadow-lg",
+                          progress >= 100 
+                            ? "bg-gradient-to-r from-emerald-500 to-teal-600 shadow-emerald-500/20" 
+                            : "bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] shadow-orange-500/20"
+                        )}
                         style={{ width: `${progress}%` }}
                       />
                     </div>
@@ -313,7 +349,7 @@ export default function CobrancaSucessoPage() {
 
                 <div className="flex items-center gap-3 text-[10px] font-black text-neutral-300 uppercase tracking-[0.3em]">
                    <div className="h-[1px] w-12 bg-neutral-100" />
-                   G8 PAY TECHNOLOGY
+                   {currentBrand.id === "galapagos" ? "GALAPAGOS CAPITAL TECHNOLOGY" : "G8 PAY TECHNOLOGY"}
                    <div className="h-[1px] w-12 bg-neutral-100" />
                 </div>
               </div>
