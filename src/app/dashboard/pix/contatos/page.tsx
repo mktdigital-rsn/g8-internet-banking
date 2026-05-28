@@ -141,7 +141,7 @@ export default function PixContatosPage() {
                onChange={(e) => setSearchTerm(e.target.value)}
                placeholder="Pesquisar por nome, chave ou banco..." 
                className={
-                 currentBrand.id === "galapagos"
+                 currentBrand.id !== "g8"
                    ? "h-16 bg-white/100 border border-neutral-200/80 rounded-2xl pl-16 pr-8 focus:ring-4 focus:ring-[var(--brand-accent)]/10 focus:border-[var(--brand-accent)] transition-all shadow-sm font-semibold text-lg text-neutral-800"
                    : "h-16 bg-white border border-neutral-200/80 rounded-2xl pl-16 pr-8 focus:ring-4 focus:ring-[var(--brand-accent)]/10 focus:border-[var(--brand-accent)] transition-all shadow-sm font-bold text-lg text-[#0c0a09]"
                }

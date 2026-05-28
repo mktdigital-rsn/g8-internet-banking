@@ -114,6 +114,67 @@
   --color-orange-950: #172554;
 }
 
+.theme-fiscomoney {
+  --primary: oklch(0.72 0.14 85.0); /* Warm Premium Gold #cca43b */
+  --ring: oklch(0.72 0.14 85.0);
+  --brand-accent: #cca43b;
+  --brand-accent-hover: #b28f32;
+  --brand-accent-light: rgba(204, 164, 59, 0.12);
+  --brand-secondary: #b28f32;
+  --brand-scrollbar: rgba(204, 164, 59, 0.4);
+  --brand-scrollbar-hover: rgba(204, 164, 59, 0.8);
+
+  /* Shadcn standard theme redirects for FiscoMoney dark UI */
+  --background: #1c1f22;
+  --foreground: #ffffff;
+  --card: #22252a;
+  --card-foreground: #ffffff;
+  --popover: #22252a;
+  --popover-foreground: #ffffff;
+  --muted: #272b30;
+  --muted-foreground: #a0a5b0;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.08);
+
+  /* Intercept standard Tailwind orange colors for FiscoMoney theme (Gold) */
+  --color-orange-50: #fefcf3;
+  --color-orange-100: #fdf8e2;
+  --color-orange-200: #fbedc5;
+  --color-orange-300: #f6dc9c;
+  --color-orange-400: #ecc466;
+  --color-orange-500: #cca43b; /* Primary brand warm gold */
+  --color-orange-600: #b28f32;
+  --color-orange-700: #937326;
+  --color-orange-800: #74581f;
+  --color-orange-900: #564117;
+  --color-orange-950: #36290e;
+}
+
+.theme-advogado10x {
+  --primary: oklch(0.72 0.14 85.0); /* Warm Premium Gold #cca43b */
+  --ring: oklch(0.72 0.14 85.0);
+  --brand-accent: #cca43b;
+  --brand-accent-hover: #b28f32;
+  --brand-accent-light: rgba(204, 164, 59, 0.12);
+  --brand-secondary: #b28f32;
+  --brand-scrollbar: rgba(204, 164, 59, 0.4);
+  --brand-scrollbar-hover: rgba(204, 164, 59, 0.8);
+
+  /* Intercept standard Tailwind orange colors for Advogado 10x theme */
+  --color-orange-50: #fefcf3;
+  --color-orange-100: #fdf8e2;
+  --color-orange-200: #fbedc5;
+  --color-orange-300: #f6dc9c;
+  --color-orange-400: #ecc466;
+  --color-orange-500: #cca43b; /* Primary brand warm gold */
+  --color-orange-600: #b28f32;
+  --color-orange-700: #937326;
+  --color-orange-800: #74581f;
+  --color-orange-900: #564117;
+  --color-orange-950: #36290e;
+}
+
+
 .dark {
   --background: oklch(0.129 0.011 25.5);
   --foreground: oklch(0.985 0 0);
@@ -235,4 +296,208 @@
 .theme-galapagos [class*="bg-[#0c0a09]"] button[class*="bg-white"]:hover {
   background-color: var(--brand-accent-hover) !important;
   color: white !important;
+}
+
+/* FiscoMoney interactive elements color overrides - no black buttons allowed, use premium gold with charcoal text */
+.theme-fiscomoney button.bg-\[\#0c0a09\],
+.theme-fiscomoney button[class*="bg-[#0c0a09]"],
+.theme-fiscomoney a.bg-\[\#0c0a09\],
+.theme-fiscomoney a[class*="bg-[#0c0a09]"],
+.theme-fiscomoney [role="button"].bg-\[\#0c0a09\],
+.theme-fiscomoney [role="button"][class*="bg-[#0c0a09]"],
+.theme-fiscomoney button.bg-black,
+.theme-fiscomoney a.bg-black,
+.theme-fiscomoney [role="button"].bg-black {
+  background-color: var(--brand-accent) !important;
+  color: #121416 !important;
+  font-weight: 800 !important;
+}
+
+.theme-fiscomoney button.bg-\[\#0c0a09\]:hover,
+.theme-fiscomoney button[class*="bg-[#0c0a09]"]:hover,
+.theme-fiscomoney a.bg-\[\#0c0a09\]:hover,
+.theme-fiscomoney a[class*="bg-[#0c0a09]"]:hover,
+.theme-fiscomoney [role="button"].bg-\[\#0c0a09\]:hover,
+.theme-fiscomoney [role="button"][class*="bg-[#0c0a09]"]:hover,
+.theme-fiscomoney button.bg-black:hover,
+.theme-fiscomoney a.bg-black:hover,
+.theme-fiscomoney [role="button"].bg-black:hover {
+  background-color: var(--brand-accent-hover) !important;
+  color: #121416 !important;
+}
+
+/* FiscoMoney cards background redirects - no black or navy cards allowed, use premium charcoal (excludes interactive elements like buttons and anchors) */
+.theme-fiscomoney .bg-\[\#0c0a09\]:not([class*="/"]):not(button):not(a):not([role="button"]),
+.theme-fiscomoney .bg-black:not([class*="/"]):not(button):not(a):not([role="button"]),
+.theme-fiscomoney .bg-neutral-950:not([class*="/"]):not(button):not(a):not([role="button"]),
+.theme-fiscomoney .bg-neutral-900:not([class*="/"]):not(button):not(a):not([role="button"]),
+.theme-fiscomoney div[class*="bg-[#0c0a09]"]:not([class*="/"]):not(button):not(a):not([role="button"]),
+.theme-fiscomoney div[class*="bg-black"]:not([class*="/"]):not(button):not(a):not([role="button"]) {
+  background-color: #22252a !important;
+  border-color: rgba(204, 164, 59, 0.15) !important;
+}
+
+/* Style white buttons inside dark/black cards or main container white buttons to become gold */
+.theme-fiscomoney button.bg-white.text-\[\#0c0a09\],
+.theme-fiscomoney button.bg-white[class*="text-[#0c0a09]"],
+.theme-fiscomoney .bg-white.text-\[\#0c0a09\],
+.theme-fiscomoney .bg-\[\#0c0a09\] button.bg-white,
+.theme-fiscomoney .bg-\[\#0c0a09\] button[class*="bg-white"],
+.theme-fiscomoney [class*="bg-[#0c0a09]"] button.bg-white,
+.theme-fiscomoney [class*="bg-[#0c0a09]"] button[class*="bg-white"] {
+  background-color: var(--brand-accent) !important;
+  color: #121416 !important;
+  border-color: transparent !important;
+}
+
+.theme-fiscomoney button.bg-white.text-\[\#0c0a09\]:hover,
+.theme-fiscomoney button.bg-white[class*="text-[#0c0a09]"]:hover,
+.theme-fiscomoney .bg-white.text-\[\#0c0a09\]:hover,
+.theme-fiscomoney .bg-\[\#0c0a09\] button.bg-white:hover,
+.theme-fiscomoney .bg-\[\#0c0a09\] button[class*="bg-white"]:hover,
+.theme-fiscomoney [class*="bg-[#0c0a09]"] button.bg-white:hover,
+.theme-fiscomoney [class*="bg-[#0c0a09]"] button[class*="bg-white"]:hover {
+  background-color: var(--brand-accent-hover) !important;
+  color: #121416 !important;
+}
+
+/* Ensure recent history filter trigger remains clean white under FiscoMoney as requested by user */
+.theme-fiscomoney button[data-slot="select-trigger"].bg-white,
+.theme-fiscomoney button[data-slot="select-trigger"].bg-\[\#ffffff\],
+.theme-fiscomoney button[data-slot="select-trigger"][class*="bg-white"] {
+  background-color: #ffffff !important;
+  color: #0c0a09 !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.theme-fiscomoney button[data-slot="select-trigger"].bg-white:hover,
+.theme-fiscomoney button[data-slot="select-trigger"].bg-\[\#ffffff\]:hover,
+.theme-fiscomoney button[data-slot="select-trigger"][class*="bg-white"]:hover {
+  background-color: #f5f5f5 !important;
+  color: #0c0a09 !important;
+}
+
+/* FiscoMoney Maquininhas Form Container transparent gold & white layout */
+.theme-fiscomoney .maquininhas-container [data-slot="card"],
+.theme-fiscomoney .maquininhas-container .rounded-xl,
+.theme-fiscomoney .maquininhas-container .bg-card,
+.theme-fiscomoney .maquininhas-container .bg-white:not(input):not(select):not(button) {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(204, 164, 59, 0.3) !important;
+  border-left: 6px solid var(--brand-accent) !important;
+  color: #0c0a09 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Ensure labels, headings, spans inside the maquininhas form are completely dark charcoal and readable */
+.theme-fiscomoney .maquininhas-container label,
+.theme-fiscomoney .maquininhas-container h1,
+.theme-fiscomoney .maquininhas-container h2,
+.theme-fiscomoney .maquininhas-container h3,
+.theme-fiscomoney .maquininhas-container h4,
+.theme-fiscomoney .maquininhas-container p,
+.theme-fiscomoney .maquininhas-container span:not(.text-white),
+.theme-fiscomoney .maquininhas-container div:not(.bg-brand-accent):not(.bg-green-600):not(.bg-blue-500):not(.bg-indigo-600):not(.bg-amber-600):not(.bg-black):not(.w-12):not(.w-10):not(.w-14):not(.h-12):not(.h-10):not(.h-14) {
+  color: #0c0a09 !important;
+}
+
+/* Form input fields & select dropdown triggers readability */
+.theme-fiscomoney .maquininhas-container input,
+.theme-fiscomoney .maquininhas-container select,
+.theme-fiscomoney .maquininhas-container button[data-slot="select-trigger"] {
+  background-color: #ffffff !important;
+  color: #0c0a09 !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
+.theme-fiscomoney .maquininhas-container input::placeholder {
+  color: #a0a0a0 !important;
+}
+
+.theme-fiscomoney .maquininhas-container button.bg-\[var\(--brand-accent\)\],
+.theme-fiscomoney .maquininhas-container button[class*="bg-[var(--brand-accent)]"],
+.theme-fiscomoney .maquininhas-container button.bg-brand-accent,
+.theme-fiscomoney .maquininhas-container button.bg-green-600,
+.theme-fiscomoney .maquininhas-container button.bg-blue-500,
+.theme-fiscomoney .maquininhas-container button.bg-indigo-600,
+.theme-fiscomoney .maquininhas-container button.bg-amber-600,
+.theme-fiscomoney .maquininhas-container button.bg-black {
+  color: #ffffff !important;
+}
+
+/* FiscoMoney Meus Veículos cards layout overrides */
+.theme-fiscomoney .meus-veiculos-container [data-slot="card"],
+.theme-fiscomoney .meus-veiculos-container .rounded-xl,
+.theme-fiscomoney .meus-veiculos-container .bg-white:not(input):not(select):not(button) {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(204, 164, 59, 0.35) !important;
+  color: #0c0a09 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03) !important;
+}
+
+.theme-fiscomoney .meus-veiculos-container h1,
+.theme-fiscomoney .meus-veiculos-container h2,
+.theme-fiscomoney .meus-veiculos-container h3,
+.theme-fiscomoney .meus-veiculos-container h4,
+.theme-fiscomoney .meus-veiculos-container span:not(.text-white),
+.theme-fiscomoney .meus-veiculos-container p,
+.theme-fiscomoney .meus-veiculos-container label,
+.theme-fiscomoney .meus-veiculos-container div:not(button):not(a):not(span):not(.w-12):not(.h-12) {
+  color: #0c0a09 !important;
+}
+
+.theme-fiscomoney .meus-veiculos-container .text-\[var\(--brand-accent\)\] {
+  color: var(--brand-accent) !important;
+}
+
+.theme-fiscomoney .meus-veiculos-container .bg-neutral-50,
+.theme-fiscomoney .meus-veiculos-container .bg-neutral-50\/50 {
+  background-color: #fcfbf7 !important;
+}
+
+.theme-fiscomoney .meus-veiculos-container input {
+  background-color: #ffffff !important;
+  color: #0c0a09 !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+}
+
+/* FiscoMoney Proteção Veicular Wizard cards layout overrides */
+.theme-fiscomoney .protecao-veicular-container [data-slot="card"],
+.theme-fiscomoney .protecao-veicular-container .rounded-xl,
+.theme-fiscomoney .protecao-veicular-container .bg-white:not(input):not(select):not(button),
+.theme-fiscomoney .protecao-veicular-container .bg-\[\#0c0a09\]:not(button):not(a),
+.theme-fiscomoney .protecao-veicular-container div[class*="bg-[#0c0a09]"]:not(button):not(a) {
+  background-color: #ffffff !important;
+  border: 1px solid rgba(204, 164, 59, 0.35) !important;
+  color: #0c0a09 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03) !important;
+}
+
+.theme-fiscomoney .protecao-veicular-container h1,
+.theme-fiscomoney .protecao-veicular-container h2,
+.theme-fiscomoney .protecao-veicular-container h3,
+.theme-fiscomoney .protecao-veicular-container h4,
+.theme-fiscomoney .protecao-veicular-container span:not(.text-white),
+.theme-fiscomoney .protecao-veicular-container p,
+.theme-fiscomoney .protecao-veicular-container label,
+.theme-fiscomoney .protecao-veicular-container div:not(button):not(a):not(span):not(.w-10):not(.h-10):not(.w-12):not(.h-12) {
+  color: #0c0a09 !important;
+}
+
+/* Let's style the Step 7 FIPE valuation card (left card) with a premium golden transparent background or white with thick gold border */
+.theme-fiscomoney .protecao-veicular-container .grid .md\:col-span-5 {
+  background-color: rgba(204, 164, 59, 0.08) !important;
+  border: 2px solid var(--brand-accent) !important;
+  color: #0c0a09 !important;
+}
+
+.theme-fiscomoney .protecao-veicular-container .grid .md\:col-span-5 span.text-4xl {
+  color: var(--brand-accent) !important;
+}
+
+/* Ensure progress wizard steps remain beautifully gold and high contrast */
+.theme-fiscomoney .protecao-veicular-container div[class*="w-7 h-7"] {
+  background-color: #ffffff !important;
+  border: 2px solid var(--brand-accent) !important;
+  color: var(--brand-accent) !important;
 }

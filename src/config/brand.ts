@@ -37,6 +37,30 @@ export const BRANDS: Record<string, BrandConfig> = {
     supportEmail: "suporte@galapagoscapital.com",
     bankCode: "384",
     bankName: "GALAPAGOS BANK",
+  },
+  fiscomoney: {
+    id: "fiscomoney",
+    name: "FiscoMoney Soluções Tributárias",
+    shortName: "FiscoMoney",
+    logoOfficial: "/logo_fiscomoney_official.svg",
+    logoWhite: "/logo_fiscomoney_official.svg",
+    themeClass: "theme-fiscomoney",
+    supportPhone: "(11) 94008-7114",
+    supportEmail: "contato@fiscomoney.com.br",
+    bankCode: "385",
+    bankName: "FISCOMONEY BANK",
+  },
+  advogado10x: {
+    id: "advogado10x",
+    name: "Advogado 10x",
+    shortName: "Advogado10x",
+    logoOfficial: "/logo_advogado10x_official.svg",
+    logoWhite: "/logo_advogado10x_official.svg",
+    themeClass: "theme-advogado10x",
+    supportPhone: "(11) 99855-0392",
+    supportEmail: "suporte@advogado10x.com.br",
+    bankCode: "386",
+    bankName: "ADVOGADO10X BANK",
   }
 };
 

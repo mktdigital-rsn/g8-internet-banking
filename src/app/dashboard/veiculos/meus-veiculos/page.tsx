@@ -359,7 +359,7 @@ export default function MeusVeiculosPage() {
   });
 
   return (
-    <div className="bg-[#f8f9fa] rounded-[4px] p-6 md:p-10 border border-neutral-200/60 space-y-10 relative overflow-hidden text-[#0c0a09]">
+    <div className="bg-[#f8f9fa] rounded-[4px] p-6 md:p-10 border border-neutral-200/60 space-y-10 relative overflow-hidden text-[#0c0a09] meus-veiculos-container">
       {/* Decorative Background */}
       <div className="absolute top-1/4 right-0 w-[500px] h-[500px] bg-[var(--brand-accent)]/5 rounded-full blur-[100px] pointer-events-none" />
 

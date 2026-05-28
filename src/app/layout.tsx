@@ -3,6 +3,8 @@ import { Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 
+import { currentBrand } from "@/config/brand";
+
 const outfit = Outfit({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
@@ -10,7 +12,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "G8Pay | Internet Banking",
+  title: `${currentBrand.id === "g8" ? "G8Pay" : currentBrand.shortName} | Internet Banking`,
   description: "Gerencie suas finanças com segurança e agilidade.",
 };
 

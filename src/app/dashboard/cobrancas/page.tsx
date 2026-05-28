@@ -952,7 +952,7 @@ export default function GestaoCobrancasPage() {
                                         className="flex-1 h-12 2xl:h-16 bg-[#0c0a09] text-white hover:bg-black rounded-sm font-black uppercase tracking-widest text-[11px] 2xl:text-sm transition-all shadow-xl shadow-black/10 flex flex-col items-center justify-center py-2 group active:scale-95"
                                     >
                                         <Printer className={`h-5 w-5 2xl:h-6 2xl:w-6 mb-1 group-hover:scale-110 transition-transform ${
-                                            currentBrand.id === "galapagos" ? "text-white" : "text-[var(--brand-accent)]"
+                                            currentBrand.id !== "g8" ? "text-white" : "text-[var(--brand-accent)]"
                                         }`} />
                                         Salvar PDF ou Imprimir
                                     </Button>

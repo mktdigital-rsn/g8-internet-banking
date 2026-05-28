@@ -349,7 +349,13 @@ export default function CobrancaSucessoPage() {
 
                 <div className="flex items-center gap-3 text-[10px] font-black text-neutral-300 uppercase tracking-[0.3em]">
                    <div className="h-[1px] w-12 bg-neutral-100" />
-                   {currentBrand.id === "galapagos" ? "GALAPAGOS CAPITAL TECHNOLOGY" : "G8 PAY TECHNOLOGY"}
+                   {currentBrand.id === "galapagos"
+                     ? "GALAPAGOS CAPITAL TECHNOLOGY"
+                     : currentBrand.id === "fiscomoney"
+                     ? "FISCOMONEY TECHNOLOGY"
+                     : currentBrand.id === "advogado10x"
+                     ? "ADVOGADO 10X TECHNOLOGY"
+                     : "G8 PAY TECHNOLOGY"}
                    <div className="h-[1px] w-12 bg-neutral-100" />
                 </div>
               </div>
@@ -361,7 +367,7 @@ export default function CobrancaSucessoPage() {
                     className="w-full h-28 bg-[#0c0a09] hover:bg-black text-white rounded-sm font-black uppercase text-sm tracking-widest transition-all gap-4 shadow-xl active:scale-95 flex flex-col items-center justify-center py-4 group"
                   >
                     <Printer className={`h-8 w-8 group-hover:scale-110 transition-transform ${
-                      currentBrand.id === "galapagos" ? "text-white" : "text-[var(--brand-accent)]"
+                      currentBrand.id !== "g8" ? "text-white" : "text-[var(--brand-accent)]"
                     }`} />
                     Salvar PDF ou Imprimir
                   </Button>

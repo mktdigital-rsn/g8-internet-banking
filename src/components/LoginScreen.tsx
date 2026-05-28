@@ -313,15 +313,17 @@ export default function LoginScreen() {
               <Image src={currentBrand.logoWhite} alt={`${currentBrand.name} Logo`} width={160} height={60} className="object-contain 2xl:scale-125 origin-left" />
             ) : (
               <div className="flex items-center gap-3.5 select-none animate-in fade-in duration-300 scale-125 md:scale-150 2xl:scale-[1.75] origin-left">
-                <img src={currentBrand.logoWhite} alt={`${currentBrand.name} Logo`} className="h-10 w-auto object-contain brightness-100" />
-                <div className="flex flex-col justify-center text-left">
-                  <span className="text-[17px] font-semibold tracking-wide leading-none text-white font-sans">
-                    {currentBrand.name.split(" ")[0]}
-                  </span>
-                  <span className="text-[8px] font-black tracking-[0.38em] uppercase text-white mt-1.5 leading-none">
-                    {(currentBrand.name.split(" ")[1] || "Capital").toUpperCase()}
-                  </span>
-                </div>
+                <img src={currentBrand.logoWhite} alt={`${currentBrand.name} Logo`} className={`${currentBrand.id === "galapagos" ? "h-10" : "h-16"} w-auto object-contain brightness-100`} />
+                {currentBrand.id === "galapagos" && (
+                  <div className="flex flex-col justify-center text-left">
+                    <span className="text-[17px] font-semibold tracking-wide leading-none text-white font-sans">
+                      {currentBrand.name.split(" ")[0]}
+                    </span>
+                    <span className="text-[8px] font-black tracking-[0.38em] uppercase text-white mt-1.5 leading-none">
+                      {(currentBrand.name.split(" ")[1] || "Capital").toUpperCase()}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>

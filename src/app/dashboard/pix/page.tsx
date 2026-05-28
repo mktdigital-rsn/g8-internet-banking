@@ -146,8 +146,8 @@ export default function PixPage() {
                                                 onChange={(e) => handleKeyChange(e.target.value)}
                                                 onKeyDown={(e) => { if (e.key === 'Enter') handleContinue(); }}
                                                 className={
-                                                    currentBrand.id === "galapagos"
-                                                        ? "h-14 bg-white/100 border-2 border-blue-200 focus:border-blue-500 rounded-sm pl-6 pr-12 font-semibold text-sm focus:ring-2 focus:ring-blue-500/20 transition-all text-neutral-800 placeholder:text-neutral-400 shadow-sm"
+                                                    currentBrand.id !== "g8"
+                                                        ? "h-14 bg-white border-2 border-[var(--brand-accent-light)] focus:border-[var(--brand-accent)] rounded-sm pl-6 pr-12 font-semibold text-sm focus:ring-2 focus:ring-[var(--brand-accent-light)] transition-all text-neutral-800 placeholder:text-neutral-400 shadow-sm"
                                                         : "h-14 bg-white border border-orange-100 rounded-sm pl-6 pr-12 font-black text-sm focus:ring-4 focus:ring-orange-100 transition-all text-[#0c0a09] placeholder:text-neutral-400 shadow-sm"
                                                 }
                                             />

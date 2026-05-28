@@ -231,9 +231,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const THEME_BG = "bg-[#141210]"; // Slightly lighter than #0c0a09
-  const sidebarBg = currentBrand.id === "galapagos" ? "bg-[#0b1329] border-r border-white/5" : THEME_BG;
-  const headerBg = currentBrand.id === "galapagos" ? "bg-[#0b1329] border-b border-white/5" : THEME_BG;
+  const THEME_BG = 
+    currentBrand.id === "fiscomoney"
+      ? "bg-[#1c1f22]"
+      : "bg-[#141210]"; // Slightly lighter than #0c0a09
+
+  const sidebarBg = 
+    currentBrand.id === "galapagos"
+      ? "bg-[#0b1329] border-r border-white/5"
+      : currentBrand.id === "fiscomoney"
+      ? "bg-[#141619] border-r border-white/5"
+      : currentBrand.id === "advogado10x"
+      ? "bg-[#0f0f0f] border-r border-white/5"
+      : THEME_BG;
+
+  const headerBg = 
+    currentBrand.id === "galapagos"
+      ? "bg-[#0b1329] border-b border-white/5"
+      : currentBrand.id === "fiscomoney"
+      ? "bg-[#141619] border-b border-white/5"
+      : currentBrand.id === "advogado10x"
+      ? "bg-[#0f0f0f] border-b border-white/5"
+      : THEME_BG;
 
   return (
     <div className={`flex h-screen ${THEME_BG} text-white overflow-hidden font-sans ${currentBrand.themeClass}`}>
@@ -243,16 +262,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {currentBrand.id === "g8" ? (
             <Image src={currentBrand.logoOfficial} alt={currentBrand.name} width={180} height={60} className="object-contain 2xl:scale-110" />
           ) : (
-            <div className="flex items-center gap-3.5 select-none animate-in fade-in duration-300 scale-125 2xl:scale-[1.4] origin-left">
-              <img src={currentBrand.logoOfficial} alt={currentBrand.name} className="h-9 w-auto object-contain brightness-100" />
-              <div className="flex flex-col justify-center text-left">
-                <span className="text-[17px] font-semibold tracking-wide leading-none text-white font-sans">
-                  {currentBrand.name.split(" ")[0]}
-                </span>
-                <span className="text-[8px] font-black tracking-[0.38em] uppercase text-white mt-1 leading-none">
-                  {(currentBrand.name.split(" ")[1] || "Capital").toUpperCase()}
-                </span>
-              </div>
+            <div className={`flex items-center gap-3.5 select-none animate-in fade-in duration-300 origin-left ${
+              currentBrand.id === "advogado10x"
+                ? "scale-[1.05] 2xl:scale-[1.15] -translate-x-1"
+                : "scale-125 2xl:scale-[1.4]"
+            }`}>
+              <img 
+                src={currentBrand.logoOfficial} 
+                alt={currentBrand.name} 
+                className={`${
+                  currentBrand.id === "galapagos" 
+                    ? "h-9" 
+                    : currentBrand.id === "advogado10x"
+                    ? "h-14"
+                    : "h-14"
+                } w-auto object-contain brightness-100`} 
+              />
+              {currentBrand.id === "galapagos" && (
+                <div className="flex flex-col justify-center text-left">
+                  <span className="text-[17px] font-semibold tracking-wide leading-none text-white font-sans">
+                    {currentBrand.name.split(" ")[0]}
+                  </span>
+                  <span className="text-[8px] font-black tracking-[0.38em] uppercase text-white mt-1 leading-none">
+                    {(currentBrand.name.split(" ")[1] || "Capital").toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -260,7 +295,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="flex flex-col space-y-5 relative z-10 flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
           {/* User Card with Yellowish Background */}
           <div className={`flex-shrink-0 flex items-center gap-4 p-4 rounded-md shadow-2xl relative overflow-hidden group ${
-            currentBrand.id === "galapagos"
+            currentBrand.id !== "g8"
               ? "bg-white/[0.04] border border-white/10"
               : "bg-brand-secondary/10 border border-brand-secondary/20"
           }`}>
@@ -338,14 +373,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                   href={sub.href}
                                   className={`flex items-center gap-4 px-6 py-2.5 rounded-md transition-all group border border-transparent ${
                                     isSubActive
-                                      ? currentBrand.id === "galapagos"
+                                      ? currentBrand.id !== "g8"
                                         ? "text-brand-accent bg-white shadow-md shadow-black/5"
                                         : "text-white bg-brand-accent shadow-md shadow-brand-accent/10"
                                       : "text-white/70 hover:bg-white hover:text-brand-accent"
                                   }`}
                                 >
-                                  <sub.icon className={`h-4 w-4 shrink-0 ${isSubActive ? (currentBrand.id === "galapagos" ? "text-brand-accent" : "text-white") : "text-white/40 group-hover:text-brand-accent"}`} />
-                                  <span className={`text-[10px] uppercase tracking-[0.15em] font-black ${isSubActive ? (currentBrand.id === "galapagos" ? "text-brand-accent" : "text-white") : "text-white/70 group-hover:text-brand-accent"}`}>{sub.label}</span>
+                                  <sub.icon className={`h-4 w-4 shrink-0 ${isSubActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : "text-white/40 group-hover:text-brand-accent"}`} />
+                                  <span className={`text-[10px] uppercase tracking-[0.15em] font-black ${isSubActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : "text-white/70 group-hover:text-brand-accent"}`}>{sub.label}</span>
                                 </Link>
                               );
                             })}
@@ -361,7 +396,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       href={item.disabled ? "#" : item.href}
                       onClick={(e) => item.disabled && e.preventDefault()}
                       className={`flex items-center gap-5 px-6 py-3 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
-                        ? currentBrand.id === "galapagos"
+                        ? currentBrand.id !== "g8"
                           ? "text-brand-accent bg-white shadow-lg shadow-black/10"
                           : "text-white bg-brand-accent shadow-lg shadow-brand-accent/20"
                         : item.disabled
@@ -369,9 +404,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                           : "text-white/80 hover:bg-white hover:text-brand-accent"
                         }`}
                     >
-                      <item.icon className={`h-5 w-5 relative z-10 ${isActive ? (currentBrand.id === "galapagos" ? "text-brand-accent" : "text-white") : item.disabled ? "text-white/40" : "text-white/60 group-hover:text-brand-accent"}`} />
+                      <item.icon className={`h-5 w-5 relative z-10 ${isActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : item.disabled ? "text-white/40" : "text-white/60 group-hover:text-brand-accent"}`} />
                       <div className="flex items-center justify-between flex-1 relative z-10">
-                        <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isActive ? (currentBrand.id === "galapagos" ? "text-brand-accent" : "text-white") : item.disabled ? "text-white/40" : "text-white/80 group-hover:text-brand-accent transition-colors duration-300"}`}>{item.label}</span>
+                        <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : item.disabled ? "text-white/40" : "text-white/80 group-hover:text-brand-accent transition-colors duration-300"}`}>{item.label}</span>
                         {item.badge && (
                           <span className={`font-black text-[9px] px-1.5 py-0.5 rounded-sm tracking-tighter ${item.badge === "EM BREVE" ? "bg-[#ffdd00] text-black" : "bg-white/10 text-white"}`}>
                             {item.badge}
@@ -412,7 +447,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center gap-8 xl:gap-12">
             {/* Balance Section */}
             <div className={`flex flex-col items-end justify-center h-12 border-r pr-8 xl:pr-12 ${
-              currentBrand.id === "galapagos" ? "border-white/5" : "border-white/10"
+              currentBrand.id !== "g8" ? "border-white/5" : "border-white/10"
             }`}>
               <span className="text-[10px] text-white/60 font-black uppercase tracking-[0.2em] mb-2 leading-none">Saldo Líquido</span>
               <div className="flex items-center gap-4">
@@ -430,16 +465,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             {/* Profile Section */}
             <div className="flex items-center gap-6 xl:gap-8 relative">
               <div className={`hidden lg:flex flex-col items-center gap-1.5 px-4 py-2 rounded-md shadow-lg ${
-                currentBrand.id === "galapagos"
+                currentBrand.id !== "g8"
                   ? "bg-white/10 border border-white/20"
                   : "bg-brand-secondary/10 border border-brand-secondary/20"
               }`}>
                  <div className="flex items-center gap-2">
                     <Clock className={`h-3 w-3 animate-pulse ${
-                      currentBrand.id === "galapagos" ? "text-white" : "text-brand-secondary"
+                      currentBrand.id !== "g8" ? "text-white" : "text-brand-secondary"
                     }`} />
                     <span className={`text-[9px] font-black uppercase tracking-widest ${
-                      currentBrand.id === "galapagos" ? "text-white" : "text-brand-secondary"
+                      currentBrand.id !== "g8" ? "text-white" : "text-brand-secondary"
                     }`}>Sessão Segura</span>
                  </div>
                  <span className="text-sm font-mono font-black text-white tabular-nums leading-none">
