@@ -37,6 +37,7 @@ import { toast } from "sonner";
 import Image from "next/image";
 import { useAtom } from "jotai";
 import { userAtom } from "@/store/auth";
+import { currentBrand } from "@/config/brand";
 
 // Step structure definition
 const stepsConfig = [
@@ -1087,9 +1088,13 @@ export default function ProtecaoVeicularPage() {
                     key={idx}
                     onClick={() => handleSelectRegisteredVehicle(vehicle)}
                     className={`p-6 border rounded-xl shadow-lg relative overflow-hidden flex flex-col justify-between transition-all hover:scale-[1.02] duration-300 cursor-pointer ${
-                      isActive 
-                        ? "bg-[#0c0a09] border-[var(--brand-accent)]/40 text-white shadow-[var(--brand-accent)]/5" 
-                        : "bg-white border-dashed border-[var(--brand-accent)]/30 border-2 hover:border-[var(--brand-accent)] text-[#0c0a09]"
+                      currentBrand.id === "galapagos"
+                        ? (isActive 
+                            ? "bg-neutral-950/100 border border-blue-500/40 text-white shadow-2xl" 
+                            : "bg-blue-50/40 border-2 border-dashed border-blue-200 hover:border-blue-400 text-blue-950 shadow-md")
+                        : (isActive 
+                            ? "bg-[#0c0a09] border-[var(--brand-accent)]/40 text-white shadow-[var(--brand-accent)]/5" 
+                            : "bg-white border-dashed border-[var(--brand-accent)]/30 border-2 hover:border-[var(--brand-accent)] text-[#0c0a09]")
                     }`}
                   >
                     <div className="space-y-4">
@@ -1097,23 +1102,39 @@ export default function ProtecaoVeicularPage() {
                         <Badge className={`border-0 px-2 py-0.5 text-[8px] font-black uppercase tracking-wider rounded-sm ${
                           isActive 
                             ? "bg-emerald-500/10 text-emerald-400" 
-                            : "bg-orange-500/10 text-orange-600"
+                            : (currentBrand.id === "galapagos" ? "bg-blue-500/10 text-blue-600" : "bg-orange-500/10 text-orange-600")
                         }`}>
                           {vehicle.status}
                         </Badge>
-                        <Car className={`h-6 w-6 ${isActive ? "text-[var(--brand-accent)]" : "text-neutral-400"}`} />
+                        <Car className={`h-6 w-6 ${
+                          isActive 
+                            ? "text-[var(--brand-accent)]" 
+                            : (currentBrand.id === "galapagos" ? "text-blue-500" : "text-neutral-400")
+                        }`} />
                       </div>
 
                       <div className="text-left space-y-1">
-                        <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Veículo</span>
+                        <span className={`block text-[8px] font-black uppercase tracking-widest leading-none ${
+                          isActive 
+                            ? "text-neutral-400" 
+                            : (currentBrand.id === "galapagos" ? "text-blue-900/60" : "text-neutral-400")
+                        }`}>Veículo</span>
                         <h4 className="text-base font-black uppercase truncate">{vehicle.brand} {vehicle.model}</h4>
-                        <span className={`block font-mono text-xs font-semibold ${isActive ? "text-neutral-300" : "text-neutral-500"}`}>
+                        <span className={`block font-mono text-xs font-semibold ${
+                          isActive 
+                            ? "text-neutral-300" 
+                            : (currentBrand.id === "galapagos" ? "text-blue-900/80" : "text-neutral-500")
+                        }`}>
                           {vehicle.placa} • {vehicle.year?.split(" ")[0]}
                         </span>
                       </div>
                     </div>
 
-                    <div className={`mt-6 pt-4 border-t flex items-center justify-between ${isActive ? "border-white/10" : "border-neutral-100"}`}>
+                    <div className={`mt-6 pt-4 border-t flex items-center justify-between ${
+                      isActive 
+                        ? "border-white/10" 
+                        : (currentBrand.id === "galapagos" ? "border-blue-200/40" : "border-neutral-100")
+                    }`}>
                       {isActive ? (
                         <>
                           <span className="text-[9px] font-bold text-neutral-400 uppercase">Premium Ativo</span>
@@ -1121,10 +1142,15 @@ export default function ProtecaoVeicularPage() {
                         </>
                       ) : (
                         <>
-                          <span className="text-[9px] font-bold text-neutral-400 uppercase">Cotação Pendente</span>
+                          <span className={`text-[9px] font-bold uppercase ${
+                            currentBrand.id === "galapagos" ? "text-blue-900/70" : "text-neutral-400"
+                          }`}>Cotação Pendente</span>
                           <Button 
                             size="sm"
-                            className="bg-[var(--brand-accent)] hover:bg-[var(--brand-accent)]/90 text-white text-[8px] font-black tracking-wider uppercase h-8 px-3 rounded-sm"
+                            className={currentBrand.id === "galapagos"
+                              ? "bg-blue-600 hover:bg-blue-500 text-white text-[8px] font-black tracking-wider uppercase h-8 px-3 rounded-sm"
+                              : "bg-[var(--brand-accent)] hover:bg-[var(--brand-accent)]/90 text-white text-[8px] font-black tracking-wider uppercase h-8 px-3 rounded-sm"
+                            }
                           >
                             Finalizar Cotação
                           </Button>
@@ -1468,13 +1494,21 @@ export default function ProtecaoVeicularPage() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-stretch">
               
               {/* Badge Left Column: FIPE Valuation Card */}
-              <Card className="md:col-span-5 p-8 bg-[#0c0a09] border border-orange-500/20 text-white rounded-xl relative overflow-hidden flex flex-col justify-between shadow-2xl">
-                {/* Radial gold gradient */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-orange-600/10 rounded-full blur-[80px] pointer-events-none -mr-20 -mt-20" />
+              <Card className={`md:col-span-5 p-8 border rounded-xl relative overflow-hidden flex flex-col justify-between shadow-2xl ${
+                currentBrand.id === "galapagos"
+                  ? "bg-neutral-950/100 border-blue-500/30 text-white"
+                  : "bg-[#0c0a09] border-orange-500/20 text-white"
+              }`}>
+                {/* Radial gradient */}
+                <div className={`absolute top-0 right-0 w-64 h-64 rounded-full pointer-events-none -mr-20 -mt-20 ${
+                  currentBrand.id === "galapagos" ? "bg-blue-600/10 blur-[80px]" : "bg-orange-600/10 blur-[80px]"
+                }`} />
                 
                 <div className="space-y-6 relative z-10">
                   <div className="flex justify-between items-center">
-                    <Badge className="bg-[var(--brand-accent)] text-white border-0 text-[8px] font-black tracking-[0.2em] px-2 py-0.5 rounded-sm">
+                    <Badge className={`text-[8px] font-black tracking-[0.2em] px-2 py-0.5 rounded-sm ${
+                      currentBrand.id === "galapagos" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20" : "bg-[var(--brand-accent)] text-white border-0"
+                    }`}>
                       VALOR DE MERCADO
                     </Badge>
                     <span className="text-[10px] font-mono font-bold text-neutral-400">{fipeDetails.referenceMonth}</span>
@@ -1482,7 +1516,9 @@ export default function ProtecaoVeicularPage() {
 
                   <div className="space-y-1">
                     <span className="text-[10px] text-neutral-400 uppercase tracking-widest font-black block">Tabela FIPE</span>
-                    <span className="text-4xl font-extrabold text-[var(--brand-accent)] font-mono tracking-tight block">
+                    <span className={`text-4xl font-extrabold font-mono tracking-tight block ${
+                      currentBrand.id === "galapagos" ? "text-blue-400" : "text-[var(--brand-accent)]"
+                    }`}>
                       {fipeDetails.price || fipeValueQuoted}
                     </span>
                   </div>
@@ -1502,7 +1538,11 @@ export default function ProtecaoVeicularPage() {
                     </div>
                     <div className="text-left">
                       <span className="block font-black text-xs uppercase tracking-wide leading-none mb-1">{fipeDetails.brand}</span>
-                      <span className="text-[9px] font-black text-[var(--brand-accent)] uppercase tracking-widest">G8 Protegido</span>
+                      <span className={`text-[9px] font-black uppercase tracking-widest ${
+                        currentBrand.id === "galapagos" ? "text-blue-400" : "text-[var(--brand-accent)]"
+                      }`}>
+                        {currentBrand.id === "galapagos" ? "Galapagos Protegido" : "G8 Protegido"}
+                      </span>
                     </div>
                   </div>
 
@@ -1514,50 +1554,88 @@ export default function ProtecaoVeicularPage() {
               </Card>
 
               {/* Badge Right Column: Vehicle Specs Checklist */}
-              <Card className="md:col-span-7 p-8 bg-white border border-neutral-200/80 rounded-xl space-y-6 flex flex-col justify-between shadow-md text-[#0c0a09]">
+              <Card className={`md:col-span-7 p-8 rounded-xl space-y-6 flex flex-col justify-between shadow-md ${
+                currentBrand.id === "galapagos"
+                  ? "bg-blue-50/40 border border-blue-100/50 text-blue-950"
+                  : "bg-white border border-neutral-200/80 text-[#0c0a09]"
+              }`}>
                 <div className="space-y-4">
-                  <h3 className="text-lg font-black uppercase tracking-wide pb-2 border-b border-neutral-100 flex items-center gap-2">
-                    <Car className="text-[var(--brand-accent)] h-5 w-5" /> Ficha Técnica Homologada
+                  <h3 className={`text-lg font-black uppercase tracking-wide pb-2 border-b flex items-center gap-2 ${
+                    currentBrand.id === "galapagos" ? "border-blue-100 text-blue-900" : "border-neutral-100 text-[#0c0a09]"
+                  }`}>
+                    <Car className={`h-5 w-5 ${
+                      currentBrand.id === "galapagos" ? "text-blue-600" : "text-[var(--brand-accent)]"
+                    }`} /> Ficha Técnica Homologada
                   </h3>
 
                   <div className="grid grid-cols-2 gap-y-4 gap-x-6 text-left">
                     <div className="space-y-1">
-                      <span className="text-[8px] text-neutral-400 uppercase font-black tracking-widest leading-none block">Marca</span>
-                      <span className="text-sm font-extrabold text-neutral-800 uppercase block">{fipeDetails.brand}</span>
+                      <span className={`text-[8px] uppercase font-black tracking-widest leading-none block ${
+                        currentBrand.id === "galapagos" ? "text-blue-900/60" : "text-neutral-400"
+                      }`}>Marca</span>
+                      <span className={`text-sm font-extrabold uppercase block ${
+                        currentBrand.id === "galapagos" ? "text-blue-950" : "text-neutral-800"
+                      }`}>{fipeDetails.brand}</span>
                     </div>
                     
                     <div className="space-y-1">
-                      <span className="text-[8px] text-neutral-400 uppercase font-black tracking-widest leading-none block">Modelo</span>
-                      <span className="text-sm font-extrabold text-neutral-800 uppercase block truncate max-w-[200px]" title={fipeDetails.model}>
+                      <span className={`text-[8px] uppercase font-black tracking-widest leading-none block ${
+                        currentBrand.id === "galapagos" ? "text-blue-900/60" : "text-neutral-400"
+                      }`}>Modelo</span>
+                      <span className={`text-sm font-extrabold uppercase block truncate max-w-[200px] ${
+                        currentBrand.id === "galapagos" ? "text-blue-950" : "text-neutral-800"
+                      }`} title={fipeDetails.model}>
                         {fipeDetails.model}
                       </span>
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[8px] text-neutral-400 uppercase font-black tracking-widest leading-none block">Ano & Combustível</span>
-                      <span className="text-sm font-extrabold text-neutral-800 uppercase block">{fipeDetails.fuel} • {selectedAnoTexto.split(" ")[0]}</span>
+                      <span className={`text-[8px] uppercase font-black tracking-widest leading-none block ${
+                        currentBrand.id === "galapagos" ? "text-blue-900/60" : "text-neutral-400"
+                      }`}>Ano & Combustível</span>
+                      <span className={`text-sm font-extrabold uppercase block ${
+                        currentBrand.id === "galapagos" ? "text-blue-950" : "text-neutral-800"
+                      }`}>{fipeDetails.fuel} • {selectedAnoTexto.split(" ")[0]}</span>
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[8px] text-neutral-400 uppercase font-black tracking-widest leading-none block">Código Fipe</span>
-                      <span className="text-sm font-mono font-bold text-neutral-800 block">{fipeDetails.codeFipe || fipeRealCode}</span>
+                      <span className={`text-[8px] uppercase font-black tracking-widest leading-none block ${
+                        currentBrand.id === "galapagos" ? "text-blue-900/60" : "text-neutral-400"
+                      }`}>Código Fipe</span>
+                      <span className={`text-sm font-mono font-bold block ${
+                        currentBrand.id === "galapagos" ? "text-blue-950" : "text-neutral-800"
+                      }`}>{fipeDetails.codeFipe || fipeRealCode}</span>
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[8px] text-neutral-400 uppercase font-black tracking-widest leading-none block">Cor</span>
-                      <span className="text-sm font-extrabold text-neutral-800 uppercase block">{vehicleColor}</span>
+                      <span className={`text-[8px] uppercase font-black tracking-widest leading-none block ${
+                        currentBrand.id === "galapagos" ? "text-blue-900/60" : "text-neutral-400"
+                      }`}>Cor</span>
+                      <span className={`text-sm font-extrabold uppercase block ${
+                        currentBrand.id === "galapagos" ? "text-blue-950" : "text-neutral-800"
+                      }`}>{vehicleColor}</span>
                     </div>
 
                     <div className="space-y-1">
-                      <span className="text-[8px] text-neutral-400 uppercase font-black tracking-widest leading-none block">Número do Chassi</span>
-                      <span className="text-sm font-mono font-bold text-neutral-800 block truncate" title={chassi}>{chassi}</span>
+                      <span className={`text-[8px] uppercase font-black tracking-widest leading-none block ${
+                        currentBrand.id === "galapagos" ? "text-blue-900/60" : "text-neutral-400"
+                      }`}>Número do Chassi</span>
+                      <span className={`text-sm font-mono font-bold block truncate ${
+                        currentBrand.id === "galapagos" ? "text-blue-950" : "text-neutral-800"
+                      }`} title={chassi}>{chassi}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-orange-50 border border-orange-100 rounded-sm p-4 text-left flex items-start gap-3">
-                  <Info className="h-5 w-5 text-[var(--brand-accent)] shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-neutral-600 font-bold leading-relaxed">
+                <div className={`border rounded-sm p-4 text-left flex items-start gap-3 ${
+                  currentBrand.id === "galapagos"
+                    ? "bg-blue-500/5 border-blue-500/20 text-blue-900"
+                    : "bg-orange-50 border border-orange-100 text-neutral-600"
+                }`}>
+                  <Info className={`h-5 w-5 shrink-0 mt-0.5 ${
+                    currentBrand.id === "galapagos" ? "text-blue-600" : "text-[var(--brand-accent)]"
+                  }`} />
+                  <p className="text-[11px] font-bold leading-relaxed">
                     Certifique-se de que os dados do veículo estão corretos. Ao prosseguir, buscaremos as ofertas de planos e valores mensais de seguros oficiais da Sigga para seu perfil.
                   </p>
                 </div>

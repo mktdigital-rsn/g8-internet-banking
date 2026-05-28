@@ -341,21 +341,22 @@ export default function DashboardHome() {
                   <div className="flex items-center justify-between h-12">
                      <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-[#0c0a09]">Meu Resumo</h2>
                   </div>
-
-                  <div className="relative group cursor-pointer w-full">
+                                <div className="relative group cursor-pointer w-full">
                      <div className={`absolute -inset-1 bg-gradient-to-r ${
-                        currentBrand.id === "galapagos" ? "from-blue-400 to-blue-600" : "from-orange-400 to-orange-600"
-                      } rounded-md blur-lg opacity-20 group-hover:opacity-40 transition duration-1000`}></div>
+                        currentBrand.id === "galapagos" ? "from-blue-600/30 to-blue-400/30" : "from-orange-400 to-orange-600"
+                     } rounded-md blur-lg opacity-20 group-hover:opacity-40 transition duration-1000`}></div>
                      <div className={`relative h-72 2xl:h-80 w-full ${
                         currentBrand.id === "galapagos" 
-                          ? "bg-gradient-to-br from-brand-accent to-brand-secondary" 
-                          : "bg-[#0c0a09]"
-                      } text-white p-8 2xl:p-10 rounded-md shadow-2xl flex flex-col justify-between overflow-hidden border border-white/10 group-hover:scale-[1.02] transition-all duration-500`}>
+                          ? "bg-neutral-950 border border-blue-500/20" 
+                          : "bg-[#0c0a09] border border-white/10"
+                      } text-white p-8 2xl:p-10 rounded-md shadow-2xl flex flex-col justify-between overflow-hidden group-hover:scale-[1.02] transition-all duration-500`}>
                         {/* Design elements */}
-                        <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-colors duration-700" />
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent pointer-events-none" />
+                        <div className={`absolute -top-24 -right-24 w-64 h-64 rounded-full blur-3xl transition-colors duration-700 ${
+                           currentBrand.id === "galapagos" ? "bg-blue-500/10 group-hover:bg-blue-500/15" : "bg-white/5 group-hover:bg-white/10"
+                        }`} />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-tr from-transparent via-white/[0.02] to-transparent pointer-events-none" />
                         <div className={`absolute -bottom-32 -left-32 w-80 h-80 ${
-                           currentBrand.id === "galapagos" ? "bg-white/10" : "bg-[var(--brand-accent)]/10"
+                           currentBrand.id === "galapagos" ? "bg-blue-600/10" : "bg-[var(--brand-accent)]/10"
                          } rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700`} />
 
                         <div className="flex justify-between items-start z-10">
@@ -364,11 +365,13 @@ export default function DashboardHome() {
                                  {currentBrand.id === "g8" ? "G8PAY" : currentBrand.shortName.toUpperCase()}
                               </span>
                               <span className={`text-[10px] 2xl:text-xs ${
-                                 currentBrand.id === "galapagos" ? "text-white/80" : "text-orange-400/80"
+                                 currentBrand.id === "galapagos" ? "text-blue-400" : "text-orange-400/80"
                                } font-black uppercase tracking-[0.3em] mt-3 mb-1`}>Elite Finance &bull; 2026</span>
                            </div>
                            <div className="flex flex-col items-end gap-3">
-                              <Badge className="bg-white/10 text-white border-0 backdrop-blur-xl px-5 py-2 rounded-md font-black text-[11px] 2xl:text-xs uppercase tracking-[0.2em] shadow-lg">Platinum Elite</Badge>
+                              <Badge className={`border-0 px-5 py-2 rounded-md font-black text-[11px] 2xl:text-xs uppercase tracking-[0.2em] shadow-lg ${
+                                 currentBrand.id === "galapagos" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 backdrop-blur-xl" : "bg-white/10 text-white backdrop-blur-xl"
+                              }`}>Platinum Elite</Badge>
                            </div>
                         </div>
 
@@ -376,9 +379,9 @@ export default function DashboardHome() {
                            <div className="flex items-center gap-6">
                               <div className={`w-16 2xl:w-20 h-11 2xl:h-14 bg-gradient-to-br ${
                                  currentBrand.id === "galapagos"
-                                   ? "from-white/40 via-white/25 to-white/30"
-                                   : "from-orange-300 via-[var(--brand-accent)] to-orange-400"
-                               } rounded-md flex items-center justify-center shadow-2xl relative overflow-hidden group-hover:scale-110 transition-transform border border-white/20`}>
+                                   ? "from-white/10 via-white/5 to-white/15 border border-white/10"
+                                   : "from-orange-300 via-[var(--brand-accent)] to-orange-400 border border-white/20"
+                               } rounded-md flex items-center justify-center shadow-2xl relative overflow-hidden group-hover:scale-110 transition-transform`}>
                                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.4),transparent)] opacity-50" />
                                  <div className="absolute inset-x-0 h-px bg-white/30 top-1/2 -translate-y-1/2"></div>
                                  <div className="absolute inset-y-0 w-px bg-white/30 left-1/2 -translate-x-1/2"></div>
