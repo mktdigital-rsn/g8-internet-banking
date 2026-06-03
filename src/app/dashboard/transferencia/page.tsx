@@ -680,7 +680,7 @@ export default function TransferenciaPage() {
                                                 value={pin}
                                                 onChange={(e) => setPin(e.target.value.replace(/\D/g, "").substring(0, 6))}
                                                 placeholder="0 0 0 0"
-                                                className="h-24 text-center font-black text-5xl tracking-[0.5em] border-2 border-neutral-100 rounded-[5px] focus:border-brand-accent bg-[#f8f9fa] shadow-inner"
+                                                className="h-24 text-center font-black text-5xl tracking-[0.5em] border-2 border-neutral-100 rounded-[5px] focus:border-brand-accent bg-[#f8f9fa] shadow-inner text-[#0c0a09]"
                                                 autoFocus
                                             />
 

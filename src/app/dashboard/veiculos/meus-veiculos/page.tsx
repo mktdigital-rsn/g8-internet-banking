@@ -521,19 +521,19 @@ export default function MeusVeiculosPage() {
                     {/* Action buttons (Edit & Delete) */}
                     <div className="flex gap-2.5">
                       <Button 
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleEditOpen(vehicle)}
-                        className="flex-1 h-9 border-neutral-200 hover:border-neutral-350 hover:bg-neutral-100 hover:text-black font-black uppercase text-[9px] tracking-wider rounded-sm flex items-center justify-center gap-1.5 shrink-0"
+                        className="flex-1 h-9 border border-neutral-200 bg-transparent hover:border-neutral-350 hover:bg-neutral-100 text-[#0c0a09] font-black uppercase text-[9px] tracking-wider rounded-sm flex items-center justify-center gap-1.5 shrink-0"
                       >
                         <Edit2 className="h-3 w-3 stroke-[2.5]" /> Editar
                       </Button>
                       
                       <Button 
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => handleDeleteOpen(vehicle)}
-                        className="flex-1 h-9 border-neutral-200 hover:border-red-200 hover:bg-red-50 hover:text-red-600 font-black uppercase text-[9px] tracking-wider rounded-sm flex items-center justify-center gap-1.5 text-neutral-450 shrink-0"
+                        className="flex-1 h-9 border border-neutral-200 bg-transparent hover:border-red-200 hover:bg-red-50 hover:text-red-600 text-[#0c0a09] font-black uppercase text-[9px] tracking-wider rounded-sm flex items-center justify-center gap-1.5 shrink-0"
                       >
                         <Trash2 className="h-3 w-3 stroke-[2.5]" /> Excluir
                       </Button>
@@ -702,9 +702,9 @@ export default function MeusVeiculosPage() {
               <div className="pt-4 border-t border-neutral-100 flex gap-3">
                 <Button 
                   type="button" 
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => { setShowAddModal(false); resetForm(); }}
-                  className="flex-1 h-12 border-neutral-200 font-extrabold text-xs uppercase tracking-wider text-neutral-500 rounded-sm"
+                  className="flex-1 h-12 border border-neutral-200 font-extrabold text-xs uppercase tracking-wider text-neutral-500 hover:bg-neutral-100 hover:text-black rounded-sm"
                   disabled={modalLoading}
                 >
                   Cancelar
@@ -854,9 +854,9 @@ export default function MeusVeiculosPage() {
               <div className="pt-4 border-t border-neutral-100 flex gap-3">
                 <Button 
                   type="button" 
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => { setShowEditModal(false); resetForm(); }}
-                  className="flex-1 h-12 border-neutral-200 font-extrabold text-xs uppercase tracking-wider text-neutral-500 rounded-sm"
+                  className="flex-1 h-12 border border-neutral-200 font-extrabold text-xs uppercase tracking-wider text-neutral-500 hover:bg-neutral-100 hover:text-black rounded-sm"
                   disabled={modalLoading}
                 >
                   Cancelar
@@ -900,9 +900,9 @@ export default function MeusVeiculosPage() {
               <div className="pt-2 flex gap-3">
                 <Button 
                   type="button" 
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => { setShowDeleteModal(false); resetForm(); }}
-                  className="flex-1 h-11 border-neutral-200 font-extrabold text-xs uppercase tracking-wider text-neutral-500 rounded-sm"
+                  className="flex-1 h-11 border border-neutral-200 font-extrabold text-xs uppercase tracking-wider text-neutral-500 hover:bg-neutral-100 hover:text-black rounded-sm"
                   disabled={modalLoading}
                 >
                   Cancelar

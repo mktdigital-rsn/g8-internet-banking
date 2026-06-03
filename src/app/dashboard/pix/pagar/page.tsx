@@ -871,7 +871,7 @@ function PixPagarContent() {
                 value={smsCode}
                 onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").substring(0, 6))}
                 placeholder="0 0 0 0 0"
-                className="h-20 text-center font-black text-4xl tracking-[0.5em] border-2 border-neutral-100 rounded-[5px] focus:border-[var(--brand-accent)] bg-neutral-50/50"
+                className="h-20 text-center font-black text-4xl tracking-[0.5em] border-2 border-neutral-100 rounded-[5px] focus:border-[var(--brand-accent)] bg-neutral-50/50 text-[#0c0a09]"
               />
               <div className="flex flex-col gap-4">
                 <Button

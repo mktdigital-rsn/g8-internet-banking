@@ -1207,10 +1207,10 @@ export default function DebitosVeicularesPage() {
               </div>
               
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
                 onClick={() => { setSearchCompleted(false); handleResetCart(); }}
-                className="border-neutral-200 hover:bg-neutral-100 hover:text-black font-black uppercase text-[9px] tracking-wider rounded-sm shrink-0"
+                className="border border-neutral-200 bg-transparent hover:bg-neutral-100 text-[#0c0a09] font-black uppercase text-[9px] tracking-wider rounded-sm shrink-0"
               >
                 Voltar à Busca
               </Button>

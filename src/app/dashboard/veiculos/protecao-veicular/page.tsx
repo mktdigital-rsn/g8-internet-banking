@@ -53,6 +53,23 @@ const stepsConfig = [
   { label: "Finalizar", desc: "Confirmação" } // Passo 10
 ];
 
+// Helper to calculate total of first payment (monthly price + R$ 350,00 enrollment fee)
+const getFirstPaymentTotal = (priceStr?: string) => {
+  if (!priceStr) return "R$ 350,00";
+  // Remove R$, whitespace, and parse
+  const cleanPrice = priceStr
+    .replace("R$", "")
+    .replace(/\s/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
+  const priceNum = parseFloat(cleanPrice);
+  if (isNaN(priceNum)) {
+    return `${priceStr} + R$ 350,00`;
+  }
+  const total = priceNum + 350;
+  return total.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+};
+
 export default function ProtecaoVeicularPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -1710,6 +1727,9 @@ export default function ProtecaoVeicularPage() {
                             <span className="text-4xl font-extrabold font-mono tracking-tighter">{plan.price}</span>
                             <span className="text-xs text-neutral-400 font-bold uppercase">/ mês</span>
                           </div>
+                          <div className="inline-flex items-center gap-1 mt-1 bg-neutral-100/80 px-2 py-0.5 rounded text-[9px] font-bold text-neutral-500 uppercase tracking-wider">
+                            <span>+ Adesão única: R$ 350,00</span>
+                          </div>
                           
                         
                         </div>
@@ -1920,20 +1940,44 @@ export default function ProtecaoVeicularPage() {
                     </div>
                   </div>
 
-                  <div className="p-4 bg-[#0c0a09] text-white rounded-lg border border-[var(--brand-accent)]/20 flex justify-between items-center">
-                    <div className="text-left space-y-0.5">
-                      <Badge className="bg-[var(--brand-accent)] text-white border-0 text-[7px] font-black uppercase tracking-wider py-0 px-1.5 rounded-sm">
-                        Plano Escolhido
-                      </Badge>
-                      <h4 className="text-sm font-black uppercase tracking-wide">
-                        {plans.find(p => p.tppId === selectedPlanId)?.name}
-                      </h4>
+                  <div className="space-y-3">
+                    <div className="p-4 bg-[#0c0a09] text-white rounded-lg border border-[var(--brand-accent)]/20 flex justify-between items-center">
+                      <div className="text-left space-y-0.5">
+                        <Badge className="bg-[var(--brand-accent)] text-white border-0 text-[7px] font-black uppercase tracking-wider py-0 px-1.5 rounded-sm">
+                          Plano Escolhido
+                        </Badge>
+                        <h4 className="text-sm font-black uppercase tracking-wide">
+                          {plans.find(p => p.tppId === selectedPlanId)?.name}
+                        </h4>
+                      </div>
+                      <div className="text-right">
+                        <span className="block text-[8px] text-neutral-400 font-bold uppercase leading-none mb-0.5">Valor Mensal</span>
+                        <span className="text-lg font-black font-mono text-[var(--brand-accent)]">
+                          {plans.find(p => p.tppId === selectedPlanId)?.price}
+                        </span>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <span className="block text-[8px] text-neutral-400 font-bold uppercase leading-none mb-0.5">Valor Mensal</span>
-                      <span className="text-lg font-black font-mono text-[var(--brand-accent)]">
-                        {plans.find(p => p.tppId === selectedPlanId)?.price}
-                      </span>
+
+                    <div className="p-4 bg-neutral-50 rounded-lg border border-neutral-200/60 space-y-3">
+                      <div className="flex justify-between items-center text-xs font-bold text-neutral-500">
+                        <span className="uppercase tracking-wider">Mensalidade do Plano:</span>
+                        <span className="font-mono text-neutral-800">
+                          {plans.find(p => p.tppId === selectedPlanId)?.price}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs font-bold text-neutral-500">
+                        <span className="uppercase tracking-wider">Taxa de Adesão (Única):</span>
+                        <span className="font-mono text-neutral-800">R$ 350,00</span>
+                      </div>
+                      <div className="border-t border-neutral-200/80 pt-2 flex justify-between items-center text-sm font-black text-neutral-900">
+                        <span className="uppercase tracking-widest text-[10px]">Primeiro Pagamento Total:</span>
+                        <span className="font-mono text-[var(--brand-accent)] text-base">
+                          {getFirstPaymentTotal(plans.find(p => p.tppId === selectedPlanId)?.price)}
+                        </span>
+                      </div>
+                      <p className="text-[9px] text-neutral-400 font-medium leading-tight">
+                        * A taxa de adesão de R$ 350,00 é cobrada junto com a primeira mensalidade no momento do fechamento. As parcelas seguintes contemplam apenas o valor mensal do plano.
+                      </p>
                     </div>
                   </div>
                 </div>

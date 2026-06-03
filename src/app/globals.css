@@ -501,3 +501,26 @@
   border: 2px solid var(--brand-accent) !important;
   color: var(--brand-accent) !important;
 }
+
+/* FiscoMoney Light Layout Overrides for inputs and outline buttons */
+.theme-fiscomoney input:not(.text-white):not([class*="text-white"]),
+.theme-fiscomoney select:not(.text-white):not([class*="text-white"]),
+.theme-fiscomoney textarea:not(.text-white):not([class*="text-white"]),
+.theme-fiscomoney button[data-slot="select-trigger"]:not(.text-white) {
+  color: #0c0a09 !important;
+}
+
+.theme-fiscomoney button.border:not(.bg-brand-accent):not(.bg-\[\#0c0a09\]):not([class*="bg-brand-accent"]):not([class*="bg-[#0c0a09]"]):not(.bg-black):not(.text-white):not([class*="text-white"]),
+.theme-fiscomoney button[class*="border-"]:not(.bg-brand-accent):not(.bg-\[\#0c0a09\]):not([class*="bg-brand-accent"]):not([class*="bg-[#0c0a09]"]):not(.bg-black):not(.text-white):not([class*="text-white"]),
+.theme-fiscomoney a.border:not(.bg-brand-accent):not(.bg-\[\#0c0a09\]):not([class*="bg-brand-accent"]):not([class*="bg-[#0c0a09]"]):not(.bg-black):not(.text-white):not([class*="text-white"]),
+.theme-fiscomoney a[class*="border-"]:not(.bg-brand-accent):not(.bg-\[\#0c0a09\]):not([class*="bg-brand-accent"]):not([class*="bg-[#0c0a09]"]):not(.bg-black):not(.text-white):not([class*="text-white"]) {
+  background-color: transparent !important;
+  color: #0c0a09 !important;
+}
+
+.theme-fiscomoney button.border:hover,
+.theme-fiscomoney button[class*="border-"]:hover,
+.theme-fiscomoney a.border:hover,
+.theme-fiscomoney a[class*="border-"]:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}

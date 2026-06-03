@@ -920,7 +920,7 @@ export default function PagamentosPage() {
               <Input
                 value={smsCode}
                 onChange={(e) => setSmsCode(e.target.value.replace(/\D/g, "").substring(0, 6))}
-                className="h-20 text-center font-black text-4xl tracking-[0.5em] border-2 border-neutral-100 rounded-sm focus:border-[var(--brand-accent)] bg-white shadow-2xl"
+                className="h-20 text-center font-black text-4xl tracking-[0.5em] border-2 border-neutral-100 rounded-sm focus:border-[var(--brand-accent)] bg-white shadow-2xl text-[#0c0a09]"
                 placeholder="0 0 0 0 0"
               />
               <div className="flex flex-col gap-4 w-full">
