@@ -781,11 +781,11 @@ export default function TransferenciaPage() {
                         {/* Balance Card */}
                         <div className="bg-brand-accent/5 border border-brand-accent/10 p-8 rounded-md space-y-4 shadow-xl shadow-brand-accent/5 group relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000" />
-                            <div className="flex items-center gap-3 text-brand-accent relative z-10 font-black">
-                                <Wallet size={16} />
+                            <div className="flex items-center gap-3 text-muted-foreground relative z-10 font-black">
+                                <Wallet size={16} className="text-brand-accent" />
                                 <span className="text-[10px] font-black uppercase tracking-widest">Saldo Disponível</span>
                             </div>
-                            <p className="text-4xl font-black font-mono tracking-tighter text-brand-secondary relative z-10">{balance}</p>
+                            <p className="text-4xl font-black font-mono tracking-tighter text-foreground relative z-10">{balance}</p>
                         </div>
 
                         {/* Recent Favorites */}
@@ -867,31 +867,44 @@ function TransferOption({
             onClick={onClick}
             disabled={disabled}
             className={`w-full group p-8 rounded-md text-left transition-all relative overflow-hidden flex flex-col justify-between h-[240px] border ${premium
-                    ? 'bg-brand-accent/5 border-brand-accent/10 text-brand-secondary shadow-xl shadow-brand-accent/5 active:scale-[0.98]'
+                    ? 'bg-gradient-to-br from-brand-accent to-brand-secondary border-0 text-white shadow-xl shadow-brand-accent/10 active:scale-[0.98]'
                     : disabled
                         ? 'bg-neutral-50 border-neutral-100 opacity-40 cursor-not-allowed grayscale'
-                        : 'bg-white border-brand-accent/10 hover:bg-brand-accent/5 hover:shadow-xl hover:border-brand-accent/20 active:scale-[0.98]'
+                        : 'bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800 hover:bg-brand-accent/5 hover:shadow-xl hover:border-brand-accent/20 active:scale-[0.98]'
                 }`}
         >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/10 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />
+            {/* Background elements */}
+            {premium ? (
+                <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />
+            ) : (
+                <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/10 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />
+            )}
 
-            <div className={`w-14 h-14 rounded-md flex items-center justify-center mb-6 transition-transform group-hover:rotate-6 ${premium ? 'bg-brand-accent/10 text-brand-accent' : 'bg-brand-accent/5 text-brand-accent border border-brand-accent/10 shadow-sm'
+            <div className={`w-14 h-14 rounded-md flex items-center justify-center mb-6 transition-transform group-hover:rotate-6 ${premium 
+                ? 'bg-white/20 text-white' 
+                : 'bg-brand-accent/5 text-brand-accent border border-brand-accent/10 shadow-sm'
                 }`}>
                 <Icon size={28} strokeWidth={2.5} />
             </div>
 
             <div className="space-y-2 relative z-10">
                 <div className="flex items-center gap-2">
-                    <h3 className={`text-xl font-black tracking-tight ${premium ? 'text-brand-secondary' : 'text-brand-accent'}`}>{title}</h3>
+                    <h3 className={`text-xl font-black tracking-tight ${premium ? 'text-white' : 'text-foreground'}`}>{title}</h3>
                     {disabled && <Badge className="bg-[#0c0a09]/10 text-[#0c0a09] text-[8px] font-black uppercase border-0">Breve</Badge>}
-                    {badge && <Badge className="bg-brand-accent/10 text-brand-accent border-0 text-[8px] font-black uppercase tracking-widest">{badge}</Badge>}
+                    {badge && (
+                        <Badge className={`${premium 
+                            ? 'bg-white/25 text-white border-0' 
+                            : 'bg-brand-accent/10 text-brand-accent border-0'} text-[8px] font-black uppercase tracking-widest`}>
+                            {badge}
+                        </Badge>
+                    )}
                 </div>
-                <p className={`text-[11px] font-black leading-relaxed ${premium ? 'text-brand-accent/70' : 'text-brand-accent'}`}>
+                <p className={`text-[11px] font-black leading-relaxed ${premium ? 'text-white/85' : 'text-muted-foreground'}`}>
                     {description}
                 </p>
             </div>
 
-            <div className={`flex items-center gap-2 mt-4 font-black uppercase text-[9px] tracking-[0.2em] transform translate-x-0 group-hover:translate-x-2 transition-transform ${premium ? 'text-brand-secondary' : 'text-brand-accent'
+            <div className={`flex items-center gap-2 mt-4 font-black uppercase text-[9px] tracking-[0.2em] transform translate-x-0 group-hover:translate-x-2 transition-transform ${premium ? 'text-white' : 'text-brand-accent'
                 }`}>
                 {disabled ? 'Indisponível' : 'Começar'} <ArrowRight size={14} />
             </div>
@@ -904,7 +917,7 @@ function SimpleAction({ icon: Icon, label, onClick, badge }: { icon: any, label:
         <button 
             onClick={onClick}
             disabled={!!badge}
-            className={`flex flex-col items-center justify-center p-6 bg-white border border-brand-accent/10 rounded-sm transition-all relative overflow-hidden group w-full ${!!badge ? 'opacity-60 grayscale cursor-not-allowed' : 'hover:bg-brand-accent/5 hover:shadow-xl hover:shadow-brand-accent/5 hover:scale-[1.03] active:scale-[0.98]'}`}
+            className={`flex flex-col items-center justify-center p-6 bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800 rounded-sm transition-all relative overflow-hidden group w-full ${!!badge ? 'opacity-60 grayscale cursor-not-allowed' : 'hover:bg-brand-accent/5 hover:border-brand-accent/20 hover:shadow-xl hover:shadow-brand-accent/5 hover:scale-[1.03] active:scale-[0.98]'}`}
         >
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/10 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-125" />
             
@@ -917,7 +930,7 @@ function SimpleAction({ icon: Icon, label, onClick, badge }: { icon: any, label:
             <div className="w-10 h-10 bg-brand-accent/5 rounded-sm flex items-center justify-center text-brand-accent mb-3 group-hover:scale-110 group-hover:bg-brand-accent/10 transition-all relative z-10">
                 <Icon size={18} />
             </div>
-            <span className="text-[9px] font-black uppercase tracking-widest text-brand-secondary relative z-10">{label}</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-foreground relative z-10">{label}</span>
         </button>
     );
 }
