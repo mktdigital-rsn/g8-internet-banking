@@ -111,8 +111,9 @@ function SelectLabel({
 function SelectItem({
   className,
   children,
+  startDecorator,
   ...props
-}: SelectPrimitive.Item.Props) {
+}: SelectPrimitive.Item.Props & { startDecorator?: React.ReactNode }) {
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
@@ -122,6 +123,11 @@ function SelectItem({
       )}
       {...props}
     >
+      {startDecorator && (
+        <span aria-hidden="true" className="pointer-events-none shrink-0">
+          {startDecorator}
+        </span>
+      )}
       <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
         {children}
       </SelectPrimitive.ItemText>

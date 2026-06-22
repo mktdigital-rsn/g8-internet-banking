@@ -135,7 +135,7 @@ export default function PagamentosPage() {
   const [scheduleDate, setScheduleDate] = useState("");
   const [agendamentos, setAgendamentos] = useState(mockAgendamentos);
   const [editingAgendamento, setEditingAgendamento] = useState<any>(null);
-  const [selectedCategory, setSelectedCategory] = useState("OUTROS");
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   useEffect(() => {
     const fetchBalance = async () => {
@@ -267,7 +267,8 @@ export default function PagamentosPage() {
       // 2. Efetivar Pagamento
       const res = await api.post("/api/banco/pagamentos/pagar-boleto", {
         linhaDigitavel: boletoData?.linhaDigitavel || barcode.replace(/\D/g, ""),
-        deviceId: temporaryDeviceId
+        deviceId: temporaryDeviceId,
+        ...(selectedCategory ? { motivoPagamento: selectedCategory } : {})
       });
 
       if (res.data) {
@@ -792,22 +793,31 @@ export default function PagamentosPage() {
                       <label className="text-[10px] font-black text-neutral-400 uppercase tracking-[0.2em] ml-1">Motivo do Pagamento (Opcional)</label>
                       <Select 
                         value={selectedCategory} 
-                        onValueChange={(val) => setSelectedCategory(val || "OUTROS")}
+                        onValueChange={(val) => setSelectedCategory(val ?? "")}
                       >
                         <SelectTrigger size="xl" className="w-full bg-white border-neutral-200 shadow-sm focus:border-[var(--brand-accent)] group transition-all">
-                          <SelectValue placeholder="Selecione o motivo..." />
+                          <SelectValue>
+                            {(val: string | null) =>
+                              val && CATEGORY_MAP[val]
+                                ? <span className="font-black text-sm uppercase tracking-widest text-[#0c0a09]">{CATEGORY_MAP[val].label}</span>
+                                : <span className="text-neutral-400 text-sm">Selecione o motivo...</span>
+                            }
+                          </SelectValue>
                         </SelectTrigger>
                         <SelectContent>
                           {CATEGORIES.map((cat) => {
                             const Icon = CATEGORY_MAP[cat].icon;
                             return (
-                              <SelectItem key={cat} value={cat}>
-                                <div className="flex items-center gap-3 py-1">
-                                  <div className="w-8 h-8 rounded-sm bg-neutral-50 flex items-center justify-center text-neutral-400 group-focus:bg-[var(--brand-accent)]/10 group-focus:text-[var(--brand-accent)] transition-colors">
+                              <SelectItem
+                                key={cat}
+                                value={cat}
+                                startDecorator={
+                                  <div className="w-8 h-8 rounded-sm bg-neutral-50 flex items-center justify-center text-neutral-400 transition-colors">
                                     <Icon className="h-4 w-4" />
                                   </div>
-                                  <span className="font-black text-[11px] uppercase tracking-widest">{CATEGORY_MAP[cat].label}</span>
-                                </div>
+                                }
+                              >
+                                <span className="font-black text-[11px] uppercase tracking-widest">{CATEGORY_MAP[cat].label}</span>
                               </SelectItem>
                             );
                           })}
