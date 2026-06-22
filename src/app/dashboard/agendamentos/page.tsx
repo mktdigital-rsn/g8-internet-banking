@@ -37,12 +37,7 @@ interface Agendamento {
   category?: string;
 }
 
-const MOCK_AGENDAMENTOS: Agendamento[] = [
-  { id: "1", type: "pix", beneficiario: "Mercado Central LTDA", valor: 450.00, data: "2026-04-20", status: "pending", category: "Alimentação" },
-  { id: "2", type: "boleto", beneficiario: "Condomínio Ed. Solar", valor: 1250.80, data: "2026-04-25", status: "pending", category: "Aluguel" },
-  { id: "3", type: "transfer", beneficiario: "Ana Beatriz Silva", valor: 1500.00, data: "2026-05-02", status: "pending", category: "Outros" },
-  { id: "4", type: "ted", beneficiario: "Investimentos S.A.", valor: 5000.00, data: "2026-04-18", status: "pending", category: "Marketing" },
-];
+const MOCK_AGENDAMENTOS: Agendamento[] = []
 
 const CATEGORIES = [
   "Alimentação",

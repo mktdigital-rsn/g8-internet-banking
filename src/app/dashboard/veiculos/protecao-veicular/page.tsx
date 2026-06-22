@@ -589,6 +589,17 @@ export default function ProtecaoVeicularPage() {
     setStep(7); // Go to step 7 (Revisão)
   };
 
+  // Reset quotation, FIPE and plans details when vehicle selection inputs change
+  useEffect(() => {
+    setQuotationCode("");
+    setFipeDetails(null);
+    setFipeValue("");
+    setFipeValueQuoted("");
+    setPlans([]);
+    setBenefitsCache({});
+    setSelectedPlanId(null);
+  }, [placa, selectedTipo, selectedMarca, selectedAno, selectedModelo]);
+
   // Step 7: Create SIGGA quote and query FIPE details
   useEffect(() => {
     if (step === 7 && !quotationCode && !fipeDetails) {

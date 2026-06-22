@@ -80,11 +80,7 @@ const chartData = {
    ]
 };
 
-const maturityItems = [
-   { id: 1, label: "Aluguel Imôb.", company: "Quinto Andar S.A", value: "R$ 11.500", icon: Landmark, color: "bg-orange-100 text-[var(--brand-accent)]" },
-   { id: 2, label: "Finan. Carro", company: "Banco do Brasil", value: "R$ 2.000", icon: Landmark, color: "bg-blue-100 text-blue-600" },
-   { id: 3, label: "Seguro. Saúde", company: "SulAmérica", value: "R$ 800", icon: Landmark, color: "bg-purple-100 text-purple-600" },
-];
+// maturityItems is now fetched dynamically from the API inside the DashboardHome component
 
 const getIconForMetodo = (metodo: string): any => {
    switch (metodo) {
@@ -110,6 +106,8 @@ export default function DashboardHome() {
     const [currentIndex, setCurrentIndex] = useState(0);
    const [chartPeriod, setChartPeriod] = useState<"day" | "week" | "month">("week");
    const [selectedTransaction, setSelectedTransaction] = useState<any>(null);
+   const [maturityItems, setMaturityItems] = useState<any[]>([]);
+   const [isLoadingMaturities, setIsLoadingMaturities] = useState(true);
 
    const [mounted, setMounted] = React.useState(false);
 
@@ -157,13 +155,72 @@ export default function DashboardHome() {
       fetchTransactions();
    }, []);
 
+   React.useEffect(() => {
+      const fetchMaturities = async () => {
+         setIsLoadingMaturities(true);
+         try {
+            const res = await api.get("/api/banco/pagamentos/listar-boletos?page=1").catch(() => null);
+            if (res?.data?.data?.items && Array.isArray(res.data.data.items)) {
+               const pending = res.data.data.items.filter((item: any) => {
+                  const isPaid = item.status === 'paid' || item.paidAt;
+                  const isCanceled = item.status === 'manual_cancellation';
+                  return !isPaid && !isCanceled;
+               });
+               
+               const mapped = pending.map((item: any, idx: number) => {
+                  const colors = [
+                     "bg-orange-100 text-[var(--brand-accent)]",
+                     "bg-blue-100 text-blue-600",
+                     "bg-purple-100 text-purple-600",
+                     "bg-rose-100 text-rose-600"
+                  ];
+                  const color = colors[idx % colors.length];
+                  
+                  const valFormatted = new Intl.NumberFormat("pt-BR", {
+                     style: "currency",
+                     currency: "BRL"
+                  }).format((item.amount || 0) / 100);
+                  
+                  let formattedDate = "";
+                  if (item.expirationDate) {
+                     const [year, month, day] = item.expirationDate.split('-');
+                     if (day && month && year) {
+                        formattedDate = `${day}/${month}/${year}`;
+                      } else {
+                        formattedDate = item.expirationDate;
+                     }
+                  }
+
+                  return {
+                     id: item.id || item.uuid || idx,
+                     label: item.payer?.name || "Boleto",
+                     company: item.ourNumber ? `Boleto nº ${item.ourNumber}` : "Boleto Bancário",
+                     value: valFormatted,
+                     icon: Landmark,
+                     color: color,
+                     expirationDate: formattedDate,
+                     status: item.status
+                  };
+               });
+               setMaturityItems(mapped);
+            }
+         } catch (err) {
+            console.error("Error fetching maturities:", err);
+         } finally {
+            setIsLoadingMaturities(false);
+         }
+      };
+      fetchMaturities();
+   }, []);
+
    // Auto-carousel effect for maturity cards
    React.useEffect(() => {
+      if (maturityItems.length <= 1) return;
       const interval = setInterval(() => {
          setCurrentIndex(prev => (prev + 1) % maturityItems.length);
       }, 5000);
       return () => clearInterval(interval);
-   }, []);
+   }, [maturityItems]);
 
    const handlePrintReceipt = async (id: string, description: string) => {
       if (!id) return;
@@ -282,10 +339,12 @@ export default function DashboardHome() {
     }, [allTransactions, chartPeriod]);
 
    const nextMaturity = () => {
+      if (maturityItems.length === 0) return;
       setCurrentIndex(prev => (prev + 1) % maturityItems.length);
    };
 
    const prevMaturity = () => {
+      if (maturityItems.length === 0) return;
       setCurrentIndex(prev => (prev === 0 ? maturityItems.length - 1 : prev - 1));
    };
 
@@ -341,74 +400,77 @@ export default function DashboardHome() {
                   <div className="flex items-center justify-between h-12">
                      <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-[#0c0a09]">Meu Resumo</h2>
                   </div>
-                                <div className="relative group cursor-pointer w-full">
-                     <div className={`absolute -inset-1 bg-gradient-to-r ${
-                        currentBrand.id === "galapagos" ? "from-blue-600/30 to-blue-400/30" : "from-orange-400 to-orange-600"
-                     } rounded-md blur-lg opacity-20 group-hover:opacity-40 transition duration-1000`}></div>
-                     <div className={`relative h-72 2xl:h-80 w-full ${
-                        currentBrand.id === "galapagos" 
-                          ? "bg-neutral-950 border border-blue-500/20" 
-                          : "bg-[#0c0a09] border border-white/10"
-                      } text-white p-8 2xl:p-10 rounded-md shadow-2xl flex flex-col justify-between overflow-hidden group-hover:scale-[1.02] transition-all duration-500`}>
-                        {/* Design elements */}
-                        <div className={`absolute -top-24 -right-24 w-64 h-64 rounded-full blur-3xl transition-colors duration-700 ${
-                           currentBrand.id === "galapagos" ? "bg-blue-500/10 group-hover:bg-blue-500/15" : "bg-white/5 group-hover:bg-white/10"
-                        }`} />
-                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-tr from-transparent via-white/[0.02] to-transparent pointer-events-none" />
-                        <div className={`absolute -bottom-32 -left-32 w-80 h-80 ${
-                           currentBrand.id === "galapagos" ? "bg-blue-600/10" : "bg-[var(--brand-accent)]/10"
-                         } rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700`} />
+                                               {/* Credit Card — proper 85.6×54mm ratio, ~1.586:1 */}
+                                 <div className="relative group cursor-pointer w-full">
+                      <div className={`absolute -inset-1 bg-gradient-to-r ${
+                         currentBrand.id === "galapagos" ? "from-blue-600/30 to-blue-400/30" : "from-orange-400 to-orange-600"
+                      } rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition duration-1000`}></div>
+                      {/* aspect-[1.586/1] gives the standard credit card proportions */}
+                      <div className={`relative w-full aspect-[1.586/1] min-h-[200px] max-h-[320px] ${
+                         currentBrand.id === "galapagos" 
+                           ? "bg-neutral-950 border border-blue-500/20" 
+                           : "bg-[#0c0a09] border border-white/10"
+                       } text-white px-7 py-6 rounded-xl shadow-2xl flex flex-col justify-between overflow-hidden group-hover:scale-[1.02] transition-all duration-500`}>
 
-                        <div className="flex justify-between items-start z-10">
-                           <div className="flex flex-col">
-                              <span className="font-black tracking-tighter text-2xl 2xl:text-3xl italic opacity-95 uppercase leading-none text-white drop-shadow-md">
-                                 {currentBrand.id === "g8" ? "G8PAY" : currentBrand.shortName.toUpperCase()}
-                              </span>
-                              <span className={`text-[10px] 2xl:text-xs ${
-                                 currentBrand.id === "galapagos" ? "text-blue-400" : "text-orange-400/80"
-                               } font-black uppercase tracking-[0.3em] mt-3 mb-1`}>Elite Finance &bull; 2026</span>
-                           </div>
-                           <div className="flex flex-col items-end gap-3">
-                              <Badge className={`border-0 px-5 py-2 rounded-md font-black text-[11px] 2xl:text-xs uppercase tracking-[0.2em] shadow-lg ${
-                                 currentBrand.id === "galapagos" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 backdrop-blur-xl" : "bg-white/10 text-white backdrop-blur-xl"
-                              }`}>Platinum Elite</Badge>
-                           </div>
-                        </div>
+                         {/* Background glows */}
+                         <div className={`absolute -top-20 -right-20 w-56 h-56 rounded-full blur-3xl transition-colors duration-700 ${
+                            currentBrand.id === "galapagos" ? "bg-blue-500/10" : "bg-white/5"
+                         }`} />
+                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-gradient-to-tr from-transparent via-white/[0.02] to-transparent pointer-events-none" />
+                         <div className={`absolute -bottom-24 -left-24 w-64 h-64 ${
+                            currentBrand.id === "galapagos" ? "bg-blue-600/10" : "bg-[var(--brand-accent)]/10"
+                          } rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700`} />
 
-                        <div className="space-y-6 2xl:space-y-8 z-10 mt-auto">
-                           <div className="flex items-center gap-6">
-                              <div className={`w-16 2xl:w-20 h-11 2xl:h-14 bg-gradient-to-br ${
-                                 currentBrand.id === "galapagos"
-                                   ? "from-white/10 via-white/5 to-white/15 border border-white/10"
-                                   : "from-orange-300 via-[var(--brand-accent)] to-orange-400 border border-white/20"
-                               } rounded-md flex items-center justify-center shadow-2xl relative overflow-hidden group-hover:scale-110 transition-transform`}>
-                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.4),transparent)] opacity-50" />
-                                 <div className="absolute inset-x-0 h-px bg-white/30 top-1/2 -translate-y-1/2"></div>
-                                 <div className="absolute inset-y-0 w-px bg-white/30 left-1/2 -translate-x-1/2"></div>
-                              </div>
-                              <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
-                           </div>
-                            <div className="flex justify-between items-end gap-4">
-                               <div className="flex flex-col gap-4">
-                                  <p className="text-[10px] 2xl:text-sm text-white/30 uppercase font-bold tracking-[0.2em]">Número do Cartão Platinum</p>
-                                  {isLoadingData ? (
-                                     <div className="h-8 2xl:h-12 w-48 bg-white/10 animate-pulse rounded-md" />
-                                  ) : (
-                                     <p className="text-lg 2xl:text-2xl font-mono tracking-[0.35em] text-white drop-shadow-sm font-medium">{cardNumber}</p>
-                                  )}
-                               </div>
-                               <div className="text-right shrink-0">
-                                  <p className="text-[10px] 2xl:text-sm text-white/30 uppercase font-bold tracking-[0.2em] mb-2">Rede</p>
-                                  {isLoadingData ? (
-                                     <div className="h-10 2xl:h-16 w-32 bg-white/10 animate-pulse rounded-md" />
-                                  ) : (
-                                     <span className="text-3xl 2xl:text-5xl font-black italic text-white leading-none tracking-tighter">VISA</span>
-                                  )}
-                               </div>
+                         {/* Top row: brand + badge */}
+                         <div className="flex justify-between items-start z-10">
+                            <div className="flex flex-col">
+                               <span className="font-black tracking-tighter text-xl 2xl:text-2xl italic uppercase leading-none text-white drop-shadow-md">
+                                  {currentBrand.id === "g8" ? "G8PAY" : currentBrand.shortName.toUpperCase()}
+                               </span>
+                               <span className={`text-[9px] 2xl:text-[10px] ${
+                                  currentBrand.id === "galapagos" ? "text-blue-400" : "text-orange-400/80"
+                                } font-black uppercase tracking-[0.25em] mt-1.5`}>Elite Finance &bull; 2026</span>
                             </div>
-                        </div>
-                     </div>
-                  </div>
+                            <Badge className={`border-0 px-3 py-1.5 rounded-md font-black text-[10px] uppercase tracking-[0.15em] shadow-lg ${
+                               currentBrand.id === "galapagos" ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 backdrop-blur-xl" : "bg-white/10 text-white backdrop-blur-xl"
+                            }`}>Platinum Elite</Badge>
+                         </div>
+
+                         {/* Middle: chip */}
+                         <div className="z-10 flex items-center gap-4">
+                            <div className={`w-12 h-9 2xl:w-14 2xl:h-11 bg-gradient-to-br ${
+                               currentBrand.id === "galapagos"
+                                 ? "from-white/10 via-white/5 to-white/15 border border-white/10"
+                                 : "from-orange-300 via-[var(--brand-accent)] to-orange-400 border border-white/20"
+                             } rounded-md flex items-center justify-center shadow-2xl relative overflow-hidden group-hover:scale-110 transition-transform`}>
+                               <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.4),transparent)] opacity-50" />
+                               <div className="absolute inset-x-0 h-px bg-white/30 top-1/2 -translate-y-1/2"></div>
+                               <div className="absolute inset-y-0 w-px bg-white/30 left-1/2 -translate-x-1/2"></div>
+                            </div>
+                            <div className="h-px flex-1 bg-gradient-to-r from-white/10 to-transparent" />
+                         </div>
+
+                         {/* Bottom row: card number + network */}
+                         <div className="z-10 flex justify-between items-end gap-3">
+                            <div className="flex flex-col gap-1.5 min-w-0">
+                               <p className="text-[9px] text-white/30 uppercase font-bold tracking-[0.18em]">Número do Cartão Platinum</p>
+                               {isLoadingData ? (
+                                  <div className="h-6 w-40 bg-white/10 animate-pulse rounded" />
+                               ) : (
+                                  <p className="text-base 2xl:text-lg font-mono tracking-[0.28em] text-white drop-shadow-sm font-medium truncate">{cardNumber}</p>
+                               )}
+                            </div>
+                            <div className="text-right shrink-0">
+                               <p className="text-[9px] text-white/30 uppercase font-bold tracking-[0.18em] mb-1">Rede</p>
+                               {isLoadingData ? (
+                                  <div className="h-8 w-20 bg-white/10 animate-pulse rounded" />
+                               ) : (
+                                  <span className="text-2xl 2xl:text-3xl font-black italic text-white leading-none tracking-tighter">VISA</span>
+                               )}
+                            </div>
+                         </div>
+                      </div>
+                   </div>
                </div>
 
                {/* Maturity Section Carousel */}
@@ -432,37 +494,71 @@ export default function DashboardHome() {
                   </div>
 
                   <div className="relative overflow-hidden flex-1 group/carousel h-[300px] 2xl:h-[320px]">
-                     <div 
-                        className="flex gap-6 transition-transform duration-1000 cubic-bezier(0.4, 0, 0.2, 1) h-full items-center" 
-                        style={{ transform: mounted && window.innerWidth >= 1440 ? `translateX(-${currentIndex * 344}px)` : `translateX(calc(-${currentIndex} * (100% + 24px)))` }}
-                     >
-                        {maturityItems.map((item) => {
-                           const MaturityIcon = item.icon;
-                           return (
-                              <div
-                                 key={item.id}
-                                 className="flex-shrink-0 w-full min-[1440px]:w-[320px] bg-white border border-neutral-100 rounded-md p-10 2xl:p-12 shadow-sm hover:shadow-2xl hover:shadow-orange-100/50 hover:-translate-y-2 transition-all duration-500 cursor-pointer group flex flex-col justify-between h-[90%] 2xl:h-[95%]"
-                              >
-                                 <div className="flex justify-between items-start">
-                                    <div className={`w-16 h-16 2xl:w-20 2xl:h-20 rounded-md ${item.color.split(' ')[0]} ${item.color.split(' ')[1]} flex items-center justify-center group-hover:rotate-[10deg] transition-transform shadow-sm`}>
-                                       <MaturityIcon className="h-8 w-8 2xl:h-10 2xl:w-10" />
-                                    </div>
-                                    <Badge className="bg-neutral-50 text-neutral-400 border-0 text-[10px] 2xl:text-xs font-black uppercase px-3 py-1">Próximo</Badge>
-                                 </div>
-                                 <div className="space-y-6 2xl:space-y-8">
-                                    <div>
-                                       <h4 className="font-black text-2xl 2xl:text-3xl text-[#0c0a09] leading-tight break-words group-hover:text-[var(--brand-accent)] transition-colors">{item.label}</h4>
-                                       <p className="text-xs 2xl:text-sm font-black text-neutral-400 uppercase tracking-widest mt-2">{item.company}</p>
-                                    </div>
-                                    <div className="flex items-baseline gap-2 pt-4 border-t border-neutral-50">
-                                       <span className="text-[10px] 2xl:text-xs font-black text-neutral-400 uppercase">Total Valor</span>
-                                       <p className="text-2xl 2xl:text-4xl font-black text-[#0c0a09] font-mono tracking-tighter">{item.value}</p>
-                                    </div>
-                                 </div>
+                     {isLoadingMaturities ? (
+                        <div className="flex-shrink-0 w-full min-[1440px]:w-[320px] bg-white border border-neutral-100 rounded-md p-10 2xl:p-12 shadow-sm animate-pulse flex flex-col justify-between h-[90%] 2xl:h-[95%]">
+                           <div className="flex justify-between items-start">
+                              <div className="w-16 h-16 2xl:w-20 2xl:h-20 bg-neutral-100 rounded-md" />
+                              <div className="h-6 w-20 bg-neutral-100 rounded" />
+                           </div>
+                           <div className="space-y-6">
+                              <div className="space-y-2">
+                                 <div className="h-8 bg-neutral-100 rounded w-3/4" />
+                                 <div className="h-4 bg-neutral-100 rounded w-1/2" />
                               </div>
-                           );
-                        })}
-                     </div>
+                              <div className="h-10 bg-neutral-100 rounded w-full pt-4 border-t border-neutral-50" />
+                           </div>
+                        </div>
+                     ) : maturityItems.length === 0 ? (
+                        <div className="flex-shrink-0 w-full min-[1440px]:w-[320px] bg-white border border-neutral-100 rounded-md p-10 2xl:p-12 shadow-sm flex flex-col justify-between h-[90%] 2xl:h-[95%] text-center items-center justify-center space-y-4">
+                           <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center text-green-500 mx-auto">
+                              <CheckCircle2 className="h-8 w-8" />
+                           </div>
+                           <div>
+                              <h4 className="font-black text-lg text-[#0c0a09] uppercase tracking-tight">Tudo em dia!</h4>
+                              <p className="text-xs font-black text-neutral-400 uppercase tracking-widest mt-2">Sem vencimentos pendentes</p>
+                           </div>
+                        </div>
+                     ) : (
+                        <div 
+                           className="flex gap-6 transition-transform duration-1000 cubic-bezier(0.4, 0, 0.2, 1) h-full items-center" 
+                           style={{ transform: mounted && window.innerWidth >= 1440 ? `translateX(-${currentIndex * 344}px)` : `translateX(calc(-${currentIndex} * (100% + 24px)))` }}
+                        >
+                           {maturityItems.map((item) => {
+                              const MaturityIcon = item.icon;
+                              return (
+                                 <div
+                                    key={item.id}
+                                    className="flex-shrink-0 w-full min-[1440px]:w-[320px] bg-white border border-neutral-100 rounded-md p-6 2xl:p-8 shadow-sm hover:shadow-2xl hover:shadow-orange-100/50 hover:-translate-y-2 transition-all duration-500 cursor-pointer group flex flex-col justify-between h-[90%] 2xl:h-[95%] overflow-hidden"
+                                 >
+                                    {/* Top: icon + badge+date */}
+                                    <div className="flex justify-between items-start shrink-0">
+                                       <div className={`w-14 h-14 rounded-md ${item.color.split(' ')[0]} ${item.color.split(' ')[1]} flex items-center justify-center group-hover:rotate-[10deg] transition-transform shadow-sm shrink-0`}>
+                                          <MaturityIcon className="h-7 w-7" />
+                                       </div>
+                                       <div className="flex flex-col items-end gap-0.5">
+                                          <Badge className="bg-neutral-50 text-neutral-400 border-0 text-[9px] font-black uppercase px-2 py-0.5">Próximo</Badge>
+                                          {item.expirationDate && (
+                                             <span className="text-[9px] font-bold text-neutral-400 font-mono">{item.expirationDate}</span>
+                                          )}
+                                       </div>
+                                    </div>
+
+                                    {/* Middle: name + company — grows to fill remaining space */}
+                                    <div className="flex-1 flex flex-col justify-center py-3 min-h-0">
+                                       <h4 className="font-black text-base 2xl:text-lg text-[#0c0a09] leading-snug group-hover:text-[var(--brand-accent)] transition-colors line-clamp-2 break-words">{item.label}</h4>
+                                       <p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mt-1 truncate">{item.company}</p>
+                                    </div>
+
+                                    {/* Bottom: value — font scales down for long values */}
+                                    <div className="flex items-baseline gap-2 pt-3 border-t border-neutral-100 shrink-0 flex-wrap">
+                                       <span className="text-[9px] font-black text-neutral-400 uppercase whitespace-nowrap">Total Valor</span>
+                                       <p className="font-black text-[#0c0a09] font-mono tracking-tight text-xl 2xl:text-2xl leading-none min-w-0 truncate">{item.value}</p>
+                                    </div>
+                                 </div>
+                              );
+                           })}
+                        </div>
+                     )}
                   </div>
                </div>
             </div>
