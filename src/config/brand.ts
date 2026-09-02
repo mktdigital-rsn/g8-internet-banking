@@ -26,6 +26,18 @@ export const BRANDS: Record<string, BrandConfig> = {
     bankCode: "065",
     bankName: "G8 BANK",
   },
+  lotopay: {
+    id: "lotopay",
+    name: "LottoPay",
+    shortName: "LottoPay",
+    logoOfficial: "/logo_lotopay_official.png",
+    logoWhite: "/logo_lotopay_white.png",
+    themeClass: "theme-lotopay",
+    supportPhone: "0800 387 0000",
+    supportEmail: "suporte@lottopay.com.br",
+    bankCode: "387",
+    bankName: "LOTTOPAY BANK",
+  },
   galapagos: {
     id: "galapagos",
     name: "Galapagos Capital",

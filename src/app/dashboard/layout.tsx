@@ -100,6 +100,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
    const [accountInfo, setAccountInfo] = React.useState({ agency: "", account: "" });
    const [isLoadingData, setIsLoadingData] = React.useState(true);
    const [expandedMenus, setExpandedMenus] = React.useState<Record<string, boolean>>({});
+   const isLottoPay = currentBrand.id === "lotopay";
 
    React.useEffect(() => {
      menuGroups.forEach(group => {
@@ -232,7 +233,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   const THEME_BG = 
-    currentBrand.id === "fiscomoney"
+    currentBrand.id === "lotopay"
+      ? "bg-[#101617]"
+      : currentBrand.id === "fiscomoney"
       ? "bg-[#1c1f22]"
       : "bg-[#141210]"; // Slightly lighter than #0c0a09
 
@@ -261,6 +264,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <div className="px-2 relative z-10">
           {currentBrand.id === "g8" ? (
             <Image src={currentBrand.logoOfficial} alt={currentBrand.name} width={180} height={60} className="object-contain 2xl:scale-110" />
+          ) : isLottoPay ? (
+            <Image src={currentBrand.logoOfficial} alt={currentBrand.name} width={2404} height={500} className="w-[240px] 2xl:w-[268px] h-auto object-contain origin-left" />
           ) : (
             <div className={`flex items-center gap-3.5 select-none animate-in fade-in duration-300 origin-left ${
               currentBrand.id === "advogado10x"
@@ -273,10 +278,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 className={`${
                   currentBrand.id === "galapagos" 
                     ? "h-9" 
+                    : isLottoPay
+                    ? "h-16"
                     : currentBrand.id === "advogado10x"
                     ? "h-14"
                     : "h-14"
-                } w-auto object-contain brightness-100`} 
+                } w-auto object-contain brightness-100 ${isLottoPay ? "scale-[1.05]" : ""}`} 
               />
               {currentBrand.id === "galapagos" && (
                 <div className="flex flex-col justify-center text-left">

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
+import { IBM_Plex_Mono, Instrument_Sans, Outfit } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "sonner";
 
@@ -9,6 +9,18 @@ const outfit = Outfit({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
   variable: "--font-outfit",
+});
+
+const instrumentSans = Instrument_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-instrument-sans",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-ibm-plex-mono",
 });
 
 export const metadata: Metadata = {
@@ -23,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR">
-      <body className={`${outfit.variable} font-sans antialiased text-base`}>
+      <body className={`${outfit.variable} ${instrumentSans.variable} ${ibmPlexMono.variable} ${currentBrand.themeClass} font-sans antialiased text-base`}>
         {children}
         <Toaster position="top-right" richColors />
       </body>

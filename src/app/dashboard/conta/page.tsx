@@ -29,6 +29,7 @@ export default function ContaPage() {
   const [balanceData, setBalanceData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const isLottoPay = currentBrand.id === "lotopay";
 
   useEffect(() => {
     const fetchAllData = async () => {
@@ -130,10 +131,12 @@ export default function ContaPage() {
                   <div className="space-y-1">
                     <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">PLATINUM</p>
                     {currentBrand.id === "g8" ? (
-                      <img src={currentBrand.logoWhite} className="h-6 object-contain" />
+                      <img src={currentBrand.logoWhite} alt={`${currentBrand.name} logo`} className="h-6 object-contain" />
+                    ) : isLottoPay ? (
+                      <img src={currentBrand.logoWhite} alt={`${currentBrand.name} logo`} className="h-8 object-contain" />
                     ) : (
                       <div className="flex items-center gap-1.5 select-none">
-                        <img src={currentBrand.logoWhite} className="h-6 w-auto object-contain brightness-100" />
+                        <img src={currentBrand.logoWhite} alt={`${currentBrand.name} logo`} className="h-6 w-auto object-contain brightness-100" />
                         <span className="text-[9px] font-extrabold tracking-wider uppercase text-white font-sans">{currentBrand.name.split(" ")[0]}</span>
                       </div>
                     )}

@@ -65,6 +65,7 @@ export default function LoginScreen() {
   const [hasFinalized, setHasFinalized] = useState(false);
   const [progress, setProgress] = useState(0);
   const pollingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isLottoPay = currentBrand.id === "lotopay";
 
   useEffect(() => {
     if (challengeStatus === "APPROVED") {
@@ -297,7 +298,7 @@ export default function LoginScreen() {
   }, [challengeExpiresAt]);
 
   return (
-    <div className={`min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden bg-[#0c0a09] ${currentBrand.themeClass}`}>
+    <div className={`min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden ${isLottoPay ? "bg-[#101617]" : "bg-[#0c0a09]"} ${currentBrand.themeClass}`}>
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px]" />
 
@@ -305,14 +306,29 @@ export default function LoginScreen() {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-[500px] lg:max-w-[1000px] 2xl:max-w-[1400px] grid lg:grid-cols-2 bg-[#18181b] border border-white/5 rounded-[2px] overflow-hidden shadow-2xl relative z-10 min-h-[500px] lg:min-h-[600px] 2xl:min-h-[800px]"
+        className={`w-full max-w-[500px] lg:max-w-[1000px] 2xl:max-w-[1400px] grid lg:grid-cols-2 rounded-[2px] overflow-hidden shadow-2xl relative z-10 min-h-[500px] lg:min-h-[600px] 2xl:min-h-[800px] ${
+          isLottoPay ? "bg-[#24292b]" : "bg-[#18181b]"
+        }`}
       >
-        <div className="hidden md:flex flex-col justify-between p-16 bg-gradient-to-br from-primary/10 to-transparent">
+        <div className={`hidden md:flex flex-col justify-between p-16 ${
+          isLottoPay ? "bg-gradient-to-br from-white/[0.04] via-transparent to-transparent" : "bg-gradient-to-br from-primary/10 to-transparent"
+        }`}>
           <div>
             {currentBrand.id === "g8" ? (
               <Image src={currentBrand.logoWhite} alt={`${currentBrand.name} Logo`} width={160} height={60} className="object-contain 2xl:scale-125 origin-left" />
+            ) : isLottoPay ? (
+              <Image
+                src={currentBrand.logoWhite}
+                alt={`${currentBrand.name} Logo`}
+                width={1444}
+                height={300}
+                priority
+                className="h-auto w-[280px] md:w-[320px] 2xl:w-[360px] max-w-full object-contain origin-left"
+              />
             ) : (
-              <div className="flex items-center gap-3.5 select-none animate-in fade-in duration-300 scale-125 md:scale-150 2xl:scale-[1.75] origin-left">
+              <div className={`flex items-center gap-3.5 select-none animate-in fade-in duration-300 origin-left ${
+                "scale-125 md:scale-150 2xl:scale-[1.75]"
+              }`}>
                 <img 
                   src={currentBrand.logoWhite} 
                   alt={`${currentBrand.name} Logo`} 
@@ -341,23 +357,38 @@ export default function LoginScreen() {
           <div className="space-y-8 2xl:space-y-12">
             <div className="space-y-5 2xl:space-y-8">
               <div className={`inline-flex items-center rounded-[2px] px-3 py-1 text-[11px] 2xl:text-xs font-bold uppercase tracking-widest w-fit ${
-                currentBrand.id === "galapagos"
-                  ? "bg-amber-400/20 text-amber-400 border border-amber-400/40"
-                  : "bg-white/5 text-white/70 border border-white/10"
+                isLottoPay
+                  ? "bg-brand-accent/10 text-brand-accent border border-brand-accent/30"
+                  : currentBrand.id === "galapagos"
+                    ? "bg-amber-400/20 text-amber-400 border border-amber-400/40"
+                    : "bg-white/5 text-white/70 border border-white/10"
               }`}>
-                Internet Banking
+                {isLottoPay ? "Pagamentos e operação" : "Internet Banking"}
               </div>
               <h1 className="text-5xl 2xl:text-7xl font-black tracking-tighter text-white leading-[1.05]">
-                Acesso <br />
-                <span className="text-primary italic">Seguro.</span>
+                {isLottoPay ? (
+                  <>
+                    Liquidação <br />
+                    <span className="text-primary italic">em segundos.</span>
+                  </>
+                ) : (
+                  <>
+                    Acesso <br />
+                    <span className="text-primary italic">Seguro.</span>
+                  </>
+                )}
               </h1>
               <p className="text-neutral-300 text-sm 2xl:text-lg font-medium leading-relaxed max-w-[300px] 2xl:max-w-[450px]">
-                Te ajudamos a gerenciar seu capital de forma inteligente e segura através da nossa tecnologia de ponta.
+                {isLottoPay
+                  ? "Pagamentos que o operador entende e o jogador nem percebe."
+                  : "Te ajudamos a gerenciar seu capital de forma inteligente e segura através da nossa tecnologia de ponta."}
               </p>
             </div>
           </div>
 
-          <div className="p-3 bg-amber-200/20 border border-amber-500/20 rounded-sm inline-flex items-center gap-3 text-white 2xl:gap-5 shadow-lg shadow-amber-400/10 w-fit">
+          <div className={`p-3 rounded-sm inline-flex items-center gap-3 text-white 2xl:gap-5 shadow-lg w-fit ${
+            "bg-amber-200/20 border border-amber-500/20 shadow-amber-400/10"
+          }`}>
             <ShieldCheck className={`h-4 w-4 2xl:h-6 2xl:w-6 opacity-90 ${currentBrand.id === "galapagos" ? "text-green-500" : ""}`} />
             <span className="text-[9px] 2xl:text-xs font-bold uppercase tracking-[0.2em] leading-none">SSL SECURE PROTOCOL</span>
           </div>

@@ -35,6 +35,7 @@ import { currentBrand } from "@/config/brand";
 type TabType = "todos" | "ipva" | "licenciamento" | "multas";
 
 export default function DebitosVeicularesPage() {
+  const isLottoPay = currentBrand.id === "lotopay";
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [sumLoading, setSumLoading] = useState(false);
@@ -1973,7 +1974,11 @@ export default function DebitosVeicularesPage() {
                           {/* Top Row: Brand & Wireless Wave */}
                           <div className="flex justify-between items-center z-10">
                             <div className="flex items-center">
-                              <img src={currentBrand.logoWhite} alt={currentBrand.name} className="h-5.5 object-contain" />
+                              {isLottoPay ? (
+                                <img src={currentBrand.logoWhite} alt={currentBrand.name} className="h-6 object-contain" />
+                              ) : (
+                                <img src={currentBrand.logoWhite} alt={currentBrand.name} className="h-5.5 object-contain" />
+                              )}
                             </div>
                             
                             {/* contactless pay symbol SVG */}
