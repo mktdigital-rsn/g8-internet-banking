@@ -1,0 +1,9 @@
+name: g8-internet-banking
+services:
+  - name: web
+    dockerfile_path: Dockerfile
+    http_port: 3000
+    instance_count: 1
+    instance_size_slug: basic-xxs
+    health_check:
+      http_path: /

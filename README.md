@@ -29,8 +29,15 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deploy to DigitalOcean App Platform
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This repository includes a production Dockerfile and [DigitalOcean app spec](.do/app.yaml). Create an App Platform app from the repository and select the Dockerfile deployment method; App Platform will build the image and route traffic to port `3000`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The platform supplies the `PORT` environment variable at runtime. Configure public build-time values, such as `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_BRAND`, in App Platform before deploying. Because `NEXT_PUBLIC_*` variables are embedded in the client bundle, redeploy after changing them.
+
+To test the production image locally:
+
+```bash
+docker build -t g8-internet-banking .
+docker run --rm -p 3000:3000 g8-internet-banking
+```
