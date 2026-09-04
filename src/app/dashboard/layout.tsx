@@ -265,7 +265,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           {currentBrand.id === "g8" ? (
             <Image src={currentBrand.logoOfficial} alt={currentBrand.name} width={180} height={60} className="object-contain 2xl:scale-110" />
           ) : isLottoPay ? (
-            <Image src={currentBrand.logoOfficial} alt={currentBrand.name} width={2404} height={500} className="w-[240px] 2xl:w-[268px] h-auto object-contain origin-left" />
+            <Image src={currentBrand.logoWhite} alt={currentBrand.name} width={1444} height={300} className="w-[240px] 2xl:w-[268px] h-auto object-contain origin-left" />
           ) : (
             <div className={`flex items-center gap-3.5 select-none animate-in fade-in duration-300 origin-left ${
               currentBrand.id === "advogado10x"
