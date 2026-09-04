@@ -33,7 +33,7 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 This repository includes a production Dockerfile and [DigitalOcean app spec](.do/app.yaml). Create an App Platform app from the repository and select the Dockerfile deployment method; App Platform will build the image and route traffic to port `3000`.
 
-The platform supplies the `PORT` environment variable at runtime. Configure public build-time values, such as `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_BRAND`, in App Platform before deploying. Because `NEXT_PUBLIC_*` variables are embedded in the client bundle, redeploy after changing them.
+The platform supplies the `PORT` environment variable at runtime. In App Platform, set public values such as `NEXT_PUBLIC_API_URL` and `NEXT_PUBLIC_BRAND` with **Build Time** scope (or **Run and Build Time** scope), then trigger a new deployment. The Dockerfile passes those build arguments to Next.js; `NEXT_PUBLIC_*` values are embedded in the client bundle and cannot be changed by only restarting a running container.
 
 To test the production image locally:
 

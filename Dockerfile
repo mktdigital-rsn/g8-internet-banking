@@ -9,6 +9,14 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 FROM dependencies AS builder
+# DigitalOcean passes build-scoped environment variables as Docker build args.
+# Next.js substitutes NEXT_PUBLIC_* values into browser code during `next build`.
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_VARIANT
+ARG NEXT_PUBLIC_BRAND
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_VARIANT=$NEXT_PUBLIC_VARIANT
+ENV NEXT_PUBLIC_BRAND=$NEXT_PUBLIC_BRAND
 COPY . .
 RUN npm run build
 
