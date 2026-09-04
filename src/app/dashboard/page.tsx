@@ -425,7 +425,7 @@ export default function DashboardHome() {
                          <div className="flex justify-between items-start z-10">
                             <div className="flex flex-col">
                                <span className="font-black tracking-tighter text-xl 2xl:text-2xl italic uppercase leading-none text-white drop-shadow-md">
-                                  {currentBrand.id === "g8" ? "G8PAY" : currentBrand.shortName.toUpperCase()}
+                                  {currentBrand.name.toUpperCase()}
                                </span>
                                <span className={`text-[9px] 2xl:text-[10px] ${
                                   currentBrand.id === "galapagos" ? "text-blue-400" : "text-orange-400/80"
@@ -836,7 +836,7 @@ export default function DashboardHome() {
                                       <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-widest">Origem / Pagador</p>
                                    </div>
                                    <div className="space-y-1">
-                                      <p className="font-black text-[#0c0a09] truncate text-base 2xl:text-xl">{selectedTransaction.pagadorNome || `CLIENTE ${currentBrand.id === "g8" ? "G8PAY" : currentBrand.shortName.toUpperCase()}`}</p>
+                                      <p className="font-black text-[#0c0a09] truncate text-base 2xl:text-xl">{selectedTransaction.pagadorNome || `CLIENTE ${currentBrand.name.toUpperCase()}`}</p>
                                       <p className="text-sm 2xl:text-base text-neutral-500 font-mono font-bold opacity-70">
                                          {selectedTransaction.pagadorTaxNumber?.present ? selectedTransaction.pagadorTaxNumber.value : (selectedTransaction.pagadorTaxNumber || "---")}
                                       </p>
@@ -862,7 +862,7 @@ export default function DashboardHome() {
                                       <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-widest">Destino / Recebedor</p>
                                    </div>
                                    <div className="space-y-1">
-                                      <p className="font-black text-[#0c0a09] truncate text-base 2xl:text-xl">{selectedTransaction.RecebinteNome || `PAGAMENTO ${currentBrand.id === "g8" ? "G8PAY" : currentBrand.shortName.toUpperCase()}`}</p>
+                                      <p className="font-black text-[#0c0a09] truncate text-base 2xl:text-xl">{selectedTransaction.RecebinteNome || `PAGAMENTO ${currentBrand.name.toUpperCase()}`}</p>
                                       <p className="text-sm 2xl:text-base text-neutral-500 font-mono font-bold opacity-70">
                                          {selectedTransaction.RecebinteTaxNumber?.present ? selectedTransaction.RecebinteTaxNumber.value : (selectedTransaction.RecebinteTaxNumber || "---")}
                                       </p>

@@ -459,7 +459,7 @@ export default function MaquininhasPage() {
             Adquirência {currentBrand.id === "g8" ? "G8" : "Galapagos"}
           </Badge>
           <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">
-            Maquininhas <span className="text-orange-600">{currentBrand.id === "g8" ? "G8 Pay" : currentBrand.name}</span>
+            Maquininhas <span className="text-orange-600">{currentBrand.name}</span>
           </h1>
           <p className="text-sm md:text-base text-neutral-700 font-bold max-w-2xl">
             Solicite sua maquininha e comece a receber pagamentos com as melhores taxas do mercado.
@@ -590,7 +590,7 @@ export default function MaquininhasPage() {
                 <TrendingUp className="h-10 w-10 text-white" />
               </div>
               <div className="flex-1 space-y-2 text-center md:text-left relative z-10">
-                <h3 className="text-xl font-black text-white uppercase tracking-tight">Fature mais com {currentBrand.id === "g8" ? "G8 Pay" : currentBrand.name}</h3>
+                <h3 className="text-xl font-black text-white uppercase tracking-tight">Fature mais com {currentBrand.name}</h3>
                 <p className="text-sm text-white/50 font-medium max-w-lg leading-relaxed">
                   Nossas maquininhas aceitam todas as bandeiras: Visa, Mastercard, Elo, Amex, Hipercard e muito mais. Receba via débito, crédito e voucher.
                 </p>
@@ -960,7 +960,7 @@ export default function MaquininhasPage() {
             <div className="grid grid-cols-1 gap-6">
               <DocumentUploadCard
                 title="Contrato Assinado"
-                desc={`Documento que formaliza a parceria com a ${currentBrand.id === "g8" ? "G8 Pay" : currentBrand.name}`}
+                desc={`Documento que formaliza a parceria com a ${currentBrand.name}`}
                 attached={(formData.documents["Contrato Assinado"]?.length || 0) > 0}
                 files={formData.documents["Contrato Assinado"] || []}
                 onUpload={(f) => handleFileUpload("Contrato Assinado", f)}

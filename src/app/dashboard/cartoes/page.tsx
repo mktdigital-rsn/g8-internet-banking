@@ -259,7 +259,7 @@ export default function CartoesPage() {
                                        </div>
                                     </div>
                                     <div className="flex justify-between items-end">
-                                       <span className="text-lg font-black tracking-tighter">G8 Bank</span>
+                                       <span className="text-lg font-black tracking-tighter">{currentBrand.bankName}</span>
                                        <div className="flex items-center">
                                           <div className="w-8 h-8 rounded-full bg-[#eb001b] z-10" />
                                           <div className="w-8 h-8 rounded-full bg-[#f79e1b] -ml-4 opacity-90" />
@@ -355,7 +355,7 @@ export default function CartoesPage() {
                      </div>
                      <h3 className="text-2xl font-black text-[#0c0a09] uppercase tracking-tight leading-tight">Segurança Ativada</h3>
                      <p className="text-sm text-neutral-500 font-medium leading-relaxed">
-                        Seus cartões G8 contam com proteção contra clonagem e seguros integrados para sua tranquilidade total.
+                        Seus cartões {currentBrand.shortName} contam com proteção contra clonagem e seguros integrados para sua tranquilidade total.
                      </p>
                   </div>
 
@@ -410,7 +410,7 @@ export default function CartoesPage() {
                   </div>
                   <div>
                      <p className="text-xs font-black text-[#0c0a09] uppercase tracking-tight">Precisa de Ajuda?</p>
-                     <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Suporte G8: 09h as 17h</p>
+                     <p className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest">Suporte {currentBrand.shortName}: 09h as 17h</p>
                   </div>
                   <ChevronRight className="h-4 w-4 ml-auto text-neutral-300 group-hover:text-orange-600 transition-all" />
                </div>

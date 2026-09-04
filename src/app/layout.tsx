@@ -24,7 +24,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: `${currentBrand.id === "g8" ? "G8Pay" : currentBrand.shortName} | Internet Banking`,
+  title: `${currentBrand.name} | Internet Banking`,
   description: "Gerencie suas finanças com segurança e agilidade.",
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { currentBrand } from "@/config/brand";
 import { 
   ArrowLeft, 
   QrCode, 
@@ -221,13 +222,13 @@ export default function PixReceberPage() {
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [fileToShare!] })) {
             await navigator.share({
                 files: [fileToShare!],
-                title: 'Meu Pix - G8Pay',
+                title: `Meu Pix - ${currentBrand.name}`,
                 text: pixPayload ? `Pague via Pix: ${pixPayload}` : 'Pague via Pix usando o QR Code em anexo.'
             });
         } else if (navigator.share) {
             // Share only text if files not supported
             await navigator.share({
-                title: 'Meu Pix - G8Pay',
+                title: `Meu Pix - ${currentBrand.name}`,
                 text: pixPayload || 'Pague via Pix usando o meu QR Code.'
             });
         } else {
@@ -255,7 +256,7 @@ export default function PixReceberPage() {
             </Link>
             <div>
                <div className="flex items-center gap-2 mb-1">
-                 <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-transparent font-black px-3 py-0.5 rounded-full text-[10px] uppercase tracking-widest">G8Pay &bull; Pix</Badge>
+                 <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-transparent font-black px-3 py-0.5 rounded-full text-[10px] uppercase tracking-widest">{currentBrand.name} &bull; Pix</Badge>
                  <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none">Receber Pagamento</span>
                </div>
                <h1 className="text-3xl font-black tracking-tighter text-[#0c0a09] flex items-center gap-3">
@@ -389,7 +390,7 @@ export default function PixReceberPage() {
                <div className="w-16 h-16 bg-[var(--brand-accent)] rounded-2xl flex items-center justify-center shadow-xl shadow-orange-500/20">
                   <Diamond className="h-8 w-8 text-white" />
                </div>
-               <h3 className="text-2xl font-black leading-tight">G8Pay &bull; Business</h3>
+               <h3 className="text-2xl font-black leading-tight">{currentBrand.name} &bull; Business</h3>
                <p className="text-xs text-white/50 leading-relaxed font-bold uppercase tracking-wider">Aumente suas vendas aceitando Pix. Gestão completa de recebimentos em tempo real.</p>
                <Button className="w-full bg-white text-[#0c0a09] hover:bg-white/90 rounded-2xl font-black text-[10px] uppercase tracking-widest h-12 shadow-xl shadow-black/20 transition-all active:scale-95">CONHECER AGORA</Button>
             </div>

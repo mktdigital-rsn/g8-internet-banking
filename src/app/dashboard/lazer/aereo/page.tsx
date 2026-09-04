@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { currentBrand } from "@/config/brand";
 import { 
   Plane, 
   ChevronRight
@@ -24,7 +25,7 @@ export default function AereoPage() {
             <Plane className="h-10 w-10 text-[var(--brand-accent)] stroke-[2.5]" />
           </h1>
           <p className="text-sm md:text-base text-neutral-400 font-bold max-w-2xl">
-            Pesquise e reserve voos nacionais e internacionais com tarifas exclusivas G8.
+            Pesquise e reserve voos nacionais e internacionais com tarifas exclusivas {currentBrand.shortName}.
           </p>
         </div>
       </header>
@@ -79,7 +80,7 @@ export default function AereoPage() {
                     As 10 praias mais bonitas e isoladas das Maldivas para visitar in 2026
                   </h3>
                   <p className="text-sm text-neutral-500 font-medium line-clamp-2 leading-relaxed">
-                    Confira o roteiro de luxo exclusivo preparado pela equipe G8 Elite Travel com suporte do Concierge Premium.
+                    Confira o roteiro de luxo exclusivo preparado pela equipe {currentBrand.shortName} Elite Travel com suporte do Concierge Premium.
                   </p>
                   <div className="flex items-center gap-1 text-xs font-black text-[var(--brand-accent)] uppercase tracking-widest pt-2">
                     Ler Artigo <ChevronRight size={14} />
@@ -94,12 +95,12 @@ export default function AereoPage() {
                   <div className="absolute inset-0 bg-neutral-900/10 group-hover:bg-neutral-900/0 transition-all duration-300" />
                 </div>
                 <div className="p-6 space-y-3">
-                  <Badge className="bg-emerald-500/10 text-emerald-500 border-transparent font-black px-2.5 py-1 rounded-[2px] text-[9px] uppercase tracking-widest">G8 Lounge</Badge>
+                  <Badge className="bg-emerald-500/10 text-emerald-500 border-transparent font-black px-2.5 py-1 rounded-[2px] text-[9px] uppercase tracking-widest">{currentBrand.shortName} Lounge</Badge>
                   <h3 className="font-black text-[#0c0a09] text-base leading-snug group-hover:text-[var(--brand-accent)] transition-colors">
-                    Novos Lounges VIP do G8 Bank inauguram em Paris (CDG) e Frankfurt
+                    Novos Lounges VIP do {currentBrand.bankName} inauguram em Paris (CDG) e Frankfurt
                   </h3>
                   <p className="text-sm text-neutral-500 font-medium line-clamp-2 leading-relaxed">
-                    Clientes com o cartão digital G8 Lounge Premium terão entrada prioritária e gratuita nas novas salas parceiras.
+                    Clientes com o cartão digital {currentBrand.shortName} Lounge Premium terão entrada prioritária e gratuita nas novas salas parceiras.
                   </p>
                   <div className="flex items-center gap-1 text-xs font-black text-[var(--brand-accent)] uppercase tracking-widest pt-2">
                     Ler Artigo <ChevronRight size={14} />
@@ -119,7 +120,7 @@ export default function AereoPage() {
                     Eurotrip 2026: Dicas de planejamento financeiro para sua viagem de férias
                   </h3>
                   <p className="text-sm text-neutral-500 font-medium line-clamp-2 leading-relaxed">
-                    Como utilizar o cashback de cartões e o câmbio global do G8 Bank para economizar em hospedagens e passagens.
+                    Como utilizar o cashback de cartões e o câmbio global do {currentBrand.bankName} para economizar em hospedagens e passagens.
                   </p>
                   <div className="flex items-center gap-1 text-xs font-black text-[var(--brand-accent)] uppercase tracking-widest pt-2">
                     Ler Artigo <ChevronRight size={14} />

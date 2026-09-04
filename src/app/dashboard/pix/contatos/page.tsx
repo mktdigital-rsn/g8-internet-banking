@@ -118,7 +118,7 @@ export default function PixContatosPage() {
             </Button>
           </Link>
           <div className="space-y-4 flex-1">
-             <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">G8Pay • Pix</Badge>
+             <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">{currentBrand.name} • Pix</Badge>
              <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase flex items-center gap-3 flex-wrap">
                Favoritos & <span className="text-[var(--brand-accent)]">Contatos</span>
                <Contact2 className="h-10 w-10 text-[var(--brand-accent)] stroke-[2.5]" />

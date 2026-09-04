@@ -343,7 +343,7 @@ export default function GestaoCobrancasPage() {
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.href = url;
-                link.setAttribute("download", `relatorio_g8_boletos_${new Date().getTime()}.${type}`);
+                link.setAttribute("download", `relatorio_${currentBrand.id}_boletos_${new Date().getTime()}.${type}`);
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -377,7 +377,7 @@ export default function GestaoCobrancasPage() {
                     alternateRowStyles: { fillColor: [245, 245, 245] }
                 });
 
-                doc.save(`relatorio_g8_boletos_${new Date().getTime()}.pdf`);
+                doc.save(`relatorio_${currentBrand.id}_boletos_${new Date().getTime()}.pdf`);
             }
 
             toast.dismiss(toastId);
@@ -411,7 +411,7 @@ export default function GestaoCobrancasPage() {
                 printWindow.document.write(`
                     <html>
                       <head>
-                        <title>Impressão G8 Pay</title>
+                        <title>Impressão {currentBrand.name}</title>
                         <style>
                           @media print {
                             @page { margin: 0; }
@@ -860,7 +860,7 @@ export default function GestaoCobrancasPage() {
                                         <h2 className="text-xl 2xl:text-2xl font-black text-[#0c0a09] tracking-tighter uppercase font-sans">Detalhes do Boleto</h2>
                                         <div className="flex items-center justify-center gap-2 mt-1">
                                             <CheckCircle2 className="h-3 w-3 2xl:h-4 2xl:w-4 text-green-500" />
-                                            <p className="text-[10px] 2xl:text-xs text-neutral-400 font-black uppercase tracking-[0.2em]">Registro Validado G8 PAY</p>
+                                            <p className="text-[10px] 2xl:text-xs text-neutral-400 font-black uppercase tracking-[0.2em]">Registro Validado {currentBrand.name}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -898,7 +898,7 @@ export default function GestaoCobrancasPage() {
                                         <div className="pt-2 border-t border-neutral-200/50 space-y-1.5 2xl:space-y-3">
                                             <div className="flex justify-between items-center text-[11px] 2xl:text-xs">
                                                 <span className="text-neutral-400 font-bold">Instituição</span>
-                                                <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">G8 BANK (382)</span>
+                                                <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{currentBrand.bankName} ({currentBrand.bankCode})</span>
                                             </div>
                                         </div>
                                     </div>

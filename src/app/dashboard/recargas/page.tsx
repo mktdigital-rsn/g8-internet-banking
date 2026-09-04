@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { currentBrand } from "@/config/brand";
 import {
    Smartphone,
    Clock,
@@ -308,7 +309,7 @@ export default function RecargasPage() {
                                        <User className="h-5 w-5 text-orange-600" />
                                     </div>
                                     <div>
-                                       <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest leading-none mb-1">Dica G8</p>
+                                       <p className="text-[10px] font-black text-orange-600 uppercase tracking-widest leading-none mb-1">Dica {currentBrand.shortName}</p>
                                        <p className="text-[11px] text-orange-800/70 font-bold uppercase tracking-tight">Recarregue para contatos salvos.</p>
                                     </div>
                                  </div>
@@ -433,7 +434,7 @@ export default function RecargasPage() {
                                           <Wallet className="h-7 w-7" />
                                        </div>
                                        <div>
-                                          <p className="text-sm font-black text-[#0c0a09] uppercase tracking-tight">Saldo Conta G8</p>
+                                          <p className="text-sm font-black text-[#0c0a09] uppercase tracking-tight">Saldo Conta {currentBrand.shortName}</p>
                                           <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Disponível: {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(balanceValue)}</p>
                                        </div>
                                     </button>
@@ -582,7 +583,7 @@ export default function RecargasPage() {
                >
                   <div className="absolute top-0 right-0 w-32 h-32 bg-orange-600/20 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-150 transition-transform duration-1000" />
                   <div className="relative z-10 space-y-4">
-                     <Badge className="bg-orange-600 text-white border-0 px-3 py-1 font-black text-[9px] uppercase tracking-widest leading-none">Suporte G8</Badge>
+                     <Badge className="bg-orange-600 text-white border-0 px-3 py-1 font-black text-[9px] uppercase tracking-widest leading-none">Suporte {currentBrand.shortName}</Badge>
                      <h2 className="text-xl font-black uppercase leading-tight">Fale com nosso time via WhatsApp.</h2>
                      <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest group-hover:text-white/60 transition-colors">Disponível: às 17:00</p>
                   </div>

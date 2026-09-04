@@ -1569,7 +1569,7 @@ export default function ProtecaoVeicularPage() {
                       <span className={`text-[9px] font-black uppercase tracking-widest ${
                         currentBrand.id === "galapagos" ? "text-blue-400" : "text-[var(--brand-accent)]"
                       }`}>
-                        {currentBrand.id === "galapagos" ? "Galapagos Protegido" : "G8 Protegido"}
+                        {currentBrand.shortName} Protegido
                       </span>
                     </div>
                   </div>
@@ -1890,11 +1890,11 @@ export default function ProtecaoVeicularPage() {
                     </div>
 
                     <div className="bg-neutral-50 rounded-sm p-4 border border-neutral-100 space-y-3">
-                      <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Dados de Cobrança (G8Pay)</span>
+                      <span className="block text-[8px] text-neutral-400 font-black uppercase tracking-widest leading-none">Dados de Cobrança ({currentBrand.name})</span>
                       <div className="grid grid-cols-3 gap-2">
                         <div className="space-y-0.5">
                           <span className="block text-[7px] text-neutral-400 uppercase leading-none font-bold">Banco</span>
-                          <span className="text-[10px] font-bold text-neutral-700">384-G8 PAY IP</span>
+                          <span className="text-[10px] font-bold text-neutral-700">{currentBrand.bankCode}-{currentBrand.name.toUpperCase()} IP</span>
                         </div>
                         <div className="space-y-0.5">
                           <span className="block text-[7px] text-neutral-400 uppercase leading-none font-bold">Agência</span>
@@ -1912,7 +1912,7 @@ export default function ProtecaoVeicularPage() {
                 <div className="bg-emerald-50 border border-emerald-100 rounded-sm p-3 flex items-start gap-2.5">
                   <CheckCircle2 className="h-4.5 w-4.5 text-emerald-600 shrink-0 mt-0.5" />
                   <p className="text-[10px] text-neutral-600 font-bold leading-relaxed">
-                    Pagamento mensal debitado de forma prática e automática em sua conta G8Pay no dia de vencimento.
+                    Pagamento mensal debitado de forma prática e automática em sua conta {currentBrand.name} no dia de vencimento.
                   </p>
                 </div>
               </Card>
@@ -2106,7 +2106,7 @@ export default function ProtecaoVeicularPage() {
                 </div>
                 <div>
                   <Badge className="bg-emerald-500/10 text-emerald-600 border-0 px-2 py-0.5 rounded-sm text-[8px] font-black uppercase tracking-wider">
-                    Apólice Ativa • G8 Protegido
+                    Apólice Ativa • {currentBrand.shortName} Protegido
                   </Badge>
                   <h3 className="text-2xl font-black uppercase text-neutral-900 leading-tight">
                     {selectedVehicleDetails.brand} {selectedVehicleDetails.model}
@@ -2187,7 +2187,7 @@ export default function ProtecaoVeicularPage() {
                 </div>
                 <div>
                   <h3 className="font-black uppercase text-sm tracking-wider leading-none">Cadastrar Veículo</h3>
-                  <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mt-1">G8Pay Consulta Rápida</span>
+                      <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mt-1">{currentBrand.name} Consulta Rápida</span>
                 </div>
               </div>
               <button 
@@ -2318,4 +2318,3 @@ export default function ProtecaoVeicularPage() {
     </div>
   );
 }
-

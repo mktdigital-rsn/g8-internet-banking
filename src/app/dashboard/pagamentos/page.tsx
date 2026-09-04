@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { currentBrand } from "@/config/brand";
 import Link from "next/link";
 import api from "@/lib/api";
 import {
@@ -367,7 +368,7 @@ export default function PagamentosPage() {
                 Área <span className="text-orange-600">PAGAMENTOS</span>
               </h1>
               <p className="text-sm md:text-base text-neutral-400 font-bold max-w-2xl">
-                Pague boletos, tributos e contas de consumo com rapidez e segurança G8 Bank.
+                Pague boletos, tributos e contas de consumo com rapidez e segurança {currentBrand.bankName}.
               </p>
             </div>
 
@@ -464,7 +465,7 @@ export default function PagamentosPage() {
                 <Card className="rounded-sm border border-orange-100 shadow-xl shadow-orange-100/10 bg-orange-50 p-10 space-y-8 relative overflow-hidden group cursor-pointer">
                   <div className="absolute -top-32 -right-32 w-64 h-64 bg-orange-600/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
                   <div className="relative z-10 space-y-6">
-                    <Badge className="bg-orange-600 text-white border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest">Segurança G8</Badge>
+                    <Badge className="bg-orange-600 text-white border-0 px-3 py-1 font-black text-[10px] uppercase tracking-widest">Segurança {currentBrand.shortName}</Badge>
                     <h3 className="text-3xl font-black text-orange-700 leading-tight">
                       Evite fraudes <br />
                       no seu <span className="text-orange-600">DDA.</span>
@@ -1120,4 +1121,3 @@ function SuccessStep({ boletoData, transactionId, setTransactionId, handlePrintR
     </div>
   );
 }
-

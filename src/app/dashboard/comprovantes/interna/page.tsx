@@ -2,12 +2,13 @@
 
 import ComprovanteTemplate from "../_components/ComprovanteTemplate";
 import { ArrowRightLeft } from "lucide-react";
+import { currentBrand } from "@/config/brand";
 
 export default function InternoPage() {
     return (
         <ComprovanteTemplate 
-            title="Contas G8"
-            description="Transferências realizadas entre contas do G8 Bank."
+            title={`Contas ${currentBrand.shortName}`}
+            description={`Transferências realizadas entre contas do ${currentBrand.bankName}.`}
             backHref="/dashboard/comprovantes"
             icon={ArrowRightLeft}
             protocolPrefix="P2P"

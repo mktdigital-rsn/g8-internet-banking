@@ -26,9 +26,9 @@ api.interceptors.request.use(
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('token');
       const userToken = localStorage.getItem('userToken');
-      
+      const isLoginRequest = config.url?.startsWith('/api/auth/login');
 
-      if (token) {
+      if (token && !isLoginRequest) {
         config.headers.Authorization = `Bearer ${token}`;
       }
       

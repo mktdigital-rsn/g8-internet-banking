@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { currentBrand } from "@/config/brand";
 import api from "@/lib/api";
 import {
    ArrowLeft,
@@ -213,7 +214,7 @@ export default function MyPixKeysPage() {
                <div className={`flex items-center gap-3 px-6 py-4 rounded-md shadow-2xl ${toast.type === 'success' ? 'bg-[#0c0a09] border-[var(--brand-accent)] text-[var(--brand-accent)]' : 'bg-red-600 text-white'} border min-w-[320px]`}>
                   {toast.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
                   <div className="flex-1">
-                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60 leading-none mb-1">Notificação G8</p>
+                     <p className="text-[10px] font-black uppercase tracking-widest opacity-60 leading-none mb-1">Notificação {currentBrand.shortName}</p>
                      <p className="text-sm font-black tracking-tight">{toast.message}</p>
                   </div>
                   <button onClick={() => setToast(null)} className="opacity-40 hover:opacity-100 transition-opacity">
@@ -235,7 +236,7 @@ export default function MyPixKeysPage() {
                   </Link>
                   <div>
                      <div className="flex items-center gap-2 mb-1">
-                        <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-transparent font-black px-3 py-0.5 rounded-sm text-[10px] uppercase tracking-widest leading-none">G8Pay &bull; Pix</Badge>
+                        <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-transparent font-black px-3 py-0.5 rounded-sm text-[10px] uppercase tracking-widest leading-none">{currentBrand.name} &bull; Pix</Badge>
                         <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest leading-none">Minhas Chaves</span>
                      </div>
                      <h1 className="text-3xl font-black tracking-tighter text-[#0c0a09] flex items-center gap-3">

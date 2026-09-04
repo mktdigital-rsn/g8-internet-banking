@@ -355,7 +355,7 @@ export default function CobrancaSucessoPage() {
                      ? "FISCOMONEY TECHNOLOGY"
                      : currentBrand.id === "advogado10x"
                      ? "ADVOGADO 10X TECHNOLOGY"
-                     : "G8 PAY TECHNOLOGY"}
+                     : `${currentBrand.name.toUpperCase()} TECHNOLOGY`}
                    <div className="h-[1px] w-12 bg-neutral-100" />
                 </div>
               </div>

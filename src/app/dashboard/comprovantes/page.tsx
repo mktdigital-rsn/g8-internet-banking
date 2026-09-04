@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from "react";
+import { currentBrand } from "@/config/brand";
 import {
     FileText,
     ArrowRightLeft,
@@ -99,7 +100,7 @@ export default function ComprovantesPage() {
                 icon: ArrowRightLeft,
                 color: "bg-orange-500",
                 submenus: [
-                    { id: "interna", label: "Contas G8", href: "/dashboard/comprovantes/interna" },
+                    { id: "interna", label: `Contas ${currentBrand.shortName}`, href: "/dashboard/comprovantes/interna" },
                     { id: "ted", label: "Outros bancos", badge: "Em breve", disabled: true }
                 ]
             },
@@ -331,7 +332,7 @@ export default function ComprovantesPage() {
                             <div className="space-y-6 relative z-10">
                                 <div className="flex items-center gap-3">
                                     <BadgeCheck className="text-orange-500" size={20} />
-                                    <h5 className="font-black uppercase tracking-widest text-xs">Sistema de Autenticação G8</h5>
+                                    <h5 className="font-black uppercase tracking-widest text-xs">Sistema de Autenticação {currentBrand.shortName}</h5>
                                 </div>
                                 <p className="text-3xl font-black tracking-tighter leading-tight italic">Documentos com <span className="text-orange-500">VALOR JURÍDICO</span> e integridade garantida.</p>
                                 <div className="pt-4 flex flex-col gap-4 border-t border-white/5">
@@ -361,7 +362,7 @@ export default function ComprovantesPage() {
                         <Card className="bg-orange-500 border-0 rounded-md p-8 text-white flex items-center justify-between group cursor-pointer hover:bg-orange-600 transition-all active:scale-95 shadow-xl shadow-orange-500/20">
                             <div className="space-y-1">
                                 <h4 className="text-xl font-black uppercase tracking-tighter leading-none">Precisa de Ajuda?</h4>
-                                <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Suporte G8: 09h as 17h</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest opacity-80">Suporte {currentBrand.shortName}: 09h as 17h</p>
                             </div>
                             <ChevronRight size={24} className="group-hover:translate-x-2 transition-transform" />
                         </Card>
@@ -372,4 +373,3 @@ export default function ComprovantesPage() {
         </div>
     );
 }
-

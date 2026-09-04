@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import {
     QrCode,
@@ -211,7 +210,7 @@ export default function PixPage() {
 
                                 {/* Suporte Section */}
                                 <div className="md:col-span-5 space-y-6">
-                                    <h2 className="text-xl font-black text-[#0c0a09] tracking-tight uppercase tracking-[0.1em]">Suporte G8</h2>
+                                    <h2 className="text-xl font-black text-[#0c0a09] tracking-tight uppercase tracking-[0.1em]">Suporte {currentBrand.shortName}</h2>
                                     <div className="grid grid-cols-2 gap-4">
                                         <PixAction icon={HelpCircle} label="Suporte" href="https://wa.me/5551996297077" />
                                         <PixAction icon={MessageCircle} label="Chat 09h as 17h" href="https://wa.me/5551996297077" customColor="bg-[#0c0a09]" />
@@ -237,7 +236,7 @@ export default function PixPage() {
                         <Card className="rounded-md border border-orange-100 shadow-xl shadow-orange-100/10 bg-orange-50 overflow-hidden relative group cursor-pointer h-[380px]">
                             <div className="absolute top-0 right-0 w-64 h-64 bg-orange-200/20 rounded-full blur-[80px] group-hover:scale-150 transition-transform duration-1000 -mr-20 -mt-20" />
                             <div className="p-8 space-y-4 relative z-10 text-[#0c0a09]">
-                                <Badge className="bg-orange-600/10 text-orange-600 border-0 text-[8px] font-black tracking-[0.3em] backdrop-blur-md mb-1">G8 PREMIUM</Badge>
+                                <Badge className="bg-orange-600/10 text-orange-600 border-0 text-[8px] font-black tracking-[0.3em] backdrop-blur-md mb-1">{currentBrand.shortName} PREMIUM</Badge>
                                 <h3 className="text-xl font-black leading-tight max-w-[180px] text-orange-700">
                                     Experiência que te move.
                                 </h3>
@@ -249,15 +248,6 @@ export default function PixPage() {
                                 </Button>
                             </div>
 
-                            <div className="absolute bottom-0 right-0 w-full h-[220px] flex items-end justify-end translate-y-8 group-hover:translate-y-2 transition-transform duration-700">
-                                <Image
-                                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Lucky&backgroundColor=ffedd5&radius=50"
-                                    alt="Benefit"
-                                    width={200}
-                                    height={200}
-                                    className="object-contain relative z-10 scale-110 drop-shadow-2xl"
-                                />
-                            </div>
                         </Card>
                     </div>
                 </div>

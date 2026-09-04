@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { currentBrand } from "@/config/brand";
 import { 
   Search, 
   HelpCircle, 
@@ -38,7 +39,7 @@ const faqs = [
   {
     category: "Cartões",
     questions: [
-      { q: "Como desbloquear meu cartão?", a: "Você pode realizar o desbloqueio diretamente pelo aplicativo G8 Pay na seção de Cartões." },
+      { q: "Como desbloquear meu cartão?", a: `Você pode realizar o desbloqueio diretamente pelo aplicativo ${currentBrand.name} na seção de Cartões.` },
       { q: "Quais são as taxas do cartão Platinum?", a: "Nossa conta Platinum é isenta de anuidade para clientes com investimentos ou movimentação ativa." }
     ]
   }

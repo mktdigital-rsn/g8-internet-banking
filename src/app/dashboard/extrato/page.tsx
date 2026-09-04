@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
+import { currentBrand } from "@/config/brand";
 import api from "@/lib/api";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -58,6 +59,81 @@ const PixIcon = (props: any) => (
   </svg>
 );
 
+type ExtratoItem = {
+    dataDaTransacaoFormatada?: string;
+    dataDaTransacao?: string;
+    dataTransacao?: string;
+    data_transacao?: string;
+    data?: string;
+    date?: string;
+    transactionDate?: string;
+    createdAt?: string;
+    created_at?: string;
+};
+
+const parseTransactionDate = (item: ExtratoItem) => {
+    const rawDate =
+        item?.dataDaTransacaoFormatada ??
+        item?.dataDaTransacao ??
+        item?.dataTransacao ??
+        item?.data_transacao ??
+        item?.data ??
+        item?.date ??
+        item?.transactionDate ??
+        item?.createdAt ??
+        item?.created_at;
+
+    if (!rawDate) return null;
+
+    const value = String(rawDate).trim();
+
+    const isoMatch = value.match(/^(\d{4})[-/](\d{2})[-/](\d{2})(?:[T\s](\d{2}):(\d{2})(?::(\d{2}))?)?/);
+    if (isoMatch) {
+        return new Date(
+            Number(isoMatch[1]),
+            Number(isoMatch[2]) - 1,
+            Number(isoMatch[3]),
+            Number(isoMatch[4] || 0),
+            Number(isoMatch[5] || 0),
+            Number(isoMatch[6] || 0)
+        );
+    }
+
+    const brMatch = value.match(/^(\d{2})[-/](\d{2})[-/](\d{4})(?:[,T\s]+(\d{2}):(\d{2})(?::(\d{2}))?)?/);
+    if (brMatch) {
+        return new Date(
+            Number(brMatch[3]),
+            Number(brMatch[2]) - 1,
+            Number(brMatch[1]),
+            Number(brMatch[4] || 0),
+            Number(brMatch[5] || 0),
+            Number(brMatch[6] || 0)
+        );
+    }
+
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const formatTransactionDate = (item: ExtratoItem) => {
+    const parsedDate = parseTransactionDate(item);
+
+    if (!parsedDate) {
+        return {
+            date: "--/--/----",
+            time: "--:--",
+        };
+    }
+
+    return {
+        date: parsedDate.toLocaleDateString("pt-BR"),
+        time: parsedDate.toLocaleTimeString("pt-BR", {
+            hour: "2-digit",
+            minute: "2-digit",
+        }),
+    };
+};
+
 export default function ExtratoGeralPage() {
     const [items, setItems] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -102,7 +178,6 @@ export default function ExtratoGeralPage() {
             const controller = new AbortController();
             setIsLoading(true);
             try {
-                const startTime = Date.now();
                 console.log("🚀 [EXTRATO] Iniciando busca...");
                 
                 // Passar datas se disponíveis para o backend tentar filtrar por lá
@@ -114,8 +189,6 @@ export default function ExtratoGeralPage() {
                     },
                     signal: controller.signal
                 });
-
-                console.log(`✅ [EXTRATO] Recebido em ${Date.now() - startTime}ms`);
 
                 if (response.data && (response.data.data || response.data.transacoes)) {
                    const rawItems = response.data.data || response.data.transacoes || [];
@@ -172,7 +245,7 @@ export default function ExtratoGeralPage() {
                     doc.setFont("helvetica", "bold");
                     doc.setFontSize(20);
                     doc.setTextColor(12, 10, 9);
-                    doc.text("G8PAY", 14, 20);
+                    doc.text(currentBrand.name.toUpperCase(), 14, 20);
                 }
                 
                 doc.setFont("helvetica", "bold");
@@ -199,8 +272,8 @@ export default function ExtratoGeralPage() {
                     item.idDoBancoLiquidante || item.id || "REF",
                     item.metodoFormatado,
                     getNatureza(item.metodo),
-                    item.pagadorNome || "CLIENTE G8",
-                    item.RecebinteNome || "PAGAMENTO G8",
+                    item.pagadorNome || `CLIENTE ${currentBrand.shortName}`,
+                    item.RecebinteNome || `PAGAMENTO ${currentBrand.shortName}`,
                     `${item.tipo === 'CREDITO' ? '+' : '-'} ${item.valorFormatado}`
                 ]);
 
@@ -353,29 +426,20 @@ export default function ExtratoGeralPage() {
                 (filter === "in" && item.tipo === "CREDITO") ||
                 (filter === "out" && item.tipo === "DEBITO");
 
+            const methodLabel = String(item.metodoFormatado || "").toUpperCase();
             const matchesMethod = methodFilter === "all" ||
-                (methodFilter === "PIX" && (item.metodo === "TRANSFERENCIA_PIX" || item.metodoFormatado?.toUpperCase().includes("PIX"))) ||
-                (methodFilter === "P2P" && (item.metodo === "TRANSFERENCIA_INTERNA" || item.metodo === "TRANSFERENCIA" || item.metodoFormatado?.toUpperCase().includes("P2P"))) ||
-                (methodFilter === "BOLETO" && (item.metodo === "PAGAMENTO_BOLETO" || item.metodo === "PAGAMENTO" || item.metodoFormatado?.toUpperCase().includes("BOLETO"))) ||
-                (methodFilter === "TARIFA" && (item.metodo === "TARIFA" || item.metodo === "MENSALIDADE_CLUBE_BENEFICIOS" || item.metodoFormatado?.toUpperCase().includes("TARIFA")));
+                (methodFilter === "PIX" && (item.metodo === "TRANSFERENCIA_PIX" || methodLabel.includes("PIX"))) ||
+                (methodFilter === "P2P" && (item.metodo === "TRANSFERENCIA_INTERNA" || item.metodo === "TRANSFERENCIA" || methodLabel.includes("P2P"))) ||
+                (methodFilter === "BOLETO" && (item.metodo === "PAGAMENTO_BOLETO" || item.metodo === "PAGAMENTO" || methodLabel.includes("BOLETO"))) ||
+                (methodFilter === "TARIFA" && (item.metodo === "TARIFA" || item.metodo === "MENSALIDADE_CLUBE_BENEFICIOS" || methodLabel.includes("TARIFA")));
 
-            const searchString = `${item.pagadorNome} ${item.RecebinteNome} ${item.metodoFormatado} ${item.idDoBancoLiquidante}`.toLowerCase();
+            const searchString = `${item.pagadorNome || ""} ${item.RecebinteNome || ""} ${item.metodoFormatado || ""} ${item.idDoBancoLiquidante || ""}`.toLowerCase();
             const matchesSearch = searchString.includes(searchTerm.toLowerCase());
 
-            let matchesDate = true;
-            if (startDate || endDate) {
-                if (!item.dataDaTransacaoFormatada) return false;
-                // Detect format: YYYY-MM-DD vs DD-MM-YYYY
-                const parts = item.dataDaTransacaoFormatada.split(" ")[0].replace(/\//g, "-").split("-");
-                const isoDate = parts[0].length === 4 ? parts.join("-") : parts.reverse().join("-");
-
-                if (startDate && isoDate < startDate) matchesDate = false;
-                if (endDate && isoDate > endDate) matchesDate = false;
-            }
-
-            return matchesFilter && matchesMethod && matchesSearch && matchesDate;
+            // The API already applies the selected date range in the request.
+            return matchesFilter && matchesMethod && matchesSearch;
         });
-    }, [items, filter, methodFilter, searchTerm, startDate, endDate]);
+    }, [items, filter, methodFilter, searchTerm]);
 
     const chartData = useMemo(() => {
         let referenceDate = new Date();
@@ -437,18 +501,8 @@ export default function ExtratoGeralPage() {
         }
 
         filteredItems.forEach(item => {
-            if (!item.dataDaTransacaoFormatada) return;
-            
-            const [datePart, timePart] = item.dataDaTransacaoFormatada.split(" ");
-            const parts = datePart.replace(/\//g, "-").split("-").map(Number);
-            
-            let day, month, year;
-            if (parts[0] > 1000) { [year, month, day] = parts; } 
-            else { [day, month, year] = parts; }
-            
-            const [hour, min, sec] = (timePart || "00:00:00").split(":").map(Number);
-            const itemDate = new Date(year, month - 1, day, hour, min, sec);
-            if (isNaN(itemDate.getTime())) return;
+            const itemDate = parseTransactionDate(item);
+            if (!itemDate) return;
 
             let key = "";
             if (chartPeriod === 'day') {
@@ -508,7 +562,7 @@ export default function ExtratoGeralPage() {
                                         <h2 className="text-xl font-black text-[#0c0a09] tracking-tighter uppercase leading-none">Comprovante</h2>
                                         <div className="flex items-center justify-center gap-2 mt-1">
                                             <CheckCircle2 className="h-3 w-3 text-green-500" />
-                                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.2em]">Autenticação G8 PAY</p>
+                                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.2em]">Autenticação {currentBrand.name}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -527,7 +581,7 @@ export default function ExtratoGeralPage() {
                                             <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">Origem / Pagador</p>
                                         </div>
                                         <div className="space-y-1">
-                                            <p className="font-black text-[#0c0a09] truncate text-sm uppercase">{selectedTransaction.pagadorNome || "CLIENTE G8PAY"}</p>
+                                            <p className="font-black text-[#0c0a09] truncate text-sm uppercase">{selectedTransaction.pagadorNome || `CLIENTE ${currentBrand.name}`}</p>
                                             <p className="text-[10px] text-neutral-500 font-mono font-bold opacity-70">
                                                 {selectedTransaction.pagadorTaxNumber?.present ? selectedTransaction.pagadorTaxNumber.value : (selectedTransaction.pagadorTaxNumber || "---")}
                                             </p>
@@ -535,7 +589,7 @@ export default function ExtratoGeralPage() {
                                         <div className="pt-3 border-t border-neutral-200/50 space-y-2">
                                             <div className="flex justify-between items-center text-[10px]">
                                                 <span className="text-neutral-400 font-bold">Banco</span>
-                                                <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{selectedTransaction.pagadorInstituicao || "G8 BANK (382)"}</span>
+                                                <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{selectedTransaction.pagadorInstituicao || `${currentBrand.bankName} (${currentBrand.bankCode})`}</span>
                                             </div>
                                             <div className="flex justify-between items-center text-[10px]">
                                                 <span className="text-neutral-400 font-bold">Ag/Conta</span>
@@ -552,7 +606,7 @@ export default function ExtratoGeralPage() {
                                             <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">Destino / Recebedor</p>
                                         </div>
                                         <div className="space-y-1">
-                                            <p className="font-black text-[#0c0a09] truncate text-sm uppercase">{selectedTransaction.RecebinteNome || "PAGAMENTO G8PAY"}</p>
+                                            <p className="font-black text-[#0c0a09] truncate text-sm uppercase">{selectedTransaction.RecebinteNome || `PAGAMENTO ${currentBrand.name}`}</p>
                                             <p className="text-[10px] text-neutral-500 font-mono font-bold opacity-70">
                                                 {selectedTransaction.RecebinteTaxNumber?.present ? selectedTransaction.RecebinteTaxNumber.value : (selectedTransaction.RecebinteTaxNumber || "---")}
                                             </p>
@@ -583,7 +637,7 @@ export default function ExtratoGeralPage() {
                                         <div className="text-right">
                                             <p className="text-[9px] text-neutral-400 font-black uppercase tracking-widest mb-1.5">Data Efetiva</p>
                                             <p className="text-sm font-black text-[#0c0a09]">
-                                                {selectedTransaction.dataDaTransacaoFormatada.split(" ")[0].split("-").reverse().join("/")} <span className="ml-1 text-neutral-400">{selectedTransaction.dataDaTransacaoFormatada.split(" ")[1]}</span>
+                                                {formatTransactionDate(selectedTransaction).date} <span className="ml-1 text-neutral-400">{formatTransactionDate(selectedTransaction).time}</span>
                                             </p>
                                         </div>
                                     </div>
@@ -591,7 +645,7 @@ export default function ExtratoGeralPage() {
                                     <div className="p-4 rounded-md bg-[#0c0a09] text-white/50 space-y-2 border border-white/5 shadow-2xl">
                                         <div className="flex items-center gap-2 mb-1">
                                             <Fingerprint className="h-3 w-3 text-[var(--brand-accent)]" />
-                                            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--brand-accent)]">Autenticação Digital G8</p>
+                                            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-[var(--brand-accent)]">Autenticação Digital {currentBrand.shortName}</p>
                                         </div>
                                         <p className="text-[9px] font-mono font-bold break-all leading-relaxed whitespace-pre-wrap">{selectedTransaction.codigoDeIdentificacao}</p>
                                     </div>
@@ -694,7 +748,7 @@ export default function ExtratoGeralPage() {
                         </div>
                         <div className="flex flex-col justify-center relative z-10 min-w-0">
                             <h3 className="text-lg max-[1350px]:text-[15px] font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09h as 17h</h3>
-                            <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central de Assistência G8</p>
+                            <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central de Assistência {currentBrand.shortName}</p>
                         </div>
                     </Card>
                 </div>
@@ -765,22 +819,22 @@ export default function ExtratoGeralPage() {
                         <div className="flex flex-col md:flex-row items-center justify-between gap-6 flex-wrap w-full">
                             <div className="flex flex-col sm:flex-row items-center gap-4">
                                 <Tabs value={filter} onValueChange={(val: any) => setFilter(val)} className="w-full sm:w-auto">
-                                    <TabsList className="bg-neutral-100/50 rounded-md p-0.5 h-10 gap-0.5 border border-neutral-200/20">
-                                        <TabsTrigger value="all" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[var(--brand-accent)] transition-all font-sans">Todas</TabsTrigger>
-                                        <TabsTrigger value="in" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-green-600 transition-all font-sans">Entrada</TabsTrigger>
-                                        <TabsTrigger value="out" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-red-500 transition-all font-sans">Saída</TabsTrigger>
+                                    <TabsList className="bg-neutral-100 rounded-md p-0.5 h-10 gap-0.5 border border-neutral-200/80">
+                                        <TabsTrigger value="all" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[active]:shadow-sm data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all font-sans">Todas</TabsTrigger>
+                                        <TabsTrigger value="in" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[active]:shadow-sm data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all font-sans">Entrada</TabsTrigger>
+                                        <TabsTrigger value="out" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[active]:shadow-sm data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all font-sans">Saída</TabsTrigger>
                                     </TabsList>
                                 </Tabs>
 
                                 <div className="h-6 w-px bg-neutral-200 hidden sm:block mx-2" />
 
                                 <Tabs value={methodFilter} onValueChange={(val: any) => setMethodFilter(val)} className="w-full sm:w-auto">
-                                    <TabsList className="bg-neutral-100/50 rounded-md p-0.5 h-10 gap-1 border border-neutral-200/20">
-                                        <TabsTrigger value="all" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[#0c0a09] data-[state=active]:text-white transition-all">Métodos</TabsTrigger>
-                                        <TabsTrigger value="PIX" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all">PIX</TabsTrigger>
-                                        <TabsTrigger value="P2P" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[#ea580c] data-[state=active]:text-white transition-all">P2P</TabsTrigger>
-                                        <TabsTrigger value="BOLETO" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-[#c2410c] data-[state=active]:text-white transition-all">BOLETO</TabsTrigger>
-                                        <TabsTrigger value="TARIFA" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-neutral-500 data-[state=active]:text-white transition-all">TARIFA</TabsTrigger>
+                                    <TabsList className="bg-neutral-100 rounded-md p-0.5 h-10 gap-1 border border-neutral-200/80">
+                                        <TabsTrigger value="all" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all">Métodos</TabsTrigger>
+                                        <TabsTrigger value="PIX" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all">PIX</TabsTrigger>
+                                        <TabsTrigger value="P2P" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all">P2P</TabsTrigger>
+                                        <TabsTrigger value="BOLETO" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all">BOLETO</TabsTrigger>
+                                        <TabsTrigger value="TARIFA" className="rounded-sm h-full px-3 text-[8px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all">TARIFA</TabsTrigger>
                                     </TabsList>
                                 </Tabs>
                             </div>
@@ -792,7 +846,7 @@ export default function ExtratoGeralPage() {
                                         type="date"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        className="h-8 md:h-9 w-[110px] md:w-[130px] bg-transparent border-0 pl-7 md:pl-8 text-[12px] font-black uppercase focus-visible:ring-0 cursor-pointer"
+                                        className="h-8 md:h-9 w-[145px] md:w-[155px] bg-transparent border-0 pl-7 md:pl-8 pr-7 text-[12px] font-black uppercase text-neutral-700 [color-scheme:light] [&::-webkit-datetime-edit]:text-neutral-700 [&::-webkit-datetime-edit-fields-wrapper]:text-neutral-700 focus-visible:ring-0 cursor-pointer"
                                     />
                                 </div>
                                 <span className="text-neutral-300 text-[10px]">/</span>
@@ -802,7 +856,7 @@ export default function ExtratoGeralPage() {
                                         type="date"
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
-                                        className="h-8 md:h-9 w-[110px] md:w-[130px] bg-transparent border-0 pl-7 md:pl-8 text-[12px] font-black uppercase focus-visible:ring-0 cursor-pointer"
+                                        className="h-8 md:h-9 w-[145px] md:w-[155px] bg-transparent border-0 pl-7 md:pl-8 pr-7 text-[12px] font-black uppercase text-neutral-700 [color-scheme:light] [&::-webkit-datetime-edit]:text-neutral-700 [&::-webkit-datetime-edit-fields-wrapper]:text-neutral-700 focus-visible:ring-0 cursor-pointer"
                                     />
                                 </div>
                             </div>
@@ -854,9 +908,9 @@ export default function ExtratoGeralPage() {
                             <div className="space-y-2">
                                 {filteredItems.map((t, idx) => {
                                     const Icon = getIconForMetodo(t.metodo);
-                                    const rawDescription = t.tipo === "CREDITO" ? (t.pagadorNome || "Recebimento G8Pay") : (t.RecebinteNome || "Pagamento Efetuado");
+                                    const rawDescription = t.tipo === "CREDITO" ? (t.pagadorNome || `Recebimento ${currentBrand.name}`) : (t.RecebinteNome || "Pagamento Efetuado");
                                     const description = rawDescription.toUpperCase() === "PAGAMENTO EFETUADO" ? "PAGAMENTO EFETUADO" : rawDescription;
-                                    const dateParts = t.dataDaTransacaoFormatada.split(" ");
+                                    const formattedDate = formatTransactionDate(t);
 
                                     return (
                                         <div
@@ -897,8 +951,8 @@ export default function ExtratoGeralPage() {
                                                 </div>
                                                 <div className="text-right flex items-center gap-2 md:gap-3">
                                                     <div className="text-right shrink-0">
-                                                        <p className="text-[14px] font-black text-[#0c0a09] font-mono">{dateParts[0].split("-").reverse().join("/")}</p>
-                                                        <p className="text-[12px] font-bold tracking-widest">{dateParts[1]}</p>
+                                                        <p className="text-[14px] font-black text-[#0c0a09] font-mono">{formattedDate.date}</p>
+                                                        <p className="text-[12px] font-bold tracking-widest">{formattedDate.time}</p>
                                                     </div>
                                                     <ChevronRight className="h-3 w-3 md:h-4 md:w-4" />
                                                 </div>

@@ -1695,7 +1695,7 @@ export default function DebitosVeicularesPage() {
                 </div>
                 <div>
                   <h3 className="font-black uppercase text-sm tracking-wider leading-none">Resumo do Pagamento</h3>
-                  <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mt-1">G8Pay Checkout Seguro</span>
+                  <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mt-1">{currentBrand.name} Checkout Seguro</span>
                 </div>
               </div>
 
@@ -1887,7 +1887,7 @@ export default function DebitosVeicularesPage() {
           const clean = cardNumber.replace(/\s/g, "");
           if (clean.startsWith("5")) return "Mastercard";
           if (clean.startsWith("4")) return "Visa";
-          return "G8Pay";
+          return currentBrand.name;
         };
         return (
           <div className="fixed inset-0 bg-neutral-955/80 z-50 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-300" style={{ backgroundColor: "rgba(10, 8, 7, 0.85)" }}>
@@ -2029,7 +2029,7 @@ export default function DebitosVeicularesPage() {
                                     <div className="w-4 h-4 rounded-full bg-amber-500/90" />
                                   </div>
                                 )}
-                                {getCardBrand() === "G8Pay" && (
+                                {getCardBrand() === currentBrand.name && (
                                   <span className="text-brand-secondary font-black italic text-xs tracking-tighter">{currentBrand.shortName}</span>
                                 )}
                               </div>
@@ -2378,7 +2378,7 @@ export default function DebitosVeicularesPage() {
                 </div>
                 <div>
                   <h3 className="font-black uppercase text-sm tracking-wider leading-none">Cadastrar Veículo</h3>
-                  <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mt-1">G8Pay Consulta Rápida</span>
+                  <span className="text-[9px] font-bold text-neutral-400 uppercase tracking-widest block mt-1">{currentBrand.name} Consulta Rápida</span>
                 </div>
               </div>
               <button 

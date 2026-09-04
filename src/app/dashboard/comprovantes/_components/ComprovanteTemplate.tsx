@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useMemo, useState, useEffect } from "react";
+import { currentBrand } from "@/config/brand";
 import axios from "axios";
 import {
     ArrowUpRight,
@@ -161,7 +162,7 @@ export default function ComprovanteTemplate({
                     doc.setFont("helvetica", "bold");
                     doc.setFontSize(20);
                     doc.setTextColor(12, 10, 9);
-                    doc.text("G8PAY", 14, 20);
+                    doc.text(currentBrand.name.toUpperCase(), 14, 20);
                 }
                 
                 doc.setFont("helvetica", "bold");
@@ -188,8 +189,8 @@ export default function ComprovanteTemplate({
                     item.idDoBancoLiquidante || item.id || "REF",
                     item.metodoFormatado,
                     getNatureza(item.metodo),
-                    item.pagadorNome || "CLIENTE G8",
-                    item.RecebinteNome || "PAGAMENTO G8",
+                    item.pagadorNome || `CLIENTE ${currentBrand.shortName}`,
+                    item.RecebinteNome || `PAGAMENTO ${currentBrand.shortName}`,
                     `${item.tipo === 'CREDITO' ? '+' : '-'} ${item.valorFormatado}`
                 ]);
 
@@ -468,7 +469,7 @@ export default function ComprovanteTemplate({
                                         <h2 className="text-xl font-black text-[#0c0a09] tracking-tighter uppercase leading-none">Comprovante {title}</h2>
                                         <div className="flex items-center justify-center gap-2 mt-1">
                                             <CheckCircle2 className="h-3 w-3 text-green-500" />
-                                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.2em]">Autenticação Digital G8</p>
+                                            <p className="text-[9px] text-neutral-400 font-black uppercase tracking-[0.2em]">Autenticação Digital {currentBrand.shortName}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -487,7 +488,7 @@ export default function ComprovanteTemplate({
                                             <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">Origem / Pagador</p>
                                         </div>
                                         <div className="space-y-1">
-                                            <p className="font-black text-[#0c0a09] truncate text-sm uppercase">{selectedTransaction.pagadorNome || "CLIENTE G8PAY"}</p>
+                                            <p className="font-black text-[#0c0a09] truncate text-sm uppercase">{selectedTransaction.pagadorNome || `CLIENTE ${currentBrand.name}`}</p>
                                             <p className="text-[10px] text-neutral-500 font-mono font-bold opacity-70">
                                                 {selectedTransaction.pagadorTaxNumber?.present ? selectedTransaction.pagadorTaxNumber.value : (selectedTransaction.pagadorTaxNumber || "---")}
                                             </p>
@@ -500,7 +501,7 @@ export default function ComprovanteTemplate({
                                             <p className="text-[10px] text-neutral-400 font-black uppercase tracking-widest">Destino / Recebedor</p>
                                         </div>
                                         <div className="space-y-1">
-                                            <p className="font-black text-[#0c0a09] truncate text-sm uppercase">{selectedTransaction.RecebinteNome || "PAGAMENTO G8PAY"}</p>
+                                            <p className="font-black text-[#0c0a09] truncate text-sm uppercase">{selectedTransaction.RecebinteNome || `PAGAMENTO ${currentBrand.name}`}</p>
                                             <p className="text-[10px] text-neutral-500 font-mono font-bold opacity-70">
                                                 {selectedTransaction.RecebinteTaxNumber?.present ? selectedTransaction.RecebinteTaxNumber.value : (selectedTransaction.RecebinteTaxNumber || "---")}
                                             </p>
@@ -639,7 +640,7 @@ export default function ComprovanteTemplate({
                         </div>
                         <div className="flex flex-col justify-center relative z-10 min-w-0">
                             <h3 className="text-xl font-black leading-none tracking-tighter uppercase whitespace-nowrap mb-1">Suporte 09h as 17h</h3>
-                            <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central de Assistência G8</p>
+                            <p className="text-[10px] font-bold text-white/70 leading-none tracking-widest uppercase truncate">Central de Assistência {currentBrand.shortName}</p>
                         </div>
                     </Card>
                 </div>
@@ -767,4 +768,3 @@ export default function ComprovanteTemplate({
         </div>
     );
 }
-

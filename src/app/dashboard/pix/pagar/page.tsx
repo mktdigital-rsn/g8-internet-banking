@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, Suspense, useRef } from "react";
+import { currentBrand } from "@/config/brand";
 import jsQR from "jsqr";
 import { QRCodeSVG } from "qrcode.react";
 import api from "@/lib/api";
@@ -544,7 +545,7 @@ function PixPagarContent() {
             </Link>
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-transparent font-black px-2 py-0.5 rounded-[5px] text-[10px] uppercase tracking-widest leading-none">G8Pay &bull; Pix</Badge>
+                <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-transparent font-black px-2 py-0.5 rounded-[5px] text-[10px] uppercase tracking-widest leading-none">{currentBrand.name} &bull; Pix</Badge>
                 <span className="text-[10px] text-[#0c0a09] font-bold uppercase tracking-widest leading-none opacity-60">
                   {step === "confirm" ? "Confirmação" : step === "sms" ? "Segurança" : step === "success" ? "Comprovante" : "Indicação de Pagamento"}
                 </span>
@@ -665,7 +666,7 @@ function PixPagarContent() {
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-white rounded-[5px] flex items-center justify-center shrink-0 border border-neutral-100 shadow-sm">
                       <Image
-                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent((recipientName || 'G8').trim())}`}
+                        src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent((recipientName || currentBrand.shortName).trim())}`}
                         alt="Avatar"
                         width={40}
                         height={40}
@@ -923,7 +924,7 @@ function PixPagarContent() {
                     </div>
                     <div className="space-y-1 text-right">
                       <p className="text-[10px] font-black text-[#0c0a09] uppercase tracking-widest">ID da Transação</p>
-                      <p className="text-sm font-medium text-neutral-500 font-mono break-all">{transactionId || "G8PAY329KXM0"}</p>
+                      <p className="text-sm font-medium text-neutral-500 font-mono break-all">{transactionId || `${currentBrand.shortName.toUpperCase()}329KXM0`}</p>
                     </div>
                   </div>
                 </div>

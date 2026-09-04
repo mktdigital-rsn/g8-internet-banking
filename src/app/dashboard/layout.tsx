@@ -100,7 +100,37 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
    const [accountInfo, setAccountInfo] = React.useState({ agency: "", account: "" });
    const [isLoadingData, setIsLoadingData] = React.useState(true);
    const [expandedMenus, setExpandedMenus] = React.useState<Record<string, boolean>>({});
+   const [searchQuery, setSearchQuery] = React.useState("");
    const isLottoPay = currentBrand.id === "lotopay";
+
+   const quickAccessItems = React.useMemo(() => {
+     return menuGroups.flatMap(group => group.items.flatMap(item => {
+       if (isLottoPay && ["Lazer", "Recargas", "Veículos"].includes(item.label)) return [];
+
+       if (item.submenu) {
+         return item.submenu.map(sub => ({
+           ...sub,
+           keywords: `${item.label} ${sub.label}`,
+         }));
+       }
+
+       return item.href === "#" ? [] : [{
+         icon: item.icon,
+         label: item.label,
+         href: item.href,
+         keywords: item.label,
+       }];
+     }));
+   }, [isLottoPay]);
+
+   const searchResults = React.useMemo(() => {
+     const normalizedQuery = searchQuery.trim().toLowerCase();
+     if (!normalizedQuery) return [];
+
+     return quickAccessItems
+       .filter(item => item.keywords.toLowerCase().includes(normalizedQuery))
+       .slice(0, 6);
+   }, [quickAccessItems, searchQuery]);
 
    React.useEffect(() => {
      menuGroups.forEach(group => {
@@ -345,7 +375,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <nav className="space-y-4">
             {menuGroups.map((group, groupIdx) => (
               <div key={groupIdx} className="space-y-1">
-                {group.items.map((item) => {
+                {group.items
+                  .filter((item) => !(isLottoPay && ["Lazer", "Recargas", "Veículos"].includes(item.label)))
+                  .map((item) => {
                   const isActive = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
                   
                   if (item.submenu) {
@@ -422,7 +454,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       </div>
                     </Link>
                   );
-                })}
+                  })}
                 {groupIdx < menuGroups.length - 1 && <Separator className="bg-white/5 my-4" />}
               </div>
             ))}
@@ -444,10 +476,45 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="flex items-center max-w-[280px] xl:max-w-sm w-full">
             <div className="relative w-full group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-brand-accent transition-colors" />
-              <Input 
-                placeholder="Pesquisar transações..." 
-                className="w-full bg-white/[0.08] border-white/5 pl-12 focus:bg-white/[0.12] focus:border-brand-accent/60 rounded-md h-12 transition-all font-black placeholder:text-white/30 text-white text-sm" 
+              <Input
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setSearchQuery("");
+                  if (event.key === "Enter" && searchResults[0]) {
+                    router.push(searchResults[0].href);
+                    setSearchQuery("");
+                  }
+                }}
+                placeholder="O que você deseja acessar?"
+                className="w-full bg-white/[0.08] border-white/5 pl-12 focus:bg-white/[0.12] focus:border-brand-accent/60 rounded-md h-12 transition-all font-black placeholder:text-white/30 text-white text-sm"
               />
+              {searchQuery.trim() && (
+                <div className="absolute top-full left-0 right-0 mt-3 overflow-hidden rounded-md border border-white/10 bg-[#182021] shadow-2xl shadow-black/30 z-50">
+                  {searchResults.length > 0 ? (
+                    <div className="p-2">
+                      <p className="px-3 py-2 text-[9px] font-black uppercase tracking-[0.2em] text-white/40">Acessos encontrados</p>
+                      {searchResults.map((result) => (
+                        <button
+                          key={result.href}
+                          type="button"
+                          onMouseDown={(event) => event.preventDefault()}
+                          onClick={() => {
+                            router.push(result.href);
+                            setSearchQuery("");
+                          }}
+                          className="flex w-full items-center gap-3 rounded-sm px-3 py-3 text-left text-white/80 transition-colors hover:bg-white/10 hover:text-brand-accent"
+                        >
+                          <result.icon className="h-4 w-4 shrink-0 text-brand-accent" />
+                          <span className="text-[11px] font-black uppercase tracking-widest">{result.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="px-4 py-5 text-center text-[10px] font-black uppercase tracking-widest text-white/50">Nenhuma tela encontrada</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
