@@ -463,7 +463,7 @@ export default function TransferenciaPage() {
                                             <h2 className="text-xl font-black uppercase tracking-widest text-brand-accent">
                                                 {transferType === 'G8' ? `Transferência ${currentBrand.shortName}` : 'Transferência via TED'}
                                             </h2>
-                                            <button onClick={resetFlow} className="text-[#0c0a09]/30 hover:text-[#0c0a09] transition-colors"><X size={20} /></button>
+                                            <button onClick={resetFlow} className="text-[#0c0a09]/60 hover:text-[#0c0a09] transition-colors"><X size={20} /></button>
                                         </div>
 
                                         {transferType === 'G8' ? (
@@ -476,7 +476,7 @@ export default function TransferenciaPage() {
                                                 </button>
                                                 <button
                                                     disabled
-                                                    className="flex-1 py-4 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all bg-brand-accent/10 text-brand-accent/40 cursor-not-allowed opacity-60"
+                                                    className="flex-1 py-4 font-black text-[10px] uppercase tracking-widest rounded-sm transition-all bg-brand-accent/10 text-brand-accent/70 cursor-not-allowed"
                                                 >
                                                     Agência e Conta (Em breve)
                                                 </button>
@@ -489,7 +489,7 @@ export default function TransferenciaPage() {
                                                         <select 
                                                             value={targetBankCode}
                                                             onChange={(e) => setTargetBankCode(e.target.value)}
-                                                            className="w-full h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-bold text-brand-accent px-4 appearance-none focus:outline-none"
+                                                            className="w-full h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-bold text-neutral-800 px-4 appearance-none focus:outline-none"
                                                         >
                                                             <option value="" className="text-neutral-400">Selecione o banco</option>
                                                             {COMMON_BANKS.map(b => (
@@ -522,7 +522,7 @@ export default function TransferenciaPage() {
                                                         value={targetReceiverName} 
                                                         onChange={(e) => setTargetReceiverName(e.target.value)} 
                                                         placeholder="Ex: Pedro Henrique Marques" 
-                                                        className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-bold text-brand-accent" 
+                                                        className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-bold text-neutral-800 placeholder:text-neutral-500"
                                                     />
                                                 </div>
 
@@ -532,7 +532,7 @@ export default function TransferenciaPage() {
                                                         value={targetDocument} 
                                                         onChange={(e) => setTargetDocument(e.target.value)} 
                                                         placeholder="000.000.000-00" 
-                                                        className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-bold text-brand-accent" 
+                                                        className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-bold text-neutral-800 placeholder:text-neutral-500"
                                                     />
                                                 </div>
                                             </div>
@@ -548,7 +548,7 @@ export default function TransferenciaPage() {
                                                                 placeholder="000.000.000-00"
                                                                 value={targetCpf}
                                                                 onChange={(e) => setTargetCpf(e.target.value)}
-                                                                className="h-16 bg-brand-accent/10 border-neutral-100 rounded-sm text-xl font-mono focus:border-brand-accent transition-all text-brand-accent font-bold"
+                                                                className="h-16 bg-brand-accent/10 border-neutral-100 rounded-sm text-xl font-mono focus:border-brand-accent transition-all text-neutral-800 placeholder:text-neutral-500 font-bold"
                                                             />
                                                         </div>
                                                     ) : null
@@ -558,15 +558,15 @@ export default function TransferenciaPage() {
                                                     <div className="grid grid-cols-12 gap-4">
                                                         <div className="col-span-4 space-y-2">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Agência</label>
-                                                            <Input value={targetAgencia} onChange={(e) => setTargetAgencia(e.target.value)} placeholder="0001" className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-mono font-bold text-brand-accent" />
+                                                            <Input value={targetAgencia} onChange={(e) => setTargetAgencia(e.target.value)} placeholder="0001" className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-mono font-bold text-neutral-800 placeholder:text-neutral-500" />
                                                         </div>
                                                         <div className="col-span-6 space-y-2">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Conta</label>
-                                                            <Input value={targetConta} onChange={(e) => setTargetConta(e.target.value)} placeholder="12345" className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-mono font-bold text-brand-accent" />
+                                                            <Input value={targetConta} onChange={(e) => setTargetConta(e.target.value)} placeholder="12345" className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-mono font-bold text-neutral-800 placeholder:text-neutral-500" />
                                                         </div>
                                                         <div className="col-span-2 space-y-2">
                                                             <label className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/70">Díg.</label>
-                                                            <Input value={targetDigito} onChange={(e) => setTargetDigito(e.target.value)} placeholder="0" className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-mono text-center font-bold text-brand-accent" />
+                                                            <Input value={targetDigito} onChange={(e) => setTargetDigito(e.target.value)} placeholder="0" className="h-14 bg-brand-accent/10 border-neutral-100 rounded-sm font-mono text-center font-bold text-neutral-800 placeholder:text-neutral-500" />
                                                         </div>
                                                     </div>
                                                 )}
@@ -616,7 +616,7 @@ export default function TransferenciaPage() {
                                                 <div className="relative z-10 flex-1">
                                                     <p className="text-[11px] font-black uppercase tracking-[0.2em] text-brand-accent mb-1">DADOS DO RECEBEDOR</p>
                                                     <p className="text-2xl font-black tracking-tighter text-[#0c0a09] leading-tight">{receiver.name}</p>
-                                                    <p className="text-[12px] font-mono text-[#0c0a09]/50 uppercase mt-1 font-bold">
+                                                    <p className="text-[12px] font-mono text-[#0c0a09]/70 uppercase mt-1 font-bold">
                                                         {transferType === 'G8' ? currentBrand.bankName : receiver.bankName} • AG {receiver.agencia} • CC {receiver.conta}-{receiver.digito}
                                                     </p>
                                                 </div>
@@ -668,7 +668,7 @@ export default function TransferenciaPage() {
 
                                         <div className="space-y-4 mb-12">
                                             <h2 className="text-4xl font-black text-[#0c0a09] uppercase tracking-tighter">Validação de Segurança</h2>
-                                            <p className="text-base font-bold text-[#0c0a09]/30 uppercase tracking-[0.1em]">
+                                            <p className="text-base font-bold text-[#0c0a09]/65 uppercase tracking-[0.1em]">
                                                 Confirme seu código PIN para validar a transferência de <span className="text-brand-accent font-black">{formatCurrency(amount)}</span>
                                             </p>
                                         </div>
@@ -708,7 +708,7 @@ export default function TransferenciaPage() {
                             {step === 'confirming' && (
                                 <div className="flex flex-col items-center justify-center py-20 space-y-6">
                                     <div className="h-12 w-12 border-4 border-brand-accent border-t-transparent rounded-full animate-spin" />
-                                    <p className="font-black uppercase tracking-[0.3em] text-[10px] text-[#0c0a09]/50">Processando sua transferência...</p>
+                                    <p className="font-black uppercase tracking-[0.3em] text-[10px] text-[#0c0a09]/70">Processando sua transferência...</p>
                                 </div>
                             )}
 
@@ -725,17 +725,17 @@ export default function TransferenciaPage() {
                                             </div>
                                             <div className="space-y-1">
                                                 <h2 className="text-3xl font-black tracking-tighter text-[#0c0a09]">SUCESSO!</h2>
-                                                <p className="text-[#0c0a09]/40 text-xs font-bold uppercase tracking-widest">Dinheiro enviado para {receiver?.name}</p>
+                                                <p className="text-[#0c0a09]/70 text-xs font-bold uppercase tracking-widest">Dinheiro enviado para {receiver?.name}</p>
                                             </div>
 
                                             <div className="border-y border-neutral-100 py-6 space-y-4">
                                                 <div className="flex justify-between items-center text-[10px] uppercase font-black">
-                                                    <span className="text-[#0c0a09]/30">Valor</span>
+                                                    <span className="text-[#0c0a09]/60">Valor</span>
                                                     <span className="text-xl text-brand-accent">{formatCurrency(amount)}</span>
                                                 </div>
                                                 <div className="flex justify-between items-center text-[10px] uppercase font-black">
-                                                    <span className="text-[#0c0a09]/30">Protocolo</span>
-                                                    <span className="text-[#0c0a09]/50">{transactionId.slice(0, 16).toUpperCase()}</span>
+                                                    <span className="text-[#0c0a09]/60">Protocolo</span>
+                                                    <span className="text-[#0c0a09]/70">{transactionId.slice(0, 16).toUpperCase()}</span>
                                                 </div>
                                             </div>
 
@@ -766,10 +766,10 @@ export default function TransferenciaPage() {
                                         </div>
                                         <div className="space-y-2">
                                             <h2 className="text-xl font-black text-rose-500 uppercase tracking-widest">Ops! Algo falhou</h2>
-                                            <p className="text-sm text-[#0c0a09]/50 font-medium">{errorMessage}</p>
+                                            <p className="text-sm text-[#0c0a09]/70 font-medium">{errorMessage}</p>
                                         </div>
                                         <Button onClick={() => setStep('form')} className="w-full h-14 bg-rose-500 text-white hover:bg-rose-600 font-black uppercase shadow-lg shadow-rose-500/20">Tentar Novamente</Button>
-                                        <button onClick={resetFlow} className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/30 hover:underline">Voltar ao início</button>
+                                        <button onClick={resetFlow} className="text-[10px] font-black uppercase tracking-widest text-[#0c0a09]/60 hover:underline">Voltar ao início</button>
                                     </Card>
                                 </motion.div>
                             )}
@@ -781,11 +781,11 @@ export default function TransferenciaPage() {
                         {/* Balance Card */}
                         <div className="bg-brand-accent/5 border border-brand-accent/10 p-8 rounded-md space-y-4 shadow-xl shadow-brand-accent/5 group relative overflow-hidden">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-1000" />
-                            <div className="flex items-center gap-3 text-muted-foreground relative z-10 font-black">
+                            <div className="flex items-center gap-3 text-neutral-700 relative z-10 font-black">
                                 <Wallet size={16} className="text-brand-accent" />
                                 <span className="text-[10px] font-black uppercase tracking-widest">Saldo Disponível</span>
                             </div>
-                            <p className="text-4xl font-black font-mono tracking-tighter text-foreground relative z-10">{balance}</p>
+                            <p className="text-4xl font-black font-mono tracking-tighter text-[#0c0a09] relative z-10">{balance}</p>
                         </div>
 
                         {/* Recent Favorites */}
@@ -816,10 +816,10 @@ export default function TransferenciaPage() {
                                             </div>
                                             <div className="text-left">
                                                 <p className="text-[12px] font-black text-[#0c0a09] truncate max-w-[150px]">{c.nome}</p>
-                                                <p className="text-[10px] text-[#0c0a09]/30 font-bold uppercase tracking-wider truncate max-w-[150px]">{c.instituicao || "PIX"}</p>
+                                                <p className="text-[10px] text-[#0c0a09]/60 font-bold uppercase tracking-wider truncate max-w-[150px]">{c.instituicao || "PIX"}</p>
                                             </div>
                                         </div>
-                                        <ChevronRight size={16} className="text-[#0c0a09]/20 group-hover:text-brand-accent group-hover:translate-x-1 transition-all" />
+                                        <ChevronRight size={16} className="text-[#0c0a09]/50 group-hover:text-brand-accent group-hover:translate-x-1 transition-all" />
                                     </div>
                                 ))}
                                 {favorites.length === 0 && (
@@ -869,7 +869,7 @@ function TransferOption({
             className={`w-full group p-8 rounded-md text-left transition-all relative overflow-hidden flex flex-col justify-between h-[240px] border ${premium
                     ? 'bg-gradient-to-br from-brand-accent to-brand-secondary border-0 text-white shadow-xl shadow-brand-accent/10 active:scale-[0.98]'
                     : disabled
-                        ? 'bg-neutral-50 border-neutral-100 opacity-40 cursor-not-allowed grayscale'
+                        ? 'bg-neutral-50 border-neutral-100 opacity-70 cursor-not-allowed grayscale'
                         : 'bg-white dark:bg-neutral-900 border-neutral-200/60 dark:border-neutral-800 hover:bg-brand-accent/5 hover:shadow-xl hover:border-brand-accent/20 active:scale-[0.98]'
                 }`}
         >
@@ -889,7 +889,7 @@ function TransferOption({
 
             <div className="space-y-2 relative z-10">
                 <div className="flex items-center gap-2">
-                    <h3 className={`text-xl font-black tracking-tight ${premium ? 'text-white' : 'text-foreground'}`}>{title}</h3>
+                    <h3 className={`text-xl font-black tracking-tight ${premium ? 'text-white' : 'text-[#0c0a09]'}`}>{title}</h3>
                     {disabled && <Badge className="bg-[#0c0a09]/10 text-[#0c0a09] text-[8px] font-black uppercase border-0">Breve</Badge>}
                     {badge && (
                         <Badge className={`${premium 
@@ -899,7 +899,7 @@ function TransferOption({
                         </Badge>
                     )}
                 </div>
-                <p className={`text-[11px] font-black leading-relaxed ${premium ? 'text-white/85' : 'text-muted-foreground'}`}>
+                <p className={`text-[11px] font-black leading-relaxed ${premium ? 'text-white/85' : 'text-neutral-600'}`}>
                     {description}
                 </p>
             </div>
@@ -917,7 +917,7 @@ function SimpleAction({ icon: Icon, label, onClick, badge }: { icon: any, label:
         <button 
             onClick={onClick}
             disabled={!!badge}
-            className={`flex flex-col items-center justify-center p-6 bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800 rounded-sm transition-all relative overflow-hidden group w-full ${!!badge ? 'opacity-60 grayscale cursor-not-allowed' : 'hover:bg-brand-accent/5 hover:border-brand-accent/20 hover:shadow-xl hover:shadow-brand-accent/5 hover:scale-[1.03] active:scale-[0.98]'}`}
+            className={`flex flex-col items-center justify-center p-6 bg-white dark:bg-neutral-900 border border-neutral-200/60 dark:border-neutral-800 rounded-sm transition-all relative overflow-hidden group w-full ${!!badge ? 'opacity-75 grayscale cursor-not-allowed' : 'hover:bg-brand-accent/5 hover:border-brand-accent/20 hover:shadow-xl hover:shadow-brand-accent/5 hover:scale-[1.03] active:scale-[0.98]'}`}
         >
             <div className="absolute top-0 right-0 w-32 h-32 bg-brand-accent/10 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-125" />
             
@@ -930,7 +930,7 @@ function SimpleAction({ icon: Icon, label, onClick, badge }: { icon: any, label:
             <div className="w-10 h-10 bg-brand-accent/5 rounded-sm flex items-center justify-center text-brand-accent mb-3 group-hover:scale-110 group-hover:bg-brand-accent/10 transition-all relative z-10">
                 <Icon size={18} />
             </div>
-            <span className="text-[9px] font-black uppercase tracking-widest text-foreground relative z-10">{label}</span>
+            <span className="text-[9px] font-black uppercase tracking-widest text-[#0c0a09] relative z-10">{label}</span>
         </button>
     );
 }

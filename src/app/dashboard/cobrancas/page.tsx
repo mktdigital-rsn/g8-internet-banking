@@ -686,9 +686,9 @@ export default function GestaoCobrancasPage() {
                                 }
                             }} className="w-fit">
                                 <TabsList className="bg-white rounded-sm p-0.5 h-8 gap-1 border border-neutral-200">
-                                    <TabsTrigger value="day" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-neutral-100 data-[state=active]:text-[var(--brand-accent)]">Dia</TabsTrigger>
-                                    <TabsTrigger value="week" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-neutral-100 data-[state=active]:text-[var(--brand-accent)]">Semana</TabsTrigger>
-                                    <TabsTrigger value="month" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-neutral-100 data-[state=active]:text-[var(--brand-accent)]">Mês</TabsTrigger>
+                                    <TabsTrigger value="day" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white">Dia</TabsTrigger>
+                                    <TabsTrigger value="week" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white">Semana</TabsTrigger>
+                                    <TabsTrigger value="month" className="rounded-sm h-full px-4 text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white">Mês</TabsTrigger>
                                 </TabsList>
                             </Tabs>
                         </div>
@@ -730,22 +730,22 @@ export default function GestaoCobrancasPage() {
                         } as any}>
                         <Tabs value={statusFilter} onValueChange={(val: any) => setStatusFilter(val)} className="w-full lg:w-auto">
                             <TabsList className="bg-neutral-50 rounded-sm p-0.5 h-12 gap-1 border border-neutral-100 w-full lg:w-auto overflow-x-auto no-scrollbar">
-                                <TabsTrigger value="TODOS" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[var(--brand-accent)]">Todos</TabsTrigger>
-                                <TabsTrigger value="PENDENTE" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600">A Receber</TabsTrigger>
-                                <TabsTrigger value="PAGO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-emerald-600">Pagos</TabsTrigger>
-                                <TabsTrigger value="VENCIDO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-red-600">Vencidos</TabsTrigger>
-                                <TabsTrigger value="CANCELADO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-zinc-500">Cancelados</TabsTrigger>
+                                <TabsTrigger value="TODOS" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white">Todos</TabsTrigger>
+                                <TabsTrigger value="PENDENTE" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white">A Receber</TabsTrigger>
+                                <TabsTrigger value="PAGO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white">Pagos</TabsTrigger>
+                                <TabsTrigger value="VENCIDO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white">Vencidos</TabsTrigger>
+                                <TabsTrigger value="CANCELADO" className="rounded-sm h-full px-6 text-[9px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white">Cancelados</TabsTrigger>
                             </TabsList>
                         </Tabs>
                         <div className="flex items-center gap-1 bg-neutral-50 rounded-sm p-1 border border-neutral-100 h-12 shadow-inner">
                             <div className="relative group">
                                 <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-hover:text-[var(--brand-accent)]" />
-                                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-full w-[140px] bg-transparent border-0 pl-10 text-[10px] font-black focus-visible:ring-0 cursor-pointer" />
+                                <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="h-full w-[150px] bg-transparent border-0 pl-10 pr-7 text-[10px] font-black text-neutral-700 [color-scheme:light] [&::-webkit-datetime-edit]:text-neutral-700 [&::-webkit-datetime-edit-fields-wrapper]:text-neutral-700 focus-visible:ring-0 cursor-pointer" />
                             </div>
                             <span className="text-neutral-300 font-bold px-1">/</span>
                             <div className="relative group">
                                 <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 group-hover:text-[var(--brand-accent)]" />
-                                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-full w-[140px] bg-transparent border-0 pl-10 text-[10px] font-black focus-visible:ring-0 cursor-pointer" />
+                                <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} className="h-full w-[150px] bg-transparent border-0 pl-10 pr-7 text-[10px] font-black text-neutral-700 [color-scheme:light] [&::-webkit-datetime-edit]:text-neutral-700 [&::-webkit-datetime-edit-fields-wrapper]:text-neutral-700 focus-visible:ring-0 cursor-pointer" />
                             </div>
                         </div>
                     </div>
@@ -757,7 +757,7 @@ export default function GestaoCobrancasPage() {
                         } as any}>
                         <div className="relative max-w-2xl w-full">
                             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
-                            <Input placeholder="Buscar por nome, CPF/CNPJ ou código..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold focus:border-[var(--brand-accent)] rounded-sm shadow-inner" />
+                            <Input placeholder="Buscar por nome, CPF/CNPJ ou código..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold text-neutral-800 placeholder:text-neutral-400 focus:border-[var(--brand-accent)] rounded-sm shadow-inner" />
                         </div>
                         <div className="flex items-center gap-3 shrink-0"><p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mr-2">Exportar:</p>
                             <Button onClick={() => handleExport('pdf')} disabled={!!exportingType} className="h-12 bg-orange-600 hover:bg-orange-700 text-white font-black text-[10px] uppercase tracking-widest rounded-sm px-5 flex items-center gap-2 shadow-lg active:scale-95 transition-all outline-none">{exportingType === 'pdf' ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileBox className="h-4 w-4" />} PDF</Button>

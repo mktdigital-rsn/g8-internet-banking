@@ -762,9 +762,9 @@ export default function ExtratoGeralPage() {
                         </div>
                         <Tabs value={chartPeriod} onValueChange={(val: any) => setChartPeriod(val)} className="w-fit">
                             <TabsList className="bg-neutral-50 rounded-sm p-0.5 h-8 gap-0.5 border border-neutral-100">
-                                <TabsTrigger value="day" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[var(--brand-accent)] transition-all font-sans">Dia</TabsTrigger>
-                                <TabsTrigger value="week" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[var(--brand-accent)] transition-all font-sans">Semana</TabsTrigger>
-                                <TabsTrigger value="month" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-[var(--brand-accent)] transition-all font-sans">Mês</TabsTrigger>
+                                <TabsTrigger value="day" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all font-sans">Dia</TabsTrigger>
+                                <TabsTrigger value="week" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all font-sans">Semana</TabsTrigger>
+                                <TabsTrigger value="month" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest text-neutral-600 hover:text-[var(--brand-accent)] data-[active]:bg-[var(--brand-accent)] data-[active]:text-white data-[state=active]:bg-[var(--brand-accent)] data-[state=active]:text-white transition-all font-sans">Mês</TabsTrigger>
                             </TabsList>
                         </Tabs>
                     </div>
