@@ -89,7 +89,7 @@ export default function ContaPage() {
 
         <div className="relative">
           <Avatar className="h-32 w-32 md:h-48 md:w-48 border-4 border-white shadow-2xl rounded-sm">
-            <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userData?.name}`} />
+            <AvatarImage src="/avatar.svg" />
             <AvatarFallback className="bg-primary text-white text-5xl font-black">{userData?.name?.[0]}</AvatarFallback>
           </Avatar>
           <div className="absolute -bottom-2 -right-2 bg-green-500 text-white p-2 rounded-sm shadow-xl border-4 border-white">

@@ -310,7 +310,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                <User className="h-10 w-10 text-brand-secondary" />
             </div>
             <Avatar className="h-12 w-12 border-2 border-brand-accent rounded-md shadow-lg shrink-0">
-              <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
+              <AvatarImage src="/avatar.svg" />
               <AvatarFallback className="bg-neutral-800 text-white font-black uppercase">{cleanName(userName)[0]}</AvatarFallback>
             </Avatar>
             <div className="flex flex-col min-w-0 flex-1 text-left">
@@ -499,7 +499,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="relative">
                   <div className="absolute -inset-1 bg-gradient-to-r from-brand-accent to-brand-secondary rounded-md blur opacity-0 group-hover:opacity-20 transition-opacity" />
                   <Avatar className="h-12 w-12 border border-white/5 rounded-md relative z-10 shadow-lg">
-                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${userName}`} />
+                    <AvatarImage src="/avatar.svg" />
                     <AvatarFallback className="bg-brand-accent text-white font-black">{cleanName(userName)[0]}</AvatarFallback>
                   </Avatar>
                 </div>
