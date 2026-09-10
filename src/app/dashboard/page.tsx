@@ -589,7 +589,7 @@ export default function DashboardHome() {
                      ) : filteredTransactions.length === 0 ? (
                         <div className="p-24 text-center bg-white/50 border border-dashed border-neutral-200 rounded-md space-y-6">
                            <TrendingUp className="h-12 w-12 text-neutral-200 mx-auto" />
-                           <p className="text-neutral-400 font-bold uppercase text-xs tracking-widest">Aguardando sua primeira transação</p>
+                           <p className="text-neutral-400 font-bold uppercase text-xs tracking-widest">Nenhuma transação encontrada</p>
                         </div>
                      ) : (
                         <div className="grid gap-6">

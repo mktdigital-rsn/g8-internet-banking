@@ -238,7 +238,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   React.useEffect(() => {
     if (timeLeft === null) return;
 
-    if (timeLeft <= 0) {
+    if (timeLeft <= 0 && process.env.NODE_ENV !== "development") {
       toast.error("Sua sessão expirou. Para sua segurança, você foi desconectado.");
       handleLogout();
       return;
