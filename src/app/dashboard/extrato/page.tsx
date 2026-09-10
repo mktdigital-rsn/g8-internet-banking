@@ -1,62 +1,53 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { currentBrand } from "@/config/brand";
 import api from "@/lib/api";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import {
-    ArrowUpRight,
-    ArrowDownLeft,
-    Search,
-    Download,
-    MoreVertical,
-    PlusCircle,
-    MinusCircle,
-    FileText,
-    Calendar,
-    Filter,
-    CreditCard,
-    Smartphone,
-    ArrowRightLeft,
-    Phone,
     AlertCircle,
-    Diamond,
+    ArrowDownLeft,
     ArrowLeft,
-    ChevronRight,
-    TrendingUp,
-    ShieldAlert,
-    Building2,
-    Fingerprint,
-    CheckCircle2,
-    CalendarDays,
+    ArrowRightLeft,
     ArrowUpDown,
-    QrCode
+    ArrowUpRight,
+    Building2,
+    Calendar,
+    CalendarDays,
+    CheckCircle2,
+    ChevronRight,
+    CreditCard,
+    Diamond,
+    Download,
+    FileText,
+    Fingerprint,
+    Phone,
+    Search
 } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
-    AreaChart,
     Area,
-    XAxis,
-    YAxis,
+    AreaChart,
     CartesianGrid,
+    ResponsiveContainer,
     Tooltip,
-    ResponsiveContainer
+    XAxis,
+    YAxis
 } from "recharts";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import Link from "next/link";
 
 const PixIcon = (props: any) => (
-  <svg {...props} viewBox="0 0 100 100" fill="currentColor">
-    <rect x="35" y="5" width="30" height="30" rx="6" transform="rotate(45 50 20)" />
-    <rect x="35" y="65" width="30" height="30" rx="6" transform="rotate(45 50 80)" />
-    <rect x="5" y="35" width="30" height="30" rx="6" transform="rotate(45 20 50)" />
-    <rect x="65" y="35" width="30" height="30" rx="6" transform="rotate(45 80 50)" />
-  </svg>
+    <svg {...props} viewBox="0 0 100 100" fill="currentColor">
+        <rect x="35" y="5" width="30" height="30" rx="6" transform="rotate(45 50 20)" />
+        <rect x="35" y="65" width="30" height="30" rx="6" transform="rotate(45 50 80)" />
+        <rect x="5" y="35" width="30" height="30" rx="6" transform="rotate(45 20 50)" />
+        <rect x="65" y="35" width="30" height="30" rx="6" transform="rotate(45 80 50)" />
+    </svg>
 );
 
 type ExtratoItem = {
@@ -155,7 +146,7 @@ export default function ExtratoGeralPage() {
         const updateDates = () => {
             const now = new Date();
             const todayStr = now.toISOString().split('T')[0];
-            
+
             if (chartPeriod === "day") {
                 setStartDate(todayStr);
                 setEndDate(todayStr);
@@ -179,7 +170,7 @@ export default function ExtratoGeralPage() {
             setIsLoading(true);
             try {
                 console.log("🚀 [EXTRATO] Iniciando busca...");
-                
+
                 // Passar datas se disponíveis para o backend tentar filtrar por lá
                 const response = await api.get("/api/banco/extrato/buscar", {
                     params: {
@@ -191,8 +182,8 @@ export default function ExtratoGeralPage() {
                 });
 
                 if (response.data && (response.data.data || response.data.transacoes)) {
-                   const rawItems = response.data.data || response.data.transacoes || [];
-                   setItems(Array.isArray(rawItems) ? rawItems : []);
+                    const rawItems = response.data.data || response.data.transacoes || [];
+                    setItems(Array.isArray(rawItems) ? rawItems : []);
                 }
             } catch (err: any) {
                 if (err.name === 'CanceledError') return;
@@ -237,7 +228,7 @@ export default function ExtratoGeralPage() {
         try {
             if (format === 'pdf') {
                 const doc = new jsPDF();
-                
+
                 // --- HEADER SECTION ---
                 try {
                     doc.addImage("/logo_g8_boleto.png", "PNG", 14, 10, 32, 10);
@@ -247,7 +238,7 @@ export default function ExtratoGeralPage() {
                     doc.setTextColor(12, 10, 9);
                     doc.text(currentBrand.name.toUpperCase(), 14, 20);
                 }
-                
+
                 doc.setFont("helvetica", "bold");
                 doc.setFontSize(16);
                 doc.setTextColor(12, 10, 9);
@@ -255,7 +246,7 @@ export default function ExtratoGeralPage() {
                 const titleWidth = doc.getTextWidth(reportTitle);
                 const pageWidth = doc.internal.pageSize.getWidth();
                 doc.text(reportTitle, (pageWidth - titleWidth) / 2, 20);
-                
+
                 doc.setFontSize(8);
                 doc.setFont("helvetica", "normal");
                 doc.setTextColor(100, 100, 100);
@@ -282,22 +273,22 @@ export default function ExtratoGeralPage() {
                     head: tableHeaders,
                     body: tableBody,
                     theme: 'grid',
-                    headStyles: { 
-                        fillColor: [255, 255, 255], 
+                    headStyles: {
+                        fillColor: [255, 255, 255],
                         textColor: [12, 10, 9],
                         fontSize: 8,
                         fontStyle: 'bold',
                         lineWidth: 0.1,
                         lineColor: [200, 200, 200]
                     },
-                    bodyStyles: { 
+                    bodyStyles: {
                         fontSize: 7,
                         textColor: [50, 50, 50],
                         lineWidth: 0.1,
                         lineColor: [230, 230, 230]
                     },
-                    alternateRowStyles: { 
-                        fillColor: [252, 252, 252] 
+                    alternateRowStyles: {
+                        fillColor: [252, 252, 252]
                     },
                     columnStyles: {
                         6: { halign: 'right', fontStyle: 'bold' }
@@ -447,11 +438,11 @@ export default function ExtratoGeralPage() {
             const parts = endDate.split("-").map(Number);
             referenceDate = new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59);
         }
-        
+
         const now = new Date();
         const isToday = referenceDate.toDateString() === now.toDateString();
         const startOfRef = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), referenceDate.getDate());
-        
+
         const groups: { [key: string]: { name: string, full: string, entries: number, exits: number, timestamp: number } } = {};
         const daysArr = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -459,10 +450,10 @@ export default function ExtratoGeralPage() {
             const hLimit = isToday ? now.getHours() : 23;
             for (let h = 0; h <= hLimit; h++) {
                 const key = `H-${h}`;
-                groups[key] = { 
-                    name: `${h}h`, 
-                    full: `${isToday ? 'Hoje' : referenceDate.toLocaleDateString('pt-BR')} às ${String(h).padStart(2, '0')}:00`, 
-                    entries: 0, 
+                groups[key] = {
+                    name: `${h}h`,
+                    full: `${isToday ? 'Hoje' : referenceDate.toLocaleDateString('pt-BR')} às ${String(h).padStart(2, '0')}:00`,
+                    entries: 0,
                     exits: 0,
                     timestamp: h
                 };
@@ -473,10 +464,10 @@ export default function ExtratoGeralPage() {
                 d.setDate(startOfRef.getDate() - i);
                 const dayLabel = daysArr[d.getDay()];
                 const key = `D-${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-                groups[key] = { 
-                    name: `${dayLabel} ${String(d.getDate()).padStart(2, '0')}`, 
-                    full: d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }), 
-                    entries: 0, 
+                groups[key] = {
+                    name: `${dayLabel} ${String(d.getDate()).padStart(2, '0')}`,
+                    full: d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }),
+                    entries: 0,
                     exits: 0,
                     timestamp: d.getTime()
                 };
@@ -490,10 +481,10 @@ export default function ExtratoGeralPage() {
                 const d = new Date(firstDay);
                 d.setDate(firstDay.getDate() + i);
                 const key = `D-${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-                groups[key] = { 
-                    name: String(d.getDate()).padStart(2, '0'), 
-                    full: d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }), 
-                    entries: 0, 
+                groups[key] = {
+                    name: String(d.getDate()).padStart(2, '0'),
+                    full: d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
+                    entries: 0,
                     exits: 0,
                     timestamp: d.getTime()
                 };
@@ -539,13 +530,14 @@ export default function ExtratoGeralPage() {
             {/* Receipt Modal Overlay */}
             {selectedTransaction && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-500 overflow-y-auto">
-                    <Card className="w-full max-w-[860px] max-h-[calc(100dvh-2rem)] bg-white rounded-md overflow-y-auto shadow-2xl relative border-white/20 animate-in zoom-in-95 duration-300 my-auto">
+                    <Card className="w-full max-w-[860px] max-h-[calc(100dvh-2rem)] bg-white rounded-md overflow-y-auto shadow-2xl relative border-white/20 animate-in zoom-in-95 duration-300 my-auto px-2 py-6">
                         <button
                             onClick={() => setSelectedTransaction(null)}
-                            className="absolute top-4 right-4 p-2 rounded-md bg-white/90 hover:bg-neutral-100 transition-all z-20 border border-neutral-100 shadow-sm"
+                            className="absolute flex items-center gap-2 top-4 left-4 p-2 rounded-md bg-white/90 hover:bg-orange-500 group transition-all z-20 border border-neutral-100 shadow-sm"
                             aria-label="Fechar comprovante"
                         >
-                            <ArrowLeft className="h-5 w-5 rotate-180 text-neutral-400" />
+                            <ArrowLeft className="h-5 w-5 text-neutral-400 group-hover:text-white" />
+                            <span className="text-sm font-bold text-white hidden group-hover:block">Voltar para a página anterior</span>
                         </button>
 
                         <div className="relative">
@@ -667,7 +659,7 @@ export default function ExtratoGeralPage() {
                                     <Button
                                         variant="outline"
                                         onClick={() => setSelectedTransaction(null)}
-                                        className="h-14 border-neutral-100 rounded-md font-black uppercase tracking-widest text-[11px] px-8 active:scale-95 text-neutral-500 hover:text-black"
+                                        className="h-14 border-neutral-100 rounded-md font-black uppercase tracking-widest text-sm px-8 active:scale-95 text-neutral-500 hover:bg-orange-500 hover:text-white transition-all shadow-xl shadow-black/10 text-white"
                                     >
                                         Fechar
                                     </Button>
@@ -741,7 +733,7 @@ export default function ExtratoGeralPage() {
                             </p>
                         </div>
                     </Card>
-                    <Card 
+                    <Card
                         onClick={() => window.open("https://wa.me/5551996297077", "_blank")}
                         className="rounded-[2px] border-0 shadow-xl bg-[var(--brand-accent)] p-6 text-white relative overflow-hidden group cursor-pointer border border-white/10 flex flex-row items-center gap-5 active:scale-95 transition-all min-h-[110px]"
                     >
@@ -922,10 +914,9 @@ export default function ExtratoGeralPage() {
                                             className="flex flex-col sm:grid sm:grid-cols-12 items-start sm:items-center px-6 py-6 sm:py-5 bg-white hover:bg-neutral-50/50 rounded-md border border-neutral-50 hover:border-neutral-200 hover:shadow-xl transition-all duration-300 group cursor-pointer gap-4 sm:gap-6"
                                         >
                                             <div className="flex items-center gap-3 md:gap-4 col-span-5 min-w-0 w-full">
-                                                <div className={`w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-[5px] flex items-center justify-center p-2.5 transition-all ${
-                                                    t.metodo === "TRANSFERENCIA_PIX" ? 'bg-[#32BCAD]/10 text-[#32BCAD]' :
+                                                <div className={`w-10 h-10 md:w-12 md:h-12 shrink-0 rounded-[5px] flex items-center justify-center p-2.5 transition-all ${t.metodo === "TRANSFERENCIA_PIX" ? 'bg-[#32BCAD]/10 text-[#32BCAD]' :
                                                     t.tipo === 'CREDITO' ? 'text-green-500 bg-green-50' : 'text-red-500 bg-red-50'
-                                                } group-hover:scale-110`}>
+                                                    } group-hover:scale-110`}>
                                                     <Icon className={`h-full w-full ${t.metodo === "TRANSFERENCIA_PIX" ? "" : "stroke-[2.5]"}`} />
                                                 </div>
                                                 <div className="min-w-0 flex-1">
