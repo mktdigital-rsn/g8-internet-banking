@@ -31,7 +31,8 @@ import {
     CalendarDays,
     ArrowUpDown,
     Users,
-    QrCode
+    QrCode,
+    FileSpreadsheet
 } from "lucide-react";
 import { Suspense } from "react";
 import {
@@ -613,27 +614,25 @@ function PixExtratoContent() {
                         <Button
                             onClick={() => handleExport('pdf')}
                             disabled={!!exportingType}
-                            variant="outline"
-                            className="flex-1 sm:flex-none h-10 md:h-11 border-neutral-100 bg-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all text-neutral-400 hover:text-black"
+                            className="group flex-1 sm:flex-none h-12 md:h-14 min-w-[118px] bg-[#141414] hover:bg-orange-500 text-white rounded-[8px] px-5 md:px-7 font-black text-[11px] md:text-[12px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-black/10 transition-all disabled:opacity-60 disabled:hover:bg-[#141414]"
                         >
-                            {exportingType === 'pdf' ? <div className="h-4 w-4 border-2 border-[var(--brand-accent)] border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-[var(--brand-accent)]" />}
+                            {exportingType === 'pdf' ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FileText className="h-5 w-5 text-red-500 transition-colors group-hover:text-white" />}
                             PDF
                         </Button>
                         <Button
                             onClick={() => handleExport('csv')}
                             disabled={!!exportingType}
-                            variant="outline"
-                            className="flex-1 sm:flex-none h-10 md:h-11 border-neutral-100 bg-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 hover:bg-neutral-50 shadow-sm transition-all text-neutral-400 hover:text-black"
+                            className="group flex-1 sm:flex-none h-12 md:h-14 min-w-[118px] bg-[#141414] hover:bg-orange-500 text-white rounded-[8px] px-5 md:px-7 font-black text-[11px] md:text-[12px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-black/10 transition-all disabled:opacity-60 disabled:hover:bg-[#141414]"
                         >
-                            {exportingType === 'csv' ? <div className="h-4 w-4 border-2 border-green-600 border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4 text-green-600" />}
+                            {exportingType === 'csv' ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FileSpreadsheet className="h-5 w-5 text-emerald-400 transition-colors group-hover:text-white" />}
                             CSV
                         </Button>
                         <Button
                             onClick={() => handleExport('xls')}
                             disabled={!!exportingType}
-                            className="flex-1 sm:flex-none h-10 md:h-11 bg-[var(--brand-accent)] hover:bg-[#c2410c] text-white rounded-[5px] px-4 md:px-5 font-black text-[9px] md:text-[10px] uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-orange-500/20 transition-all font-sans"
+                            className="group flex-1 sm:flex-none h-12 md:h-14 min-w-[118px] bg-[#141414] hover:bg-orange-500 text-white rounded-[8px] px-5 md:px-7 font-black text-[11px] md:text-[12px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-black/10 transition-all font-sans disabled:opacity-60 disabled:hover:bg-[#141414]"
                         >
-                            {exportingType === 'xls' ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Download className="h-4 w-4" />}
+                            {exportingType === 'xls' ? <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <FileSpreadsheet className="h-5 w-5 text-emerald-400 transition-colors group-hover:text-white" />}
                             XLS
                         </Button>
                     </div>
