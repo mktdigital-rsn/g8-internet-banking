@@ -1096,7 +1096,7 @@ function SuccessStep({ boletoData, transactionId, setTransactionId, handlePrintR
         <Button 
           onClick={handlePrintReceipt} 
           disabled={isSyncing}
-          className="flex-[2] h-20 bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-70"
+          className="flex-[2] h-20 bg-[#0c0a09] hover:bg-orange-500 text-white rounded-sm font-black text-lg uppercase tracking-widest shadow-xl flex items-center justify-center gap-3 transition-all disabled:opacity-70"
         >
           {isSyncing ? (
             <>
@@ -1113,7 +1113,7 @@ function SuccessStep({ boletoData, transactionId, setTransactionId, handlePrintR
         <Button
           onClick={onNewPayment}
           variant="outline"
-          className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-sm font-black text-lg uppercase tracking-widest hover:border-[var(--brand-accent)] hover:text-[var(--brand-accent)] transition-all"
+          className="flex-1 h-20 border-2 border-neutral-200 text-neutral-400 rounded-sm font-black text-sm hover:bg-orange-500  uppercase tracking-widest hover:border-[var(--brand-accent)] hover:text-white  text-white transition-all"
         >
           NOVO PAGAMENTO
         </Button>
