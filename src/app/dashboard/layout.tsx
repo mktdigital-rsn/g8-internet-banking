@@ -2,6 +2,7 @@
 
 import React from "react";
 import styles from "./sidebar.module.css";
+import ui from "./overview.module.css";
 import Image from "next/image";
 import {
   Home,
@@ -289,9 +290,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       : THEME_BG;
 
   return (
-    <div className={`flex h-screen ${THEME_BG} text-white overflow-hidden font-sans ${currentBrand.themeClass}`}>
+    <div className={`${isLottoPay ? ui.shell : ""} flex h-dvh ${THEME_BG} text-white overflow-hidden font-sans ${currentBrand.themeClass}`}>
       {/* Sidebar */}
-      <aside className={`w-72 2xl:w-80 flex flex-col p-6 2xl:p-10 space-y-8 z-20 relative ${sidebarBg} shrink-0`}>
+      <aside className={`${ui.sidebar} w-72 2xl:w-80 flex flex-col p-6 2xl:p-10 space-y-8 z-20 relative ${sidebarBg} shrink-0`}>
         <div className="px-2 relative z-10">
           {currentBrand.id === "g8" ? (
             <Image src={currentBrand.logoOfficial} alt={currentBrand.name} width={180} height={60} className="object-contain 2xl:scale-110" />
@@ -353,7 +354,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <span className={`text-[8px] font-black uppercase tracking-widest leading-none mb-1 ${
                     currentBrand.id === "galapagos" ? "text-white/50" : "text-brand-secondary/60"
                   }`}>Banco</span>
-                  <span className="text-[10px] font-mono font-black text-white leading-none">{currentBrand.bankCode} • {currentBrand.bankName}</span>
+                  <span className="text-[10px] font-mono font-black text-white leading-none">{isLottoPay ? "LottoPay" : `${currentBrand.bankCode} • ${currentBrand.bankName}`}</span>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col">
@@ -387,6 +388,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <div key={item.label} className="space-y-1">
                         <button
                           onClick={() => setExpandedMenus(prev => ({ ...prev, [item.label]: !prev[item.label] }))}
+                          aria-label={item.label}
+                          aria-expanded={!!expandedMenus[item.label]}
                           data-active={isAnySubActive}
                           className={`${isLottoPay ? styles.item : ""} flex items-center gap-5 px-6 py-3 w-full rounded-md transition-all group relative overflow-hidden border border-transparent ${
                             isAnySubActive
@@ -412,6 +415,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <Link
                                   key={sub.label}
                                   href={sub.href}
+                                  aria-label={sub.label}
                                   data-active={isSubActive}
                                   className={`${isLottoPay ? styles.item : ""} flex items-center gap-4 px-6 py-2.5 rounded-md transition-all group border border-transparent ${
                                     isSubActive
@@ -437,6 +441,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       key={item.label}
                       href={item.disabled ? "#" : item.href}
                       onClick={(e) => item.disabled && e.preventDefault()}
+                      aria-label={item.label}
                       data-active={isActive}
                       data-disabled={item.disabled || undefined}
                       className={`${isLottoPay ? styles.item : ""} flex items-center gap-5 px-6 py-3 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
@@ -467,7 +472,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="mt-auto relative z-10 pt-6 border-t border-white/5">
-          <button onClick={handleLogout} className={`${isLottoPay ? styles.item : ""} flex items-center gap-5 px-5 py-4 w-full text-white/60 hover:bg-white hover:text-brand-accent rounded-md transition-all border border-transparent group`}>
+          <button aria-label="Encerrar sessão" onClick={handleLogout} className={`${isLottoPay ? styles.item : ""} flex items-center gap-5 px-5 py-4 w-full text-white/60 hover:bg-white hover:text-brand-accent rounded-md transition-all border border-transparent group`}>
             <LogOut className="h-5 w-5 text-white/60 group-hover:text-brand-accent" />
             <span className="text-[11px] font-black uppercase tracking-widest text-white/60 group-hover:text-brand-accent">Encerrar Sessão</span>
           </button>
@@ -475,9 +480,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col relative overflow-hidden">
+      <main className={`${ui.main} flex-1 flex flex-col relative overflow-hidden`}>
         {/* Top Header */}
-        <header className={`h-24 flex items-center justify-between px-10 z-10 shrink-0 ${headerBg}`}>
+        <header className={`${ui.header} h-24 flex items-center justify-between px-10 z-10 shrink-0 ${headerBg}`}>
           <div className="flex items-center max-w-[280px] xl:max-w-sm w-full">
             <div className="relative w-full group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40 group-focus-within:text-brand-accent transition-colors" />
@@ -580,7 +585,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-10 bg-white relative shadow-inner no-scrollbar">
+        <div className={`${ui.content} flex-1 overflow-y-auto p-10 bg-white relative shadow-inner no-scrollbar`}>
           <div className="max-w-[1920px] mx-auto min-h-full">
             {children}
           </div>

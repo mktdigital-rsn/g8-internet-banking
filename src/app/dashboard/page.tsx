@@ -1,5 +1,7 @@
 "use client";
 
+import ui from "./overview.module.css";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,6 +23,7 @@ import {
    Landmark,
    MoreHorizontal,
    RotateCw,
+   Plus,
    TrendingUp,
    Users
 } from "lucide-react";
@@ -353,12 +356,12 @@ export default function DashboardHome() {
    }, [allTransactions, filter]);
 
    return (
-      <div className="bg-[#f8f9fa] min-h-screen w-full overflow-y-auto overflow-x-hidden no-scrollbar">
-         <div className="p-4 md:p-10 2xl:p-16 flex flex-col xl:flex-row gap-8 2xl:gap-24 max-w-[1800px] mx-auto animate-in fade-in duration-700">
+      <div className={`${currentBrand.id === "lotopay" ? ui.overview : ""} bg-[#f8f9fa] min-h-screen w-full overflow-y-auto overflow-x-hidden no-scrollbar`}>
+         <div className={`${ui.grid} p-4 md:p-10 2xl:p-16 flex flex-col xl:flex-row gap-8 2xl:gap-24 max-w-[1800px] mx-auto animate-in fade-in duration-700`}>
             {/* Left Column: Main Dashboard */}
-            <div className="flex-1 space-y-12 2xl:space-y-16 min-w-0 w-full">
+            <div className={`${ui.primary} flex-1 space-y-12 2xl:space-y-16 min-w-0 w-full`}>
                {/* Upper Section: Welcome & Actions */}
-               <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 px-2">
+               <div className={`${ui.welcome} flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 px-2`}>
                   <div className="space-y-4">
                      <Badge variant="secondary" className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-6 py-2.5 font-black text-[12px] 2xl:text-xl uppercase tracking-[0.35em] mb-4">Conta Verificada</Badge>
                      {isLoadingData ? (
@@ -373,19 +376,21 @@ export default function DashboardHome() {
                         </>
                      )}
                   </div>
+                  {currentBrand.id !== "lotopay" && (
                   <div className="flex gap-4 w-full sm:w-auto">
                      <Link href="/dashboard/pix" className="flex-1 sm:flex-none">
-                        <Button className={`w-full rounded-md h-12 2xl:h-20 px-10 2xl:px-16 font-black text-xs 2xl:text-lg uppercase tracking-widest ${currentBrand.id === "galapagos"
+                        <Button className={`w-full rounded-md h-12 2xl:h-20 px-10 2xl:px-16  text-xs 2xl:text-lg uppercase tracking-widest ${currentBrand.id === "galapagos"
                               ? "bg-brand-accent hover:bg-brand-accent-hover text-white shadow-xl shadow-brand-accent/20"
                               : "bg-black text-white hover:bg-[var(--brand-accent)] shadow-2xl shadow-orange-500/30"
                            } transition-all active:scale-95`}>Nova Transação</Button>
                      </Link>
                   </div>
+                  )}
                </div>
 
-               <div className="flex flex-col min-[1440px]:flex-row gap-8 2xl:gap-12 items-start min-[1440px]:items-stretch">
+               <div className={`${ui.summary} flex flex-col min-[1440px]:flex-row gap-8 2xl:gap-12 items-start min-[1440px]:items-stretch`}>
                   {/* Card Summary */}
-                  <div className="space-y-8 flex flex-col flex-1 min-w-0 w-full min-[1440px]:max-w-[750px]">
+                  <div className={`${ui.cardColumn} space-y-8 flex flex-col flex-1 min-w-0 w-full min-[1440px]:max-w-[750px]`}>
                      <div className="flex items-center justify-between h-12">
                         <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-[#0c0a09]">Meu Resumo</h2>
                      </div>
@@ -456,7 +461,7 @@ export default function DashboardHome() {
                   </div>
 
                   {/* Maturity Section Carousel */}
-                  <div className="space-y-8 flex flex-col w-full min-[1440px]:w-[320px] shrink-0 min-w-0 justify-center">
+                  <div className={`${ui.maturities} space-y-8 flex flex-col w-full min-[1440px]:w-[320px] shrink-0 min-w-0 justify-center`}>
                      <div className="flex items-center justify-between h-12">
                         <h2 className="text-2xl md:text-3xl font-black tracking-tighter text-[#0c0a09] truncate pr-2">Vencimentos</h2>
                         <div className="flex gap-3 shrink-0">
@@ -475,7 +480,7 @@ export default function DashboardHome() {
                         </div>
                      </div>
 
-                     <div className="relative overflow-hidden flex-1 group/carousel h-[300px] 2xl:h-[320px]">
+                     <div className={`${ui.carousel} relative overflow-hidden flex-1 group/carousel h-[300px] 2xl:h-[320px]`}>
                         {isLoadingMaturities ? (
                            <div className="flex-shrink-0 w-full min-[1440px]:w-[320px] bg-white border border-neutral-100 rounded-md p-10 2xl:p-12 shadow-sm animate-pulse flex flex-col justify-between h-[90%] 2xl:h-[95%]">
                               <div className="flex justify-between items-start">
@@ -503,7 +508,7 @@ export default function DashboardHome() {
                         ) : (
                            <div
                               className="flex gap-6 transition-transform duration-1000 cubic-bezier(0.4, 0, 0.2, 1) h-full items-center"
-                              style={{ transform: mounted && window.innerWidth >= 1440 ? `translateX(-${currentIndex * 344}px)` : `translateX(calc(-${currentIndex} * (100% + 24px)))` }}
+                              style={{ transform: currentBrand.id !== "lotopay" && mounted && window.innerWidth >= 1440 ? `translateX(-${currentIndex * 344}px)` : `translateX(calc(-${currentIndex} * (100% + 24px)))` }}
                            >
                               {maturityItems.map((item) => {
                                  const MaturityIcon = item.icon;
@@ -546,7 +551,7 @@ export default function DashboardHome() {
                </div>
 
                {/* Recent Transactions List */}
-               <div className="space-y-10 2xl:space-y-12 bg-white/30 backdrop-blur-md rounded-md border border-white/40">
+               <div className={`${ui.history} space-y-10 2xl:space-y-12 bg-white/30 backdrop-blur-md rounded-md border border-white/40`}>
                   <div className="flex items-center justify-between">
                      <div className="flex items-center gap-6">
                         <h2 className="text-3xl 2xl:text-4xl font-black tracking-tighter text-[#0c0a09]">Histórico Recente</h2>
@@ -598,9 +603,9 @@ export default function DashboardHome() {
                                  <div
                                     key={idx}
                                     onClick={() => setSelectedTransaction(t)}
-                                    className="flex flex-col sm:flex-row sm:items-center justify-between p-6 2xl:p-8 bg-white rounded-md border border-neutral-100 shadow-sm hover:shadow-2xl hover:shadow-orange-100/30 hover:-translate-y-1.5 transition-all duration-500 cursor-pointer group gap-4 sm:gap-0"
+                                    className={`${ui.transaction} flex flex-col sm:flex-row sm:items-center justify-between p-6 2xl:p-8 bg-white rounded-md border border-neutral-100 shadow-sm hover:shadow-2xl hover:shadow-orange-100/30 hover:-translate-y-1.5 transition-all duration-500 cursor-pointer group gap-4 sm:gap-0`}
                                  >
-                                    <div className="flex items-center gap-8 2xl:gap-10 flex-1 min-w-0">
+                                    <div className={`${ui.transactionInfo} flex items-center gap-8 2xl:gap-10 flex-1 min-w-0`}>
                                        <div className={`shrink-0 w-16 h-16 2xl:w-18 2xl:h-18 rounded-md flex items-center justify-center p-4 transition-all shadow-sm ${t.metodo === "TRANSFERENCIA_PIX" ? 'bg-[#32BCAD]/10 text-[#32BCAD]' :
                                              t.tipo === 'CREDITO' ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'
                                           }`}>
@@ -608,7 +613,7 @@ export default function DashboardHome() {
                                        </div>
                                        <div className="space-y-2 min-w-0 flex-1">
                                           <p className="font-black text-xl 2xl:text-xl text-[#0c0a09] leading-none group-hover:text-[var(--brand-accent)] transition-colors truncate max-w-[200px] sm:max-w-[300px] 2xl:max-w-[450px]">{displayName}</p>
-                                          <div className="flex items-center gap-3">
+                                          <div className={`${ui.transactionMeta} flex items-center gap-3`}>
                                              <Badge variant="secondary" className={`text-[10px] 2xl:text-[10px] font-black uppercase border-0 px-3 h-6 flex items-center ${t.tipo === 'CREDITO' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
                                                 {t.metodoFormatado}
                                              </Badge>
@@ -617,7 +622,7 @@ export default function DashboardHome() {
                                           </div>
                                        </div>
                                     </div>
-                                    <div className="flex items-center justify-between sm:justify-end gap-6 md:gap-12 shrink-0 w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-neutral-50">
+                                    <div className={`${ui.transactionAmount} flex items-center justify-between sm:justify-end gap-6 md:gap-12 shrink-0 w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-neutral-50`}>
                                        <div className="text-left sm:text-right w-full sm:w-40 md:w-56 2xl:w-64">
                                           <p className={`font-mono text-xl md:text-2xl 2xl:text-3xl font-black tracking-tighter ${t.tipo === 'CREDITO' ? 'text-green-600' : 'text-red-500'}`}>
                                              {t.tipo === 'CREDITO' ? '+' : '-'} {t.valorFormatado}
@@ -637,8 +642,13 @@ export default function DashboardHome() {
             </div>
 
 
-            <div className="w-full xl:w-[32%] xl:min-w-[320px] xl:max-w-[450px] 2xl:max-w-[550px] shrink-0 space-y-12 2xl:space-y-16 pb-10 pr-0 xl:pr-2">
-               <Card className="rounded-md border-0 shadow-2xl shadow-black/10 bg-white p-10 2xl:p-12 space-y-12 2xl:space-y-16 relative overflow-hidden">
+            <div className={`${ui.secondary} w-full xl:w-[32%] xl:min-w-[320px] xl:max-w-[450px] 2xl:max-w-[550px] shrink-0 space-y-12 2xl:space-y-16 pb-10 pr-0 xl:pr-2`}>
+               {currentBrand.id === "lotopay" && (
+                  <Link href="/dashboard/pix" className={ui.newTransaction}>
+                     <Plus className="h-4 w-4 text-white" aria-hidden="true" /> <span className="text-xs text-white 2xl:text-lg font-bold uppercase tracking-widest">Nova transação</span>
+                  </Link>
+               )}
+               <Card className={`${ui.balanceCard} rounded-md border-0 shadow-2xl shadow-black/10 bg-white p-10 2xl:p-12 space-y-12 2xl:space-y-16 relative overflow-hidden`}>
                   <div className="absolute top-0 right-0 w-32 h-32 bg-orange-50 rounded-full -mr-16 -mt-16 blur-3xl opacity-50" />
                   <div className="space-y-10 2xl:space-y-12 relative z-10">
                      <div className="space-y-2">
@@ -666,14 +676,14 @@ export default function DashboardHome() {
                         onValueChange={(val) => setChartPeriod(val as any)}
                      >
                         <TabsList className="bg-slate-50 rounded-md p-2 h-14 2xl:h-16 w-full grid grid-cols-3">
-                           <TabsTrigger value="day" className="rounded-md h-full text-[10px] 2xl:text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[var(--brand-accent)]">Dia</TabsTrigger>
-                           <TabsTrigger value="week" className="rounded-md h-full text-[10px] 2xl:text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[var(--brand-accent)]">Semana</TabsTrigger>
-                           <TabsTrigger value="month" className="rounded-md h-full text-[10px] 2xl:text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[var(--brand-accent)]">Mês</TabsTrigger>
+                           <TabsTrigger value="day" className="rounded-md h-full  text-[10px]  2xl:text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[var( )]">Dia</TabsTrigger>
+                           <TabsTrigger value="week" className="rounded-md h-full text-[10px]  2xl:text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[var( )]">Semana</TabsTrigger>
+                           <TabsTrigger value="month" className="rounded-md h-full text-[10px]  2xl:text-xs font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:shadow-md data-[state=active]:text-[var(   )]">Mês</TabsTrigger>
                         </TabsList>
                      </Tabs>
                   </div>
 
-                  <div className="h-[280px] 2xl:h-[350px] w-full -mx-4">
+                  <div className={`${ui.chart} h-[280px] 2xl:h-[350px] w-full -mx-4`}>
                      {mounted && (
                         <ResponsiveContainer width="100%" height="100%">
                            <AreaChart data={processedChartData}>
