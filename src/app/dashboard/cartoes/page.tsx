@@ -105,7 +105,7 @@ export default function CartoesPage() {
 
             <div className="flex gap-4">
                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                  <DialogTrigger className="h-14 px-8 bg-[#0c0a09] hover:bg-neutral-800 text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all shadow-xl group flex items-center">
+                  <DialogTrigger className="h-14 px-8 bg-[#0c0a09] hover:bg-orange-500 text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all shadow-xl group flex items-center">
                      <Plus className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform text-white" />
                      Novo Cartão Virtual
                   </DialogTrigger>
@@ -187,7 +187,7 @@ export default function CartoesPage() {
                      )}
                   </DialogContent>
                </Dialog>
-               <Button className="h-14 px-8 bg-[#0c0a09] hover:bg-neutral-800 text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all shadow-xl group flex items-center">
+               <Button className="h-14 px-8 bg-[#0c0a09] hover:bg-orange-500  text-white rounded-sm font-black uppercase tracking-widest text-xs transition-all shadow-xl group flex items-center">
                   <CreditCard className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform text-white" />
                   Solicitar Cartão Físico
                </Button>

@@ -1,68 +1,59 @@
 "use client";
 
-import React, { useMemo, useState, useEffect } from "react";
-import api from "@/lib/api";
-import {
-    Banknote,
-    Search,
-    Download,
-    Plus,
-    FileText,
-    Calendar,
-    Filter,
-    CreditCard,
-    ArrowUpRight,
-    ArrowDownLeft,
-    CheckCircle2,
-    XCircle,
-    Clock,
-    AlertCircle,
-    ChevronRight,
-    ArrowLeft,
-    PlusCircle,
-    CalendarDays,
-    ArrowUpDown,
-    Send,
-    Loader2,
-    FileSpreadsheet,
-    FileBox,
-    RotateCw,
-    TrendingUp,
-    AlertTriangle,
-    PieChart as PieChartIcon,
-    Diamond,
-    Building2,
-    Fingerprint,
-    Printer,
-    Layers
-} from "lucide-react";
-import {
-    AreaChart,
-    Area,
-    XAxis,
-    YAxis,
-    CartesianGrid,
-    Tooltip as RechartsTooltip,
-    ResponsiveContainer,
-    PieChart,
-    Pie,
-    Cell,
-    Legend
-} from "recharts";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
-import { useAtom, useAtomValue } from "jotai";
-import { cobrancaDataAtom } from "@/store/pagamentos";
-import { userAtom } from "@/store/auth";
 import { currentBrand } from "@/config/brand";
+import api from "@/lib/api";
+import { cn } from "@/lib/utils";
+import { userAtom } from "@/store/auth";
+import { cobrancaDataAtom } from "@/store/pagamentos";
+import { useAtom, useAtomValue } from "jotai";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+    AlertCircle,
+    AlertTriangle,
+    ArrowLeft,
+    ArrowUpRight,
+    Banknote,
+    Building2,
+    CalendarDays,
+    CheckCircle2,
+    ChevronRight,
+    Clock,
+    Diamond,
+    FileBox,
+    FileSpreadsheet,
+    FileText,
+    Fingerprint,
+    Loader2,
+    PieChart as PieChartIcon,
+    PlusCircle,
+    Printer,
+    Search,
+    Send,
+    TrendingUp,
+    XCircle
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import {
+    Area,
+    AreaChart,
+    CartesianGrid,
+    Cell,
+    Legend,
+    Pie,
+    PieChart,
+    Tooltip as RechartsTooltip,
+    ResponsiveContainer,
+    XAxis,
+    YAxis
+} from "recharts";
+import { toast } from "sonner";
 
 interface BoletoItem {
     id: string;
@@ -760,9 +751,9 @@ export default function GestaoCobrancasPage() {
                             <Input placeholder="Buscar por nome, CPF/CNPJ ou código..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-12 h-14 bg-neutral-50 border-neutral-100 font-bold text-neutral-800 placeholder:text-neutral-400 focus:border-[var(--brand-accent)] rounded-sm shadow-inner" />
                         </div>
                         <div className="flex items-center gap-3 shrink-0"><p className="text-[10px] font-black text-neutral-400 uppercase tracking-widest mr-2">Exportar:</p>
-                            <Button onClick={() => handleExport('pdf')} disabled={!!exportingType} className="h-12 bg-orange-600 hover:bg-orange-700 text-white font-black text-[10px] uppercase tracking-widest rounded-sm px-5 flex items-center gap-2 shadow-lg active:scale-95 transition-all outline-none">{exportingType === 'pdf' ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileBox className="h-4 w-4" />} PDF</Button>
-                            <Button onClick={() => handleExport('csv')} disabled={!!exportingType} className="h-12 bg-neutral-900 hover:bg-black text-white font-black text-[10px] uppercase tracking-widest rounded-sm px-5 flex items-center gap-2 shadow-lg active:scale-95 transition-all outline-none">{exportingType === 'csv' ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4 text-emerald-400" />} CSV</Button>
-                            <Button onClick={() => handleExport('xls')} disabled={!!exportingType} className="h-12 bg-neutral-900 hover:bg-black text-white font-black text-[10px] uppercase tracking-widest rounded-sm px-5 flex items-center gap-2 shadow-lg active:scale-95 transition-all outline-none">{exportingType === 'xls' ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4 text-emerald-400" />} XLS</Button>
+                            <Button onClick={() => handleExport('pdf')} disabled={!!exportingType} className="h-12 bg-neutral-900 hover:bg-orange-500 text-white font-black text-[10px] uppercase tracking-widest rounded-sm px-5 flex items-center gap-2 shadow-lg active:scale-95 transition-all outline-non group">{exportingType === 'pdf' ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileBox className="h-4 w-4 text-red-400 group-hover:text-white" />} PDF</Button>
+                            <Button onClick={() => handleExport('csv')} disabled={!!exportingType} className="h-12 bg-neutral-900 hover:bg-orange-500 text-white font-black text-[10px] uppercase tracking-widest rounded-sm px-5 flex items-center gap-2 shadow-lg active:scale-95 transition-all outline-none group">{exportingType === 'csv' ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4 text-emerald-400 group-hover:text-white" />} CSV</Button>
+                            <Button onClick={() => handleExport('xls')} disabled={!!exportingType} className="h-12 bg-neutral-900 hover:bg-orange-500 text-white font-black text-[10px] uppercase tracking-widest rounded-sm px-5 flex items-center gap-2 shadow-lg active:scale-95 transition-all outline-none group">{exportingType === 'xls' ? <Loader2 className="h-4 w-4 animate-spin" /> : <FileSpreadsheet className="h-4 w-4 text-emerald-400 group-hover:text-white" />} XLS</Button>
                         </div>
                     </div>
                 </div>
@@ -951,9 +942,8 @@ export default function GestaoCobrancasPage() {
                                         onClick={() => selectedBoleto && handlePrint(selectedBoleto)}
                                         className="flex-1 h-12 2xl:h-16 bg-[#0c0a09] text-white hover:bg-black rounded-sm font-black uppercase tracking-widest text-[11px] 2xl:text-sm transition-all shadow-xl shadow-black/10 flex flex-col items-center justify-center py-2 group active:scale-95"
                                     >
-                                        <Printer className={`h-5 w-5 2xl:h-6 2xl:w-6 mb-1 group-hover:scale-110 transition-transform ${
-                                            currentBrand.id !== "g8" ? "text-white" : "text-[var(--brand-accent)]"
-                                        }`} />
+                                        <Printer className={`h-5 w-5 2xl:h-6 2xl:w-6 mb-1 group-hover:scale-110 transition-transform ${currentBrand.id !== "g8" ? "text-white" : "text-[var(--brand-accent)]"
+                                            }`} />
                                         Salvar PDF ou Imprimir
                                     </Button>
                                     <Button
