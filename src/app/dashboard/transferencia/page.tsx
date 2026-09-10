@@ -407,7 +407,7 @@ export default function TransferenciaPage() {
                     <div className="space-y-1">
                         <Badge className="bg-brand-accent/10 text-brand-accent border-0 text-[10px] font-black tracking-[0.3em] uppercase px-3 py-1 mb-2">{currentBrand.name} Transactional</Badge>
                         <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none text-[#0c0a09]">
-                            Transferir <span className="text-brand-accent">RECURSOS</span>
+                            TRANSFERIR <span className="text-brand-accent">RECURSOS</span>
                         </h1>
                     </div>
                 </header>
