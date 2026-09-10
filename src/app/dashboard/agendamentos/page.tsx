@@ -1,29 +1,28 @@
 "use client";
 
 import React, { useState } from "react";
+import styles from "./agendamentos.module.css";
+import PasswordConfirmationDialog from "@/components/PasswordConfirmationDialog";
 import { 
   CalendarClock, 
   Search, 
-  Filter, 
-  ChevronRight, 
   Trash2, 
-  Pencil, 
   ArrowRight,
   Clock,
   Calendar,
   Wallet,
   ArrowUpRight,
   Smartphone,
-  CheckCircle2,
   AlertCircle,
   X
 } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
+
 
 type PaymentType = "pix" | "transfer" | "boleto" | "ted";
 
@@ -35,6 +34,11 @@ interface Agendamento {
   data: string;
   status: "pending" | "failed";
   category?: string;
+  pixKey?: string;
+  agency?: string;
+  account?: string;
+  bank?: string;
+  barcode?: string;
 }
 
 const MOCK_AGENDAMENTOS: Agendamento[] = []
@@ -58,31 +62,6 @@ const CATEGORIES = [
   "Saque",
   "Transporte e mobilidade"
 ];
-
-function StatusBadge({ valor }: { valor: number }) {
-  if (valor >= 5000) {
-    return (
-      <Badge className="bg-purple-600/10 text-purple-600 border-0 px-2 py-0 h-5 font-black text-[9px] uppercase tracking-widest rounded-sm flex items-center gap-1">
-        <div className="w-1.5 h-1.5 bg-purple-600 rounded-full animate-pulse" />
-        ANALISE ESPECIAL
-      </Badge>
-    );
-  }
-  if (valor >= 1000) {
-    return (
-      <Badge className="bg-rose-600/10 text-rose-600 border-0 px-2 py-0 h-5 font-black text-[9px] uppercase tracking-widest rounded-sm flex items-center gap-1">
-        <Clock className="h-3 w-3" />
-        ALTA PRIORIDADE
-      </Badge>
-    );
-  }
-  return (
-    <Badge className="bg-orange-600/10 text-orange-600 border-0 px-2 py-0 h-5 font-black text-[9px] uppercase tracking-widest rounded-sm flex items-center gap-1">
-      <CheckCircle2 className="h-3 w-3" />
-      AGENDADO
-    </Badge>
-  );
-}
 
 export default function AgendamentosPage() {
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>(MOCK_AGENDAMENTOS);
@@ -113,10 +92,12 @@ export default function AgendamentosPage() {
     category: "Outros",
   });
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" });
+  const [deleting, setDeleting] = useState<Agendamento | null>(null);
+  const invalidPeriod = !!(dateRange.start && dateRange.end && dateRange.start > dateRange.end);
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const filtered = agendamentos.filter(ag => {
-    const matchesSearch = ag.beneficiario.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = ag.beneficiario.toLocaleLowerCase("pt-BR").includes(search.trim().toLocaleLowerCase("pt-BR"));
     const matchesTab = activeTab === "todos" || ag.type === activeTab;
     
     let matchesDate = true;
@@ -127,15 +108,8 @@ export default function AgendamentosPage() {
       matchesDate = matchesDate && new Date(ag.data) <= new Date(dateRange.end);
     }
 
-    return matchesSearch && matchesTab && matchesDate;
+    return !invalidPeriod && matchesSearch && matchesTab && matchesDate;
   });
-
-  const handleDelete = (id: string) => {
-    if (confirm("Deseja realmente excluir este agendamento?")) {
-      setAgendamentos(prev => prev.filter(ag => ag.id !== id));
-      toast.success("Agendamento excluído com sucesso.");
-    }
-  };
 
   const handleEdit = (ag: Agendamento) => {
     setNewAgendamento({
@@ -143,11 +117,12 @@ export default function AgendamentosPage() {
       beneficiario: ag.beneficiario,
       valor: formatBRL((ag.valor * 100).toFixed(0)),
       data: ag.data,
-      pixKey: "",
-      agency: "",
-      account: "",
-      bank: "",
-      barcode: "",
+      category: ag.category || "Outros",
+      pixKey: ag.pixKey || "",
+      agency: ag.agency || "",
+      account: ag.account || "",
+      bank: ag.bank || "",
+      barcode: ag.barcode || "",
     });
     setEditingId(ag.id);
     setIsAdding(true);
@@ -158,9 +133,18 @@ export default function AgendamentosPage() {
       return toast.error("Preencha todos os campos.");
     }
 
+    const amount = parseFloat(newAgendamento.valor.replace(/[^0-9,]/g, '').replace(',', '.'));
+    if (!Number.isFinite(amount) || amount <= 0) return toast.error("Informe um valor maior que zero.");
+    const destination = newAgendamento.type === "pix"
+      ? { pixKey: newAgendamento.pixKey }
+      : newAgendamento.type === "boleto"
+        ? { barcode: newAgendamento.barcode }
+        : { agency: newAgendamento.agency, account: newAgendamento.account, bank: newAgendamento.bank };
+    const details = { pixKey: "", agency: "", account: "", bank: "", barcode: "", ...destination };
     if (editingId) {
       setAgendamentos(prev => prev.map(a => a.id === editingId ? {
         ...a,
+        ...details,
         type: newAgendamento.type,
         beneficiario: newAgendamento.beneficiario,
         valor: parseFloat(newAgendamento.valor.replace(/[^0-9,]/g, '').replace(',', '.')),
@@ -170,7 +154,8 @@ export default function AgendamentosPage() {
       toast.success("Agendamento atualizado com sucesso!");
     } else {
       const ag: Agendamento = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: crypto.randomUUID(),
+        ...details,
         type: newAgendamento.type,
         beneficiario: newAgendamento.beneficiario,
         valor: parseFloat(newAgendamento.valor.replace(/[^0-9,]/g, '').replace(',', '.')),
@@ -213,8 +198,8 @@ export default function AgendamentosPage() {
   };
 
   return (
-    <div className="p-8 md:p-12 space-y-10 max-w-[1400px] mx-auto min-h-screen bg-[#f8f9fa] relative overflow-hidden">
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-orange-600/5 rounded-full blur-[120px] -mr-64 -mt-64 pointer-events-none" />
+    <div className={styles.page}>
+
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
@@ -251,24 +236,26 @@ export default function AgendamentosPage() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+      <div className={styles.layout}>
         {/* Filters and List */}
-        <div className="lg:col-span-8 space-y-6">
-          <div className="flex flex-col gap-6 bg-white p-6 rounded-sm border border-neutral-100 shadow-sm relative z-20">
-            <div className="flex flex-col md:flex-row gap-4 items-center">
+        <div className={styles.main}>
+          <div className={styles.filters}>
+            <div className={styles.searchRow}>
               <div className="relative flex-1 w-full">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-300" />
                 <Input 
+                  aria-label="Buscar por beneficiário"
                   placeholder="Buscar por beneficiário..." 
                   className="pl-12 h-12 bg-neutral-50 border-neutral-100 rounded-sm font-bold text-sm"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
-              <div className="flex items-center gap-2 p-1 bg-neutral-100 rounded-sm w-full md:w-auto overflow-x-auto no-scrollbar">
+              <div className={styles.types} aria-label="Filtrar por tipo">
                 {(["todos", "pix", "transfer", "boleto", "ted"] as const).map((tab) => (
                   <button
                     key={tab}
+                    aria-pressed={activeTab === tab}
                     onClick={() => setActiveTab(tab)}
                     className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all whitespace-nowrap ${
                       activeTab === tab ? "bg-white text-orange-600 shadow-sm" : "text-neutral-400 hover:text-neutral-600"
@@ -280,24 +267,28 @@ export default function AgendamentosPage() {
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-8 gap-y-4 pt-4 border-t border-neutral-50">
+            <div className={styles.period}>
               <div className="flex items-center gap-2 shrink-0">
                 <Calendar className="h-4 w-4 text-orange-600" />
                 <span className="text-[13px] font-black text-neutral-400 uppercase tracking-widest whitespace-nowrap">Filtrar por Período</span>
               </div>
-              <div className="flex flex-wrap xl:flex-nowrap items-center gap-4 flex-1">
-                <div className="w-full m:w-30 md:w-36 lg:w-50  relative my-2">
+              <div className={styles.dates}>
+                <div className="relative">
                   <span className="absolute -top-2.5 left-3 px-1 bg-white text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest z-10">De</span>
                   <Input 
+                    aria-label="Data inicial"
+                    max={dateRange.end || undefined}
                     type="date"
                     className="h-12 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[var(--brand-accent)] transition-all w-full"
                     value={dateRange.start}
                     onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
                   />
                 </div>
-                <div className="w-full sm:w-30 md:w-36 lg:w-50 relative">
+                <div className="relative">
                   <span className="absolute -top-2.5 left-3 px-1 bg-white text-[10px] font-black text-[var(--brand-accent)] uppercase tracking-widest z-10">Até</span>
                   <Input 
+                    aria-label="Data final"
+                    min={dateRange.start || undefined}
                     type="date"
                     className="h-12 bg-neutral-50 border-neutral-100 rounded-sm font-black text-sm px-4 focus:bg-white focus:border-[var(--brand-accent)] transition-all w-full"
                     value={dateRange.end}
@@ -317,79 +308,35 @@ export default function AgendamentosPage() {
             </div>
           </div>
 
-          <div className="space-y-4">
-            {filtered.map((ag) => (
-              <Card key={ag.id} className="p-6 bg-white border border-neutral-100 rounded-sm hover:border-orange-200 hover:shadow-xl hover:shadow-orange-100/10 transition-all group relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-32 h-32 bg-orange-200/40 rounded-full -mr-16 -mt-16 blur-3xl transition-transform duration-1000 group-hover:scale-150" />
-                
-                <div className="overflow-x-auto custom-scrollbar">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10 min-w-max md:min-w-0 pb-2 md:pb-0">
-                  <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 bg-orange-50 rounded-sm flex items-center justify-center text-orange-600 group-hover:scale-110 transition-transform shadow-sm border border-orange-100/50">
-                      {ag.type === "pix" && <Smartphone className="h-6 w-6" />}
-                      {ag.type === "transfer" && <ArrowUpRight className="h-6 w-6" />}
-                      {ag.type === "boleto" && <Wallet className="h-6 w-6" />}
-                      {ag.type === "ted" && <ArrowUpRight className="h-6 w-6 group-hover:rotate-45" />}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-[10px] font-black text-orange-700 uppercase tracking-widest opacity-60">{ag.type}</span>
-                        <div className="w-1 h-1 bg-orange-200 rounded-full" />
-                        <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest">{ag.category}</span>
-                        <div className="w-1 h-1 bg-orange-200 rounded-full" />
-                        <StatusBadge valor={ag.valor} />
-                      </div>
-                      <h3 className="text-lg font-black text-[#0c0a09] uppercase tracking-tight">{ag.beneficiario}</h3>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between w-full md:w-auto gap-8">
-                    <div className="text-right">
-                      <p className="text-[10px] font-black text-neutral-300 uppercase tracking-widest mb-1">Valor</p>
-                      <p className="text-xl font-black text-[#0c0a09] font-mono leading-none">
-                        {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(ag.valor)}
-                      </p>
-                    </div>
-                    <div className="text-right border-l border-neutral-100 pl-8">
-                      <p className="text-[10px] font-black text-neutral-300 uppercase tracking-widest mb-1">Data</p>
-                      <div className="flex items-center gap-2 text-orange-600">
-                        <Calendar className="h-3 w-3" />
-                        <span className="text-xs font-black uppercase tracking-widest">{new Date(ag.data).toLocaleDateString('pt-BR')}</span>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                       <button 
-                        onClick={() => handleEdit(ag)}
-                        className="w-10 h-10 flex items-center justify-center bg-neutral-50 hover:bg-orange-50 text-neutral-300 hover:text-orange-600 rounded-sm transition-all border border-neutral-100 hover:border-orange-200"
-                       >
-                          <Pencil className="h-4 w-4" />
-                       </button>
-                       <button 
-                        onClick={() => handleDelete(ag.id)}
-                        className="w-10 h-10 flex items-center justify-center bg-neutral-50 hover:bg-red-50 text-neutral-300 hover:text-red-600 rounded-sm transition-all border border-neutral-100 hover:border-red-200"
-                       >
-                          <Trash2 className="h-4 w-4" />
-                       </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-            ))}
-
-            {filtered.length === 0 && (
-              <div className="py-20 text-center bg-white rounded-sm border border-neutral-100 border-dashed">
-                <div className="w-16 h-16 bg-neutral-50 rounded-full flex items-center justify-center mx-auto text-neutral-200 mb-4">
-                  <Search className="h-8 w-8" />
-                </div>
-                <p className="text-sm font-black text-neutral-400 uppercase tracking-widest">Nenhum agendamento encontrado</p>
-              </div>
-            )}
-          </div>
+          <section className={styles.list} aria-labelledby="schedule-list-title">
+            <div className={styles.listHeader}>
+              <h2 id="schedule-list-title">Lista de agendamentos</h2>
+              <span aria-live="polite">{filtered.length} {filtered.length === 1 ? "agendamento" : "agendamentos"}</span>
+            </div>
+            {invalidPeriod && <p role="alert" className="p-4 text-sm text-red-600">A data final deve ser igual ou posterior à data inicial.</p>}
+            <table className={styles.table}>
+              <thead><tr><th scope="col">Data</th><th scope="col">Beneficiário</th><th scope="col">Tipo</th><th scope="col">Valor</th><th scope="col">Ações</th></tr></thead>
+              <tbody>
+                {filtered.map(ag => (
+                  <tr key={ag.id}>
+                    <td data-label="Data">{ag.data.split("-").reverse().join("/")}</td>
+                    <td data-label="Beneficiário"><span className={styles.beneficiary}>{ag.beneficiario}</span></td>
+                    <td data-label="Tipo"><span className={styles.typeBadge}>{ag.type.toUpperCase()}</span></td>
+                    <td data-label="Valor" className={styles.value}>{new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(ag.valor)}</td>
+                    <td data-label="Ações"><div className={styles.actions}>
+                      <button type="button" onClick={() => handleEdit(ag)} aria-label={`Visualizar ou editar agendamento de ${ag.beneficiario}`}>Visualizar / editar</button>
+                      <button type="button" onClick={() => setDeleting(ag)} aria-label={`Excluir agendamento de ${ag.beneficiario}`} className={styles.deleteButton}><Trash2 className="h-4 w-4" /> Excluir</button>
+                    </div></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {filtered.length === 0 && <div className={styles.empty}><Search className="h-7 w-7" /><p>Nenhum agendamento encontrado.</p><span>{search || activeTab !== "todos" || dateRange.start || dateRange.end ? "Ajuste os filtros para consultar outros agendamentos." : "Os agendamentos cadastrados aparecerão aqui."}</span></div>}
+          </section>
         </div>
 
         {/* Sidebar Info */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className={styles.info}>
           <Card className="p-8 bg-orange-600 text-white rounded-sm border-0 shadow-2xl shadow-orange-600/20 relative overflow-hidden group">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:scale-125 transition-transform duration-1000" />
             <div className="relative z-10 space-y-6">
@@ -429,20 +376,27 @@ export default function AgendamentosPage() {
         </div>
       </div>
 
+      {deleting && <PasswordConfirmationDialog
+        key={deleting.id}
+        open
+        onClose={() => setDeleting(null)}
+        title="Excluir agendamento"
+        description={`Confirme a exclusão do agendamento de ${deleting.beneficiario}, para ${deleting.data.split("-").reverse().join("/")}, no valor de ${new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(deleting.valor)}.`}
+      />}
+
       {/* Modal Novo Agendamento */}
-      {isAdding && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-8 md:p-12 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-300">
-          <Card className="w-full max-w-lg bg-white rounded-sm shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[90vh]">
+      <Dialog open={isAdding} onOpenChange={(open) => { setIsAdding(open); if (!open) setEditingId(null); }}>
+          <DialogContent className={`${styles.editor} w-[calc(100%-2rem)] max-w-lg p-0 gap-0 bg-white rounded-xl text-neutral-900 flex flex-col max-h-[90dvh]`}>
             <div className="flex items-center justify-between p-6 border-b border-neutral-100 shrink-0">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-orange-50 rounded-sm flex items-center justify-center text-orange-600">
                   <CalendarClock className="h-6 w-6" />
                 </div>
                 <div>
-                  <h2 className="text-lg md:text-xl font-black text-[#0c0a09] uppercase tracking-tight">
-                    {editingId ? "Editar Agendamento" : "Novo Agendamento"}
-                  </h2>
-                  <p className="text-[9px] font-black text-orange-600 uppercase tracking-[0.2em]">Programação transacional</p>
+                  <DialogTitle className="text-lg md:text-xl font-black text-[#0c0a09] uppercase tracking-tight">
+                    {editingId ? "Visualizar / editar" : "Novo Agendamento"}
+                  </DialogTitle>
+                  <DialogDescription className="text-xs text-neutral-500">Dados completos do agendamento</DialogDescription>
                 </div>
               </div>
               <button 
@@ -450,6 +404,7 @@ export default function AgendamentosPage() {
                   setIsAdding(false);
                   setEditingId(null);
                 }}
+                aria-label="Fechar agendamento"
                 className="p-2 rounded-sm hover:bg-neutral-50 transition-colors text-neutral-400"
               >
                 <X className="h-6 w-6" />
@@ -609,9 +564,8 @@ export default function AgendamentosPage() {
                 </Button>
               </div>
             </div>
-          </Card>
-        </div>
-      )}
+          </DialogContent>
+      </Dialog>
     </div>
   );
 }
