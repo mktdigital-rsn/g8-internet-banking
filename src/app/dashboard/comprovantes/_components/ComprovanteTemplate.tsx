@@ -654,9 +654,9 @@ export default function ComprovanteTemplate({
                         </div>
                         <Tabs value={chartPeriod} onValueChange={(val: any) => setChartPeriod(val)} className="w-fit">
                             <TabsList className="bg-neutral-50 rounded-sm p-0.5 h-8 gap-0.5 border border-neutral-100">
-                                <TabsTrigger value="day" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-orange-500 transition-all">Dia</TabsTrigger>
-                                <TabsTrigger value="week" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-orange-500 transition-all">Semana</TabsTrigger>
-                                <TabsTrigger value="month" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-orange-500 transition-all">Mês</TabsTrigger>
+                                <TabsTrigger value="day" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest text-neutral-500 data-active:bg-white data-active:text-orange-500 transition-all">Dia</TabsTrigger>
+                                <TabsTrigger value="week" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest text-neutral-500 data-active:bg-white data-active:text-orange-500 transition-all">Semana</TabsTrigger>
+                                <TabsTrigger value="month" className="rounded-xs h-full px-4 text-[8px] font-black uppercase tracking-widest text-neutral-500 data-active:bg-white data-active:text-orange-500 transition-all">Mês</TabsTrigger>
                             </TabsList>
                         </Tabs>
                     </div>
@@ -694,31 +694,31 @@ export default function ComprovanteTemplate({
                     <div className="flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-6 pb-6 border-b border-neutral-100">
                         <div className="flex flex-col md:flex-row items-center justify-between gap-6 flex-wrap w-full">
                             <Tabs value={filter} onValueChange={(val: any) => setFilter(val)} className="w-full sm:w-auto">
-                                <TabsList className="bg-neutral-100/50 rounded-[5px] p-0.5 h-10 gap-0.5 border border-neutral-200/20">
-                                    <TabsTrigger value="all" className="rounded-[5px] h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-orange-500 transition-all">Todas</TabsTrigger>
-                                    <TabsTrigger value="in" className="rounded-[5px] h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-green-600 transition-all">Entrada</TabsTrigger>
-                                    <TabsTrigger value="out" className="rounded-[5px] h-full px-4 text-[9px] font-black uppercase tracking-widest data-[state=active]:bg-white data-[state=active]:text-red-500 transition-all">Saída</TabsTrigger>
+                                <TabsList className="grid w-full grid-cols-3 bg-neutral-100/70 rounded-[5px] p-0.5 h-11 gap-0.5 border border-neutral-200/70 sm:inline-grid sm:w-[380px]">
+                                    <TabsTrigger value="all" className="rounded-[5px] h-full px-4 text-[10px] font-black uppercase tracking-widest text-neutral-600 data-active:bg-[#0c0a09] data-active:text-white data-active:shadow-sm transition-all">Todas</TabsTrigger>
+                                    <TabsTrigger value="in" className="rounded-[5px] h-full px-4 text-[10px] font-black uppercase tracking-widest text-neutral-600 data-active:bg-green-600 data-active:text-white data-active:shadow-sm transition-all">Entrada</TabsTrigger>
+                                    <TabsTrigger value="out" className="rounded-[5px] h-full px-4 text-[10px] font-black uppercase tracking-widest text-neutral-600 data-active:bg-red-500 data-active:text-white data-active:shadow-sm transition-all">Saída</TabsTrigger>
                                 </TabsList>
                             </Tabs>
 
-                            <div className="flex items-center gap-2 bg-neutral-100/50 rounded-[5px] p-0.5 border border-neutral-200/20 w-fit overflow-x-auto no-scrollbar ml-auto">
+                            <div className="flex w-full items-center gap-2 overflow-x-auto rounded-[5px] border border-neutral-200/70 bg-neutral-100/70 p-1 no-scrollbar sm:w-fit md:ml-auto">
                                 <div className="relative group shrink-0">
-                                    <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400" />
+                                    <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-500 pointer-events-none" />
                                     <Input
                                         type="date"
                                         value={startDate}
                                         onChange={(e) => setStartDate(e.target.value)}
-                                        className="h-9 w-[160px] bg-transparent border-0 pl-8 text-[12px] font-black uppercase focus-visible:ring-0 cursor-pointer"
+                                        className="h-9 w-[160px] rounded-[4px] border-0 bg-white pl-9 pr-3 text-[12px] font-black uppercase text-[#0c0a09] shadow-sm focus-visible:ring-2 focus-visible:ring-orange-500/20 cursor-pointer [color-scheme:light] [&::-webkit-calendar-picker-indicator]:opacity-100"
                                     />
                                 </div>
-                                <span className="text-neutral-300">/</span>
+                                <span className="shrink-0 px-1 text-sm font-black text-neutral-500">/</span>
                                 <div className="relative group shrink-0">
-                                    <CalendarDays className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-neutral-400" />
+                                    <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-neutral-500 pointer-events-none" />
                                     <Input
                                         type="date"
                                         value={endDate}
                                         onChange={(e) => setEndDate(e.target.value)}
-                                        className="h-9 w-[160px] bg-transparent border-0 pl-8 text-[12px] font-black uppercase focus-visible:ring-0 cursor-pointer"
+                                        className="h-9 w-[160px] rounded-[4px] border-0 bg-white pl-9 pr-3 text-[12px] font-black uppercase text-[#0c0a09] shadow-sm focus-visible:ring-2 focus-visible:ring-orange-500/20 cursor-pointer [color-scheme:light] [&::-webkit-calendar-picker-indicator]:opacity-100"
                                     />
                                 </div>
                             </div>

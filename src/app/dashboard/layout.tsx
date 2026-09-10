@@ -18,6 +18,7 @@ import {
   LogOut,
   Palmtree,
   Plane,
+  ReceiptText,
   RotateCw,
   Search,
   Shield,
@@ -58,6 +59,7 @@ const menuGroups: { label?: string; items: MenuItem[] }[] = [
       { icon: Clock, label: "Agendamentos", href: "/dashboard/agendamentos" },
       { icon: Banknote, label: "Cobranças", href: "/dashboard/cobrancas" },
       { icon: CreditCard, label: "Cartões", href: "/dashboard/cartoes" },
+      { icon: ReceiptText, label: "Comprovantes", href: "/dashboard/comprovantes" },
       { icon: FileText, label: "Extrato", href: "/dashboard/extrato" },
       {
         icon: Palmtree,
@@ -203,6 +205,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return name.replace(/^\d+(\.\d+)*\s*/, '').split(' ')[0] || "Cliente";
   };
 
+  const isDevelopment = process.env.NODE_ENV === "development";
   const SESSION_DURATION = 900; // 15 minutes in seconds
   const [timeLeft, setTimeLeft] = React.useState<number | null>(null);
 
@@ -213,13 +216,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [router, setTemporaryDeviceId]);
 
   const refreshSession = React.useCallback(() => {
+    if (isDevelopment) {
+      localStorage.removeItem("sessionExpiresAt");
+      setTimeLeft(null);
+      return;
+    }
+
     const expiresAt = Date.now() + SESSION_DURATION * 1000;
     localStorage.setItem("sessionExpiresAt", expiresAt.toString());
     setTimeLeft(SESSION_DURATION);
-  }, []);
+  }, [isDevelopment]);
 
   // Initial load and sync
   React.useEffect(() => {
+    if (isDevelopment) {
+      localStorage.removeItem("sessionExpiresAt");
+      setTimeLeft(null);
+      return;
+    }
+
     const expiresAt = localStorage.getItem("sessionExpiresAt");
     if (expiresAt) {
       const remaining = Math.floor((parseInt(expiresAt) - Date.now()) / 1000);
@@ -232,10 +247,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     } else {
       refreshSession();
     }
-  }, [handleLogout, refreshSession]);
+  }, [handleLogout, refreshSession, isDevelopment]);
 
   // Countdown logic
   React.useEffect(() => {
+    if (isDevelopment) return;
     if (timeLeft === null) return;
 
     if (timeLeft <= 0) {
@@ -255,7 +271,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timeLeft, handleLogout]);
+  }, [timeLeft, handleLogout, isDevelopment]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -556,7 +572,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     }`}>Sessão Segura</span>
                 </div>
                 <span className="text-sm font-mono font-black text-white tabular-nums leading-none">
-                  {timeLeft !== null ? formatTime(timeLeft) : "00:00"}
+                  {isDevelopment ? "DEV" : timeLeft !== null ? formatTime(timeLeft) : "00:00"}
                 </span>
               </div>
 
