@@ -765,14 +765,16 @@ export default function DashboardHome() {
             {/* Premium Receipt Modal Overlay */}
             {selectedTransaction && (
                <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-500 overflow-y-auto">
-                  <Card className="w-full max-w-[860px] max-h-[calc(100dvh-2rem)] bg-white rounded-md overflow-y-auto shadow-2xl relative border-white/20 animate-in zoom-in-95 duration-300 my-auto">
+                  <Card className="w-full max-w-[860px] max-h-[calc(100dvh-2rem)] bg-white rounded-md overflow-y-auto shadow-2xl relative border-white/20 animate-in zoom-in-95 duration-300 my-auto px-2 py-6">
                      <button
                         onClick={() => setSelectedTransaction(null)}
-                        className="absolute top-4 right-4 p-2 rounded-md bg-white/90 hover:bg-neutral-100 transition-all z-20 border border-neutral-100 shadow-sm"
+                        className="absolute flex items-center gap-2 top-4 left-4 p-2 rounded-md bg-white/90 hover:bg-orange-500 group transition-all z-20 border border-neutral-100 shadow-sm"
                         aria-label="Fechar comprovante"
                      >
-                        <ArrowLeft className="h-5 w-5 rotate-180 text-neutral-400" />
+                        <ArrowLeft className="h-5 w-5 text-neutral-400 group-hover:text-white" />
+                           <span className="text-sm font-bold text-white hidden group-hover:block">Voltar para a página anterior</span>
                      </button>
+                
 
                      <div className="relative">
                         <div className="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-neutral-50 to-white" />
@@ -792,7 +794,7 @@ export default function DashboardHome() {
                                  <h2 className="text-2xl md:text-3xl font-black text-[#0c0a09] tracking-tight uppercase font-sans">Comprovante</h2>
                                  <div className="flex items-center gap-2 mt-1">
                                     <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                                    <p className="text-[11px] md:text-xs text-neutral-500 font-black uppercase tracking-[0.18em] break-words">Autenticação {currentBrand.shortName.toUpperCase()} Pay</p>
+                                    <p className="text-[11px] md:text-xs text-neutral-500 font-black uppercase tracking-[0.18em] break-words">Autenticação {currentBrand.shortName.toUpperCase() === "G8" ? "G8Pay" : currentBrand.shortName.toUpperCase()}</p>
                                  </div>
                               </div>
                            </div>
@@ -901,7 +903,7 @@ export default function DashboardHome() {
                               <Button
                                  variant="outline"
                                  onClick={() => setSelectedTransaction(null)}
-                                 className="h-14 border-neutral-100 rounded-md font-black uppercase tracking-widest text-sm px-8 active:scale-95 text-neutral-500 hover:text-black"
+                                 className="h-14 border-neutral-100 rounded-md font-black uppercase tracking-widest text-sm px-8 active:scale-95 text-neutral-500 hover:bg-orange-500 hover:text-white transition-all shadow-xl shadow-black/10 text-white"
                               >
                                  Fechar
                               </Button>
