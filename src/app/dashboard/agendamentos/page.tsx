@@ -548,7 +548,7 @@ export default function AgendamentosPage() {
               <div className="pt-4 flex gap-3">
                 <Button 
                   onClick={handleAdd}
-                  className="flex-1 h-14 bg-orange-600 hover:bg-orange-700 text-white rounded-sm font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-orange-600/20"
+                  className="flex-1 h-14 bg-black hover:bg-orange-500 text-white rounded-sm font-black uppercase tracking-[0.2em] text-[10px] shadow-xl shadow-orange-600/20"
                 >
                   {editingId ? "Salvar Alterações" : "Confirmar Agendamento"} <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -558,7 +558,7 @@ export default function AgendamentosPage() {
                     setEditingId(null);
                   }}
                   variant="outline"
-                  className="px-8 h-14 border-neutral-100 text-neutral-400 hover:bg-neutral-50 font-black uppercase tracking-[0.2em] text-[10px]"
+                  className="px-8 h-14 border-neutral-100 text-neutral-400 text-white hover:bg-orange-500 font-black uppercase tracking-[0.2em] text-[10px]"
                 >
                   Cancelar
                 </Button>

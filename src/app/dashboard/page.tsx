@@ -22,11 +22,12 @@ import {
    Fingerprint,
    Landmark,
    MoreHorizontal,
-   RotateCw,
    Plus,
+   RotateCw,
    TrendingUp,
    Users
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import {
@@ -377,14 +378,14 @@ export default function DashboardHome() {
                      )}
                   </div>
                   {currentBrand.id !== "lotopay" && (
-                  <div className="flex gap-4 w-full sm:w-auto">
-                     <Link href="/dashboard/pix" className="flex-1 sm:flex-none">
-                        <Button className={`w-full rounded-md h-12 2xl:h-20 px-10 2xl:px-16  text-xs 2xl:text-lg uppercase tracking-widest ${currentBrand.id === "galapagos"
+                     <div className="flex gap-4 w-full sm:w-auto">
+                        <Link href="/dashboard/pix" className="flex-1 sm:flex-none">
+                           <Button className={`w-full rounded-md h-12 2xl:h-20 px-10 2xl:px-16  text-xs 2xl:text-lg uppercase tracking-widest ${currentBrand.id === "galapagos"
                               ? "bg-brand-accent hover:bg-brand-accent-hover text-white shadow-xl shadow-brand-accent/20"
                               : "bg-black text-white hover:bg-[var(--brand-accent)] shadow-2xl shadow-orange-500/30"
-                           } transition-all active:scale-95`}>Nova Transação</Button>
-                     </Link>
-                  </div>
+                              } transition-all active:scale-95`}>Nova Transação</Button>
+                        </Link>
+                     </div>
                   )}
                </div>
 
@@ -400,8 +401,8 @@ export default function DashboardHome() {
                            } rounded-xl blur-lg opacity-20 group-hover:opacity-40 transition duration-1000`}></div>
                         {/* aspect-[1.586/1] gives the standard credit card proportions */}
                         <div className={`relative w-full aspect-[1.586/1] min-h-[200px] max-h-[320px] ${currentBrand.id === "galapagos"
-                              ? "bg-neutral-950 border border-blue-500/20"
-                              : "bg-[#0c0a09] border border-white/10"
+                           ? "bg-neutral-950 border border-blue-500/20"
+                           : "bg-[#0c0a09] border border-white/10"
                            } text-white px-7 py-6 rounded-xl shadow-2xl flex flex-col justify-between overflow-hidden group-hover:scale-[1.02] transition-all duration-500`}>
 
                            {/* Background glows */}
@@ -427,8 +428,8 @@ export default function DashboardHome() {
                            {/* Middle: chip */}
                            <div className="z-10 flex items-center gap-4">
                               <div className={`w-12 h-9 2xl:w-14 2xl:h-11 bg-gradient-to-br ${currentBrand.id === "galapagos"
-                                    ? "from-white/10 via-white/5 to-white/15 border border-white/10"
-                                    : "from-orange-300 via-[var(--brand-accent)] to-orange-400 border border-white/20"
+                                 ? "from-white/10 via-white/5 to-white/15 border border-white/10"
+                                 : "from-orange-300 via-[var(--brand-accent)] to-orange-400 border border-white/20"
                                  } rounded-md flex items-center justify-center shadow-2xl relative overflow-hidden group-hover:scale-110 transition-transform`}>
                                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(255,255,255,0.4),transparent)] opacity-50" />
                                  <div className="absolute inset-x-0 h-px bg-white/30 top-1/2 -translate-y-1/2"></div>
@@ -448,11 +449,22 @@ export default function DashboardHome() {
                                  )}
                               </div>
                               <div className="text-right shrink-0">
-                                 <p className="text-[9px] text-white/30 uppercase font-bold tracking-[0.18em] mb-1">Rede</p>
+                                
                                  {isLoadingData ? (
                                     <div className="h-8 w-20 bg-white/10 animate-pulse rounded" />
+                                 ) : currentBrand.id === "lotopay" ? (
+                                    <Image
+                                       src="/logo_lotopay_white.png"
+                                       alt="LottoPay"
+                                       width={100}
+                                       height={32}
+                                       className="object-contain ml-auto"
+                                    />
                                  ) : (
+                                    <>
+                                     <p className="text-[9px] text-white/30 uppercase font-bold tracking-[0.18em] mb-1">Rede</p>
                                     <span className="text-2xl 2xl:text-3xl font-black italic text-white leading-none tracking-tighter">VISA</span>
+                                    </>
                                  )}
                               </div>
                            </div>
@@ -561,8 +573,8 @@ export default function DashboardHome() {
                      <div className="flex gap-4">
                         <Select value={filter} onValueChange={(val) => val && setFilter(val)}>
                            <SelectTrigger className={`w-[200px] 2xl:w-[280px] rounded-md h-12 2xl:h-14 shadow-sm font-bold px-8 transition-all hover:bg-neutral-50 ${currentBrand.id === "galapagos"
-                                 ? "bg-[#ffffff] text-[#0c0a09] border border-neutral-200"
-                                 : "bg-white text-[#0c0a09] border-white/10"
+                              ? "bg-[#ffffff] text-[#0c0a09] border border-neutral-200"
+                              : "bg-white text-[#0c0a09] border-white/10"
                               }`}>
                               <SelectValue placeholder="Filtrar" />
                            </SelectTrigger>
@@ -607,7 +619,7 @@ export default function DashboardHome() {
                                  >
                                     <div className={`${ui.transactionInfo} flex items-center gap-8 2xl:gap-10 flex-1 min-w-0`}>
                                        <div className={`shrink-0 w-16 h-16 2xl:w-18 2xl:h-18 rounded-md flex items-center justify-center p-4 transition-all shadow-sm ${t.metodo === "TRANSFERENCIA_PIX" ? 'bg-[#32BCAD]/10 text-[#32BCAD]' :
-                                             t.tipo === 'CREDITO' ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'
+                                          t.tipo === 'CREDITO' ? 'bg-green-50 text-green-500' : 'bg-red-50 text-red-500'
                                           }`}>
                                           <TransactionIcon className={`h-full w-full ${t.metodo === "TRANSFERENCIA_PIX" ? "" : "stroke-[2]"}`} />
                                        </div>
@@ -732,8 +744,8 @@ export default function DashboardHome() {
                </Card>
 
                <Card className={`rounded-md border-0 shadow-2xl shadow-black/10 p-6 text-white relative overflow-hidden group border ml-10 ${currentBrand.id === "galapagos"
-                     ? "bg-[#0b1329] border-white/10"
-                     : "bg-[#0c0a09] border-white/5"
+                  ? "bg-[#0b1329] border-white/10"
+                  : "bg-[#0c0a09] border-white/5"
                   }`}>
                   <div className="absolute -top-32 -right-32 w-64 h-64 bg-[var(--brand-accent)]/5 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-1000" />
                   <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-white/5 rounded-full blur-3xl" />
@@ -742,8 +754,8 @@ export default function DashboardHome() {
                         <div className={`absolute -inset-4 rounded-full blur-2xl group-hover:scale-150 transition-transform ${currentBrand.id === "galapagos" ? "bg-brand-accent/20" : "bg-orange-500/20"
                            }`} />
                         <div className={`w-24 h-24 2xl:w-32 2xl:h-32 rounded-md flex items-center justify-center p-6 2xl:p-8 shadow-2xl relative bg-gradient-to-br ${currentBrand.id === "galapagos"
-                              ? "from-brand-accent/80 to-brand-secondary"
-                              : "from-orange-400 to-[var(--brand-accent)]"
+                           ? "from-brand-accent/80 to-brand-secondary"
+                           : "from-orange-400 to-[var(--brand-accent)]"
                            }`}>
                            <Users className="h-full w-full text-white" />
                         </div>
@@ -753,8 +765,8 @@ export default function DashboardHome() {
                         <p className="text-sm 2xl:text-base font-medium text-white/50 px-4 leading-relaxed">Compartilhe o {currentBrand.name} com seus parceiros e amigos e cresçam juntos.</p>
                      </div>
                      <Button className={`w-full transition-all duration-500 rounded-md h-14 2xl:h-16 font-black uppercase tracking-widest text-xs 2xl:text-base shadow-xl ${currentBrand.id === "galapagos"
-                           ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-brand-accent/20"
-                           : "bg-white text-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white shadow-black/20"
+                        ? "bg-brand-accent text-white hover:bg-brand-accent-hover shadow-brand-accent/20"
+                        : "bg-white text-[#0c0a09] hover:bg-[var(--brand-accent)] hover:text-white shadow-black/20"
                         }`}>
                         Compartilhar Agora
                      </Button>
@@ -772,9 +784,9 @@ export default function DashboardHome() {
                         aria-label="Fechar comprovante"
                      >
                         <ArrowLeft className="h-5 w-5 text-neutral-400 group-hover:text-white" />
-                           <span className="text-sm font-bold text-white hidden group-hover:block">Voltar para a página anterior</span>
+                        <span className="text-sm font-bold text-white hidden group-hover:block">Voltar para a página anterior</span>
                      </button>
-                
+
 
                      <div className="relative">
                         <div className="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-neutral-50 to-white" />
@@ -784,8 +796,8 @@ export default function DashboardHome() {
                               <div className="relative shrink-0">
                                  <div className="absolute -inset-4 bg-[var(--brand-accent)]/10 rounded-full blur-xl" />
                                  <div className={`w-14 h-14 rounded-md flex items-center justify-center text-[var(--brand-accent)] shadow-2xl relative border ${currentBrand.id === "galapagos"
-                                       ? "bg-[#0b1329] border-white/10"
-                                       : "bg-[#0c0a09] border-white/5"
+                                    ? "bg-[#0b1329] border-white/10"
+                                    : "bg-[#0c0a09] border-white/5"
                                     }`}>
                                     <Diamond className="h-7 w-7 fill-[var(--brand-accent)]/20" />
                                  </div>
@@ -894,8 +906,8 @@ export default function DashboardHome() {
                                     selectedTransaction.tipo === "CREDITO" ? (selectedTransaction.pagadorNome || "Transacao") : (selectedTransaction.RecebinteNome || "Transacao")
                                  )}
                                  className={`flex-1 h-14 2xl:h-20 text-white rounded-md font-black uppercase tracking-widest text-sm 2xl:text-lg transition-all shadow-xl group active:scale-95 ${currentBrand.id === "galapagos"
-                                       ? "bg-brand-accent hover:bg-brand-accent-hover shadow-brand-accent/20"
-                                       : "bg-[#0c0a09] hover:bg-[var(--brand-accent)] shadow-black/10"
+                                    ? "bg-brand-accent hover:bg-brand-accent-hover shadow-brand-accent/20"
+                                    : "bg-[#0c0a09] hover:bg-[var(--brand-accent)] shadow-black/10"
                                     }`}
                               >
                                  <Download className="h-5 w-5 mr-3 group-hover:-translate-y-1 transition-transform" /> Gerar Comprovante
