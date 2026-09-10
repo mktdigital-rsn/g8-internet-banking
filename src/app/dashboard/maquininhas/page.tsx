@@ -450,7 +450,7 @@ export default function MaquininhasPage() {
 
   return (
     <div className="p-4 md:p-8 xl:p-12 flex flex-col gap-8 h-full overflow-y-auto w-full no-scrollbar bg-[#f8f9fa] relative maquininhas-container">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[var(--brand-accent)]/5 rounded-full blur-[120px] -mr-64 -mt-64 pointer-events-none" />
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500 rounded-full blur-[120px] -mr-64 -mt-64 pointer-events-none" />
 
       <div className="flex-1 space-y-12 relative z-10">
         {/* Header */}
@@ -514,10 +514,10 @@ export default function MaquininhasPage() {
                         <div className={`absolute top-0 inset-x-0 h-1 ${
                           currentBrand.id === "galapagos"
                             ? "bg-[var(--brand-accent)]"
-                            : "bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c]"
+                            : "bg-orange-500"
                         }`} />
                       )}
-                      <div className={`h-40 bg-gradient-to-br ${
+                      <div className={`h-40 bg-orange-500 ${
                         currentBrand.id === "galapagos"
                           ? model.id === "g8-pro"
                             ? "from-[#0b1329] to-[#1e3a8a]"
@@ -566,7 +566,7 @@ export default function MaquininhasPage() {
                           </div>
                           <Button className={`w-full h-12 text-white rounded-sm font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95 ${
                             currentBrand.id !== "g8"
-                              ? "bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)]"
+                              ? "bg-black hover:bg-orange-500"
                               : "bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)]"
                           }`}>
                             Solicitar <ArrowRight className="h-4 w-4 ml-2" />
@@ -585,7 +585,7 @@ export default function MaquininhasPage() {
               <div className={`w-20 h-20 rounded-sm flex items-center justify-center shrink-0 shadow-2xl ${
                 currentBrand.id === "galapagos"
                   ? "bg-gradient-to-br from-[#0b1329] to-[#1e3a8a]"
-                  : "bg-gradient-to-br from-[var(--brand-accent)] to-[#ea580c]"
+                  : "bg-orange-500"
               }`}>
                 <TrendingUp className="h-10 w-10 text-white" />
               </div>
@@ -1027,8 +1027,8 @@ export default function MaquininhasPage() {
                 onClick={() => setStep("confirm")}
                 className={`flex-3 h-20 text-white rounded-[2px] font-black text-sm uppercase tracking-[0.2em] transition-all active:scale-[0.98] ${
                   currentBrand.id !== "g8"
-                    ? "bg-[var(--brand-accent)] hover:bg-[var(--brand-accent-hover)] shadow-2xl shadow-[var(--brand-accent-light)]"
-                    : "bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] shadow-2xl shadow-orange-500/20"
+                    ? "bg-[#0c0a09] hover:bg-orange-500 text-white shadow-2xl shadow-[var(--brand-accent-light)]"
+                    : "bg-[#0c0a09] hover:bg-orange-500 text-whiteshadow-2xl shadow-orange-500/20"
                 }`}
               >
                 Próximo Passo <ArrowRight className="h-6 w-6 ml-3" />

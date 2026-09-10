@@ -773,7 +773,7 @@ function PixPagarContent() {
               disabled={isSearching || hasInsufficientBalance || amountExceedsBalance}
               className={`w-full h-14 text-white rounded-[5px] font-black text-sm uppercase tracking-widest shadow-xl transition-all active:scale-95 group ${hasInsufficientBalance || amountExceedsBalance
                   ? 'bg-neutral-300 cursor-not-allowed shadow-none'
-                  : 'bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] shadow-orange-200/30'
+                  : 'bg-[#0c0a09] hover:bg-orange-500 text-white shadow-orange-200/30'
                 }`}
             >
               {isSearching ? "VALIDANDO DADOS..." : hasInsufficientBalance && !isBalanceLoading ? "SEM SALDO EM CONTA" : amountExceedsBalance ? "VALOR ACIMA DO SALDO" : "PRÓXIMO PASSO"}
