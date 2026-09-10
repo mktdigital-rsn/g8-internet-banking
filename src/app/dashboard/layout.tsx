@@ -1,44 +1,43 @@
 "use client";
 
-import React from "react";
-import styles from "./sidebar.module.css";
-import ui from "./overview.module.css";
-import Image from "next/image";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import {
-  Home,
-  Wallet,
   ArrowUpRight,
-  Smartphone,
-  FileText,
-  UserCircle,
-  HelpCircle,
-  Search,
-  LogOut,
-  RotateCw,
-  CreditCard,
-  Clock,
   Banknote,
-  Cpu,
-  User,
-  Palmtree,
-  Plane,
-  Shield,
   Car,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Clock,
+  Cpu,
+  CreditCard,
+  FileText,
+  HelpCircle,
+  Home,
+  LogOut,
+  Palmtree,
+  Plane,
+  RotateCw,
+  Search,
+  Shield,
+  Smartphone,
+  User,
+  UserCircle,
+  Wallet
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
+import React from "react";
+import ui from "./overview.module.css";
+import styles from "./sidebar.module.css";
 
+import { currentBrand } from "@/config/brand";
+import api from "@/lib/api";
+import { balanceAtom, isBalanceLoadingAtom, isUserLoadingAtom, temporaryDeviceIdAtom, userAtom } from "@/store/auth";
+import { useAtom, useSetAtom } from "jotai";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import Link from "next/link";
-import axios from "axios";
-import api from "@/lib/api";
-import { useSetAtom, useAtom } from "jotai";
-import { temporaryDeviceIdAtom, balanceAtom, isBalanceLoadingAtom, userAtom, isUserLoadingAtom } from "@/store/auth";
-import { currentBrand } from "@/config/brand";
 
 interface MenuItem {
   icon: any;
@@ -60,28 +59,28 @@ const menuGroups: { label?: string; items: MenuItem[] }[] = [
       { icon: Banknote, label: "Cobranças", href: "/dashboard/cobrancas" },
       { icon: CreditCard, label: "Cartões", href: "/dashboard/cartoes" },
       { icon: FileText, label: "Extrato", href: "/dashboard/extrato" },
-      { 
-        icon: Palmtree, 
-        label: "Lazer", 
-        href: "#", 
+      {
+        icon: Palmtree,
+        label: "Lazer",
+        href: "#",
         submenu: [
           { icon: Plane, label: "Aéreo", href: "/dashboard/lazer/aereo" }
-        ] 
+        ]
       },
       { icon: Wallet, label: "Pagamentos", href: "/dashboard/pagamentos" },
       { icon: Smartphone, label: "PIX", href: "/dashboard/pix" },
       { icon: Cpu, label: "POS/MAQUI.", href: "/dashboard/maquininhas" },
       { icon: Smartphone, label: "Recargas", href: "/dashboard/recargas" },
       { icon: ArrowUpRight, label: "Transferência", href: "/dashboard/transferencia" },
-      { 
-        icon: Car, 
-        label: "Veículos", 
-        href: "#", 
+      {
+        icon: Car,
+        label: "Veículos",
+        href: "#",
         submenu: [
           { icon: Car, label: "Meus Veículos", href: "/dashboard/veiculos/meus-veiculos" },
           { icon: Car, label: "Débitos Veiculares", href: "/dashboard/veiculos/debitos-veiculares" },
           { icon: Shield, label: "Proteção Veicular", href: "/dashboard/veiculos/protecao-veicular" }
-        ] 
+        ]
       },
     ]
   },
@@ -94,62 +93,62 @@ const menuGroups: { label?: string; items: MenuItem[] }[] = [
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-   const pathname = usePathname();
-   const router = useRouter();
-   const setTemporaryDeviceId = useSetAtom(temporaryDeviceIdAtom);
-   const [userName, setUserName] = React.useState("");
-   const [balance, setBalance] = React.useState("");
-   const [accountInfo, setAccountInfo] = React.useState({ agency: "", account: "" });
-   const [isLoadingData, setIsLoadingData] = React.useState(true);
-   const [expandedMenus, setExpandedMenus] = React.useState<Record<string, boolean>>({});
-   const [searchQuery, setSearchQuery] = React.useState("");
-   const isLottoPay = currentBrand.id === "lotopay";
+  const pathname = usePathname();
+  const router = useRouter();
+  const setTemporaryDeviceId = useSetAtom(temporaryDeviceIdAtom);
+  const [userName, setUserName] = React.useState("");
+  const [balance, setBalance] = React.useState("");
+  const [accountInfo, setAccountInfo] = React.useState({ agency: "", account: "" });
+  const [isLoadingData, setIsLoadingData] = React.useState(true);
+  const [expandedMenus, setExpandedMenus] = React.useState<Record<string, boolean>>({});
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const isLottoPay = currentBrand.id === "lotopay";
 
-   const quickAccessItems = React.useMemo(() => {
-     return menuGroups.flatMap(group => group.items.flatMap(item => {
-       if (isLottoPay && ["Lazer", "Recargas", "Veículos"].includes(item.label)) return [];
+  const quickAccessItems = React.useMemo(() => {
+    return menuGroups.flatMap(group => group.items.flatMap(item => {
+      if (isLottoPay && ["Lazer", "Recargas", "Veículos"].includes(item.label)) return [];
 
-       if (item.submenu) {
-         return item.submenu.map(sub => ({
-           ...sub,
-           keywords: `${item.label} ${sub.label}`,
-         }));
-       }
+      if (item.submenu) {
+        return item.submenu.map(sub => ({
+          ...sub,
+          keywords: `${item.label} ${sub.label}`,
+        }));
+      }
 
-       return item.href === "#" ? [] : [{
-         icon: item.icon,
-         label: item.label,
-         href: item.href,
-         keywords: item.label,
-       }];
-     }));
-   }, [isLottoPay]);
+      return item.href === "#" ? [] : [{
+        icon: item.icon,
+        label: item.label,
+        href: item.href,
+        keywords: item.label,
+      }];
+    }));
+  }, [isLottoPay]);
 
-   const searchResults = React.useMemo(() => {
-     const normalizedQuery = searchQuery.trim().toLowerCase();
-     if (!normalizedQuery) return [];
+  const searchResults = React.useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+    if (!normalizedQuery) return [];
 
-     return quickAccessItems
-       .filter(item => item.keywords.toLowerCase().includes(normalizedQuery))
-       .slice(0, 6);
-   }, [quickAccessItems, searchQuery]);
+    return quickAccessItems
+      .filter(item => item.keywords.toLowerCase().includes(normalizedQuery))
+      .slice(0, 6);
+  }, [quickAccessItems, searchQuery]);
 
-   React.useEffect(() => {
-     menuGroups.forEach(group => {
-       group.items.forEach(item => {
-         if (item.submenu) {
-           const isAnySubActive = item.submenu.some(sub => pathname.startsWith(sub.href));
-           if (isAnySubActive) {
-             setExpandedMenus(prev => ({ ...prev, [item.label]: true }));
-           }
-         }
-       });
-     });
-   }, [pathname]);
-   const setGlobalBalance = useSetAtom(balanceAtom);
-   const setGlobalBalanceLoading = useSetAtom(isBalanceLoadingAtom);
-   const [user, setUser] = useAtom(userAtom);
-   const setIsUserLoading = useSetAtom(isUserLoadingAtom);
+  React.useEffect(() => {
+    menuGroups.forEach(group => {
+      group.items.forEach(item => {
+        if (item.submenu) {
+          const isAnySubActive = item.submenu.some(sub => pathname.startsWith(sub.href));
+          if (isAnySubActive) {
+            setExpandedMenus(prev => ({ ...prev, [item.label]: true }));
+          }
+        }
+      });
+    });
+  }, [pathname]);
+  const setGlobalBalance = useSetAtom(balanceAtom);
+  const setGlobalBalanceLoading = useSetAtom(isBalanceLoadingAtom);
+  const [user, setUser] = useAtom(userAtom);
+  const setIsUserLoading = useSetAtom(isUserLoadingAtom);
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -160,14 +159,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           const u = userRes.data;
           setUser(u);
           setUserName(u.name || u.nome || "Cliente");
-          
-          const extract = (val: any) => (val && typeof val === 'object' && 'present' in val) 
-            ? (val.present ? val.value : "---") 
+
+          const extract = (val: any) => (val && typeof val === 'object' && 'present' in val)
+            ? (val.present ? val.value : "---")
             : (val || "---");
 
-          setAccountInfo({ 
-            agency: extract(u.accountBranch || u.branch || u.agencia), 
-            account: extract(u.accountNumber || u.account || u.conta) 
+          setAccountInfo({
+            agency: extract(u.accountBranch || u.branch || u.agencia),
+            account: extract(u.accountNumber || u.account || u.conta)
           });
         }
       } catch (err) {
@@ -238,7 +237,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Countdown logic
   React.useEffect(() => {
     if (timeLeft === null) return;
-    
+
     if (timeLeft <= 0) {
       toast.error("Sua sessão expirou. Para sua segurança, você foi desconectado.");
       handleLogout();
@@ -254,7 +253,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return prev - 1;
       });
     }, 1000);
-    
+
     return () => clearInterval(interval);
   }, [timeLeft, handleLogout]);
 
@@ -264,30 +263,30 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const THEME_BG = 
+  const THEME_BG =
     currentBrand.id === "lotopay"
       ? "bg-[#101617]"
       : currentBrand.id === "fiscomoney"
-      ? "bg-[#1c1f22]"
-      : "bg-[#141210]"; // Slightly lighter than #0c0a09
+        ? "bg-[#1c1f22]"
+        : "bg-[#141210]"; // Slightly lighter than #0c0a09
 
-  const sidebarBg = 
+  const sidebarBg =
     currentBrand.id === "galapagos"
       ? "bg-[#0b1329] border-r border-white/5"
       : currentBrand.id === "fiscomoney"
-      ? "bg-[#141619] border-r border-white/5"
-      : currentBrand.id === "advogado10x"
-      ? "bg-[#0f0f0f] border-r border-white/5"
-      : THEME_BG;
+        ? "bg-[#141619] border-r border-white/5"
+        : currentBrand.id === "advogado10x"
+          ? "bg-[#0f0f0f] border-r border-white/5"
+          : THEME_BG;
 
-  const headerBg = 
+  const headerBg =
     currentBrand.id === "galapagos"
       ? "bg-[#0b1329] border-b border-white/5"
       : currentBrand.id === "fiscomoney"
-      ? "bg-[#141619] border-b border-white/5"
-      : currentBrand.id === "advogado10x"
-      ? "bg-[#0f0f0f] border-b border-white/5"
-      : THEME_BG;
+        ? "bg-[#141619] border-b border-white/5"
+        : currentBrand.id === "advogado10x"
+          ? "bg-[#0f0f0f] border-b border-white/5"
+          : THEME_BG;
 
   return (
     <div className={`${isLottoPay ? ui.shell : ""} flex h-dvh ${THEME_BG} text-white overflow-hidden font-sans ${currentBrand.themeClass}`}>
@@ -299,23 +298,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           ) : isLottoPay ? (
             <Image src={currentBrand.logoWhite} alt={currentBrand.name} width={1444} height={300} className="w-[240px] 2xl:w-[268px] h-auto object-contain origin-left" />
           ) : (
-            <div className={`flex items-center gap-3.5 select-none animate-in fade-in duration-300 origin-left ${
-              currentBrand.id === "advogado10x"
-                ? "scale-[1.05] 2xl:scale-[1.15] -translate-x-1"
-                : "scale-125 2xl:scale-[1.4]"
-            }`}>
-              <img 
-                src={currentBrand.logoOfficial} 
-                alt={currentBrand.name} 
-                className={`${
-                  currentBrand.id === "galapagos" 
-                    ? "h-9" 
-                    : isLottoPay
+            <div className={`flex items-center gap-3.5 select-none animate-in fade-in duration-300 origin-left ${currentBrand.id === "advogado10x"
+              ? "scale-[1.05] 2xl:scale-[1.15] -translate-x-1"
+              : "scale-125 2xl:scale-[1.4]"
+              }`}>
+              <img
+                src={currentBrand.logoOfficial}
+                alt={currentBrand.name}
+                className={`${currentBrand.id === "galapagos"
+                  ? "h-9"
+                  : isLottoPay
                     ? "h-16"
                     : currentBrand.id === "advogado10x"
-                    ? "h-14"
-                    : "h-14"
-                } w-auto object-contain brightness-100 ${isLottoPay ? "scale-[1.05]" : ""}`} 
+                      ? "h-14"
+                      : "h-14"
+                  } w-auto object-contain brightness-100 ${isLottoPay ? "scale-[1.05]" : ""}`}
               />
               {currentBrand.id === "galapagos" && (
                 <div className="flex flex-col justify-center text-left">
@@ -333,13 +330,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <div className="flex flex-col space-y-5 relative z-10 flex-1 min-h-0 overflow-y-auto pr-2 custom-scrollbar">
           {/* User Card with Yellowish Background */}
-          <div className={`flex-shrink-0 flex items-center gap-4 p-4 rounded-md shadow-2xl relative overflow-hidden group ${
-            currentBrand.id !== "g8"
-              ? "bg-white/[0.04] border border-white/10"
-              : "bg-brand-secondary/10 border border-brand-secondary/20"
-          }`}>
+          <div className={`flex-shrink-0 flex items-center gap-4 p-4 rounded-md shadow-2xl relative overflow-hidden group ${currentBrand.id !== "g8"
+            ? "bg-white/[0.04] border border-white/10"
+            : "bg-brand-secondary/10 border border-brand-secondary/20"
+            }`}>
             <div className="absolute top-0 right-0 p-2 opacity-10">
-               <User className="h-10 w-10 text-brand-secondary" />
+              <User className="h-10 w-10 text-brand-secondary" />
             </div>
             <Avatar className="h-12 w-12 border-2 border-brand-accent rounded-md shadow-lg shrink-0">
               <AvatarImage src="/avatar.svg" />
@@ -348,28 +344,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <div className="flex flex-col min-w-0 flex-1 text-left">
               <span className="text-[9px] text-brand-accent font-black uppercase tracking-[0.2em] mb-0.5">Status Platinum</span>
               <span className="text-lg font-black text-white leading-tight truncate mb-1.5">{cleanName(userName)}</span>
-              
+
               <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
                 <div className="flex flex-col">
-                  <span className={`text-[8px] font-black uppercase tracking-widest leading-none mb-1 ${
-                    currentBrand.id === "galapagos" ? "text-white/50" : "text-brand-secondary/60"
-                  }`}>Banco</span>
+                  {
+                    currentBrand.id !== "lotopay" && (
+                      <span className={`text-[8px] font-black uppercase tracking-widest leading-none mb-1 text-brand-secondary/60}`}>Banco</span>
+                    )
+                  }
                   <span className="text-[10px] font-mono font-black text-white leading-none">{isLottoPay ? "LottoPay" : `${currentBrand.bankCode} • ${currentBrand.bankName}`}</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-col">
-                    <span className={`text-[8px] font-black uppercase tracking-widest leading-none mb-1 ${
-                      currentBrand.id === "galapagos" ? "text-white/50" : "text-brand-secondary/60"
-                    }`}>Ag</span>
-                    <span className="text-[10px] font-mono font-black text-white leading-none">{accountInfo.agency}</span>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className={`text-[8px] font-black uppercase tracking-widest leading-none mb-1 ${
-                      currentBrand.id === "galapagos" ? "text-white/50" : "text-brand-secondary/60"
-                    }`}>C/C</span>
-                    <span className="text-[10px] font-mono font-black text-white leading-none">{accountInfo.account}</span>
-                  </div>
-                </div>
+                {
+                  currentBrand.id !== "lotopay" && (
+                    <div className="flex items-center gap-4">
+                      <div className="flex flex-col">
+                        <span className={`text-[8px] font-black uppercase tracking-widest leading-none mb-1 ${currentBrand.id === "galapagos" ? "text-white/50" : "text-brand-secondary/60"
+                          }`}>Ag</span>
+                        <span className="text-[10px] font-mono font-black text-white leading-none">{accountInfo.agency}</span>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className={`text-[8px] font-black uppercase tracking-widest leading-none mb-1 ${currentBrand.id === "galapagos" ? "text-white/50" : "text-brand-secondary/60"
+                          }`}>C/C</span>
+                        <span className="text-[10px] font-mono font-black text-white leading-none">{accountInfo.account}</span>
+                      </div>
+                    </div>
+                  )
+                }
               </div>
             </div>
           </div>
@@ -380,90 +380,88 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 {group.items
                   .filter((item) => !(isLottoPay && ["Lazer", "Recargas", "Veículos"].includes(item.label)))
                   .map((item) => {
-                  const isActive = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
-                  
-                  if (item.submenu) {
-                    const isAnySubActive = item.submenu.some(sub => pathname.startsWith(sub.href));
-                    return (
-                      <div key={item.label} className="space-y-1">
-                        <button
-                          onClick={() => setExpandedMenus(prev => ({ ...prev, [item.label]: !prev[item.label] }))}
-                          aria-label={item.label}
-                          aria-expanded={!!expandedMenus[item.label]}
-                          data-active={isAnySubActive}
-                          className={`${isLottoPay ? styles.item : ""} flex items-center gap-5 px-6 py-3 w-full rounded-md transition-all group relative overflow-hidden border border-transparent ${
-                            isAnySubActive
+                    const isActive = item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
+
+                    if (item.submenu) {
+                      const isAnySubActive = item.submenu.some(sub => pathname.startsWith(sub.href));
+                      return (
+                        <div key={item.label} className="space-y-1">
+                          <button
+                            onClick={() => setExpandedMenus(prev => ({ ...prev, [item.label]: !prev[item.label] }))}
+                            aria-label={item.label}
+                            aria-expanded={!!expandedMenus[item.label]}
+                            data-active={isAnySubActive}
+                            className={`${isLottoPay ? styles.item : ""} flex items-center gap-5 px-6 py-3 w-full rounded-md transition-all group relative overflow-hidden border border-transparent ${isAnySubActive
                               ? "text-brand-accent bg-white shadow-lg shadow-brand-accent/5"
                               : "text-white/80 hover:bg-white hover:text-brand-accent"
-                          }`}
-                        >
-                          <item.icon className={`h-5 w-5 relative z-10 ${isAnySubActive ? "text-brand-accent" : "text-white/60 group-hover:text-brand-accent"}`} />
-                          <div className="flex items-center justify-between flex-1 relative z-10">
-                            <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isAnySubActive ? "text-brand-accent" : "text-white/80 group-hover:text-brand-accent transition-colors duration-300"}`}>{item.label}</span>
-                            {expandedMenus[item.label] ? (
-                              <ChevronUp className="h-4 w-4 text-brand-accent relative z-10 shrink-0" />
-                            ) : (
-                              <ChevronDown className={`h-4 w-4 relative z-10 shrink-0 ${isAnySubActive ? "text-brand-accent" : "text-white/60 group-hover:text-brand-accent"}`} />
-                            )}
-                          </div>
-                        </button>
-                        {expandedMenus[item.label] && (
-                          <div className="pl-6 space-y-1 animate-in slide-in-from-top-1 duration-200">
-                            {item.submenu.map((sub) => {
-                              const isSubActive = pathname.startsWith(sub.href);
-                              return (
-                                <Link
-                                  key={sub.label}
-                                  href={sub.href}
-                                  aria-label={sub.label}
-                                  data-active={isSubActive}
-                                  className={`${isLottoPay ? styles.item : ""} flex items-center gap-4 px-6 py-2.5 rounded-md transition-all group border border-transparent ${
-                                    isSubActive
+                              }`}
+                          >
+                            <item.icon className={`h-5 w-5 relative z-10 ${isAnySubActive ? "text-brand-accent" : "text-white/60 group-hover:text-brand-accent"}`} />
+                            <div className="flex items-center justify-between flex-1 relative z-10">
+                              <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isAnySubActive ? "text-brand-accent" : "text-white/80 group-hover:text-brand-accent transition-colors duration-300"}`}>{item.label}</span>
+                              {expandedMenus[item.label] ? (
+                                <ChevronUp className="h-4 w-4 text-brand-accent relative z-10 shrink-0" />
+                              ) : (
+                                <ChevronDown className={`h-4 w-4 relative z-10 shrink-0 ${isAnySubActive ? "text-brand-accent" : "text-white/60 group-hover:text-brand-accent"}`} />
+                              )}
+                            </div>
+                          </button>
+                          {expandedMenus[item.label] && (
+                            <div className="pl-6 space-y-1 animate-in slide-in-from-top-1 duration-200">
+                              {item.submenu.map((sub) => {
+                                const isSubActive = pathname.startsWith(sub.href);
+                                return (
+                                  <Link
+                                    key={sub.label}
+                                    href={sub.href}
+                                    aria-label={sub.label}
+                                    data-active={isSubActive}
+                                    className={`${isLottoPay ? styles.item : ""} flex items-center gap-4 px-6 py-2.5 rounded-md transition-all group border border-transparent ${isSubActive
                                       ? currentBrand.id !== "g8"
                                         ? "text-brand-accent bg-white shadow-md shadow-black/5"
                                         : "text-white bg-brand-accent shadow-md shadow-brand-accent/10"
                                       : "text-white/70 hover:bg-white hover:text-brand-accent"
-                                  }`}
-                                >
-                                  <sub.icon className={`h-4 w-4 shrink-0 ${isSubActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : "text-white/40 group-hover:text-brand-accent"}`} />
-                                  <span className={`text-[10px] uppercase tracking-[0.15em] font-black ${isSubActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : "text-white/70 group-hover:text-brand-accent"}`}>{sub.label}</span>
-                                </Link>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  }
+                                      }`}
+                                  >
+                                    <sub.icon className={`h-4 w-4 shrink-0 ${isSubActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : "text-white/40 group-hover:text-brand-accent"}`} />
+                                    <span className={`text-[10px] uppercase tracking-[0.15em] font-black ${isSubActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : "text-white/70 group-hover:text-brand-accent"}`}>{sub.label}</span>
+                                  </Link>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
 
-                  return (
-                    <Link
-                      key={item.label}
-                      href={item.disabled ? "#" : item.href}
-                      onClick={(e) => item.disabled && e.preventDefault()}
-                      aria-label={item.label}
-                      data-active={isActive}
-                      data-disabled={item.disabled || undefined}
-                      className={`${isLottoPay ? styles.item : ""} flex items-center gap-5 px-6 py-3 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
-                        ? currentBrand.id !== "g8"
-                          ? "text-brand-accent bg-white shadow-lg shadow-black/10"
-                          : "text-white bg-brand-accent shadow-lg shadow-brand-accent/20"
-                        : item.disabled
-                          ? "opacity-60 cursor-not-allowed"
-                          : "text-white/80 hover:bg-white hover:text-brand-accent"
-                        }`}
-                    >
-                      <item.icon className={`h-5 w-5 relative z-10 ${isActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : item.disabled ? "text-white/40" : "text-white/60 group-hover:text-brand-accent"}`} />
-                      <div className="flex items-center justify-between flex-1 relative z-10">
-                        <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : item.disabled ? "text-white/40" : "text-white/80 group-hover:text-brand-accent transition-colors duration-300"}`}>{item.label}</span>
-                        {item.badge && (
-                          <span data-sidebar-badge className={`font-black text-[9px] px-1.5 py-0.5 rounded-sm tracking-tighter ${item.badge === "EM BREVE" ? "bg-[#ffdd00] text-black" : "bg-white/10 text-white"}`}>
-                            {item.badge}
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-                  );
+                    return (
+                      <Link
+                        key={item.label}
+                        href={item.disabled ? "#" : item.href}
+                        onClick={(e) => item.disabled && e.preventDefault()}
+                        aria-label={item.label}
+                        data-active={isActive}
+                        data-disabled={item.disabled || undefined}
+                        className={`${isLottoPay ? styles.item : ""} flex items-center gap-5 px-6 py-3 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
+                          ? currentBrand.id !== "g8"
+                            ? "text-brand-accent bg-white shadow-lg shadow-black/10"
+                            : "text-white bg-brand-accent shadow-lg shadow-brand-accent/20"
+                          : item.disabled
+                            ? "opacity-60 cursor-not-allowed"
+                            : "text-white/80 hover:bg-white hover:text-brand-accent"
+                          }`}
+                      >
+                        <item.icon className={`h-5 w-5 relative z-10 ${isActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : item.disabled ? "text-white/40" : "text-white/60 group-hover:text-brand-accent"}`} />
+                        <div className="flex items-center justify-between flex-1 relative z-10">
+                          <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : item.disabled ? "text-white/40" : "text-white/80 group-hover:text-brand-accent transition-colors duration-300"}`}>{item.label}</span>
+                          {item.badge && (
+                            <span data-sidebar-badge className={`font-black text-[9px] px-1.5 py-0.5 rounded-sm tracking-tighter ${item.badge === "EM BREVE" ? "bg-[#ffdd00] text-black" : "bg-white/10 text-white"}`}>
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    );
                   })}
                 {groupIdx < menuGroups.length - 1 && <Separator className="bg-white/5 my-4" />}
               </div>
@@ -530,9 +528,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
           <div className="flex items-center gap-8 xl:gap-12">
             {/* Balance Section */}
-            <div className={`flex flex-col items-end justify-center h-12 border-r pr-8 xl:pr-12 ${
-              currentBrand.id !== "g8" ? "border-white/5" : "border-white/10"
-            }`}>
+            <div className={`flex flex-col items-end justify-center h-12 border-r pr-8 xl:pr-12 ${currentBrand.id !== "g8" ? "border-white/5" : "border-white/10"
+              }`}>
               <span className="text-[10px] text-white/60 font-black uppercase tracking-[0.2em] mb-2 leading-none">Saldo Líquido</span>
               <div className="flex items-center gap-4">
                 {isLoadingData ? (
@@ -541,29 +538,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <span className="text-2xl xl:text-3xl font-black text-white font-mono tracking-tighter">{balance}</span>
                 )}
                 <button onClick={() => window.location.reload()} className="group/sync">
-                   <RotateCw className="h-4 w-4 text-brand-accent group-hover/sync:rotate-180 transition-transform duration-700" />
+                  <RotateCw className="h-4 w-4 text-brand-accent group-hover/sync:rotate-180 transition-transform duration-700" />
                 </button>
               </div>
             </div>
 
             {/* Profile Section */}
             <div className="flex items-center gap-6 xl:gap-8 relative">
-              <div className={`hidden lg:flex flex-col items-center gap-1.5 px-4 py-2 rounded-md shadow-lg ${
-                currentBrand.id !== "g8"
-                  ? "bg-white/10 border border-white/20"
-                  : "bg-brand-secondary/10 border border-brand-secondary/20"
-              }`}>
-                 <div className="flex items-center gap-2">
-                    <Clock className={`h-3 w-3 animate-pulse ${
-                      currentBrand.id !== "g8" ? "text-white" : "text-brand-secondary"
+              <div className={`hidden lg:flex flex-col items-center gap-1.5 px-4 py-2 rounded-md shadow-lg ${currentBrand.id !== "g8"
+                ? "bg-white/10 border border-white/20"
+                : "bg-brand-secondary/10 border border-brand-secondary/20"
+                }`}>
+                <div className="flex items-center gap-2">
+                  <Clock className={`h-3 w-3 animate-pulse ${currentBrand.id !== "g8" ? "text-white" : "text-brand-secondary"
                     }`} />
-                    <span className={`text-[9px] font-black uppercase tracking-widest ${
-                      currentBrand.id !== "g8" ? "text-white" : "text-brand-secondary"
+                  <span className={`text-[9px] font-black uppercase tracking-widest ${currentBrand.id !== "g8" ? "text-white" : "text-brand-secondary"
                     }`}>Sessão Segura</span>
-                 </div>
-                 <span className="text-sm font-mono font-black text-white tabular-nums leading-none">
-                   {timeLeft !== null ? formatTime(timeLeft) : "00:00"}
-                 </span>
+                </div>
+                <span className="text-sm font-mono font-black text-white tabular-nums leading-none">
+                  {timeLeft !== null ? formatTime(timeLeft) : "00:00"}
+                </span>
               </div>
 
               <Link href="/dashboard/conta" className="flex items-center gap-4 cursor-pointer group">
