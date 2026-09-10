@@ -405,14 +405,14 @@ export default function MyPixKeysPage() {
          {/* Multi-step Modal */}
          {isAddModalOpen && (
             <div className="fixed inset-0 z-40 flex items-center justify-center p-4 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-300">
-               <Card className="w-full max-w-md bg-white rounded-md overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300 border-0">
-                  <div className="p-8 space-y-8">
+               <Card className="w-full max-w-lg bg-white text-[#0c0a09] rounded-md overflow-visible shadow-2xl animate-in zoom-in-95 duration-300 border-0">
+                  <div className="p-6 sm:p-8 space-y-8">
                      <div className="flex items-center justify-between">
                         <div className="space-y-1">
-                           <h2 className="text-2xl font-black text-[#0c0a09] tracking-tighter uppercase">
+                           <h2 className="text-2xl sm:text-3xl font-black text-[#0c0a09] tracking-tight uppercase">
                               {step === 'CREATE' ? 'Nova Chave Pix' : 'Confirmar Chave'}
                            </h2>
-                           <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                           <p className="text-[10px] sm:text-xs font-bold text-neutral-500 uppercase tracking-widest">
                               {step === 'CREATE' ? 'Cadastre um novo endereço' : 'Valide a autoridade da sua chave'}
                            </p>
                         </div>
@@ -429,15 +429,15 @@ export default function MyPixKeysPage() {
                            <div className="space-y-2">
                               <label className="text-[10px] font-black text-[#0c0a09] uppercase tracking-widest ml-1">Tipo de Chave</label>
                               <Select value={newKeyType} onValueChange={(val) => setNewKeyType(val || "CPF")}>
-                                 <SelectTrigger className="h-14 w-full bg-neutral-50 border-neutral-100 rounded-md font-bold text-sm focus:ring-0 focus:border-[var(--brand-accent)] transition-all px-4">
+                                 <SelectTrigger className="h-14 w-full bg-white border-neutral-200 rounded-md font-bold text-sm text-[#0c0a09] focus:ring-0 focus:border-[var(--brand-accent)] transition-all px-4 data-placeholder:text-neutral-400">
                                     <SelectValue placeholder="Selecione o tipo" />
                                  </SelectTrigger>
-                                 <SelectContent className="rounded-md border-0 shadow-2xl z-[60] bg-white">
-                                    <SelectItem value="CPF" className="font-bold py-3">CPF</SelectItem>
-                                    <SelectItem value="EMAIL" className="font-bold py-3">E-mail</SelectItem>
-                                    <SelectItem value="CELULAR" className="font-bold py-3">Celular</SelectItem>
-                                    <SelectItem value="CHAVE_ALEATORIA" className="font-bold py-3">Chave Aleatória</SelectItem>
-                                    <SelectItem value="CNPJ" className="font-bold py-3">CNPJ</SelectItem>
+                                 <SelectContent className="rounded-md border border-neutral-100 shadow-2xl z-[60] bg-white text-[#0c0a09] p-1">
+                                    <SelectItem value="CPF" className="font-bold py-3 px-3 text-[#0c0a09] data-highlighted:bg-[var(--brand-accent)] data-highlighted:text-white focus:bg-[var(--brand-accent)] focus:text-white">CPF</SelectItem>
+                                    <SelectItem value="EMAIL" className="font-bold py-3 px-3 text-[#0c0a09] data-highlighted:bg-[var(--brand-accent)] data-highlighted:text-white focus:bg-[var(--brand-accent)] focus:text-white">E-mail</SelectItem>
+                                    <SelectItem value="CELULAR" className="font-bold py-3 px-3 text-[#0c0a09] data-highlighted:bg-[var(--brand-accent)] data-highlighted:text-white focus:bg-[var(--brand-accent)] focus:text-white">Celular</SelectItem>
+                                    <SelectItem value="CHAVE_ALEATORIA" className="font-bold py-3 px-3 text-[#0c0a09] data-highlighted:bg-[var(--brand-accent)] data-highlighted:text-white focus:bg-[var(--brand-accent)] focus:text-white">Chave Aleatória</SelectItem>
+                                    <SelectItem value="CNPJ" className="font-bold py-3 px-3 text-[#0c0a09] data-highlighted:bg-[var(--brand-accent)] data-highlighted:text-white focus:bg-[var(--brand-accent)] focus:text-white">CNPJ</SelectItem>
                                  </SelectContent>
                               </Select>
                            </div>
@@ -455,7 +455,7 @@ export default function MyPixKeysPage() {
                                  }
                                  value={newKeyValue}
                                  onChange={(e) => setNewKeyValue(e.target.value)}
-                                 className="h-14 bg-neutral-50 border-neutral-100 rounded-md font-bold text-sm placeholder:text-neutral-300 focus:ring-0 focus:border-[var(--brand-accent)] transition-all"
+                                 className="h-14 bg-white border-neutral-200 rounded-md font-bold text-sm text-[#0c0a09] placeholder:text-neutral-400 focus:ring-0 focus:border-[var(--brand-accent)] transition-all"
                               />
                            </div>
 
@@ -463,7 +463,7 @@ export default function MyPixKeysPage() {
                               <Button 
                                  onClick={handleCreateKey}
                                  disabled={isCreating || (!newKeyValue && newKeyType !== "CHAVE_ALEATORIA")}
-                                 className="h-14 bg-[var(--brand-accent)] hover:bg-orange-600 text-white rounded-md font-black uppercase tracking-[0.2em] text-[11px] shadow-lg shadow-orange-500/20 active:scale-95 transition-all disabled:opacity-50"
+                                 className="h-14 bg-[var(--brand-accent)] hover:bg-[var(--brand-accent)]/90 text-white rounded-md font-black uppercase tracking-[0.2em] text-[11px] shadow-lg shadow-[var(--brand-accent)]/20 active:scale-95 transition-all disabled:opacity-50"
                               >
                                  {isCreating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Plus className="h-5 w-5 mr-2" />}
                                  CADASTRAR CHAVE

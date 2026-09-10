@@ -764,74 +764,75 @@ export default function DashboardHome() {
 
             {/* Premium Receipt Modal Overlay */}
             {selectedTransaction && (
-               <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-500 overflow-y-auto">
-                  <Card className="w-full max-w-lg 2xl:max-w-3xl bg-white rounded-md overflow-hidden shadow-2xl relative border-white/20 animate-in zoom-in-95 duration-300 my-auto">
+               <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-6 bg-[#0c0a09]/90 backdrop-blur-md animate-in fade-in duration-500 overflow-y-auto">
+                  <Card className="w-full max-w-[860px] max-h-[calc(100dvh-2rem)] bg-white rounded-md overflow-y-auto shadow-2xl relative border-white/20 animate-in zoom-in-95 duration-300 my-auto">
                      <button
                         onClick={() => setSelectedTransaction(null)}
-                        className="absolute top-4 right-4 p-2 rounded-full bg-neutral-50 hover:bg-neutral-100 transition-all z-20 hover:rotate-90"
+                        className="absolute top-4 right-4 p-2 rounded-md bg-white/90 hover:bg-neutral-100 transition-all z-20 border border-neutral-100 shadow-sm"
+                        aria-label="Fechar comprovante"
                      >
                         <ArrowLeft className="h-5 w-5 rotate-180 text-neutral-400" />
                      </button>
 
                      <div className="relative">
-                        <div className="absolute top-0 inset-x-0 h-32 bg-gradient-to-b from-neutral-50 to-white" />
+                        <div className="absolute top-0 inset-x-0 h-28 bg-gradient-to-b from-neutral-50 to-white" />
 
-                        <div className="p-6 md:p-8 2xl:p-12 space-y-6 2xl:space-y-10 relative z-10">
-                           <div className="text-center space-y-3 2xl:space-y-5">
-                              <div className="relative inline-block">
+                        <div className="p-5 sm:p-7 md:p-9 space-y-5 md:space-y-6 relative z-10">
+                           <div className="flex flex-col sm:flex-row sm:items-center gap-4 pr-10">
+                              <div className="relative shrink-0">
                                  <div className="absolute -inset-4 bg-[var(--brand-accent)]/10 rounded-full blur-xl" />
-                                 <div className={`w-14 h-14 2xl:w-20 2xl:h-20 rounded-md flex items-center justify-center text-[var(--brand-accent)] mx-auto shadow-2xl relative border ${currentBrand.id === "galapagos"
+                                 <div className={`w-14 h-14 rounded-md flex items-center justify-center text-[var(--brand-accent)] shadow-2xl relative border ${currentBrand.id === "galapagos"
                                        ? "bg-[#0b1329] border-white/10"
                                        : "bg-[#0c0a09] border-white/5"
                                     }`}>
-                                    <Diamond className="h-7 w-7 2xl:h-10 2xl:w-10 fill-[var(--brand-accent)]/20" />
+                                    <Diamond className="h-7 w-7 fill-[var(--brand-accent)]/20" />
                                  </div>
                               </div>
-                              <div>
-                                 <h2 className="text-2xl 2xl:text-4xl font-black text-[#0c0a09] tracking-tighter uppercase font-sans">Comprovante</h2>
-                                 <div className="flex items-center justify-center gap-2 mt-1">
-                                    <CheckCircle2 className="h-4 w-4 2xl:h-5 2xl:w-5 text-green-500" />
-                                    <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-[0.2em]">Autenticação {currentBrand.shortName.toUpperCase()} PAY</p>
+                              <div className="min-w-0">
+                                 <h2 className="text-2xl md:text-3xl font-black text-[#0c0a09] tracking-tight uppercase font-sans">Comprovante</h2>
+                                 <div className="flex items-center gap-2 mt-1">
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                                    <p className="text-[11px] md:text-xs text-neutral-500 font-black uppercase tracking-[0.18em] break-words">Autenticação {currentBrand.shortName.toUpperCase()} Pay</p>
                                  </div>
                               </div>
                            </div>
 
-                           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                              <div className="md:col-span-2 text-center py-7 2xl:py-12 bg-neutral-50 rounded-md border border-neutral-100 flex flex-col justify-center">
-                                 <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-[0.3em] mb-3">Valor Total</p>
-                                 <p className="text-3xl 2xl:text-5xl font-black text-[var(--brand-accent)] font-mono tracking-tighter leading-none">
+                           <div className="grid grid-cols-1 md:grid-cols-[0.85fr_1.15fr] gap-4">
+                              <div className="p-5 md:p-6 bg-neutral-50 rounded-md border border-neutral-100 flex flex-col justify-center">
+                                 <p className="text-[10px] md:text-xs text-neutral-400 font-black uppercase tracking-[0.22em] mb-2">Valor total</p>
+                                 <p className="text-3xl sm:text-4xl font-black text-[var(--brand-accent)] font-mono tracking-tight leading-none break-words">
                                     {selectedTransaction.tipo === 'CREDITO' ? '+' : '-'} {selectedTransaction.valorFormatado}
                                  </p>
                               </div>
 
-                              <div className="md:col-span-3 p-5 2xl:p-8 rounded-md bg-neutral-50 border border-neutral-100 flex flex-col justify-center space-y-2">
+                              <div className="p-5 md:p-6 rounded-md bg-neutral-50 border border-neutral-100 flex flex-col justify-center space-y-2 min-w-0">
                                  <div className="flex items-center gap-2 mb-1">
-                                    <Fingerprint className="h-4 w-4 text-[var(--brand-accent)]" />
-                                    <p className="text-xs 2xl:text-sm font-black uppercase tracking-[0.2em] text-[var(--brand-accent)]">Autenticação Digital</p>
+                                    <Fingerprint className="h-4 w-4 text-[var(--brand-accent)] shrink-0" />
+                                    <p className="text-[10px] md:text-xs font-black uppercase tracking-[0.18em] text-[var(--brand-accent)]">Autenticação digital</p>
                                  </div>
-                                 <p className="text-xs 2xl:text-sm font-mono font-bold break-all leading-relaxed text-[#0c0a09]/70">{selectedTransaction.codigoDeIdentificacao}</p>
+                                 <p className="text-xs md:text-sm font-mono font-bold break-all leading-relaxed text-[#0c0a09]/70">{selectedTransaction.codigoDeIdentificacao}</p>
                               </div>
                            </div>
 
-                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 2xl:gap-8">
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                               {/* Payer Card */}
-                              <div className="space-y-4 2xl:space-y-6 p-5 2xl:p-8 rounded-md bg-neutral-50/80 border border-neutral-100">
+                              <div className="space-y-4 p-5 md:p-6 rounded-md bg-neutral-50/80 border border-neutral-100 min-w-0">
                                  <div className="flex items-center gap-3 mb-2">
-                                    <Building2 className="h-4 w-4 2xl:h-5 2xl:w-5 text-neutral-400" />
-                                    <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-widest">Origem / Pagador</p>
+                                    <Building2 className="h-4 w-4 text-neutral-400 shrink-0" />
+                                    <p className="text-[10px] md:text-xs text-neutral-400 font-black uppercase tracking-widest">Origem / Pagador</p>
                                  </div>
                                  <div className="space-y-1">
-                                    <p className="font-black text-[#0c0a09] truncate text-base 2xl:text-xl">{selectedTransaction.pagadorNome || `CLIENTE ${currentBrand.name.toUpperCase()}`}</p>
-                                    <p className="text-sm 2xl:text-base text-neutral-500 font-mono font-bold opacity-70">
+                                    <p className="font-black text-[#0c0a09] text-base md:text-lg leading-tight break-words">{selectedTransaction.pagadorNome || `CLIENTE ${currentBrand.name.toUpperCase()}`}</p>
+                                    <p className="text-sm text-neutral-500 font-mono font-bold opacity-80 break-words">
                                        {selectedTransaction.pagadorTaxNumber?.present ? selectedTransaction.pagadorTaxNumber.value : (selectedTransaction.pagadorTaxNumber || "---")}
                                     </p>
                                  </div>
-                                 <div className="pt-3 border-t border-neutral-200/50 space-y-2 2xl:space-y-4">
-                                    <div className="flex justify-between items-center text-sm 2xl:text-base">
+                                 <div className="pt-3 border-t border-neutral-200/60 space-y-2">
+                                    <div className="grid grid-cols-[72px_1fr] gap-3 text-sm">
                                        <span className="text-neutral-400 font-bold">Banco</span>
-                                       <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{selectedTransaction.pagadorInstituicao || `${currentBrand.bankName} (${currentBrand.bankCode})`}</span>
+                                       <span className="font-black text-[#0c0a09] uppercase text-right break-words">{selectedTransaction.pagadorInstituicao || `${currentBrand.bankName} (${currentBrand.bankCode})`}</span>
                                     </div>
-                                    <div className="flex justify-between items-center text-xs 2xl:text-sm">
+                                    <div className="grid grid-cols-[72px_1fr] gap-3 text-xs md:text-sm">
                                        <span className="text-neutral-400 font-bold">Ag/Conta</span>
                                        <span className="font-black text-[#0c0a09] font-mono tracking-tighter text-right">
                                           {selectedTransaction.pagadorAgencia || "0001"} &bull; {selectedTransaction.pagadorConta || "0000000-0"}
@@ -841,23 +842,23 @@ export default function DashboardHome() {
                               </div>
 
                               {/* Receiver Card */}
-                              <div className="space-y-4 2xl:space-y-6 p-5 2xl:p-8 rounded-md bg-neutral-50/80 border border-neutral-100">
+                              <div className="space-y-4 p-5 md:p-6 rounded-md bg-neutral-50/80 border border-neutral-100 min-w-0">
                                  <div className="flex items-center gap-3 mb-2">
-                                    <Building2 className="h-4 w-4 2xl:h-5 2xl:w-5 text-neutral-400" />
-                                    <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-widest">Destino / Recebedor</p>
+                                    <Building2 className="h-4 w-4 text-neutral-400 shrink-0" />
+                                    <p className="text-[10px] md:text-xs text-neutral-400 font-black uppercase tracking-widest">Destino / Recebedor</p>
                                  </div>
                                  <div className="space-y-1">
-                                    <p className="font-black text-[#0c0a09] truncate text-base 2xl:text-xl">{selectedTransaction.RecebinteNome || `PAGAMENTO ${currentBrand.name.toUpperCase()}`}</p>
-                                    <p className="text-sm 2xl:text-base text-neutral-500 font-mono font-bold opacity-70">
+                                    <p className="font-black text-[#0c0a09] text-base md:text-lg leading-tight break-words">{selectedTransaction.RecebinteNome || `PAGAMENTO ${currentBrand.name.toUpperCase()}`}</p>
+                                    <p className="text-sm text-neutral-500 font-mono font-bold opacity-80 break-words">
                                        {selectedTransaction.RecebinteTaxNumber?.present ? selectedTransaction.RecebinteTaxNumber.value : (selectedTransaction.RecebinteTaxNumber || "---")}
                                     </p>
                                  </div>
-                                 <div className="pt-3 border-t border-neutral-200/50 space-y-2 2xl:space-y-4">
-                                    <div className="flex justify-between items-center text-sm 2xl:text-base">
+                                 <div className="pt-3 border-t border-neutral-200/60 space-y-2">
+                                    <div className="grid grid-cols-[72px_1fr] gap-3 text-sm">
                                        <span className="text-neutral-400 font-bold">Banco</span>
-                                       <span className="font-black text-[#0c0a09] uppercase truncate ml-2 text-right">{selectedTransaction.RecebinteInstituicao || "BANCO DESTINO"}</span>
+                                       <span className="font-black text-[#0c0a09] uppercase text-right break-words">{selectedTransaction.RecebinteInstituicao || "BANCO DESTINO"}</span>
                                     </div>
-                                    <div className="flex justify-between items-center text-xs 2xl:text-sm">
+                                    <div className="grid grid-cols-[72px_1fr] gap-3 text-xs md:text-sm">
                                        <span className="text-neutral-400 font-bold">Ag/Conta</span>
                                        <span className="font-black text-[#0c0a09] font-mono tracking-tighter text-right">
                                           {selectedTransaction.RecebinteAgencia || "---"} &bull; {selectedTransaction.RecebinteConta || "---"}
@@ -867,24 +868,24 @@ export default function DashboardHome() {
                               </div>
                            </div>
 
-                           <div className="space-y-5 pt-2">
-                              <div className="grid grid-cols-2 gap-8">
+                           <div className="rounded-md border border-neutral-100 bg-white p-4 md:p-5">
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8">
                                  <div>
-                                    <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-widest mb-1.5">Tipo</p>
-                                    <Badge className="bg-[var(--brand-accent)]/5 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-sm 2xl:text-base uppercase tracking-widest rounded-sm">
+                                    <p className="text-[10px] md:text-xs text-neutral-400 font-black uppercase tracking-widest mb-1.5">Tipo</p>
+                                    <Badge className="bg-[var(--brand-accent)]/10 text-[var(--brand-accent)] border-0 px-3 py-1 font-black text-xs md:text-sm uppercase tracking-widest rounded-sm max-w-full whitespace-normal text-left">
                                        {selectedTransaction.metodoFormatado}
                                     </Badge>
                                  </div>
-                                 <div className="text-right">
-                                    <p className="text-xs 2xl:text-sm text-neutral-400 font-black uppercase tracking-widest mb-1.5">Data Efetiva</p>
-                                    <p className="text-base 2xl:text-xl font-black text-[#0c0a09]">
+                                 <div className="sm:text-right">
+                                    <p className="text-[10px] md:text-xs text-neutral-400 font-black uppercase tracking-widest mb-1.5">Data efetiva</p>
+                                    <p className="text-base md:text-lg font-black text-[#0c0a09]">
                                        {selectedTransaction.dataDaTransacaoFormatada.split(" ")[0].split("-").reverse().join("/")} <span className="ml-2 text-neutral-400">{selectedTransaction.dataDaTransacaoFormatada.split(" ")[1]}</span>
                                     </p>
                                  </div>
                               </div>
                            </div>
 
-                           <div className="flex gap-4 pt-2">
+                           <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3 pt-1">
                               <Button
                                  onClick={() => handlePrintReceipt(
                                     selectedTransaction.idDoBancoLiquidante || selectedTransaction.itemId || selectedTransaction.id,
@@ -900,7 +901,7 @@ export default function DashboardHome() {
                               <Button
                                  variant="outline"
                                  onClick={() => setSelectedTransaction(null)}
-                                 className="h-12 2xl:h-20 border-neutral-100 rounded-md font-black uppercase tracking-widest text-sm 2xl:text-lg px-8 active:scale-95 text-neutral-400 hover:text-black"
+                                 className="h-14 border-neutral-100 rounded-md font-black uppercase tracking-widest text-sm px-8 active:scale-95 text-neutral-500 hover:text-black"
                               >
                                  Fechar
                               </Button>

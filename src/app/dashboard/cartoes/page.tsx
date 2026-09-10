@@ -109,35 +109,36 @@ export default function CartoesPage() {
                      <Plus className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform text-white" />
                      Novo Cartão Virtual
                   </DialogTrigger>
-                  <DialogContent className={`sm:max-w-[450px] p-0 overflow-hidden border-0 bg-white shadow-2xl ${currentBrand.themeClass}`}>
+                  <DialogContent className={`sm:max-w-[560px] p-0 overflow-hidden border-0 bg-white text-[#0c0a09] shadow-2xl ${currentBrand.themeClass}`}>
                      {step === 1 ? (
-                        <div className="p-8 space-y-8">
+                        <div className="p-6 sm:p-8 space-y-8">
                            <div className="space-y-2">
-                              <DialogTitle className="text-2xl font-black uppercase tracking-tight">Novo Cartão Virtual</DialogTitle>
-                              <DialogDescription className="text-neutral-400 font-bold uppercase text-[10px] tracking-widest">
+                              <DialogTitle className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-[#0c0a09]">Novo Cartão Virtual</DialogTitle>
+                              <DialogDescription className="text-neutral-500 font-bold uppercase text-[10px] sm:text-xs tracking-widest">
                                  Segurança máxima para suas compras online.
                               </DialogDescription>
                            </div>
 
                            <div className="space-y-6">
                               <div className="space-y-3">
-                                 <Label htmlFor="nickname" className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Apelido do Cartão</Label>
+                                 <Label htmlFor="nickname" className="text-[10px] sm:text-xs font-black uppercase tracking-widest text-neutral-500">Apelido do Cartão</Label>
                                  <Input
                                     id="nickname"
+                                    autoComplete="off"
                                     placeholder="Ex: Compras Amazon"
-                                    className="h-14 border-neutral-100 bg-neutral-50 rounded-sm font-bold focus:ring-orange-600/20 focus:border-orange-600/30 transition-all"
+                                    className="h-14 border-neutral-200 bg-white rounded-sm font-bold text-[#0c0a09] placeholder:text-neutral-400 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)] transition-all"
                                     value={newCardNickname}
                                     onChange={(e) => setNewCardNickname(e.target.value)}
                                  />
                               </div>
 
-                              <div className="p-6 bg-orange-50 rounded-sm border border-orange-100 flex items-start gap-4">
+                              <div className="p-5 sm:p-6 bg-[var(--brand-accent)]/10 rounded-sm border border-[var(--brand-accent)]/20 flex items-start gap-4">
                                  <div className="w-10 h-10 bg-white rounded-sm flex items-center justify-center shrink-0 shadow-sm">
-                                    <ShieldCheck className="h-5 w-5 text-orange-600" />
+                                    <ShieldCheck className="h-5 w-5 text-[var(--brand-accent)]" />
                                  </div>
                                  <div className="space-y-1">
-                                    <p className="text-xs font-black text-orange-600 uppercase tracking-tight">Proteção Total</p>
-                                    <p className="text-[10px] text-orange-800/60 font-bold leading-relaxed">
+                                    <p className="text-xs sm:text-sm font-black text-[var(--brand-accent)] uppercase tracking-tight">Proteção Total</p>
+                                    <p className="text-xs sm:text-sm text-[#0c0a09]/60 font-bold leading-relaxed">
                                        Este cartão poderá ser excluído a qualquer momento após o uso.
                                     </p>
                                  </div>
@@ -158,7 +159,7 @@ export default function CartoesPage() {
                               </Button>
                               <Button
                                  variant="outline"
-                                 className="h-14 flex-1 border-neutral-100 text-neutral-400 font-black uppercase tracking-widest text-xs rounded-sm"
+                                 className="h-14 flex-1 border-neutral-200 text-neutral-500 hover:text-[#0c0a09] font-black uppercase tracking-widest text-xs rounded-sm"
                                  onClick={() => setIsModalOpen(false)}
                               >
                                  Cancelar
@@ -171,8 +172,8 @@ export default function CartoesPage() {
                               <CheckCircle2 className="h-10 w-10" />
                            </div>
                            <div className="space-y-2">
-                              <h3 className="text-2xl font-black uppercase tracking-tight">Cartão Gerado!</h3>
-                              <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">
+                              <h3 className="text-2xl font-black uppercase tracking-tight text-[#0c0a09]">Cartão Gerado!</h3>
+                              <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">
                                  Seu novo cartão virtual já está pronto para uso.
                               </p>
                            </div>

@@ -638,9 +638,9 @@ export default function MaquininhasPage() {
             </div>
 
             {/* Form Sections */}
-            <div className="space-y-12">
+            <div className="space-y-8">
               {/* Informações Básicas */}
-              <Card className="p-8 border-l-[6px] border-l-[var(--brand-accent)] shadow-xl space-y-8">
+              <Card className="bg-white text-[#0c0a09] p-5 md:p-7 lg:p-8 border border-neutral-100 border-l-[6px] border-l-[var(--brand-accent)] shadow-xl space-y-7 rounded-md">
                 <div className="flex items-center gap-3 border-b border-neutral-100 pb-5">
                   <div className="w-10 h-10 bg-[var(--brand-accent)] rounded-sm flex items-center justify-center">
                     <AlertCircle className="h-5 w-5 text-white" />
@@ -648,7 +648,7 @@ export default function MaquininhasPage() {
                   <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Informações Básicas</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-5">
                   <FormSelect
                     label="Tipo de Estabelecimento"
                     required
@@ -698,26 +698,25 @@ export default function MaquininhasPage() {
                   <FormField label="Descrição do Shopping" value={formData.descricaoShopping} onChange={(v) => updateField("descricaoShopping", v)} placeholder="Nome do Shopping ou Edifício" />
                   <div className="space-y-2">
                     <FormField label="MCC" required value={formData.mcc} onChange={(v) => updateField("mcc", v)} placeholder="XXXX" />
-                    <p className="text-[9px] text-neutral-400 font-bold uppercase italic tracking-widest leading-none">Código MCC será preenchido automaticamente</p>
+                    <p className="text-[9px] text-neutral-500 font-bold uppercase italic tracking-widest leading-none">Código MCC será preenchido automaticamente</p>
                   </div>
                   <div className="space-y-2">
                     <FormField label="CNAE" required value={formData.cnae} onChange={(v) => updateField("cnae", v)} placeholder="XXXX-X/XX" />
-                    <p className="text-[9px] text-neutral-400 font-bold uppercase italic tracking-widest leading-none">CNAE será preenchido automaticamente</p>
+                    <p className="text-[9px] text-neutral-500 font-bold uppercase italic tracking-widest leading-none">CNAE será preenchido automaticamente</p>
                   </div>
                 </div>
               </Card>
 
               {/* Informações Financeiras */}
-              {/* Informações Financeiras */}
-              <Card className="p-8 border-l-[6px] border-l-blue-500 shadow-xl space-y-8">
+              <Card className="bg-white text-[#0c0a09] p-5 md:p-7 lg:p-8 border border-neutral-100 border-l-[6px] border-l-[var(--brand-accent)] shadow-xl space-y-7 rounded-md">
                 <div className="flex items-center gap-3 border-b border-neutral-100 pb-5">
-                  <div className="w-10 h-10 bg-blue-500 rounded-sm flex items-center justify-center">
+                  <div className="w-10 h-10 bg-[var(--brand-accent)] rounded-sm flex items-center justify-center">
                     <TrendingUp className="h-5 w-5 text-white" />
                   </div>
                   <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Informações Financeiras</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-5">
                   <FormField label="Faturamento Mensal" required value={formData.faturamentoMensal} onChange={(v) => updateField("faturamentoMensal", maskCurrency(v))} placeholder="R$ 0,00" />
                   <FormField label="Ticket Médio" required value={formData.ticketMedio} onChange={(v) => updateField("ticketMedio", maskCurrency(v))} placeholder="R$ 0,00" />
                   <FormSelect
@@ -731,29 +730,29 @@ export default function MaquininhasPage() {
               </Card>
 
               {/* Contatos */}
-              <Card className="p-8 border-l-[6px] border-l-green-500 shadow-xl space-y-8">
+              <Card className="bg-white text-[#0c0a09] p-5 md:p-7 lg:p-8 border border-neutral-100 border-l-[6px] border-l-[var(--brand-accent)] shadow-xl space-y-7 rounded-md">
                 <div className="flex items-center justify-between border-b border-neutral-100 pb-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-green-500 rounded-sm flex items-center justify-center">
+                    <div className="w-10 h-10 bg-[var(--brand-accent)] rounded-sm flex items-center justify-center">
                       <Smartphone className="h-5 w-5 text-white" />
                     </div>
                     <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Contatos</h3>
                   </div>
-                  <Button onClick={addContato} className="bg-green-600 hover:bg-green-700 text-white font-black text-[10px] uppercase tracking-[0.2em] px-6 rounded-[4px]">
+                  <Button onClick={addContato} className="bg-[var(--brand-accent)] hover:bg-[var(--brand-accent)]/90 text-white font-black text-[10px] uppercase tracking-[0.2em] px-6 rounded-[4px]">
                     + Adicionar Contato
                   </Button>
                 </div>
 
                 <div className="space-y-8">
                   {formData.contatos.map((contato, idx) => (
-                    <div key={idx} className="p-8 bg-neutral-50/50 rounded-[2px] border-2 border-dashed border-neutral-200 relative group animate-in fade-in duration-300">
+                    <div key={idx} className="p-5 md:p-7 bg-neutral-50 rounded-md border border-neutral-200 relative group animate-in fade-in duration-300">
                       <div className="absolute top-4 right-4 flex items-center gap-4">
                         <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest bg-white px-3 py-1 rounded-full border border-neutral-100 shadow-sm">Contato {idx + 1}</span>
                         {formData.contatos.length > 1 && (
                           <Button variant="destructive" size="sm" onClick={() => removeContato(idx)} className="h-8 text-[9px] font-black uppercase tracking-widest px-4 rounded-[2px]">Remover</Button>
                         )}
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-5 mt-10">
                         <FormField label="Nome" required value={contato.nome} onChange={(v) => updateContato(idx, "nome", v)} placeholder="Nome completo" />
                         <FormField label="CPF" required value={contato.cpf} onChange={(v) => updateContato(idx, "cpf", maskCpfCnpj(v))} placeholder="XXX.XXX.XXX-XX" />
                         <FormField label="Email" required value={contato.email} onChange={(v) => updateContato(idx, "email", v)} placeholder="nome@email.com" />
@@ -777,29 +776,29 @@ export default function MaquininhasPage() {
               </Card>
 
               {/* Contas Bancárias */}
-              <Card className="p-8 border-l-[6px] border-l-indigo-600 shadow-xl space-y-8">
+              <Card className="bg-white text-[#0c0a09] p-5 md:p-7 lg:p-8 border border-neutral-100 border-l-[6px] border-l-[var(--brand-accent)] shadow-xl space-y-7 rounded-md">
                 <div className="flex items-center justify-between border-b border-neutral-100 pb-5">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-indigo-600 rounded-[2px] flex items-center justify-center">
+                    <div className="w-10 h-10 bg-[var(--brand-accent)] rounded-[2px] flex items-center justify-center">
                       <Shield className="h-5 w-5 text-white" />
                     </div>
                     <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Contas Bancárias</h3>
                   </div>
-                  <Button onClick={addConta} className="bg-green-600 hover:bg-green-700 text-white font-black text-[10px] uppercase tracking-[0.2em] px-6 rounded-[2px]">
+                  <Button onClick={addConta} className="bg-[var(--brand-accent)] hover:bg-[var(--brand-accent)]/90 text-white font-black text-[10px] uppercase tracking-[0.2em] px-6 rounded-[2px]">
                     + Adicionar Conta
                   </Button>
                 </div>
 
                 <div className="space-y-8">
                   {formData.contasBancarias.map((conta, idx) => (
-                    <div key={idx} className="p-8 bg-neutral-50/50 rounded-[2px] border-2 border-dashed border-neutral-200 relative group animate-in fade-in duration-300">
+                    <div key={idx} className="p-5 md:p-7 bg-neutral-50 rounded-md border border-neutral-200 relative group animate-in fade-in duration-300">
                       <div className="absolute top-4 right-4 flex items-center gap-4">
                         <span className="text-[10px] font-black text-neutral-400 uppercase tracking-widest bg-white px-3 py-1 rounded-[2px] border border-neutral-100 shadow-sm">Conta {idx + 1}</span>
                         {formData.contasBancarias.length > 1 && (
                           <Button variant="destructive" size="sm" onClick={() => removeConta(idx)} className="h-8 text-[9px] font-black uppercase tracking-widest px-4 rounded-[2px]">Remover</Button>
                         )}
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mt-10">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-5 mt-10">
                         <FormSelect
                           label="Tipo de Conta"
                           value={conta.tipoConta}
@@ -830,15 +829,15 @@ export default function MaquininhasPage() {
               </Card>
 
               {/* Endereço */}
-              <Card className="p-8 border-l-[6px] border-l-amber-600 shadow-xl space-y-8">
+              <Card className="bg-white text-[#0c0a09] p-5 md:p-7 lg:p-8 border border-neutral-100 border-l-[6px] border-l-[var(--brand-accent)] shadow-xl space-y-7 rounded-md">
                 <div className="flex items-center gap-3 border-b border-neutral-100 pb-5">
-                  <div className="w-10 h-10 bg-amber-600 rounded-[2px] flex items-center justify-center">
+                  <div className="w-10 h-10 bg-[var(--brand-accent)] rounded-[2px] flex items-center justify-center">
                     <MapPin className="h-5 w-5 text-white" />
                   </div>
                   <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Endereço</h3>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-6 gap-y-5">
                   <FormSelect
                     label="Tipo de Endereço"
                     required
@@ -848,7 +847,7 @@ export default function MaquininhasPage() {
                   />
                   <div className="space-y-2">
                     <FormField label="CEP" required value={formData.cep} onChange={(v) => handleCepChange(v)} placeholder="XXXXX-XXX" />
-                    <p className="text-[9px] text-neutral-400 font-bold uppercase italic tracking-widest leading-none">
+                    <p className="text-[9px] text-neutral-500 font-bold uppercase italic tracking-widest leading-none">
                       {isSearchingCep ? "Buscando dados..." : "Digite o CEP para buscar automaticamente"}
                     </p>
                   </div>
@@ -868,15 +867,15 @@ export default function MaquininhasPage() {
                   />
                   <div className="space-y-2">
                     <FormField label="País" required value={formData.pais} onChange={(v) => updateField("pais", v)} />
-                    <p className="text-[9px] text-neutral-400 font-bold uppercase italic tracking-widest leading-none">Nome do País</p>
+                    <p className="text-[9px] text-neutral-500 font-bold uppercase italic tracking-widest leading-none">Nome do País</p>
                   </div>
                 </div>
               </Card>
 
               {/* Quantidade */}
-              <Card className="p-8 border-l-[6px] border-l-black shadow-xl bg-neutral-900/5 space-y-8">
+              <Card className="bg-white text-[#0c0a09] p-5 md:p-7 lg:p-8 border border-neutral-100 border-l-[6px] border-l-[var(--brand-accent)] shadow-xl space-y-7 rounded-md">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-black rounded-[2px] flex items-center justify-center">
+                  <div className="w-10 h-10 bg-[var(--brand-accent)] rounded-[2px] flex items-center justify-center">
                     <Store className="h-5 w-5 text-white" />
                   </div>
                   <h3 className="text-sm font-black text-[#0c0a09] uppercase tracking-[0.1em]">Quantidade de Máquinas Solicitadas</h3>
@@ -888,7 +887,7 @@ export default function MaquininhasPage() {
               </Card>
 
               {/* Seção de Documentos - Botão Solicitado */}
-              <Card className="p-8 border-l-[6px] border-l-[var(--brand-accent)] shadow-xl bg-orange-50/30 space-y-6 rounded-[2px]">
+              <Card className="p-5 md:p-7 lg:p-8 border border-[var(--brand-accent)]/20 border-l-[6px] border-l-[var(--brand-accent)] shadow-xl bg-[var(--brand-accent)]/5 text-[#0c0a09] space-y-6 rounded-md">
                 <div className="flex items-center justify-between flex-wrap gap-6">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-[var(--brand-accent)] rounded-[2px] flex items-center justify-center shadow-lg shadow-orange-500/20">
@@ -904,7 +903,7 @@ export default function MaquininhasPage() {
                           <p className="text-[8px] font-bold text-neutral-500 uppercase">{attachedDocs.join(", ")}</p>
                         </div>
                       ) : (
-                        <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-tight">Anexe o contrato, CNPJ e fotos para agilizar seu credenciamento</p>
+                        <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-tight">Anexe o contrato, CNPJ e fotos para agilizar seu credenciamento</p>
                       )}
                     </div>
                   </div>
@@ -1242,7 +1241,7 @@ function FormField({
 }) {
   return (
     <div className="space-y-2.5">
-      <label className="text-[11px] font-black text-[#0c0a09] uppercase tracking-widest block flex items-center gap-1">
+      <label className="flex items-center gap-1 text-[11px] font-black text-neutral-700 uppercase tracking-widest">
         {label}
         {required && <span className="text-[var(--brand-accent)] text-sm leading-none">*</span>}
       </label>
@@ -1253,8 +1252,8 @@ function FormField({
         placeholder={placeholder}
         className={
           currentBrand.id !== "g8"
-            ? "h-14 bg-white border-2 border-[var(--brand-accent-light)] focus:border-[var(--brand-accent)] rounded-sm text-sm font-semibold focus:ring-2 focus:ring-[var(--brand-accent-light)] transition-all placeholder:text-neutral-400 text-neutral-800 shadow-sm"
-            : "h-14 bg-white border-2 border-neutral-200 rounded-sm text-sm font-black focus:ring-2 focus:ring-[var(--brand-accent)]/30 focus:border-[var(--brand-accent)] transition-all placeholder:text-neutral-400 text-[#0c0a09] shadow-sm"
+            ? "h-14 bg-white border border-[var(--brand-accent)]/25 focus:border-[var(--brand-accent)] rounded-md text-sm font-semibold focus:ring-2 focus:ring-[var(--brand-accent)]/15 transition-all placeholder:text-neutral-400 text-[#0c0a09] shadow-sm"
+            : "h-14 bg-white border border-neutral-200 rounded-md text-sm font-semibold focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)] transition-all placeholder:text-neutral-400 text-[#0c0a09] shadow-sm"
         }
       />
     </div>
@@ -1300,7 +1299,7 @@ function FormSelect({
 }) {
   return (
     <div className="space-y-2.5">
-      <label className="text-[11px] font-black text-[#0c0a09] uppercase tracking-widest block flex items-center gap-1">
+      <label className="flex items-center gap-1 text-[11px] font-black text-neutral-700 uppercase tracking-widest">
         {label}
         {required && <span className="text-[var(--brand-accent)] text-sm leading-none">*</span>}
       </label>
@@ -1309,13 +1308,11 @@ function FormSelect({
         onChange={(e) => onChange(e.target.value)}
         className={
           currentBrand.id !== "g8"
-            ? "h-14 w-full bg-white border-2 border-[var(--brand-accent-light)] focus:border-[var(--brand-accent)] rounded-[2px] px-4 text-sm font-semibold focus:ring-2 focus:ring-[var(--brand-accent-light)] transition-all outline-none text-neutral-800 shadow-sm appearance-none cursor-pointer"
-            : "h-14 w-full bg-white border-2 border-neutral-200 rounded-[2px] px-4 text-sm font-black focus:ring-2 focus:ring-[var(--brand-accent)]/30 focus:border-[var(--brand-accent)] transition-all outline-none text-[#0c0a09] shadow-sm appearance-none cursor-pointer"
+            ? "h-14 w-full bg-white border border-[var(--brand-accent)]/25 focus:border-[var(--brand-accent)] rounded-md px-4 text-sm font-semibold focus:ring-2 focus:ring-[var(--brand-accent)]/15 transition-all outline-none text-[#0c0a09] shadow-sm appearance-none cursor-pointer"
+            : "h-14 w-full bg-white border border-neutral-200 rounded-md px-4 text-sm font-semibold focus:ring-2 focus:ring-[var(--brand-accent)]/20 focus:border-[var(--brand-accent)] transition-all outline-none text-[#0c0a09] shadow-sm appearance-none cursor-pointer"
         }
         style={{
-          backgroundImage: currentBrand.id !== "g8"
-            ? `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='${encodeURIComponent(currentBrand.id === "galapagos" ? "#2563eb" : "#cca43b")}' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`
-            : `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23f97316' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='${encodeURIComponent(currentBrand.id === "g8" ? "#f97316" : "var(--brand-accent)")}' stroke-width='3'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7' /%3E%3C/svg%3E")`,
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'right 1rem center',
           backgroundSize: '1.2rem'
