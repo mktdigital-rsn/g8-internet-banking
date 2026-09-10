@@ -1,29 +1,30 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { QRCodeSVG } from "qrcode.react";
-import {
-  User,
-  ArrowRight,
-  ShieldCheck,
-  ChevronLeft,
-  Smartphone,
-  RefreshCcw,
-  AlertCircle,
-  CheckCircle2,
-  Loader2,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
+import PasswordRecovery from "@/components/PasswordRecovery";
 import { Button } from "@/components/ui/button";
-import { temporaryDeviceIdAtom } from "@/store/auth";
-import { useAtom } from "jotai";
-import api from "@/lib/api";
-import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 import { currentBrand } from "@/config/brand";
+import api from "@/lib/api";
+import { temporaryDeviceIdAtom } from "@/store/auth";
+import { AnimatePresence, motion } from "framer-motion";
+import { useAtom } from "jotai";
+import {
+  AlertCircle,
+  ArrowRight,
+  CheckCircle2,
+  ChevronLeft,
+  Loader2,
+  RefreshCcw,
+  ShieldCheck,
+  Smartphone,
+  User,
+} from "lucide-react";
+import Image from "next/image";
+import { QRCodeSVG } from "qrcode.react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
-type LoginStep = "identifier" | "virtual" | "qrcode";
+type LoginStep = "identifier" | "virtual" | "qrcode" | "recovery";
 type ChallengeStatus = "PENDING" | "APPROVED" | "EXPIRED";
 
 type ChallengeResponse = {
@@ -298,7 +299,7 @@ export default function LoginScreen() {
   }, [challengeExpiresAt]);
 
   return (
-    <div className={`min-h-screen w-full flex items-center justify-center p-4 relative overflow-hidden ${isLottoPay ? "bg-[#101617]" : "bg-[#0c0a09]"} ${currentBrand.themeClass}`}>
+    <div className={`min-h-dvh w-full flex items-center justify-center p-4 relative overflow-hidden ${isLottoPay ? "bg-[#101617]" : "bg-[#0c0a09]"} ${currentBrand.themeClass}`}>
       <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px]" />
       <div className="absolute bottom-[-10%] left-[-10%] w-[30%] h-[30%] bg-primary/5 rounded-full blur-[100px]" />
 
@@ -306,13 +307,11 @@ export default function LoginScreen() {
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.4 }}
-        className={`w-full max-w-[500px] lg:max-w-[1000px] 2xl:max-w-[1400px] grid lg:grid-cols-2 rounded-[2px] overflow-hidden shadow-2xl relative z-10 min-h-[500px] lg:min-h-[600px] 2xl:min-h-[800px] ${
-          isLottoPay ? "bg-[#24292b]" : "bg-[#18181b]"
-        }`}
+        className={`w-full max-w-[500px] lg:max-w-[1000px] 2xl:max-w-[1400px] grid lg:grid-cols-2 rounded-[2px] overflow-hidden shadow-2xl relative z-10 min-h-[min(500px,calc(100dvh-2rem))] lg:min-h-[min(600px,calc(100dvh-2rem))] 2xl:min-h-[min(800px,calc(100dvh-2rem))] lg:max-2xl:[@media(max-height:650px)]:min-h-[min(520px,calc(100dvh-5rem))]  ${isLottoPay ? "bg-[#24292b]" : "bg-[#18181b]"
+          }`}
       >
-        <div className={`hidden md:flex flex-col justify-between p-16 ${
-          isLottoPay ? "bg-gradient-to-br from-white/[0.04] via-transparent to-transparent" : "bg-gradient-to-br from-primary/10 to-transparent"
-        }`}>
+        <div className={`hidden lg:flex min-w-0 flex-col justify-between gap-6 p-[clamp(1.5rem,calc(12dvh-2rem),4rem)] ${isLottoPay ? "bg-gradient-to-br from-white/[0.04] via-transparent to-transparent" : "bg-gradient-to-br from-primary/10 to-transparent"
+          }`}>
           <div>
             {currentBrand.id === "g8" ? (
               <Image src={currentBrand.logoWhite} alt={`${currentBrand.name} Logo`} width={160} height={60} className="object-contain 2xl:scale-125 origin-left" />
@@ -323,22 +322,20 @@ export default function LoginScreen() {
                 width={1444}
                 height={300}
                 priority
-                className="h-auto w-[280px] md:w-[320px] 2xl:w-[360px] max-w-full object-contain origin-left"
+                className="h-auto w-[280px] md:w-[320px] 2xl:w-[360px] lg:max-2xl:[@media(max-height:650px)]:w-[280px] max-w-full object-contain origin-left"
               />
             ) : (
-              <div className={`flex items-center gap-3.5 select-none animate-in fade-in duration-300 origin-left ${
-                "scale-125 md:scale-150 2xl:scale-[1.75]"
-              }`}>
-                <img 
-                  src={currentBrand.logoWhite} 
-                  alt={`${currentBrand.name} Logo`} 
-                  className={`${
-                    currentBrand.id === "galapagos" 
-                      ? "h-10" 
+              <div className={`flex items-center gap-3.5 select-none animate-in fade-in duration-300 origin-left ${"scale-125 md:scale-150 2xl:scale-[1.75]"
+                }`}>
+                <img
+                  src={currentBrand.logoWhite}
+                  alt={`${currentBrand.name} Logo`}
+                  className={`${currentBrand.id === "galapagos"
+                      ? "h-10"
                       : (currentBrand.id === "fiscomoney" || currentBrand.id === "advogado10x")
-                      ? "h-[60px]"
-                      : "h-16"
-                  } w-auto object-contain brightness-100`} 
+                        ? "h-[60px]"
+                        : "h-16"
+                    } w-auto object-contain brightness-100`}
                 />
                 {currentBrand.id === "galapagos" && (
                   <div className="flex flex-col justify-center text-left">
@@ -355,17 +352,16 @@ export default function LoginScreen() {
           </div>
 
           <div className="space-y-8 2xl:space-y-12">
-            <div className="space-y-5 2xl:space-y-8">
-              <div className={`inline-flex items-center rounded-[2px] px-3 py-1 text-[11px] 2xl:text-xs font-bold uppercase tracking-widest w-fit ${
-                isLottoPay
+            <div className="space-y-5 2xl:space-y-8 lg:max-2xl:[@media(max-height:650px)]:space-y-4">
+              <div className={`inline-flex items-center rounded-[2px] px-3 py-1 text-[11px] 2xl:text-xs font-bold uppercase tracking-widest w-fit ${isLottoPay
                   ? "bg-brand-accent/10 text-brand-accent border border-brand-accent/30"
                   : currentBrand.id === "galapagos"
                     ? "bg-amber-400/20 text-amber-400 border border-amber-400/40"
                     : "bg-white/5 text-white/70 border border-white/10"
-              }`}>
+                }`}>
                 {isLottoPay ? "Pagamentos e operação" : "Internet Banking"}
               </div>
-              <h1 className="text-5xl 2xl:text-7xl font-black tracking-tighter text-white leading-[1.05]">
+              <h1 className="text-[clamp(2rem,7dvh,3rem)] 2xl:text-[clamp(2rem,7dvh,4.5rem)] font-black tracking-tighter text-white leading-[1.05]">
                 {isLottoPay ? (
                   <>
                     Liquidação <br />
@@ -386,23 +382,43 @@ export default function LoginScreen() {
             </div>
           </div>
 
-          <div className={`p-3 rounded-sm inline-flex items-center gap-3 text-white 2xl:gap-5 shadow-lg w-fit ${
-            "bg-amber-200/20 border border-amber-500/20 shadow-amber-400/10"
-          }`}>
+          <div className={`p-3 rounded-sm inline-flex items-center gap-3 text-white 2xl:gap-5 shadow-lg w-fit ${"bg-amber-200/20 border border-amber-500/20 shadow-amber-400/10"
+            }`}>
             <ShieldCheck className={`h-4 w-4 2xl:h-6 2xl:w-6 opacity-90 ${currentBrand.id === "galapagos" ? "text-green-500" : ""}`} />
             <span className="text-[9px] 2xl:text-xs font-bold uppercase tracking-[0.2em] leading-none">SSL SECURE PROTOCOL</span>
           </div>
         </div>
 
-        <div className="p-8 md:p-16 flex flex-col justify-center relative bg-[#0c0a09]">
+        <div className="px-5 sm:px-8 lg:px-[clamp(1.5rem,calc(12dvh-2rem),4rem)] py-[clamp(1.5rem,calc(12dvh-2rem),4rem)] min-w-0 flex flex-col justify-center relative bg-[#0c0a09]">
+          {isLottoPay && (
+            <div className="lg:hidden shrink-0 pb-[clamp(1rem,4dvh,2rem)]">
+              <Image
+                src={currentBrand.logoWhite}
+                alt={`${currentBrand.name} Logo`}
+                width={1844}
+                height={300}
+                priority
+                className="mx-auto h-auto w-[clamp(13rem,28dvh,13rem)] max-w-full object-contain"
+              />
+            </div>
+          )}
+          <div className="flex flex-1 flex-col justify-center min-w-0">
           <AnimatePresence mode="wait">
+            {step === "recovery" && (
+              <PasswordRecovery
+                key="recovery"
+                initialEmail={cleanIdentifier.includes("@") ? cleanIdentifier : ""}
+                onBack={() => setStep("virtual")}
+                onComplete={(email) => { setIdentifier(email); setPasswordKeys([]); setStep("virtual"); }}
+              />
+            )}
             {step === "identifier" && (
               <motion.div
                 key="step-id"
                 initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                className="space-y-10 2xl:space-y-16 mt-12 lg:mt-0"
+                className="space-y-[clamp(1rem,5dvh,2.5rem)] 2xl:space-y-[clamp(1rem,5dvh,4rem)] lg:max-2xl:[@media(max-height:650px)]:space-y-6"
               >
                 <div className="space-y-2">
                   <h2 className="text-3xl font-black text-white tracking-tight">Identificação</h2>
@@ -411,18 +427,17 @@ export default function LoginScreen() {
                   </p>
                 </div>
 
-                <form onSubmit={handleIdentifierSubmit} className="space-y-6 2xl:space-y-10">
+                <form onSubmit={handleIdentifierSubmit} className="space-y-[clamp(1rem,3dvh,1.5rem)] 2xl:space-y-[clamp(1rem,3dvh,2.5rem)]">
                   <div className="space-y-2 2xl:space-y-4">
                     <label className="text-[10px] 2xl:text-xs font-black uppercase tracking-widest text-brand-accent ml-1">Acessar com</label>
                     <div className="relative group">
-                      <User className={`absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 2xl:h-7 2xl:w-7 text-white/20 transition-colors ${
-                        currentBrand.id === "galapagos"
+                      <User className={`absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 2xl:h-7 2xl:w-7 text-white/20 transition-colors ${currentBrand.id === "galapagos"
                           ? "group-focus-within:text-white"
                           : "group-focus-within:text-brand-accent"
-                      }`} />
+                        }`} />
                       <Input
                         placeholder="000.000.000-00"
-                        className="pl-14 2xl:pl-20 h-16 2xl:h-24 bg-white/[0.02] border-white/10 focus:border-brand-accent/50 focus:bg-white/[0.04] transition-all text-white font-bold text-xl 2xl:text-3xl rounded-[2px] placeholder:text-white/5 shadow-inner"
+                        className="pl-14 2xl:pl-20 h-[clamp(3rem,9dvh,4rem)] 2xl:h-[clamp(3rem,9dvh,6rem)] bg-white/[0.02] border-white/10 focus:border-brand-accent/50 focus:bg-white/[0.04] transition-all text-white font-bold text-xl 2xl:text-3xl rounded-[2px] placeholder:text-white/5 shadow-inner"
                         value={identifier}
                         onChange={(e) => setIdentifier(e.target.value)}
                         autoFocus
@@ -432,11 +447,10 @@ export default function LoginScreen() {
 
                   <Button
                     type="submit"
-                    className={`w-full h-16 2xl:h-24 text-sm 2xl:text-xl font-black transition-all text-white cursor-pointer rounded-[2px] tracking-widest shadow-xl ${
-                      currentBrand.id === "galapagos"
+                    className={`w-full h-[clamp(3rem,9dvh,4rem)] 2xl:h-[clamp(3rem,9dvh,6rem)] text-sm 2xl:text-xl font-black transition-all text-white cursor-pointer rounded-[2px] tracking-widest shadow-xl ${currentBrand.id === "galapagos"
                         ? "bg-blue-500 hover:bg-blue-400 shadow-blue-500/10"
                         : "bg-brand-accent hover:bg-brand-accent-hover shadow-brand-accent/20"
-                    }`}
+                      }`}
                     disabled={!identifier}
                   >
                     AVANÇAR PARA SENHA
@@ -444,7 +458,7 @@ export default function LoginScreen() {
                   </Button>
                 </form>
 
-                <div className="pt-6 2xl:pt-10 border-t border-white/5 flex items-center justify-between">
+                <div className="pt-[clamp(1rem,3dvh,1.5rem)] 2xl:pt-[clamp(1rem,3dvh,2.5rem)] border-t border-white/5 flex flex-wrap gap-x-4 gap-y-3 items-center justify-between">
                   <button className="text-[10px] 2xl:text-xs font-black text-neutral-400 uppercase tracking-widest hover:text-white transition-colors">Dificuldade em acessar?</button>
                   <button className="text-[10px] 2xl:text-xs font-black text-brand-accent uppercase tracking-widest hover:underline">Solicitar Acesso</button>
                 </div>
@@ -457,7 +471,7 @@ export default function LoginScreen() {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
-                className="space-y-10 2xl:space-y-16 mt-12 lg:mt-0"
+                className="space-y-[clamp(1rem,5dvh,2.5rem)] 2xl:space-y-[clamp(1rem,5dvh,4rem)] lg:max-2xl:[@media(max-height:650px)]:space-y-6"
               >
                 <div className="flex items-center gap-4">
                   <button
@@ -474,9 +488,8 @@ export default function LoginScreen() {
                 </div>
 
                 <div className="space-y-6">
-                  <div className={`h-16 flex items-center justify-center gap-3 bg-white/[0.07] rounded-[2px] border border-white/[0.12] font-mono text-2xl tracking-[0.5em] ${
-                    currentBrand.id === "galapagos" ? "text-white" : "text-primary"
-                  }`}>
+                  <div className={`h-16 flex items-center justify-center gap-3 bg-white/[0.07] rounded-[2px] border border-white/[0.12] font-mono text-2xl tracking-[0.5em] ${currentBrand.id === "galapagos" ? "text-white" : "text-primary"
+                    }`}>
                     {shownPassword || <span className="text-white/20 text-[10px] uppercase font-black tracking-[0.3em]">Teclado Virtual</span>}
                   </div>
 
@@ -486,11 +499,10 @@ export default function LoginScreen() {
                         key={idx}
                         type="button"
                         onClick={() => addPasswordPair(pair)}
-                        className={`h-14 border rounded-[2px] text-white font-black text-lg transition-all ${
-                          currentBrand.id === "galapagos"
+                        className={`h-14 border rounded-[2px] text-white font-black text-lg transition-all ${currentBrand.id === "galapagos"
                             ? "bg-transparent hover:bg-[rgba(255,255,255,0.06)] border-white/10"
                             : "bg-white/[0.10] hover:bg-brand-accent border-white/[0.14]"
-                        }`}
+                          }`}
                       >
                         {pair[0]} ou {pair[1]}
                       </button>
@@ -506,15 +518,24 @@ export default function LoginScreen() {
 
                   <Button
                     onClick={handleLoginSubmit}
-                    className={`w-full h-16 text-lg font-black text-white rounded-[2px] shadow-lg cursor-pointer transition-all ${
-                      currentBrand.id === "galapagos"
+                    className={`w-full h-16 text-lg font-black text-white rounded-[2px] shadow-lg cursor-pointer transition-all ${currentBrand.id === "galapagos"
                         ? "bg-blue-500 hover:bg-blue-400"
                         : "bg-brand-accent hover:bg-brand-accent-hover"
-                    }`}
+                      }`}
                     disabled={isLoading || passwordKeys.length === 0}
                   >
                     {isLoading ? "Aguarde um instante" : "CONTINUAR"}
                   </Button>
+                 <div className="flex items-center justify-end">
+                   <button
+                    type="button"
+                    disabled={isLoading}
+                    onClick={() => { setPasswordKeys([]); setStep("recovery"); }}
+                    className="block  text-sm font-bold text-brand-accent hover:underline disabled:opacity-50"
+                  >
+                    Esqueci a senha
+                  </button>
+                 </div>
                 </div>
               </motion.div>
             )}
@@ -525,7 +546,7 @@ export default function LoginScreen() {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center space-y-10 2xl:space-y-16 text-center mt-12 lg:mt-0"
+                className="flex flex-col items-center justify-center space-y-[clamp(1rem,5dvh,2.5rem)] 2xl:space-y-[clamp(1rem,5dvh,4rem)] text-center"
               >
                 <AnimatePresence mode="wait">
                   {challengeStatus === "APPROVED" ? (
@@ -581,13 +602,12 @@ export default function LoginScreen() {
 
                       <div className="w-full max-w-sm space-y-4 pt-4 relative z-10">
                         <div className="flex justify-between items-center text-xs">
-                          <span className={`font-black uppercase tracking-widest animate-pulse text-left ${
-                            currentBrand.id === "galapagos" ? "text-amber-400" : "text-brand-accent"
-                          }`}>
+                          <span className={`font-black uppercase tracking-widest animate-pulse text-left ${currentBrand.id === "galapagos" ? "text-amber-400" : "text-brand-accent"
+                            }`}>
                             {progress < 30 ? "Estabelecendo conexão segura..." :
-                             progress < 60 ? "Autenticando criptografia..." :
-                             progress < 90 ? "Sincronizando dados..." :
-                             "Acesso liberado! Redirecionando..."}
+                              progress < 60 ? "Autenticando criptografia..." :
+                                progress < 90 ? "Sincronizando dados..." :
+                                  "Acesso liberado! Redirecionando..."}
                           </span>
                           <span className="font-mono font-black text-white text-base">
                             {Math.round(progress)}%
@@ -597,12 +617,11 @@ export default function LoginScreen() {
                         {/* Outer track */}
                         <div className="w-full h-3 bg-neutral-900 rounded-full overflow-hidden border border-white/5 p-[2px]">
                           {/* Inner glowing bar */}
-                          <div 
-                            className={`h-full rounded-full transition-all duration-100 ease-out ${
-                              currentBrand.id === "galapagos"
+                          <div
+                            className={`h-full rounded-full transition-all duration-100 ease-out ${currentBrand.id === "galapagos"
                                 ? "bg-gradient-to-r from-amber-400 to-yellow-500 shadow-[0_0_12px_#f59e0b]"
                                 : "bg-gradient-to-r from-brand-accent to-brand-secondary shadow-[0_0_12px_var(--brand-accent)]"
-                            }`}
+                              }`}
                             style={{ width: `${progress}%` }}
                           />
                         </div>
@@ -614,9 +633,8 @@ export default function LoginScreen() {
                         transition={{ delay: 0.8 }}
                         className="flex items-center gap-3 bg-white/5 border border-white/10 px-6 py-4 rounded-xl shadow-2xl"
                       >
-                        <Loader2 className={`h-4 w-4 animate-spin ${
-                          currentBrand.id === "galapagos" ? "text-amber-400" : "text-brand-accent"
-                        }`} />
+                        <Loader2 className={`h-4 w-4 animate-spin ${currentBrand.id === "galapagos" ? "text-amber-400" : "text-brand-accent"
+                          }`} />
                         <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Carregando painel de controle...</span>
                       </motion.div>
                     </motion.div>
@@ -627,7 +645,7 @@ export default function LoginScreen() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0, scale: 0.9 }}
                       transition={{ duration: 0.3 }}
-                      className="flex flex-col items-center space-y-10 2xl:space-y-16 w-full"
+                      className="flex flex-col items-center space-y-[clamp(1rem,5dvh,2.5rem)] 2xl:space-y-[clamp(1rem,5dvh,4rem)] w-full"
                     >
                       <div className="space-y-2">
                         <h2 className="text-3xl font-black text-white">Aprovação no App</h2>
@@ -644,15 +662,13 @@ export default function LoginScreen() {
                         )}
                       </div>
 
-                      <div className={`w-full max-w-md space-y-3 rounded-[2px] p-5 text-left border transition-all ${
-                        currentBrand.id === "galapagos"
+                      <div className={`w-full max-w-md space-y-3 rounded-[2px] p-5 text-left border transition-all ${currentBrand.id === "galapagos"
                           ? "bg-amber-400/10 border-amber-400/20"
                           : "bg-white/[0.05] border-white/10"
-                      }`}>
+                        }`}>
                         <div className="flex items-center gap-3 text-white">
-                          <Smartphone className={`h-5 w-5 ${
-                            currentBrand.id === "galapagos" ? "text-blue-400" : "text-primary"
-                          }`} />
+                          <Smartphone className={`h-5 w-5 ${currentBrand.id === "galapagos" ? "text-blue-400" : "text-primary"
+                            }`} />
                           <span className="text-sm font-bold text-white">{statusLabel}</span>
                         </div>
                         <div className="flex items-center gap-3 text-white/50">
@@ -685,6 +701,7 @@ export default function LoginScreen() {
               </motion.div>
             )}
           </AnimatePresence>
+          </div>
         </div>
       </motion.div>
     </div>
