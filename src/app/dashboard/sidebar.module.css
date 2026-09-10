@@ -1,0 +1,56 @@
+.item {
+  position: relative;
+  overflow: hidden;
+}
+
+.item:not([data-disabled="true"]) span:not([data-sidebar-badge]) {
+  color: #ffffffe6;
+}
+
+.item::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  border-radius: 3px;
+  background: linear-gradient(to bottom, #fff, var(--brand-accent));
+  opacity: 0;
+  transition: opacity 180ms ease;
+  pointer-events: none;
+}
+
+.item[data-active="true"],
+.item:not([data-disabled="true"]):hover,
+.item:not([data-disabled="true"]):focus-visible {
+  background: #ffffff24;
+  box-shadow: none;
+}
+
+.item:not([data-disabled="true"]):hover,
+.item:not([data-disabled="true"]):focus-visible {
+  background: color-mix(in srgb, var(--brand-accent) 10%, #ffffff24);
+}
+
+.item[data-active="true"] :is(svg, span:not([data-sidebar-badge])),
+.item:not([data-disabled="true"]):hover :is(svg, span:not([data-sidebar-badge])),
+.item:not([data-disabled="true"]):focus-visible :is(svg, span:not([data-sidebar-badge])) {
+  color: #fff;
+}
+
+.item[data-active="true"]::before,
+.item:not([data-disabled="true"]):hover::before,
+.item:not([data-disabled="true"]):focus-visible::before {
+  opacity: 1;
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--brand-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item,
+  .item::before {
+    transition: none;
+  }
+}

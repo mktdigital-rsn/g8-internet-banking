@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import styles from "./sidebar.module.css";
 import Image from "next/image";
 import {
   Home,
@@ -386,7 +387,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <div key={item.label} className="space-y-1">
                         <button
                           onClick={() => setExpandedMenus(prev => ({ ...prev, [item.label]: !prev[item.label] }))}
-                          className={`flex items-center gap-5 px-6 py-3 w-full rounded-md transition-all group relative overflow-hidden border border-transparent ${
+                          data-active={isAnySubActive}
+                          className={`${isLottoPay ? styles.item : ""} flex items-center gap-5 px-6 py-3 w-full rounded-md transition-all group relative overflow-hidden border border-transparent ${
                             isAnySubActive
                               ? "text-brand-accent bg-white shadow-lg shadow-brand-accent/5"
                               : "text-white/80 hover:bg-white hover:text-brand-accent"
@@ -410,7 +412,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 <Link
                                   key={sub.label}
                                   href={sub.href}
-                                  className={`flex items-center gap-4 px-6 py-2.5 rounded-md transition-all group border border-transparent ${
+                                  data-active={isSubActive}
+                                  className={`${isLottoPay ? styles.item : ""} flex items-center gap-4 px-6 py-2.5 rounded-md transition-all group border border-transparent ${
                                     isSubActive
                                       ? currentBrand.id !== "g8"
                                         ? "text-brand-accent bg-white shadow-md shadow-black/5"
@@ -434,7 +437,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       key={item.label}
                       href={item.disabled ? "#" : item.href}
                       onClick={(e) => item.disabled && e.preventDefault()}
-                      className={`flex items-center gap-5 px-6 py-3 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
+                      data-active={isActive}
+                      data-disabled={item.disabled || undefined}
+                      className={`${isLottoPay ? styles.item : ""} flex items-center gap-5 px-6 py-3 rounded-md transition-all group relative overflow-hidden border border-transparent ${isActive
                         ? currentBrand.id !== "g8"
                           ? "text-brand-accent bg-white shadow-lg shadow-black/10"
                           : "text-white bg-brand-accent shadow-lg shadow-brand-accent/20"
@@ -447,7 +452,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       <div className="flex items-center justify-between flex-1 relative z-10">
                         <span className={`text-[11px] uppercase tracking-[0.15em] font-black ${isActive ? (currentBrand.id !== "g8" ? "text-brand-accent" : "text-white") : item.disabled ? "text-white/40" : "text-white/80 group-hover:text-brand-accent transition-colors duration-300"}`}>{item.label}</span>
                         {item.badge && (
-                          <span className={`font-black text-[9px] px-1.5 py-0.5 rounded-sm tracking-tighter ${item.badge === "EM BREVE" ? "bg-[#ffdd00] text-black" : "bg-white/10 text-white"}`}>
+                          <span data-sidebar-badge className={`font-black text-[9px] px-1.5 py-0.5 rounded-sm tracking-tighter ${item.badge === "EM BREVE" ? "bg-[#ffdd00] text-black" : "bg-white/10 text-white"}`}>
                             {item.badge}
                           </span>
                         )}
@@ -462,7 +467,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="mt-auto relative z-10 pt-6 border-t border-white/5">
-          <button onClick={handleLogout} className="flex items-center gap-5 px-5 py-4 w-full text-white/60 hover:bg-white hover:text-brand-accent rounded-md transition-all border border-transparent group">
+          <button onClick={handleLogout} className={`${isLottoPay ? styles.item : ""} flex items-center gap-5 px-5 py-4 w-full text-white/60 hover:bg-white hover:text-brand-accent rounded-md transition-all border border-transparent group`}>
             <LogOut className="h-5 w-5 text-white/60 group-hover:text-brand-accent" />
             <span className="text-[11px] font-black uppercase tracking-widest text-white/60 group-hover:text-brand-accent">Encerrar Sessão</span>
           </button>
