@@ -150,7 +150,7 @@ export default function ComprovantesPage() {
                     <div className="space-y-1">
                         <Badge className="bg-orange-600/10 text-orange-600 border-0 text-[10px] font-black tracking-[0.22em] uppercase px-3 py-1 mb-2">Central de Documentos</Badge>
                         <h1 className="text-3xl md:text-5xl font-black tracking-tighter leading-none text-[#0c0a09]">
-                            Área de <span className="text-orange-600">COMPROVANTES</span>
+                            ÁREA DE <span className="text-orange-600">COMPROVANTES</span>
                         </h1>
                         <p className="text-sm text-neutral-500 font-bold uppercase tracking-widest mt-3 max-w-3xl">Escolha o tipo de comprovante e acesse os documentos para consultar, baixar ou compartilhar.</p>
                     </div>

@@ -112,7 +112,7 @@ export default function PixPage() {
                 {/* Header Section */}
                 <div className="space-y-4">
                     <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none">
-                        Área <span className="text-[var(--brand-accent)]">PIX</span>
+                        ÁREA <span className="text-[var(--brand-accent)]">PIX</span>
                     </h1>
                 </div>
 

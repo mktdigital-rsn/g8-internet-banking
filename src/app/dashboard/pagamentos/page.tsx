@@ -365,7 +365,7 @@ export default function PagamentosPage() {
             <div className="space-y-4">
               <Badge variant="secondary" className="bg-orange-600/10 text-orange-600 border-0 px-3 py-1 font-black text-[10px] uppercase tracking-[0.2em]">Serviços Financeiros</Badge>
               <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-[#0c0a09] leading-none uppercase">
-                Área <span className="text-orange-600">PAGAMENTOS</span>
+                ÁREA <span className="text-orange-600">PAGAMENTOS</span>
               </h1>
               <p className="text-sm md:text-base text-neutral-400 font-bold max-w-2xl">
                 Pague boletos, tributos e contas de consumo com rapidez e segurança {currentBrand.bankName}.
