@@ -873,7 +873,7 @@ export default function PagamentosPage() {
                       ? "bg-red-500/10 text-red-500 border border-red-200 cursor-not-allowed hover:bg-red-500/10 shadow-none"
                       : paymentMode === "schedule"
                         ? "bg-[#0c0a09] hover:bg-[var(--brand-accent)] text-white shadow-black/10"
-                        : "bg-gradient-to-r from-[var(--brand-accent)] to-[#ea580c] hover:from-[#ea580c] hover:to-[var(--brand-accent)] text-white shadow-black/20"
+                        : "bg-black hover:bg-orange-500 text-white shadow-black/20"
                       }`}
                   >
                     {isLoading ? "PROCESSANDO..." : (
